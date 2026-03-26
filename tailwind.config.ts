@@ -1,0 +1,49 @@
+import type { Config } from "tailwindcss"
+
+const config: Config = {
+  content: [
+    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+  ],
+  theme: {
+    extend: {
+      colors: {
+        unit: {
+          background: "var(--unit-background)",
+          card: "var(--unit-card)",
+          surface: "var(--unit-surface)",
+          "text-primary": "var(--unit-text-primary)",
+          "text-secondary": "var(--unit-text-secondary)",
+          border: "var(--unit-border)",
+          muted: "var(--unit-muted)",
+          disabled: "var(--unit-disabled)",
+          accent: "var(--unit-accent)",
+          "accent-foreground": "var(--unit-accent-foreground)",
+          success: "var(--unit-success)",
+          error: "var(--unit-error)",
+        },
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 4px)",
+        sm: "calc(var(--radius) - 6px)",
+      },
+      fontFamily: {
+        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+      },
+      spacing: {
+        "unit-xxs": "4px",
+        "unit-xs": "8px",
+        "unit-sm": "12px",
+        "unit-md": "16px",
+        "unit-lg": "24px",
+        "unit-xl": "32px",
+        "unit-xxl": "48px",
+        "unit-xxxl": "64px",
+      },
+    },
+  },
+  plugins: [],
+}
+export default config

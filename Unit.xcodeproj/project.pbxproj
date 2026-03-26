@@ -1,0 +1,606 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		541C84E82F5B818100D0DB57 /* Cycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 541C84E72F5B818100D0DB57 /* Cycle.swift */; };
+		541C84EA2F5B818100D0DB57 /* ProgressionRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 541C84E92F5B818100D0DB57 /* ProgressionRule.swift */; };
+		541C84EC2F5B819E00D0DB57 /* ProgressionEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 541C84EB2F5B819E00D0DB57 /* ProgressionEngine.swift */; };
+		541C84EE2F5B819E00D0DB57 /* CyclesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 541C84ED2F5B819E00D0DB57 /* CyclesView.swift */; };
+		541C84F02F5B81BA00D0DB57 /* PRLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 541C84EF2F5B81BA00D0DB57 /* PRLibraryView.swift */; };
+		A10000000000000000000001 /* UnitApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000001 /* UnitApp.swift */; };
+		A10000000000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* ContentView.swift */; };
+		A10000000000000000000003 /* Exercise.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000003 /* Exercise.swift */; };
+		A10000000000000000000004 /* DayTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* DayTemplate.swift */; };
+		A10000000000000000000005 /* WorkoutSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000005 /* WorkoutSession.swift */; };
+		A10000000000000000000006 /* SetEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000006 /* SetEntry.swift */; };
+		A10000000000000000000007 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000007 /* TodayView.swift */; };
+		A10000000000000000000008 /* ActiveWorkoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000008 /* ActiveWorkoutView.swift */; };
+		A10000000000000000000009 /* TemplatesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000009 /* TemplatesView.swift */; };
+		A1000000000000000000000A /* TemplateDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000A /* TemplateDetailView.swift */; };
+		A1000000000000000000000B /* AddTemplateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000B /* AddTemplateView.swift */; };
+		A1000000000000000000000C /* ExercisesListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000C /* ExercisesListView.swift */; };
+		A1000000000000000000000D /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000D /* HistoryView.swift */; };
+		A1000000000000000000000E /* SessionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000E /* SessionDetailView.swift */; };
+		A1000000000000000000000F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000F /* Assets.xcassets */; };
+		A10000000000000000000010 /* RestTimerAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000010 /* RestTimerAttributes.swift */; };
+		A10000000000000000000011 /* WorkoutTargetFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000011 /* WorkoutTargetFormatter.swift */; };
+		CC000000000000000000001 /* WeekDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000000000000000100001 /* WeekDetailView.swift */; };
+		CC000000000000000000002 /* CreateCycleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000000000000000100002 /* CreateCycleView.swift */; };
+		CC000000000000000000003 /* CycleSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000000000000000100003 /* CycleSettingsView.swift */; };
+		CC000000000000000000004 /* ProgressionRule+Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000000000000000100004 /* ProgressionRule+Helpers.swift */; };
+		CC000000000000000000005 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000000000000000100005 /* SettingsView.swift */; };
+		CC000000000000000000006 /* ExerciseProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000000000000000100006 /* ExerciseProgressView.swift */; };
+		CC000000000000000000007 /* CalendarTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000000000000000100007 /* CalendarTabView.swift */; };
+		OB100000000000000000001 /* OnboardingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB000000000000000000001 /* OnboardingViewModel.swift */; };
+		OB100000000000000000002 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB000000000000000000002 /* OnboardingView.swift */; };
+		OB100000000000000000003 /* OnboardingShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB000000000000000000003 /* OnboardingShell.swift */; };
+		OB100000000000000000004 /* OnboardingSplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB000000000000000000004 /* OnboardingSplashView.swift */; };
+		OB100000000000000000006 /* OnboardingUnitsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB000000000000000000006 /* OnboardingUnitsView.swift */; };
+		OB100000000000000000007 /* OnboardingSplitBuilderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB000000000000000000007 /* OnboardingSplitBuilderView.swift */; };
+		OB100000000000000000008 /* OnboardingExercisesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB000000000000000000008 /* OnboardingExercisesView.swift */; };
+		OB100000000000000000009 /* OnboardingBaselinesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB000000000000000000009 /* OnboardingBaselinesView.swift */; };
+		OB10000000000000000000A /* OnboardingProgressionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB00000000000000000000A /* OnboardingProgressionView.swift */; };
+		OB10000000000000000000B /* OnboardingCycleStartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB00000000000000000000B /* OnboardingCycleStartView.swift */; };
+		OB10000000000000000000D /* OnboardingImportMethodView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB00000000000000000000D /* OnboardingImportMethodView.swift */; };
+		OB10000000000000000000E /* OnboardingProgramImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB00000000000000000000E /* OnboardingProgramImportView.swift */; };
+		UI100000000000000000005 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = UI000000000000000000005 /* DesignSystem.swift */; };
+		SUB100000000000000000001 /* StoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = SUB000000000000000000001 /* StoreManager.swift */; };
+		SUB100000000000000000002 /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SUB000000000000000000002 /* PaywallView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		541C84E72F5B818100D0DB57 /* Cycle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cycle.swift; sourceTree = "<group>"; };
+		541C84E92F5B818100D0DB57 /* ProgressionRule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressionRule.swift; sourceTree = "<group>"; };
+		541C84EB2F5B819E00D0DB57 /* ProgressionEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressionEngine.swift; sourceTree = "<group>"; };
+		541C84ED2F5B819E00D0DB57 /* CyclesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CyclesView.swift; sourceTree = "<group>"; };
+		541C84EF2F5B81BA00D0DB57 /* PRLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PRLibraryView.swift; sourceTree = "<group>"; };
+		544D8D052F5F58C100E4C17E /* Unit.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Unit.entitlements; sourceTree = "<group>"; };
+		A20000000000000000000000 /* Unit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Unit.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A20000000000000000000001 /* UnitApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnitApp.swift; sourceTree = "<group>"; };
+		A20000000000000000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		A20000000000000000000003 /* Exercise.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Exercise.swift; sourceTree = "<group>"; };
+		A20000000000000000000004 /* DayTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayTemplate.swift; sourceTree = "<group>"; };
+		A20000000000000000000005 /* WorkoutSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutSession.swift; sourceTree = "<group>"; };
+		A20000000000000000000006 /* SetEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetEntry.swift; sourceTree = "<group>"; };
+		A20000000000000000000007 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
+		A20000000000000000000008 /* ActiveWorkoutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveWorkoutView.swift; sourceTree = "<group>"; };
+		A20000000000000000000009 /* TemplatesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplatesView.swift; sourceTree = "<group>"; };
+		A2000000000000000000000A /* TemplateDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateDetailView.swift; sourceTree = "<group>"; };
+		A2000000000000000000000B /* AddTemplateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTemplateView.swift; sourceTree = "<group>"; };
+		A2000000000000000000000C /* ExercisesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExercisesListView.swift; sourceTree = "<group>"; };
+		A2000000000000000000000D /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
+		A2000000000000000000000E /* SessionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionDetailView.swift; sourceTree = "<group>"; };
+		A2000000000000000000000F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A20000000000000000000010 /* RestTimerAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestTimerAttributes.swift; sourceTree = "<group>"; };
+		A20000000000000000000011 /* WorkoutTargetFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutTargetFormatter.swift; sourceTree = "<group>"; };
+		B20000000000000000000001 /* RestTimerLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestTimerLiveActivity.swift; sourceTree = "<group>"; };
+		B20000000000000000000002 /* UnitWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnitWidgetBundle.swift; sourceTree = "<group>"; };
+		CC000000000000000100001 /* WeekDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeekDetailView.swift; sourceTree = "<group>"; };
+		CC000000000000000100002 /* CreateCycleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateCycleView.swift; sourceTree = "<group>"; };
+		CC000000000000000100003 /* CycleSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CycleSettingsView.swift; sourceTree = "<group>"; };
+		CC000000000000000100004 /* ProgressionRule+Helpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ProgressionRule+Helpers.swift"; sourceTree = "<group>"; };
+		CC000000000000000100005 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		CC000000000000000100006 /* ExerciseProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseProgressView.swift; sourceTree = "<group>"; };
+		CC000000000000000100007 /* CalendarTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarTabView.swift; sourceTree = "<group>"; };
+		OB000000000000000000001 /* OnboardingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModel.swift; sourceTree = "<group>"; };
+		OB000000000000000000002 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		OB000000000000000000003 /* OnboardingShell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingShell.swift; sourceTree = "<group>"; };
+		OB000000000000000000004 /* OnboardingSplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingSplashView.swift; sourceTree = "<group>"; };
+		OB000000000000000000006 /* OnboardingUnitsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingUnitsView.swift; sourceTree = "<group>"; };
+		OB000000000000000000007 /* OnboardingSplitBuilderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingSplitBuilderView.swift; sourceTree = "<group>"; };
+		OB000000000000000000008 /* OnboardingExercisesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingExercisesView.swift; sourceTree = "<group>"; };
+		OB000000000000000000009 /* OnboardingBaselinesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingBaselinesView.swift; sourceTree = "<group>"; };
+		OB00000000000000000000A /* OnboardingProgressionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingProgressionView.swift; sourceTree = "<group>"; };
+		OB00000000000000000000B /* OnboardingCycleStartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingCycleStartView.swift; sourceTree = "<group>"; };
+		OB00000000000000000000D /* OnboardingImportMethodView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingImportMethodView.swift; sourceTree = "<group>"; };
+		OB00000000000000000000E /* OnboardingProgramImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingProgramImportView.swift; sourceTree = "<group>"; };
+		UI000000000000000000005 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
+		SUB000000000000000000001 /* StoreManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreManager.swift; sourceTree = "<group>"; };
+		SUB000000000000000000002 /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A30000000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		541C84E52F5B815D00D0DB57 /* Engine */ = {
+			isa = PBXGroup;
+			children = (
+				541C84EB2F5B819E00D0DB57 /* ProgressionEngine.swift */,
+			);
+			path = Engine;
+			sourceTree = "<group>";
+		};
+		541C84E62F5B815D00D0DB57 /* Cycles */ = {
+			isa = PBXGroup;
+			children = (
+				541C84ED2F5B819E00D0DB57 /* CyclesView.swift */,
+				CC000000000000000100001 /* WeekDetailView.swift */,
+				CC000000000000000100002 /* CreateCycleView.swift */,
+				CC000000000000000100003 /* CycleSettingsView.swift */,
+			);
+			path = Cycles;
+			sourceTree = "<group>";
+		};
+		A40000000000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				A40000000000000000000002 /* Unit */,
+				B40000000000000000000001 /* UnitWidget */,
+				A40000000000000000000003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A40000000000000000000002 /* Unit */ = {
+			isa = PBXGroup;
+			children = (
+				544D8D052F5F58C100E4C17E /* Unit.entitlements */,
+				A20000000000000000000001 /* UnitApp.swift */,
+				A20000000000000000000002 /* ContentView.swift */,
+				UI200000000000000000001 /* UI */,
+				A40000000000000000000004 /* Models */,
+				A40000000000000000000005 /* Features */,
+				A2000000000000000000000F /* Assets.xcassets */,
+				541C84E52F5B815D00D0DB57 /* Engine */,
+			);
+			path = Unit;
+			sourceTree = "<group>";
+		};
+		A40000000000000000000003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000000 /* Unit.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A40000000000000000000004 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000003 /* Exercise.swift */,
+				A20000000000000000000004 /* DayTemplate.swift */,
+				A20000000000000000000005 /* WorkoutSession.swift */,
+				A20000000000000000000006 /* SetEntry.swift */,
+				541C84E72F5B818100D0DB57 /* Cycle.swift */,
+				541C84E92F5B818100D0DB57 /* ProgressionRule.swift */,
+				CC000000000000000100004 /* ProgressionRule+Helpers.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		A40000000000000000000005 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				A40000000000000000000006 /* Today */,
+				A40000000000000000000007 /* Templates */,
+				A40000000000000000000008 /* History */,
+				541C84E62F5B815D00D0DB57 /* Cycles */,
+				A40000000000000000000009 /* Settings */,
+				OB200000000000000000001 /* Onboarding */,
+				SUB200000000000000000001 /* Subscription */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		A40000000000000000000006 /* Today */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000007 /* TodayView.swift */,
+				A20000000000000000000008 /* ActiveWorkoutView.swift */,
+				A20000000000000000000010 /* RestTimerAttributes.swift */,
+				A20000000000000000000011 /* WorkoutTargetFormatter.swift */,
+			);
+			path = Today;
+			sourceTree = "<group>";
+		};
+		A40000000000000000000007 /* Templates */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000009 /* TemplatesView.swift */,
+				A2000000000000000000000A /* TemplateDetailView.swift */,
+				A2000000000000000000000B /* AddTemplateView.swift */,
+				A2000000000000000000000C /* ExercisesListView.swift */,
+			);
+			path = Templates;
+			sourceTree = "<group>";
+		};
+		A40000000000000000000008 /* History */ = {
+			isa = PBXGroup;
+			children = (
+				A2000000000000000000000D /* HistoryView.swift */,
+				CC000000000000000100007 /* CalendarTabView.swift */,
+				A2000000000000000000000E /* SessionDetailView.swift */,
+				541C84EF2F5B81BA00D0DB57 /* PRLibraryView.swift */,
+				CC000000000000000100006 /* ExerciseProgressView.swift */,
+			);
+			path = History;
+			sourceTree = "<group>";
+		};
+		A40000000000000000000009 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				CC000000000000000100005 /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		SUB200000000000000000001 /* Subscription */ = {
+			isa = PBXGroup;
+			children = (
+				SUB000000000000000000001 /* StoreManager.swift */,
+				SUB000000000000000000002 /* PaywallView.swift */,
+			);
+			path = Subscription;
+			sourceTree = "<group>";
+		};
+		B40000000000000000000001 /* UnitWidget */ = {
+			isa = PBXGroup;
+			children = (
+				B20000000000000000000001 /* RestTimerLiveActivity.swift */,
+				B20000000000000000000002 /* UnitWidgetBundle.swift */,
+			);
+			path = UnitWidget;
+			sourceTree = "<group>";
+		};
+		OB200000000000000000001 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				OB000000000000000000001 /* OnboardingViewModel.swift */,
+				OB000000000000000000002 /* OnboardingView.swift */,
+				OB000000000000000000003 /* OnboardingShell.swift */,
+				OB000000000000000000004 /* OnboardingSplashView.swift */,
+				OB000000000000000000006 /* OnboardingUnitsView.swift */,
+				OB000000000000000000007 /* OnboardingSplitBuilderView.swift */,
+				OB000000000000000000008 /* OnboardingExercisesView.swift */,
+				OB000000000000000000009 /* OnboardingBaselinesView.swift */,
+				OB00000000000000000000A /* OnboardingProgressionView.swift */,
+				OB00000000000000000000B /* OnboardingCycleStartView.swift */,
+				OB00000000000000000000D /* OnboardingImportMethodView.swift */,
+				OB00000000000000000000E /* OnboardingProgramImportView.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		UI200000000000000000001 /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				UI000000000000000000005 /* DesignSystem.swift */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A50000000000000000000001 /* Unit */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A60000000000000000000002 /* Build configuration list for PBXNativeTarget "Unit" */;
+			buildPhases = (
+				A50000000000000000000002 /* Sources */,
+				A30000000000000000000001 /* Frameworks */,
+				A50000000000000000000003 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Unit;
+			productName = Unit;
+			productReference = A20000000000000000000000 /* Unit.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A70000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 2630;
+			};
+			buildConfigurationList = A60000000000000000000001 /* Build configuration list for PBXProject "Unit" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A40000000000000000000001;
+			productRefGroup = A40000000000000000000003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A50000000000000000000001 /* Unit */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A50000000000000000000003 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1000000000000000000000F /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A50000000000000000000002 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000000000000000000001 /* UnitApp.swift in Sources */,
+				A10000000000000000000002 /* ContentView.swift in Sources */,
+				A10000000000000000000003 /* Exercise.swift in Sources */,
+				A10000000000000000000004 /* DayTemplate.swift in Sources */,
+				A10000000000000000000005 /* WorkoutSession.swift in Sources */,
+				A10000000000000000000006 /* SetEntry.swift in Sources */,
+				541C84E82F5B818100D0DB57 /* Cycle.swift in Sources */,
+				A10000000000000000000007 /* TodayView.swift in Sources */,
+				A10000000000000000000008 /* ActiveWorkoutView.swift in Sources */,
+				541C84EC2F5B819E00D0DB57 /* ProgressionEngine.swift in Sources */,
+				A10000000000000000000011 /* WorkoutTargetFormatter.swift in Sources */,
+				A10000000000000000000009 /* TemplatesView.swift in Sources */,
+				541C84EE2F5B819E00D0DB57 /* CyclesView.swift in Sources */,
+				541C84F02F5B81BA00D0DB57 /* PRLibraryView.swift in Sources */,
+				A1000000000000000000000A /* TemplateDetailView.swift in Sources */,
+				A1000000000000000000000B /* AddTemplateView.swift in Sources */,
+				A1000000000000000000000C /* ExercisesListView.swift in Sources */,
+				A1000000000000000000000D /* HistoryView.swift in Sources */,
+				541C84EA2F5B818100D0DB57 /* ProgressionRule.swift in Sources */,
+				A1000000000000000000000E /* SessionDetailView.swift in Sources */,
+				A10000000000000000000010 /* RestTimerAttributes.swift in Sources */,
+				CC000000000000000000001 /* WeekDetailView.swift in Sources */,
+				CC000000000000000000002 /* CreateCycleView.swift in Sources */,
+				CC000000000000000000003 /* CycleSettingsView.swift in Sources */,
+				CC000000000000000000004 /* ProgressionRule+Helpers.swift in Sources */,
+				CC000000000000000000005 /* SettingsView.swift in Sources */,
+				CC000000000000000000006 /* ExerciseProgressView.swift in Sources */,
+				CC000000000000000000007 /* CalendarTabView.swift in Sources */,
+				OB100000000000000000001 /* OnboardingViewModel.swift in Sources */,
+				OB100000000000000000002 /* OnboardingView.swift in Sources */,
+				OB100000000000000000003 /* OnboardingShell.swift in Sources */,
+				OB100000000000000000004 /* OnboardingSplashView.swift in Sources */,
+				OB100000000000000000006 /* OnboardingUnitsView.swift in Sources */,
+				OB100000000000000000007 /* OnboardingSplitBuilderView.swift in Sources */,
+				OB100000000000000000008 /* OnboardingExercisesView.swift in Sources */,
+				OB100000000000000000009 /* OnboardingBaselinesView.swift in Sources */,
+				OB10000000000000000000A /* OnboardingProgressionView.swift in Sources */,
+				OB10000000000000000000B /* OnboardingCycleStartView.swift in Sources */,
+				OB10000000000000000000D /* OnboardingImportMethodView.swift in Sources */,
+				OB10000000000000000000E /* OnboardingProgramImportView.swift in Sources */,
+				UI100000000000000000005 /* DesignSystem.swift in Sources */,
+				SUB100000000000000000001 /* StoreManager.swift in Sources */,
+				SUB100000000000000000002 /* PaywallView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		A80000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = R2BR5SX98Y;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		A80000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = R2BR5SX98Y;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		A80000000000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_ENTITLEMENTS = Unit/Unit.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_ASSET_PATHS = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Unit";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.atlaslog.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		A80000000000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_ENTITLEMENTS = Unit/Unit.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_ASSET_PATHS = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Unit";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.atlaslog.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A60000000000000000000001 /* Build configuration list for PBXProject "Unit" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A80000000000000000000001 /* Debug */,
+				A80000000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A60000000000000000000002 /* Build configuration list for PBXNativeTarget "Unit" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A80000000000000000000003 /* Debug */,
+				A80000000000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A70000000000000000000001 /* Project object */;
+}
