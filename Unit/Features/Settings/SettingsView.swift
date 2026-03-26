@@ -21,18 +21,9 @@ struct SettingsView: View {
     }
 
     var body: some View {
-        AppScreen(
-            title: "Settings",
-            leadingAction: shouldShowCloseButton ? NavAction(icon: .close, action: { dismiss() }) : nil
-        ) {
+        AppScreen(showsNativeNavigationBar: true) {
             SettingsSection(title: "Preferences") {
-                HStack(spacing: AppSpacing.md) {
-                    Text("Weight unit")
-                        .font(AppFont.body.font)
-                        .foregroundStyle(AppColor.textPrimary)
-
-                    Spacer()
-
+                AppListRow(title: "Weight unit") {
                     Picker("Weight unit", selection: $unitSystem) {
                         Text("kg").tag("kg")
                         Text("lb").tag("lb")
@@ -40,23 +31,36 @@ struct SettingsView: View {
                     .pickerStyle(.segmented)
                     .fixedSize(horizontal: true, vertical: false)
                 }
-                .frame(minHeight: 44)
             }
 
-            SettingsSection(title: "App") {
-                Button(role: .destructive) {
-                    showingRestartConfirmation = true
-                } label: {
-                    Text("Start onboarding again")
-                        .font(AppFont.body.font)
-                        .foregroundStyle(AppColor.error)
-                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+            VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                SettingsSection(title: "App") {
+                    Button(role: .destructive) {
+                        showingRestartConfirmation = true
+                    } label: {
+                        Text("Start onboarding again")
+                            .font(AppFont.body.font)
+                            .foregroundStyle(AppColor.error)
+                            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
 
                 Text("This reopens onboarding without deleting your current data.")
-                    .font(AppFont.muted.font)
-                    .foregroundStyle(AppFont.muted.color)
+                    .font(AppFont.caption.font)
+                    .foregroundStyle(AppColor.textSecondary)
+                    .padding(.horizontal, AppSpacing.md)
+            }
+        }
+        .navigationTitle("Settings")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if shouldShowCloseButton {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button { dismiss() } label: {
+                        Image(systemName: AppIcon.close.systemName)
+                    }
+                }
             }
         }
         .tint(AppColor.accent)

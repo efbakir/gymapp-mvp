@@ -172,30 +172,30 @@ enum PreviewSampleData {
     ]
 
     private static let programDays: [(name: String, exercises: [String])] = [
-        ("Day 1 · Strength + Upper Body", [
+        ("Strength + Upper Body", [
             "Trap Bar Deadlift", "Weighted Pull-Up", "Landmine Punch Press", "Face Pull",
             "Hamstring Curl", "Push-Up Plus", "Pallof Press", "Copenhagen Plank",
             "Broad Jump", "Med Ball Overhead Slam", "Agility Ladder", "Ab Wheel", "Neck Work"
         ]),
-        ("Day 2 · Full Body Power", [
+        ("Full Body Power", [
             "Hang Power Clean", "Bench Press", "Pendlay Row", "Suitcase Carry",
             "Ab Wheel", "Skater Bounds", "Back Extension", "Neck Flexion",
             "Biceps Curl", "Triceps Extension"
         ]),
-        ("Day 3 · Zone 2 + Footwork", [
+        ("Zone 2 + Footwork", [
             "Zone 2 Cardio", "Footwork Drill"
         ]),
-        ("Day 4 · SIT Day", [
+        ("SIT Day", [
             "Zercher Deadlift", "Overhead Press", "Weighted Pull-Up", "Landmine Punch Press",
             "Suitcase Carry", "Hamstring Curl", "Pallof Press", "Hamstring / Calf Iso",
             "Ab Wheel", "Neck Work", "Push-Up Plus", "Face Pull"
         ]),
-        ("Day 5 · Unilateral + Rotational Force", [
+        ("Unilateral + Rotational Force", [
             "Rotational Med Ball Throw", "Bird Dog", "KB Combination", "Plyo Push-Up",
             "Bulgarian Split Squat", "Single-Arm Cable Press", "Single-Arm DB Row",
             "4-Way Neck Isometric", "Heavy Curl", "Dynamic Hugs", "Heavy DB Shrug"
         ]),
-        ("Day 6 · HIIT Day", [
+        ("HIIT Day", [
             "HIIT Intervals", "Easy Warm-Up + Drills"
         ])
     ]

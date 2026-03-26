@@ -14,7 +14,6 @@ import OSLog
 final class StoreManager {
     // MARK: - Product ID
 
-    /// Readable from `Task.detached` transaction listener without crossing the main actor.
     nonisolated static let lifetimeProductID = "com.unit.lifetime"
 
     // MARK: - State
@@ -107,6 +106,10 @@ final class StoreManager {
         }
     }
 
+    private func notePurchaseVerified() {
+        isPurchased = true
+    }
+
     // MARK: - Transaction Listener
 
     private func listenForTransactions() -> Task<Void, Never> {
@@ -119,10 +122,6 @@ final class StoreManager {
                 }
             }
         }
-    }
-
-    private func notePurchaseVerified() {
-        isPurchased = true
     }
 
     // MARK: - Verification

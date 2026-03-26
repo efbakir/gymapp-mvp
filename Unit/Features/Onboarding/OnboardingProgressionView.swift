@@ -16,7 +16,7 @@ struct OnboardingProgressionView: View {
 
     var body: some View {
         OnboardingShell(
-            title: "Weekly increase",
+            title: "Default increment",
             ctaLabel: "Continue",
             progressStep: progressStep,
             progressTotal: progressTotal,

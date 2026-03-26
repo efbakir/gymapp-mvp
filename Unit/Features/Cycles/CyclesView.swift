@@ -100,14 +100,14 @@ struct CyclesView: View {
                 .foregroundStyle(AppColor.textSecondary)
                 .accessibilityHidden(true)
             VStack(spacing: AppSpacing.sm) {
-                Text("Start an 8-week cycle to unlock auto-progression.\nThe app computes your targets every week.")
+                Text("Cycles are an optional layer for tracking multi-week blocks.\nYour training history lives in Templates.")
                     .font(AppFont.body.font)
                     .foregroundStyle(AppColor.textSecondary)
                     .multilineTextAlignment(.center)
             }
             .frame(maxWidth: .infinity)
             .padding(.bottom, AppSpacing.lg)
-            AppPrimaryButton("Start 8-Week Cycle") {
+            AppPrimaryButton("Create Cycle") {
                 showingCreateCycle = true
             }
             .frame(maxWidth: 280)

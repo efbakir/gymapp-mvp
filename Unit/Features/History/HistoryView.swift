@@ -160,7 +160,7 @@ struct RecentSessionsView: View {
     }
 
     private var templateNamesByID: [UUID: String] {
-        Dictionary(uniqueKeysWithValues: templates.map { ($0.id, $0.name) })
+        Dictionary(uniqueKeysWithValues: templates.map { ($0.id, $0.displayName) })
     }
 
     private var exercisesByID: [UUID: Exercise] {
@@ -187,11 +187,7 @@ struct RecentSessionsView: View {
 
     var body: some View {
         AppScreen(
-            title: nil,
-            customHeader: ProductTopBar(
-                title: "History",
-                leadingAction: showsCloseButton ? .icon(.back, action: { dismiss() }) : nil
-            ).eraseToAnyView()
+            showsNativeNavigationBar: true
         ) {
             if sessionSnapshots.isEmpty {
                 emptyState
@@ -207,6 +203,9 @@ struct RecentSessionsView: View {
                 }
             }
         }
+        .navigationTitle("History")
+        .navigationBarTitleDisplayMode(.inline)
+        .appNavigationBarChrome()
         .sheet(item: $selectedPayload) { payload in
             SessionSummarySheet(payload: payload)
                 .presentationDetents([.medium, .large])
@@ -243,15 +242,20 @@ struct RecentSessionsView: View {
         }
     }
 
+    private var sortedDays: [(date: Date, sessions: [SessionSnapshot])] {
+        sessionsByDay
+            .map { (date: $0.key, sessions: $0.value.sorted { $0.date > $1.date }) }
+            .sorted { $0.date > $1.date }
+    }
+
     private var listContent: some View {
         VStack(alignment: .leading, spacing: AppSpacing.sm) {
-            ForEach(sessionSnapshots) { snapshot in
+            ForEach(sortedDays, id: \.date) { day in
                 Button {
-                    let day = Calendar.current.startOfDay(for: snapshot.date)
-                    selectedDate = day
-                    selectedPayload = SelectedSessionsPayload(date: day, sessions: [snapshot])
+                    selectedDate = day.date
+                    selectedPayload = SelectedSessionsPayload(date: day.date, sessions: day.sessions)
                 } label: {
-                    RecentSessionListRow(snapshot: snapshot)
+                    DaySessionCard(date: day.date, sessions: day.sessions)
                 }
                 .buttonStyle(.plain)
             }
@@ -409,6 +413,71 @@ struct RecentSessionListRow: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(AppColor.cardBackground)
             .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
+    }
+}
+
+private struct DaySessionCard: View {
+    let date: Date
+    let sessions: [SessionSnapshot]
+
+    private var totalExercises: Int {
+        sessions.reduce(0) { $0 + $1.completedExerciseCount }
+    }
+
+    private var totalSets: Int {
+        sessions.reduce(0) { $0 + $1.setCount }
+    }
+
+    private var overallState: SessionReviewState {
+        if sessions.allSatisfy({ $0.state == .completed }) { return .completed }
+        if sessions.contains(where: { $0.state == .skipped }) { return .skipped }
+        return .partial
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.sm) {
+            HStack(alignment: .center, spacing: AppSpacing.md) {
+                Text(date.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day()))
+                    .font(AppFont.label.font)
+                    .foregroundStyle(AppColor.textSecondary)
+
+                Spacer(minLength: 0)
+
+                HStack(spacing: AppSpacing.xs) {
+                    Circle()
+                        .fill(overallState.markerColor)
+                        .frame(width: 6, height: 6)
+
+                    Text(overallState.title)
+                        .font(AppFont.caption.font)
+                        .foregroundStyle(overallState.markerColor)
+                }
+            }
+
+            // Show template names (deduplicated)
+            let templateNames = sessions.map(\.templateName)
+            let uniqueNames = NSOrderedSet(array: templateNames).array as? [String] ?? templateNames
+            Text(uniqueNames.joined(separator: " + "))
+                .font(AppFont.title.font)
+                .foregroundStyle(AppColor.textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            // Summary line
+            let parts = [
+                totalExercises > 0 ? "\(totalExercises) exercise\(totalExercises == 1 ? "" : "s")" : nil,
+                totalSets > 0 ? "\(totalSets) set\(totalSets == 1 ? "" : "s")" : nil
+            ].compactMap { $0 }
+
+            if !parts.isEmpty {
+                Text(parts.joined(separator: " · "))
+                    .font(AppFont.caption.font)
+                    .foregroundStyle(AppColor.textSecondary)
+            }
+        }
+        .padding(AppSpacing.md)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(AppColor.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
     }
 }
 
@@ -690,7 +759,7 @@ private struct CalendarSessionCard: View {
 
     var body: some View {
         sessionPreviewCardContent(snapshot: snapshot, showDisclosure: false)
-            .padding(isToday ? 18 : AppSpacing.md)
+            .padding(isToday ? AppSpacing.lg : AppSpacing.md)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(AppColor.cardBackground)
             .clipShape(RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous))

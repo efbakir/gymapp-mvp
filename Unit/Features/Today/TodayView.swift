@@ -2,17 +2,18 @@
 //  TodayView.swift
 //  Unit
 //
-//  Today: program-first dashboard with one clear workout action.
+//  Today: template-first dashboard — next workout, freestyle, or resume.
 //
 
 import SwiftUI
 import SwiftData
 
+// MARK: - Dashboard state
+
 enum TodayDashboardState {
     case noProgram
     case setupIncomplete(SetupIncompleteContext)
     case readyToday(ReadyTodayContext)
-    case restDay(RestDayContext)
 }
 
 struct ExerciseTarget {
@@ -22,11 +23,9 @@ struct ExerciseTarget {
 }
 
 struct ReadyTodayContext {
-    let weekNumber: Int
-    let weekCount: Int
     let programName: String
     let templateName: String
-    let progressSteps: [WeeklyProgressStepper.Step]
+    let lastPerformedLabel: String?
     let previewTargets: [ExerciseTarget]
     let lastSessionDate: Date?
 }
@@ -37,14 +36,7 @@ struct SetupIncompleteContext {
     let message: String
 }
 
-struct RestDayContext {
-    let weekNumber: Int
-    let weekCount: Int
-    let progressSteps: [WeeklyProgressStepper.Step]
-    let nextTemplateName: String
-    let nextTimingLabel: String
-    let firstTarget: ExerciseTarget?
-}
+// MARK: - TodayView
 
 struct TodayView: View {
     @Environment(\.modelContext) private var modelContext
@@ -55,8 +47,6 @@ struct TodayView: View {
     @Query(sort: \Split.name) private var splits: [Split]
     @Query(sort: \Exercise.displayName) private var exercises: [Exercise]
     @Query(sort: \WorkoutSession.date, order: .reverse) private var sessions: [WorkoutSession]
-    @Query private var cycles: [Cycle]
-    @Query private var rules: [ProgressionRule]
 
     @State private var viewModel = TodayDashboardViewModel()
     @State private var feelingPromptPayload: FeelingPromptPayload?
@@ -67,9 +57,8 @@ struct TodayView: View {
         sessions.first(where: { !$0.isCompleted })
     }
 
-    private var activeCycle: Cycle? {
-        cycles.first(where: { $0.isActive && !$0.isCompleted })
-            ?? cycles.first(where: { !$0.isCompleted })
+    private var activeSplit: Split? {
+        splits.first
     }
 
     var body: some View {
@@ -112,8 +101,6 @@ struct TodayView: View {
 
     private var dashboardContent: some View {
         let state = viewModel.dashboardState(
-            activeCycle: activeCycle,
-            rules: rules,
             sessions: sessions,
             templates: templates,
             splits: splits,
@@ -121,21 +108,28 @@ struct TodayView: View {
         )
 
         return AppScreen(
-            title: nil,
-            primaryButton: nil,
-            customHeader: ProductTopBar(
-                title: "Today",
-                trailingActions: [
-                    .text("History") {
-                        showsHistory = true
-                    }
-                ]
-            ).eraseToAnyView(),
-            navigationBarTitleDisplayMode: .inline
+            showsNativeNavigationBar: true
         ) {
-            stateCard(for: state)
+            VStack(spacing: AppSpacing.md) {
+                stateCard(for: state)
+
+                AppSecondaryButton("Start Empty Workout") {
+                    startEmptyWorkout()
+                }
+            }
         }
-        .toolbar(.hidden, for: .navigationBar)
+        .navigationTitle("Today")
+        .navigationBarTitleDisplayMode(.large)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    showsHistory = true
+                } label: {
+                    Image(systemName: AppIcon.calendarPlain.systemName)
+                }
+            }
+        }
+        .appNavigationBarChrome()
     }
 
     @ViewBuilder
@@ -161,9 +155,6 @@ struct TodayView: View {
                     startWorkout(named: context.templateName)
                 }
             )
-
-        case .restDay(let context):
-            RestDayCard(context: context)
         }
     }
 
@@ -173,19 +164,37 @@ struct TodayView: View {
     }
 
     private func startWorkout(_ template: DayTemplate) {
-        let cycle = activeCycle
-        let weekNumber = cycle?.currentWeekNumber ?? 0
         let session = WorkoutSession(
             date: Date(),
             templateId: template.id,
             isCompleted: false,
             overallFeeling: 0,
-            cycleId: cycle?.id,
-            weekNumber: weekNumber
+            cycleId: nil,
+            weekNumber: 0
         )
 
         modelContext.insert(session)
         template.lastPerformedDate = session.date
+        try? modelContext.save()
+    }
+
+    private func startEmptyWorkout() {
+        let emptyTemplate = DayTemplate(
+            name: "Freestyle",
+            splitId: activeSplit?.id,
+            orderedExerciseIds: []
+        )
+        modelContext.insert(emptyTemplate)
+
+        let session = WorkoutSession(
+            date: Date(),
+            templateId: emptyTemplate.id,
+            isCompleted: false,
+            overallFeeling: 0,
+            cycleId: nil,
+            weekNumber: 0
+        )
+        modelContext.insert(session)
         try? modelContext.save()
     }
 
@@ -212,9 +221,11 @@ struct TodayView: View {
 
 extension ReadyTodayContext: Identifiable {
     var id: String {
-        "\(weekNumber)-\(templateName)"
+        templateName
     }
 }
+
+// MARK: - Ready Today Card
 
 private struct ReadyTodayCard: View {
     let context: ReadyTodayContext
@@ -222,19 +233,49 @@ private struct ReadyTodayCard: View {
     let onStart: () -> Void
 
     var body: some View {
-        HeroWorkoutCard(
-            progressSteps: context.progressSteps,
-            title: context.templateName,
-            subtitle: context.programName,
-            previewItems: context.previewTargets.map {
-                ExercisePreviewStrip.Item(title: $0.exerciseName, detail: $0.displayTarget)
-            },
-            onPreviewTap: onOpenPreview,
-            onPrimaryAction: onStart
-        )
-    }
+        AppCard {
+            VStack(alignment: .center, spacing: AppSpacing.md) {
+                VStack(spacing: AppSpacing.lg) {
+                    VStack(spacing: AppSpacing.xs) {
+                        Text(context.templateName)
+                            .font(AppFont.productHeading)
+                            .foregroundStyle(AppColor.textPrimary)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
 
+                        Text(context.programName)
+                            .font(AppFont.productAction)
+                            .foregroundStyle(AppColor.textSecondary)
+                            .multilineTextAlignment(.center)
+
+                        if let lastLabel = context.lastPerformedLabel {
+                            Text(lastLabel)
+                                .font(AppFont.caption.font)
+                                .foregroundStyle(AppColor.textSecondary)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, AppSpacing.lg)
+
+                    if !context.previewTargets.isEmpty {
+                        ExercisePreviewStrip(
+                            items: context.previewTargets.map {
+                                ExercisePreviewStrip.Item(title: $0.exerciseName, detail: $0.displayTarget)
+                            }
+                        ) { _ in
+                            onOpenPreview()
+                        }
+                    }
+                }
+
+                AppPrimaryButton("Start", action: onStart)
+            }
+            .frame(maxWidth: .infinity)
+        }
+    }
 }
+
+// MARK: - Workout Details Sheet
 
 private struct TodayWorkoutDetailsSheet: View {
     let context: ReadyTodayContext
@@ -258,8 +299,6 @@ private struct TodayWorkoutDetailsSheet: View {
                 AppCard {
                     VStack(alignment: .leading, spacing: AppSpacing.lg) {
                         VStack(alignment: .center, spacing: AppSpacing.sm) {
-                            WeeklyProgressStepper(steps: context.progressSteps)
-
                             Text(context.templateName)
                                 .font(AppFont.productHeading)
                                 .foregroundStyle(AppColor.textPrimary)
@@ -270,6 +309,12 @@ private struct TodayWorkoutDetailsSheet: View {
                                 .font(AppFont.productAction)
                                 .foregroundStyle(AppColor.textSecondary)
                                 .multilineTextAlignment(.center)
+
+                            if let lastLabel = context.lastPerformedLabel {
+                                Text(lastLabel)
+                                    .font(AppFont.caption.font)
+                                    .foregroundStyle(AppColor.textSecondary)
+                            }
                         }
                         .frame(maxWidth: .infinity)
 
@@ -300,6 +345,9 @@ private struct TodayWorkoutDetailsSheet: View {
         }
     }
 }
+
+// MARK: - Supporting Cards
+
 private struct SetupIncompleteCard: View {
     let context: SetupIncompleteContext
     let onOpenProgram: () -> Void
@@ -330,57 +378,13 @@ private struct SetupIncompleteCard: View {
     }
 }
 
-private struct RestDayCard: View {
-    let context: RestDayContext
-
-    var body: some View {
-        AppCard {
-            VStack(alignment: .center, spacing: AppSpacing.md) {
-                WeeklyProgressStepper(steps: context.progressSteps)
-
-                VStack(alignment: .center, spacing: AppSpacing.xs) {
-                    Text("Rest Day")
-                        .font(AppFont.productHeading)
-                        .foregroundStyle(AppColor.textPrimary)
-
-                    Text("Next: \(context.nextTemplateName) \(context.nextTimingLabel)")
-                        .font(AppFont.productAction)
-                        .foregroundStyle(AppColor.textSecondary)
-                        .multilineTextAlignment(.center)
-                }
-
-                if let firstTarget = context.firstTarget {
-                    VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                        Text("First target")
-                            .font(AppFont.caption.font)
-                            .foregroundStyle(AppColor.textSecondary)
-
-                        Text(firstTarget.exerciseName)
-                            .font(AppFont.body.font)
-                            .foregroundStyle(AppColor.textPrimary)
-
-                        Text(firstTarget.displayTarget)
-                            .font(AppFont.productAction)
-                            .foregroundStyle(AppColor.disabledSurface)
-                    }
-                    .padding(AppSpacing.md)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(AppColor.controlBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
-                }
-            }
-            .frame(maxWidth: .infinity)
-        }
-    }
-}
-
 private struct NoProgramCard: View {
     let onGoToProgram: () -> Void
 
     var body: some View {
         AppCard {
             VStack(alignment: .center, spacing: AppSpacing.md) {
-                Text("Program")
+                Text("Templates")
                     .font(AppFont.caption.font)
                     .foregroundStyle(AppColor.textSecondary)
 
@@ -390,18 +394,20 @@ private struct NoProgramCard: View {
                         .foregroundStyle(AppColor.textPrimary)
                         .multilineTextAlignment(.center)
 
-                    Text("Set up one simple recurring program so Unit can show the next target before every set.")
+                    Text("Set up one simple recurring program so Unit can show the last session before every set.")
                         .font(AppFont.productAction)
                         .foregroundStyle(AppColor.textSecondary)
                         .multilineTextAlignment(.center)
                 }
 
-                AppPrimaryButton("Go to Program", action: onGoToProgram)
+                AppPrimaryButton("Go to Templates", action: onGoToProgram)
             }
             .frame(maxWidth: .infinity)
         }
     }
 }
+
+// MARK: - Post-Workout Feeling
 
 private struct FeelingPromptPayload: Identifiable {
     let id = UUID()
@@ -483,277 +489,133 @@ private struct PostWorkoutFeelingPrompt: View {
     }
 }
 
+// MARK: - View Model
+
 @MainActor
 @Observable
 final class TodayDashboardViewModel {
     func dashboardState(
-        activeCycle: Cycle?,
-        rules: [ProgressionRule],
         sessions: [WorkoutSession],
         templates: [DayTemplate],
         splits: [Split],
         exercises: [Exercise]
     ) -> TodayDashboardState {
-        guard let cycle = activeCycle else { return .noProgram }
+        guard let split = splits.first else { return .noProgram }
 
-        let orderedTemplates = orderedTemplates(for: cycle, templates: templates, splits: splits)
+        let orderedTemplates = orderedTemplates(for: split, templates: templates)
         guard !orderedTemplates.isEmpty else {
             return .setupIncomplete(
                 SetupIncompleteContext(
-                    eyebrow: "Program",
+                    eyebrow: "Templates",
                     title: "Finish set up",
-                    message: "Add at least one training day before starting workouts."
+                    message: "Add at least one routine before starting workouts."
                 )
             )
         }
 
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: Date())
-        let cycleStart = calendar.startOfDay(for: cycle.startDate)
-        let daysSinceStart = calendar.dateComponents([.day], from: cycleStart, to: today).day ?? 0
+        // Pick the next template: the one with the oldest (or nil) lastPerformedDate
+        let nextTemplate = orderedTemplates
+            .sorted { ($0.lastPerformedDate ?? .distantPast) < ($1.lastPerformedDate ?? .distantPast) }
+            .first!
 
-        if daysSinceStart < 0, let firstTemplate = orderedTemplates.first {
-            let firstTargets = targets(
-                for: firstTemplate,
-                cycle: cycle,
-                rules: rules,
-                sessions: sessions,
-                exercises: exercises
-            )
-
-            guard firstTemplate.orderedExerciseIds.count == firstTargets.count else {
-                return .setupIncomplete(
-                    SetupIncompleteContext(
-                        eyebrow: "Program",
-                        title: "Finish set up",
-                        message: "Add exercises and starting weights so Unit can prepare the first workout."
-                    )
-                )
-            }
-
-            return .restDay(
-                RestDayContext(
-                    weekNumber: cycle.currentWeekNumber,
-                    weekCount: cycle.weekCount,
-                    progressSteps: weeklyProgressSteps(for: cycle, sessions: sessions),
-                    nextTemplateName: firstTemplate.name,
-                    nextTimingLabel: relativeDayLabel(from: today, to: cycleStart),
-                    firstTarget: firstTargets.first
-                )
-            )
-        }
-
-        let effectiveOffset = max(daysSinceStart, 0)
-        let trainingDaysPerWeek = min(max(orderedTemplates.count, 1), 6)
-
-        if let todayTemplate = plannedTemplate(
-            atDayOffset: effectiveOffset,
-            templates: orderedTemplates,
-            trainingDaysPerWeek: trainingDaysPerWeek
-        ) {
-            return stateForTodayTemplate(
-                todayTemplate,
-                cycle: cycle,
-                rules: rules,
-                sessions: sessions,
-                splits: splits,
-                exercises: exercises
-            )
-        }
-
-        guard let nextPlanned = nextPlannedTemplate(
-            fromDayOffset: effectiveOffset,
-            templates: orderedTemplates,
-            trainingDaysPerWeek: trainingDaysPerWeek
-        ) else {
-            return .noProgram
-        }
-
-        let nextDate = calendar.date(
-            byAdding: .day,
-            value: nextPlanned.dayOffset - effectiveOffset,
-            to: today
-        ) ?? today
-
-        let nextTargets = targets(
-            for: nextPlanned.template,
-            cycle: cycle,
-            rules: rules,
+        return stateForTemplate(
+            nextTemplate,
+            split: split,
             sessions: sessions,
             exercises: exercises
         )
-
-        guard nextPlanned.template.orderedExerciseIds.count == nextTargets.count else {
-            return .setupIncomplete(
-                SetupIncompleteContext(
-                    eyebrow: "Program",
-                    title: "Finish set up",
-                    message: "Add exercises and starting weights so Unit can prepare the next workout."
-                )
-            )
-        }
-
-        return .restDay(
-            RestDayContext(
-                weekNumber: cycle.currentWeekNumber,
-                weekCount: cycle.weekCount,
-                progressSteps: weeklyProgressSteps(for: cycle, sessions: sessions),
-                nextTemplateName: nextPlanned.template.name,
-                nextTimingLabel: relativeDayLabel(from: today, to: nextDate),
-                firstTarget: nextTargets.first
-            )
-        )
     }
 
-    private func stateForTodayTemplate(
+    private func stateForTemplate(
         _ template: DayTemplate,
-        cycle: Cycle,
-        rules: [ProgressionRule],
+        split: Split,
         sessions: [WorkoutSession],
-        splits: [Split],
         exercises: [Exercise]
     ) -> TodayDashboardState {
         if template.orderedExerciseIds.isEmpty {
             return .setupIncomplete(
                 SetupIncompleteContext(
-                    eyebrow: weekLabel(for: cycle),
-                    title: template.name,
+                    eyebrow: split.name,
+                    title: template.displayName,
                     message: "Add at least one exercise before starting this workout."
                 )
             )
         }
 
-        let trustedTargets = targets(
+        let previewTargets = exercisePreviews(
             for: template,
-            cycle: cycle,
-            rules: rules,
             sessions: sessions,
             exercises: exercises
         )
 
-        guard trustedTargets.count == template.orderedExerciseIds.count,
-              !trustedTargets.isEmpty else {
+        guard !previewTargets.isEmpty else {
             return .setupIncomplete(
                 SetupIncompleteContext(
-                    eyebrow: weekLabel(for: cycle),
-                    title: template.name,
-                    message: "Add starting weights for each exercise to see today's targets."
+                    eyebrow: split.name,
+                    title: template.displayName,
+                    message: "Add exercises to see today's targets."
                 )
             )
         }
 
+        let lastDate = lastCompletedDate(for: template.id, sessions: sessions)
+        let lastLabel: String? = lastDate.map { date in
+            let days = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: date), to: Calendar.current.startOfDay(for: Date())).day ?? 0
+            switch days {
+            case 0: return "Last performed today"
+            case 1: return "Last performed yesterday"
+            default: return "Last performed \(days) days ago"
+            }
+        }
+
         return .readyToday(
             ReadyTodayContext(
-                weekNumber: cycle.currentWeekNumber,
-                weekCount: cycle.weekCount,
-                programName: programName(for: cycle, splits: splits),
+                programName: split.name,
                 templateName: template.name,
-                progressSteps: weeklyProgressSteps(for: cycle, sessions: sessions),
-                previewTargets: trustedTargets,
-                lastSessionDate: lastCompletedDate(for: template.id, sessions: sessions)
+                lastPerformedLabel: lastLabel,
+                previewTargets: previewTargets,
+                lastSessionDate: lastDate
             )
         )
     }
 
-    private func programName(for cycle: Cycle, splits: [Split]) -> String {
-        if let splitID = cycle.splitId,
-           let split = splits.first(where: { $0.id == splitID }) {
-            let trimmedName = split.name.trimmingCharacters(in: .whitespacesAndNewlines)
-            if !trimmedName.isEmpty {
-                return trimmedName
-            }
-        }
-
-        let trimmedName = cycle.name.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmedName.isEmpty ? "Current cycle" : trimmedName
-    }
-
     private func orderedTemplates(
-        for cycle: Cycle,
-        templates: [DayTemplate],
-        splits: [Split]
+        for split: Split,
+        templates: [DayTemplate]
     ) -> [DayTemplate] {
-        let splitTemplates = templates.filter { $0.splitId == cycle.splitId }
-        guard let split = splits.first(where: { $0.id == cycle.splitId }) else {
-            return splitTemplates.sorted { $0.name < $1.name }
-        }
-
+        let splitTemplates = templates.filter { $0.splitId == split.id }
         let templateByID = Dictionary(uniqueKeysWithValues: splitTemplates.map { ($0.id, $0) })
         let ordered = split.orderedTemplateIds.compactMap { templateByID[$0] }
         return ordered.isEmpty ? splitTemplates.sorted { $0.name < $1.name } : ordered
     }
 
-    private func plannedTemplate(
-        atDayOffset dayOffset: Int,
-        templates: [DayTemplate],
-        trainingDaysPerWeek: Int
-    ) -> DayTemplate? {
-        guard dayOffset >= 0, !templates.isEmpty else { return nil }
-
-        let week = dayOffset / 7
-        let dayInWeek = dayOffset % 7
-        guard dayInWeek < trainingDaysPerWeek else { return nil }
-
-        let slotIndex = (week * trainingDaysPerWeek) + dayInWeek
-        return templates[slotIndex % templates.count]
-    }
-
-    private func nextPlannedTemplate(
-        fromDayOffset dayOffset: Int,
-        templates: [DayTemplate],
-        trainingDaysPerWeek: Int
-    ) -> (template: DayTemplate, dayOffset: Int)? {
-        guard !templates.isEmpty else { return nil }
-
-        for step in 1...21 {
-            let candidateOffset = dayOffset + step
-            if let template = plannedTemplate(
-                atDayOffset: candidateOffset,
-                templates: templates,
-                trainingDaysPerWeek: trainingDaysPerWeek
-            ) {
-                return (template, candidateOffset)
-            }
-        }
-
-        return nil
-    }
-
-    private func targets(
+    private func exercisePreviews(
         for template: DayTemplate,
-        cycle: Cycle,
-        rules: [ProgressionRule],
         sessions: [WorkoutSession],
         exercises: [Exercise]
     ) -> [ExerciseTarget] {
-        let weekNumber = cycle.currentWeekNumber
         let lastSession = sessions.first { $0.templateId == template.id && $0.isCompleted }
 
         return template.orderedExerciseIds.compactMap { exerciseID in
-            guard let exercise = exercises.first(where: { $0.id == exerciseID }),
-                  let rule = rules.first(where: { $0.exerciseId == exerciseID && $0.cycleId == cycle.id }) else {
-                return nil
-            }
-
-            let snapshot = rule.snapshot(weekCount: cycle.weekCount)
-            let outcomes = rule.buildOutcomes(from: sessions)
-
-            guard let weekTarget = ProgressionEngine.computeTargets(rule: snapshot, outcomes: outcomes)
-                .first(where: { $0.weekNumber == weekNumber }),
-                let displayTarget = WorkoutTargetFormatter.trustedTargetText(
-                    weightKg: weekTarget.weightKg,
-                    setCount: max(lastSession?.setEntries.filter {
-                        $0.exerciseId == exerciseID && $0.isCompleted && !$0.isWarmup
-                    }.count ?? 0, 3),
-                    reps: weekTarget.reps,
-                    isBodyweight: exercise.isBodyweight
-                ) else {
+            guard let exercise = exercises.first(where: { $0.id == exerciseID }) else {
                 return nil
             }
 
             let lastSets = lastSession?.setEntries
                 .filter { $0.exerciseId == exerciseID && $0.isCompleted && !$0.isWarmup }
                 .sorted { $0.setIndex < $1.setIndex } ?? []
+
+            let displayTarget: String
+            if let representative = lastSets.last {
+                displayTarget = WorkoutTargetFormatter.actualText(
+                    weightKg: representative.weight,
+                    setCount: max(lastSets.count, 1),
+                    reps: representative.reps,
+                    isBodyweight: exercise.isBodyweight
+                )
+            } else {
+                displayTarget = "No history yet"
+            }
 
             let lastPerformanceLabel = lastSets.last.map {
                 WorkoutTargetFormatter.lastText(
@@ -774,54 +636,6 @@ final class TodayDashboardViewModel {
 
     private func lastCompletedDate(for templateID: UUID, sessions: [WorkoutSession]) -> Date? {
         sessions.first { $0.isCompleted && $0.templateId == templateID }?.date
-    }
-
-    private func weeklyProgressSteps(for cycle: Cycle, sessions: [WorkoutSession]) -> [WeeklyProgressStepper.Step] {
-        guard cycle.weekCount > 0 else { return [] }
-
-        let completedWeeks = Set(
-            sessions
-                .filter { $0.isCompleted && $0.cycleId == cycle.id && $0.weekNumber > 0 }
-                .map(\.weekNumber)
-        )
-
-        return (1...cycle.weekCount).map { week in
-            let state: WeeklyProgressStepper.Step.State
-            if completedWeeks.contains(week) {
-                state = .completed
-            } else if week < cycle.currentWeekNumber {
-                state = .missed
-            } else if week == cycle.currentWeekNumber {
-                state = .current
-            } else {
-                state = .upcoming
-            }
-
-            return WeeklyProgressStepper.Step(
-                id: week,
-                label: "\(week)",
-                state: state
-            )
-        }
-    }
-
-    private func relativeDayLabel(from today: Date, to nextDate: Date) -> String {
-        let days = Calendar.current.dateComponents([.day], from: today, to: nextDate).day ?? 0
-
-        switch days {
-        case ..<0:
-            return "Yesterday"
-        case 0:
-            return "Today"
-        case 1:
-            return "Tomorrow"
-        default:
-            return "In \(days) days"
-        }
-    }
-
-    private func weekLabel(for cycle: Cycle) -> String {
-        "Week \(cycle.currentWeekNumber) of \(cycle.weekCount)"
     }
 }
 

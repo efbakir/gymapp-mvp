@@ -60,6 +60,13 @@ final class DayTemplate {
         self.lastPerformedDate = lastPerformedDate
     }
 
+    /// Strips "Day N · " prefix if present, returning just the routine name.
+    var displayName: String {
+        let pattern = /^Day\s+\d+\s*·\s*/
+        let stripped = name.replacing(pattern, with: "")
+        return stripped.isEmpty ? name : stripped
+    }
+
     var orderedExerciseIds: [UUID] {
         get {
             guard let data = orderedExerciseIdsData,

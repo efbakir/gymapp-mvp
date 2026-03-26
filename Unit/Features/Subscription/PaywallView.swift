@@ -34,7 +34,7 @@ struct PaywallView: View {
                     }
                     .padding(.top, AppSpacing.xxl)
 
-                    Text("Log workouts fast, track your targets, and let Unit adjust the next week automatically.")
+                    Text("Log workouts fast, track your targets, and see exactly what you lifted last time.")
                         .font(AppFont.body.font)
                         .foregroundStyle(AppColor.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -50,9 +50,9 @@ struct PaywallView: View {
                         )
 
                         benefitRow(
-                            icon: .progression,
-                            title: "Automatic progression",
-                            body: "Next week updates based on what you actually did."
+                            icon: .chart,
+                            title: "Ghost values",
+                            body: "Pre-filled weight and reps from your last session — no typing needed."
                         )
 
                         benefitRow(

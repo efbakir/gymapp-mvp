@@ -55,27 +55,7 @@ struct ContentView: View {
                 .tag(RootTab.program)
         }
         .tint(AppColor.accent)
-        .toolbar(.hidden, for: .tabBar)
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            if !hasActiveSession {
-                VStack(spacing: 0) {
-                    ScrollEdgeFadeView(
-                        edge: .topOfFooter,
-                        surfaceColor: AppColor.background
-                    )
-
-                    UnitTabBar(
-                        items: RootTab.allCases.map {
-                            UnitTabBar.Item(id: $0.rawValue, title: $0.title, icon: $0.icon)
-                        },
-                        selectedID: selectedTab.rawValue
-                    ) { id in
-                        guard let tab = RootTab(rawValue: id) else { return }
-                        selectedTab = tab
-                    }
-                }
-            }
-        }
+        .toolbar(hasActiveSession ? .hidden : .visible, for: .tabBar)
         .environment(\.appTabSelection, AppTabSelection { tab in
             selectedTab = tab
         })
@@ -84,19 +64,24 @@ struct ContentView: View {
     private func configureNavigationBarAppearance() {
         let titleColor = UIColor(AppColor.textPrimary)
         let backgroundColor = UIColor(AppColor.barBackground)
-        let borderColor = UIColor(AppColor.border)
+
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
         appearance.backgroundColor = backgroundColor
-        appearance.shadowColor = borderColor
+        appearance.shadowColor = .clear
         appearance.titleTextAttributes = [.foregroundColor: titleColor]
         appearance.largeTitleTextAttributes = [.foregroundColor: titleColor]
+
+        let scrollEdgeAppearance = UINavigationBarAppearance()
+        scrollEdgeAppearance.configureWithTransparentBackground()
+        scrollEdgeAppearance.titleTextAttributes = [.foregroundColor: titleColor]
+        scrollEdgeAppearance.largeTitleTextAttributes = [.foregroundColor: titleColor]
 
         let navBar = UINavigationBar.appearance()
         navBar.tintColor = titleColor
         navBar.standardAppearance = appearance
         navBar.compactAppearance = appearance
-        navBar.scrollEdgeAppearance = appearance
+        navBar.scrollEdgeAppearance = scrollEdgeAppearance
     }
 
     private func configureSegmentedControlAppearance() {
@@ -142,7 +127,7 @@ enum RootTab: String, CaseIterable, Hashable {
         case .today:
             return "Today"
         case .program:
-            return "Program"
+            return "Templates"
         }
     }
 

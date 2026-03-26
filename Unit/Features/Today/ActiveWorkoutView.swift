@@ -27,6 +27,7 @@ struct ActiveWorkoutView: View {
     @State private var adjustResultPayload: AdjustResultPayload?
     @State private var selectedExerciseIndex = 0
     @State private var showsReadyState = false
+    @State private var showsCancelConfirmation = false
 
     private var template: DayTemplate? {
         templates.first(where: { $0.id == session.templateId })
@@ -199,21 +200,8 @@ struct ActiveWorkoutView: View {
 
     var body: some View {
         AppScreen(
-            title: nil,
             primaryButton: primaryButton,
-            customHeader: ProductTopBar(
-                title: template?.name ?? "Workout",
-                size: .md,
-                trailingActions: [
-                    .text("List") {
-                        showLineup = true
-                    },
-                    .text("Cancel") {
-                        cancelWorkout()
-                    }
-                ]
-            ).eraseToAnyView(),
-            navigationBarTitleDisplayMode: .inline
+            showsNativeNavigationBar: true
         ) {
             if let currentSection {
                 VStack(spacing: AppSpacing.lg) {
@@ -266,6 +254,24 @@ struct ActiveWorkoutView: View {
                 }
             }
         }
+        .navigationTitle(template?.name ?? "Workout")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    showsCancelConfirmation = true
+                } label: {
+                    Image(systemName: AppIcon.close.systemName)
+                }
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("List") {
+                    showLineup = true
+                }
+            }
+        }
+        .appNavigationBarChrome()
+        .toolbar(.hidden, for: .tabBar)
         .sheet(isPresented: $showLineup) {
             exerciseListSheet
                 .presentationDetents([.medium, .large])
@@ -292,6 +298,14 @@ struct ActiveWorkoutView: View {
             }
             .presentationDetents([.medium, .large])
             .appBottomSheetChrome()
+        }
+        .alert("Cancel Workout", isPresented: $showsCancelConfirmation) {
+            Button("Cancel Workout", role: .destructive) {
+                cancelWorkout()
+            }
+            Button("Keep Going", role: .cancel) {}
+        } message: {
+            Text("Are you sure you want to cancel this workout? All logged sets will be lost.")
         }
         .onAppear {
             selectedExerciseIndex = recommendedExerciseIndex
@@ -326,11 +340,7 @@ struct ActiveWorkoutView: View {
     }
 
     private var exerciseListSheet: some View {
-        VStack(spacing: AppSpacing.md) {
-            SheetHeader(title: "Exercise List") {
-                showLineup = false
-            }
-
+        NavigationStack {
             ScrollView {
                 VStack(spacing: 0) {
                     ForEach(Array(sectionModels.enumerated()), id: \.element.id) { index, section in
@@ -359,9 +369,19 @@ struct ActiveWorkoutView: View {
                 }
                 .background(AppColor.cardBackground)
                 .clipShape(RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous))
+                .padding(AppSpacing.md)
+            }
+            .background(AppColor.sheetBackground.ignoresSafeArea())
+            .navigationTitle("Exercise List")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") {
+                        showLineup = false
+                    }
+                }
             }
         }
-        .padding(AppSpacing.md)
     }
 
     private func exerciseListSubtitle(for section: WorkoutExerciseSectionModel) -> String? {

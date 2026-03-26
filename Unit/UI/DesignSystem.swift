@@ -107,9 +107,9 @@ enum AppFont {
     static let display: Font = .system(size: 36, weight: .bold)
     static let numericDisplay: Font = .system(size: 36, weight: .bold).monospacedDigit()
     static let numericLarge: Font = .system(size: 28, weight: .bold).monospacedDigit()
-    static let stepIndicator: Font = .system(size: 14, weight: .semibold, design: .rounded)
-    static let productHeading: Font = .system(size: 24, weight: .semibold, design: .rounded)
-    static let productAction: Font = .system(size: 17, weight: .semibold, design: .rounded)
+    static let stepIndicator: Font = .system(size: 14, weight: .semibold)
+    static let productHeading: Font = .system(size: 24, weight: .semibold)
+    static let productAction: Font = .system(size: 17, weight: .semibold)
 }
 
 enum AppSpacing {
@@ -739,24 +739,33 @@ struct WeeklyProgressStepper: View {
     var body: some View {
         HStack(spacing: AppSpacing.xs) {
             ForEach(steps) { step in
-                ZStack {
-                    Circle()
-                        .fill(backgroundColor(for: step.state))
-                        .frame(width: 20, height: 20)
-
-                    switch step.state {
-                    case .completed:
-                        AppIcon.checkmark.image(size: 10, weight: .bold)
-                            .foregroundStyle(AppColor.textPrimary)
-
-                    case .missed:
-                        AppIcon.remove.image(size: 10, weight: .bold)
-                            .foregroundStyle(AppColor.textPrimary)
-
-                    case .current, .upcoming:
-                        Text(step.label)
+                Group {
+                    if step.state == .current {
+                        Text("Week \(step.label)")
                             .font(AppFont.stepIndicator)
-                            .foregroundStyle(foregroundColor(for: step.state))
+                            .foregroundStyle(AppColor.accentForeground)
+                            .padding(.horizontal, AppSpacing.sm)
+                            .frame(height: 20)
+                            .background(Capsule().fill(AppColor.accent))
+                    } else {
+                        ZStack {
+                            Circle()
+                                .fill(backgroundColor(for: step.state))
+                                .frame(width: 20, height: 20)
+
+                            switch step.state {
+                            case .completed:
+                                AppIcon.checkmark.image(size: 10, weight: .bold)
+                                    .foregroundStyle(AppColor.textPrimary)
+                            case .missed:
+                                AppIcon.remove.image(size: 10, weight: .bold)
+                                    .foregroundStyle(AppColor.textPrimary)
+                            default:
+                                Text(step.label)
+                                    .font(AppFont.stepIndicator)
+                                    .foregroundStyle(foregroundColor(for: step.state))
+                            }
+                        }
                     }
                 }
                 .accessibilityElement(children: .ignore)
@@ -820,26 +829,37 @@ struct SetProgressIndicator: View {
     var body: some View {
         HStack(spacing: AppSpacing.xs) {
             ForEach(steps) { step in
-                ZStack {
-                    Circle()
-                        .fill(backgroundColor(for: step.state))
-                        .overlay {
-                            Circle()
-                                .stroke(borderColor(for: step.state), lineWidth: 1)
-                        }
-                        .frame(width: 20, height: 20)
-
-                    switch step.state {
-                    case .completed:
-                        AppIcon.checkmark.image(size: 10, weight: .bold)
-                            .foregroundStyle(AppColor.textPrimary)
-                    case .failed:
-                        AppIcon.remove.image(size: 10, weight: .bold)
-                            .foregroundStyle(AppColor.textPrimary)
-                    case .current, .upcoming, .disabled:
-                        Text(step.label)
+                Group {
+                    if step.state == .current {
+                        Text("Set \(step.label)")
                             .font(AppFont.stepIndicator)
-                            .foregroundStyle(foregroundColor(for: step.state))
+                            .foregroundStyle(AppColor.accentForeground)
+                            .padding(.horizontal, AppSpacing.sm)
+                            .frame(height: 20)
+                            .background(Capsule().fill(AppColor.accent))
+                    } else {
+                        ZStack {
+                            Circle()
+                                .fill(backgroundColor(for: step.state))
+                                .overlay {
+                                    Circle()
+                                        .stroke(borderColor(for: step.state), lineWidth: 1)
+                                }
+                                .frame(width: 20, height: 20)
+
+                            switch step.state {
+                            case .completed:
+                                AppIcon.checkmark.image(size: 10, weight: .bold)
+                                    .foregroundStyle(AppColor.textPrimary)
+                            case .failed:
+                                AppIcon.remove.image(size: 10, weight: .bold)
+                                    .foregroundStyle(AppColor.textPrimary)
+                            default:
+                                Text(step.label)
+                                    .font(AppFont.stepIndicator)
+                                    .foregroundStyle(foregroundColor(for: step.state))
+                            }
+                        }
                     }
                 }
                 .accessibilityElement(children: .ignore)
@@ -1757,6 +1777,7 @@ struct AppScreen<Content: View>: View {
     var usesCircularTrailingButton: Bool = false
     var navigationBarTitleDisplayMode: NavigationBarItem.TitleDisplayMode? = nil
     var hidesNavigationBar: Bool = false
+    var showsNativeNavigationBar: Bool = false
     @ViewBuilder let content: () -> Content
 
     init(
@@ -1769,6 +1790,7 @@ struct AppScreen<Content: View>: View {
         usesCircularTrailingButton: Bool = false,
         navigationBarTitleDisplayMode: NavigationBarItem.TitleDisplayMode? = nil,
         hidesNavigationBar: Bool = false,
+        showsNativeNavigationBar: Bool = false,
         @ViewBuilder content: @escaping () -> Content
     ) {
         self.title = title
@@ -1780,6 +1802,7 @@ struct AppScreen<Content: View>: View {
         self.usesCircularTrailingButton = usesCircularTrailingButton
         self.navigationBarTitleDisplayMode = navigationBarTitleDisplayMode
         self.hidesNavigationBar = hidesNavigationBar
+        self.showsNativeNavigationBar = showsNativeNavigationBar
         self.content = content
     }
 
@@ -1793,46 +1816,48 @@ struct AppScreen<Content: View>: View {
                 content()
             }
             .padding(.horizontal, AppSpacing.md)
-            .padding(.top, customHeader == nil ? AppSpacing.md : AppSpacing.sm)
+            .padding(.top, showsNativeNavigationBar ? AppSpacing.sm : (customHeader == nil ? AppSpacing.md : AppSpacing.sm))
             .padding(.bottom, primaryButton != nil ? 100 : AppSpacing.md)
         }
         .coordinateSpace(name: appScreenScrollCoordinateSpace)
-        .appScrollEdgeSoftTop(enabled: !hidesNavigationBar)
+        .appScrollEdgeSoftTop(enabled: !hidesNavigationBar || showsNativeNavigationBar)
         .safeAreaInset(edge: .top, spacing: 0) {
-            if let customHeader {
-                VStack(spacing: 0) {
-                    customHeader
-                        .padding(.horizontal, AppSpacing.md)
-                        .padding(.top, AppSpacing.md)
-                        .padding(.bottom, AppSpacing.xs)
-                        .background(AppColor.background)
+            if !showsNativeNavigationBar {
+                if let customHeader {
+                    VStack(spacing: 0) {
+                        customHeader
+                            .padding(.horizontal, AppSpacing.md)
+                            .padding(.top, AppSpacing.md)
+                            .padding(.bottom, AppSpacing.xs)
+                            .background(AppColor.background)
 
-                    ScrollEdgeFadeView(edge: .bottomOfHeader, surfaceColor: AppColor.background)
-                }
-            } else if shouldShowNavBar {
-                VStack(spacing: 0) {
-                    Group {
-                        if let trailingText, trailingAction != nil {
-                            AppNavBarWithTextTrailing(
-                                title: title,
-                                leadingAction: leadingAction,
-                                trailingAction: trailingAction,
-                                trailingText: trailingText
-                            )
-                        } else {
-                            AppNavBar(
-                                title: title,
-                                leadingAction: leadingAction,
-                                trailingAction: trailingAction,
-                                trailingText: trailingText
-                            )
-                        }
+                        ScrollEdgeFadeView(edge: .bottomOfHeader, surfaceColor: AppColor.background)
                     }
-                    .background(AppColor.barBackground)
-                    .padding(.top, AppSpacing.xs)
-                    .padding(.bottom, AppSpacing.xs)
+                } else if shouldShowNavBar {
+                    VStack(spacing: 0) {
+                        Group {
+                            if let trailingText, trailingAction != nil {
+                                AppNavBarWithTextTrailing(
+                                    title: title,
+                                    leadingAction: leadingAction,
+                                    trailingAction: trailingAction,
+                                    trailingText: trailingText
+                                )
+                            } else {
+                                AppNavBar(
+                                    title: title,
+                                    leadingAction: leadingAction,
+                                    trailingAction: trailingAction,
+                                    trailingText: trailingText
+                                )
+                            }
+                        }
+                        .background(AppColor.barBackground)
+                        .padding(.top, AppSpacing.xs)
+                        .padding(.bottom, AppSpacing.xs)
 
-                    ScrollEdgeFadeView(edge: .bottomOfHeader)
+                        ScrollEdgeFadeView(edge: .bottomOfHeader)
+                    }
                 }
             }
         }
@@ -1853,7 +1878,7 @@ struct AppScreen<Content: View>: View {
             }
         }
         .background(AppColor.background.ignoresSafeArea())
-        .toolbar(.hidden, for: .navigationBar)
+        .toolbar(showsNativeNavigationBar ? .automatic : .hidden, for: .navigationBar)
     }
 }
 

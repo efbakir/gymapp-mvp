@@ -12,37 +12,19 @@ struct TemplatesView: View {
     @Query(sort: \Split.name) private var splits: [Split]
     @Query(sort: \DayTemplate.name) private var templates: [DayTemplate]
     @Query(sort: \Exercise.displayName) private var exercises: [Exercise]
-    @Query(sort: \Cycle.startDate, order: .reverse) private var cycles: [Cycle]
     @Query(sort: \WorkoutSession.date, order: .reverse) private var sessions: [WorkoutSession]
 
     @State private var showingOnboarding = false
     @State private var showingSettings = false
 
-    private var activeCycle: Cycle? {
-        cycles.first(where: { $0.isActive && !$0.isCompleted })
-            ?? cycles.first(where: { !$0.isCompleted })
-    }
-
     private var activeSplit: Split? {
-        if let splitID = activeCycle?.splitId {
-            return splits.first(where: { $0.id == splitID }) ?? splits.first
-        }
-        return splits.first
+        splits.first
     }
 
     var body: some View {
         NavigationStack {
             AppScreen(
-                title: nil,
-                customHeader: ProductTopBar(
-                    title: "Program",
-                    trailingActions: [
-                        .icon(.settingsOutline) {
-                            showingSettings = true
-                        }
-                    ]
-                ).eraseToAnyView(),
-                navigationBarTitleDisplayMode: .inline
+                showsNativeNavigationBar: true
             ) {
                 VStack(alignment: .leading, spacing: AppSpacing.lg) {
                     if let split = activeSplit {
@@ -52,7 +34,18 @@ struct TemplatesView: View {
                     }
                 }
             }
-            .toolbar(.hidden, for: .navigationBar)
+            .navigationTitle("Templates")
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showingSettings = true
+                    } label: {
+                        Image(systemName: AppIcon.settingsOutline.systemName)
+                    }
+                }
+            }
+            .appNavigationBarChrome()
             .navigationDestination(for: Split.self) { split in
                 EditProgramView(split: split)
             }
@@ -82,17 +75,17 @@ struct TemplatesView: View {
             if days.isEmpty {
                 AppCard {
                     VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                        Text("No days yet")
+                        Text("No routines yet")
                             .font(AppFont.sectionHeader.font)
                             .foregroundStyle(AppColor.textPrimary)
 
-                        Text("Finish your program setup to add training days and exercises.")
+                        Text("Finish your program setup to add training routines and exercises.")
                             .font(AppFont.body.font)
                             .foregroundStyle(AppColor.textSecondary)
                     }
                 }
             } else {
-                Text("Days")
+                Text("Routines")
                     .font(AppFont.sectionHeader.font)
                     .foregroundStyle(AppColor.textPrimary)
                     .padding(.top, AppSpacing.lg)
@@ -102,9 +95,9 @@ struct TemplatesView: View {
                     VStack(alignment: .leading, spacing: AppSpacing.sm) {
                         ForEach(Array(days.enumerated()), id: \.element.id) { index, template in
                             NavigationLink(value: template) {
-                                ProgramDayGroupRow(
-                                    title: template.name,
-                                    subtitle: daySummary(for: template)
+                                RoutineRow(
+                                    title: template.displayName,
+                                    subtitle: routineSummary(for: template)
                                 )
                             }
                             .buttonStyle(.plain)
@@ -127,16 +120,9 @@ struct TemplatesView: View {
                 RecentSessionsView(showsCloseButton: false)
             } label: {
                 AppCard {
-                    AppListRow(title: "Recent Sessions")
-                }
-            }
-            .buttonStyle(.plain)
-
-            NavigationLink {
-                CyclesView()
-            } label: {
-                AppCard {
-                    AppListRow(title: "Cycle Timeline")
+                    AppListRow(title: "Recent Sessions") {
+                        EmptyView()
+                    }
                 }
             }
             .buttonStyle(.plain)
@@ -180,30 +166,18 @@ struct TemplatesView: View {
                             .foregroundStyle(AppColor.success)
                     }
 
-                    VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                        Text(displayName)
-                            .font(AppFont.largeTitle.font)
-                            .foregroundStyle(AppColor.textPrimary)
-                            .fixedSize(horizontal: false, vertical: true)
-
-                        HStack(spacing: AppSpacing.sm) {
-                            Text(programWeekLabel)
-                                .font(AppFont.caption.font)
-                                .foregroundStyle(AppColor.textSecondary)
-
-                            Text(programDayCountLabel(dayCount: days.count))
-                                .font(AppFont.caption.font)
-                                .foregroundStyle(AppColor.textSecondary)
-                        }
-                    }
+                    Text(displayName)
+                        .font(AppFont.largeTitle.font)
+                        .foregroundStyle(AppColor.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
                 if !previewDays.isEmpty {
                     VStack(alignment: .leading, spacing: AppSpacing.sm) {
                         ForEach(Array(previewDays.enumerated()), id: \.element.id) { index, template in
                             ProgramDayPreviewRow(
-                                title: template.name,
-                                subtitle: daySummary(for: template),
+                                title: template.displayName,
+                                subtitle: routineSummary(for: template),
                                 opacity: previewOpacity(for: index)
                             )
                         }
@@ -224,15 +198,6 @@ struct TemplatesView: View {
         }
     }
 
-    private var programWeekLabel: String {
-        guard let activeCycle else { return "No active cycle" }
-        return "Week \(activeCycle.currentWeekNumber) of \(activeCycle.weekCount)"
-    }
-
-    private func programDayCountLabel(dayCount: Int) -> String {
-        "\(dayCount) Day\(dayCount == 1 ? "" : "s")"
-    }
-
     private func previewOpacity(for index: Int) -> Double {
         switch index {
         case 0: return 1
@@ -250,7 +215,7 @@ struct TemplatesView: View {
         return templates.filter { $0.splitId == split.id }
     }
 
-    private func daySummary(for template: DayTemplate) -> String {
+    private func routineSummary(for template: DayTemplate) -> String {
         let exerciseNames = Dictionary(uniqueKeysWithValues: exercises.map { ($0.id, $0.displayName) })
         let count = template.orderedExerciseIds.compactMap { exerciseNames[$0] }.count
         if count == 0 {
@@ -260,12 +225,14 @@ struct TemplatesView: View {
     }
 }
 
-private struct ProgramDayGroupRow: View {
+private struct RoutineRow: View {
     let title: String
     let subtitle: String
 
     var body: some View {
-        AppListRow(title: title, subtitle: subtitle)
+        AppListRow(title: title, subtitle: subtitle) {
+            EmptyView()
+        }
     }
 }
 
@@ -296,7 +263,6 @@ struct EditProgramView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \DayTemplate.name) private var templates: [DayTemplate]
-    @Query(sort: \Cycle.startDate, order: .reverse) private var cycles: [Cycle]
 
     private var orderedTemplates: [DayTemplate] {
         let byID = Dictionary(uniqueKeysWithValues: templates.map { ($0.id, $0) })
@@ -305,11 +271,6 @@ struct EditProgramView: View {
             return linked
         }
         return templates.filter { $0.splitId == split.id }
-    }
-
-    private var activeCycle: Cycle? {
-        cycles.first(where: { $0.isActive && !$0.isCompleted && $0.splitId == split.id })
-            ?? cycles.first(where: { !$0.isCompleted && $0.splitId == split.id })
     }
 
     var body: some View {
@@ -334,54 +295,28 @@ struct EditProgramView: View {
 
                 AppCard {
                     VStack(alignment: .leading, spacing: AppSpacing.md) {
-                        Text("Day Names")
+                        Text("Routine Names")
                             .font(AppFont.caption.font)
                             .foregroundStyle(AppColor.textSecondary)
 
                         if orderedTemplates.isEmpty {
-                            Text("No days in this program yet.")
+                            Text("No routines in this program yet.")
                                 .font(AppFont.body.font)
                                 .foregroundStyle(AppColor.textSecondary)
                         } else {
                             ForEach(Array(orderedTemplates.enumerated()), id: \.element.id) { index, template in
                                 VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                                    HStack(spacing: AppSpacing.sm) {
-                                        Text("Day \(index + 1)")
-                                            .font(AppFont.caption.font)
-                                            .foregroundStyle(AppColor.textSecondary)
-                                            .frame(width: 44, alignment: .leading)
-
-                                        TextField("Day name", text: binding(for: template))
-                                            .font(AppFont.body.font)
-                                            .foregroundStyle(AppColor.textPrimary)
-                                            .textInputAutocapitalization(.words)
-                                            .frame(minHeight: 44)
-                                    }
+                                    TextField("Routine name", text: binding(for: template))
+                                        .font(AppFont.body.font)
+                                        .foregroundStyle(AppColor.textPrimary)
+                                        .textInputAutocapitalization(.words)
+                                        .frame(minHeight: 44)
 
                                     if index < orderedTemplates.count - 1 {
                                         AppDivider()
                                     }
                                 }
                             }
-                        }
-                    }
-                }
-
-                if let activeCycle {
-                    AppCard {
-                        AppListRow(title: "Weekly Increase") {
-                            AppStepper(
-                                value: "\(activeCycle.globalIncrementKg.weightString) kg",
-                                minimumValueWidth: 64,
-                                onDecrement: {
-                                    activeCycle.globalIncrementKg = max(0, activeCycle.globalIncrementKg - 0.5)
-                                    try? modelContext.save()
-                                },
-                                onIncrement: {
-                                    activeCycle.globalIncrementKg += 0.5
-                                    try? modelContext.save()
-                                }
-                            )
                         }
                     }
                 }
