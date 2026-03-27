@@ -199,12 +199,12 @@ struct ExerciseProgressView: View {
                     .monospacedDigit()
                 if let d = delta {
                     if d > 0 {
-                        Text("+\(d.weightString)kg vs. last \(templateName)")
+                        Text("+\(WorkoutTargetFormatter.weightDisplay(d)) vs. last \(templateName)")
                             .font(AppFont.caption.font)
                             .foregroundStyle(AppColor.success)
                             .monospacedDigit()
                     } else if d < 0 {
-                        Text("\(d.weightString)kg vs. last \(templateName)")
+                        Text("-\(WorkoutTargetFormatter.weightDisplay(abs(d))) vs. last \(templateName)")
                             .font(AppFont.caption.font)
                             .foregroundStyle(AppColor.error)
                             .monospacedDigit()

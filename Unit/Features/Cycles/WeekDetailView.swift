@@ -130,7 +130,7 @@ struct WeekDetailView: View {
                                 .font(AppFont.caption.font)
                                 .foregroundStyle(AppColor.textSecondary)
                                 .frame(width: 44, alignment: .leading)
-                            Text("1 × \(entry.reps) × \(entry.weight.weightString)kg")
+                            Text("1 × \(entry.reps) × \(WorkoutTargetFormatter.weightDisplay(entry.weight))")
                                 .font(AppFont.body.font)
                                 .monospacedDigit()
                             Spacer(minLength: 0)
@@ -138,7 +138,7 @@ struct WeekDetailView: View {
                                 .foregroundStyle(met ? AppColor.success : AppColor.error)
                         }
                         .accessibilityElement(children: .combine)
-                        .accessibilityValue("Set \(entry.setIndex + 1): 1 × \(entry.reps) × \(entry.weight.weightString)kg. \(met ? "Met target." : "Missed target.")")
+                        .accessibilityValue("Set \(entry.setIndex + 1): 1 × \(entry.reps) × \(WorkoutTargetFormatter.weightDisplay(entry.weight)). \(met ? "Met target." : "Missed target.")")
                     }
                 }
             }

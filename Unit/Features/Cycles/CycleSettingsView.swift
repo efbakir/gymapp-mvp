@@ -41,7 +41,7 @@ struct CycleSettingsView: View {
                         HStack {
                             Text("Global Increment")
                             Spacer()
-                            Text("\(cycle.globalIncrementKg.weightString) kg/week")
+                            Text("\(WorkoutTargetFormatter.weightDisplay(cycle.globalIncrementKg))/week")
                                 .foregroundStyle(AppColor.accent)
                                 .monospacedDigit()
                         }
@@ -154,7 +154,7 @@ private struct ExerciseWeightRow: View {
                         .font(AppFont.caption.font)
                         .foregroundStyle(AppColor.textSecondary)
                     Spacer()
-                    Text("\(rule.baseWeightKg.weightString)kg")
+                    Text(WorkoutTargetFormatter.weightDisplay(rule.baseWeightKg))
                         .font(AppFont.body.font)
                         .monospacedDigit()
                 }
@@ -162,7 +162,7 @@ private struct ExerciseWeightRow: View {
             .frame(minHeight: 44)
 
             // Inline preview
-            Text("Next target: \(nextWeight.weightString)kg  ·  was \(previousWeight.weightString)kg")
+            Text("Next target: \(WorkoutTargetFormatter.weightDisplay(nextWeight))  ·  was \(WorkoutTargetFormatter.weightDisplay(previousWeight))")
                 .font(AppFont.caption.font)
                 .foregroundStyle(AppColor.accent)
                 .monospacedDigit()

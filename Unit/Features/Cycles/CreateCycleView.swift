@@ -74,7 +74,7 @@ struct CreateCycleView: View {
         let cyclesNeeded = Int(ceil(delta / (increment * Double(weekCount))))
         let isAggressive = delta > 30 && cyclesNeeded <= 2
         let warning = isAggressive ? " — aggressive jump, consider starting lower" : ""
-        return "At +\(increment.weightString)kg/week, you'll reach \(goalWeightKg.weightString)kg in ~\(cyclesNeeded) cycle\(cyclesNeeded == 1 ? "" : "s")\(warning)"
+        return "At +\(WorkoutTargetFormatter.weightDisplay(increment))/week, you'll reach \(WorkoutTargetFormatter.weightDisplay(goalWeightKg)) in ~\(cyclesNeeded) cycle\(cyclesNeeded == 1 ? "" : "s")\(warning)"
     }
 
     var body: some View {
@@ -133,7 +133,7 @@ struct CreateCycleView: View {
                         HStack {
                             Text("Increment")
                             Spacer()
-                            Text("\(globalIncrementKg.weightString) kg")
+                            Text(WorkoutTargetFormatter.weightDisplay(globalIncrementKg))
                                 .foregroundStyle(AppColor.accent)
                                 .monospacedDigit()
                         }
@@ -183,7 +183,7 @@ struct CreateCycleView: View {
                                         in: 0...500,
                                         step: 2.5
                                     ) {
-                                        Text("\(goalWeightKg.weightString)kg")
+                                        Text(WorkoutTargetFormatter.weightDisplay(goalWeightKg))
                                             .monospacedDigit()
                                     }
                                 }

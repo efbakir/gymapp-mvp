@@ -226,7 +226,7 @@ struct OnboardingProgramImportView: View {
             parts.append("\(reps) reps")
         }
         if let weightKg = exercise.weightKg {
-            parts.append("\(weightKg.weightString) kg")
+            parts.append(WorkoutTargetFormatter.weightDisplay(weightKg))
         }
         return parts.isEmpty ? "Exercise only" : parts.joined(separator: " · ")
     }
