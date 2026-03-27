@@ -1,56 +1,63 @@
-# Unit — Company / Product Goals
+# Unit — Goals
 
-Ordered goals with success criteria. Used to prioritize and say no.
-
----
-
-## 1. Ship the 8-Week Cycle + Cascading Failure Engine
-
-- **Goal**: Launch the Adaptive Periodization Engine: 8-week cycle creation, per-exercise progression rules, target weight displayed before every set, cascading failure detection (3 misses → 10% deload), and auto-recalibration of future weeks.
-- **Success criteria**:
-  - Target weight visible on set row in < 0.5s after session start.
-  - Create Cycle → Week 1 shows targets → log below target → Week 2 shows same weight.
-  - 3 consecutive failures triggers deload badge and 10% weight reduction.
-  - App passes Gym Test: log a set with RIR in under 3 seconds on device.
-  - No critical bugs in core cycle flow.
+> Measurable targets for v1. Source of truth: `product-compass.md`.
 
 ---
 
-## 2. Pass the Gym Test
+## Primary KPI
 
-- **Goal**: A user can log one set (weight, reps, optional RPE, warmup flag) in under 3 seconds, under physical stress.
-- **Success**: Measured time from “looking at set row” to “set marked complete” &lt; 3 s with defaults and one-tap. No required fields that slow the flow.
-
----
-
-## 3. Establish design and doc foundation
-
-- **Goal**: Strategy docs (competitors, design principles, visual language, **atomic design system**, cognitive/behavior, mental models, values, goals) and Cursor rules so all work is aligned.
-- **Success**: Docs in `docs/` (including `atomic-design-system.md`); Cursor/AGENTS reference them and the stack (Swift 6, SwiftUI, SwiftData, iOS 18+). New contributors can onboard from docs.
+**Seconds per set logged** — the time from the moment the user is ready to log a set to the moment it's recorded. Target: ≤ 3 seconds for a ghost-value set (one tap, no typing).
 
 ---
 
-## 4. Grow revenue
+## Core experience targets
 
-- **Goal**: Monetize in a sustainable way (e.g. one-time purchase, subscription for sync/advanced features) without undermining trust.
-- **Success**: Defined monetization and first paying users (or clear path to it). No dark patterns.
-
----
-
-## 5. Expand reach
-
-- **Goal**: Get Unit in front of program-focused lifters who are tired of notes or bloated apps.
-- **Success**: Marketing and distribution (landing, positioning, channels) in place; measurable reach (downloads, signups, or waitlist).
-
----
-
-## Out of scope for initial release
-
-- CloudKit sync (design schema for it; implement later).
-- Exercise library / discovery (user-created exercises only at launch).
-- Export (CSV/PDF) and onboarding flows (define in roadmap; implement in a later phase).
-- Social, videos, or AI-generated plans.
+| Goal | Target | How we measure |
+|------|--------|----------------|
+| **Gym Test** | Log a set in ≤ 3 seconds under physical stress | Manual QA: one-handed, sweaty-finger simulation on device |
+| **Taps to start** | ≤ 2 taps from app launch to first set logged | Count: open → tap Start → tap Done |
+| **Ghost value hit rate** | > 90% of sets logged without keyboard | Analytics: % of sets where weight and reps match ghost value exactly |
+| **Template creation** | < 2 minutes for any path (paste, redo, manual) | Manual QA: time each onboarding flow end-to-end |
+| **Session completion** | > 80% of started sessions reach "Finish" | Analytics: started vs finished sessions |
+| **App launch to interactive** | < 500ms | Instruments profiling on baseline device |
 
 ---
 
-Goals 1–3 are immediate (ship MLP, Gym Test, docs/rules). Goals 4–5 follow once the product is in users’ hands.
+## Retention targets
+
+| Metric | Target | Rationale |
+|--------|--------|-----------|
+| **Day 1 retention** | > 60% | User created a template and logged at least one set on first day |
+| **Day 7 retention** | > 40% | User returned and logged at least one session in the first week |
+| **Day 30 retention** | > 25% | Sustained use; the app has replaced their previous method |
+
+---
+
+## v1 scope boundaries
+
+**Ships:**
+- Template-based logging with ghost values
+- Three onboarding paths (text-paste, redo-from-history, manual builder)
+- Auto rest timer with Lock Screen / Dynamic Island
+- History view (list + calendar)
+- Exercise library with search and custom exercise creation
+- Haptic confirmation on set logged
+- PR detection and notification
+
+**Does not ship:**
+- ProgressionEngine (auto-increment, fail modes, deload)
+- CloudKit sync
+- Social features (feed, profiles, sharing)
+- Exercise discovery / recommendation
+- Subscription paywall on core logging
+
+---
+
+## Design constraints (always active)
+
+- Swift 6, SwiftUI, SwiftData, local-first
+- Atomic design system (`DESIGN_SYSTEM.md`) — no raw values in view files
+- Light-first, follows system appearance
+- 44×44 pt minimum touch targets
+- No chevrons anywhere in the app
+- Every screen uses `AppScreen` wrapper

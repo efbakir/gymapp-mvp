@@ -51,7 +51,39 @@
 		UI100000000000000000005 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = UI000000000000000000005 /* DesignSystem.swift */; };
 		SUB100000000000000000001 /* StoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = SUB000000000000000000001 /* StoreManager.swift */; };
 		SUB100000000000000000002 /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SUB000000000000000000002 /* PaywallView.swift */; };
+		FT100000000000000000001 /* Inter-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FT000000000000000000001 /* Inter-Regular.ttf */; };
+		FT100000000000000000002 /* Inter-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FT000000000000000000002 /* Inter-Medium.ttf */; };
+		FT100000000000000000003 /* Inter-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FT000000000000000000003 /* Inter-SemiBold.ttf */; };
+		FT100000000000000000004 /* Inter-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FT000000000000000000004 /* Inter-Bold.ttf */; };
+		WE100000000000000000001 /* RestTimerLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000001 /* RestTimerLiveActivity.swift */; };
+		WE100000000000000000002 /* UnitWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000002 /* UnitWidgetBundle.swift */; };
+		WE100000000000000000003 /* RestTimerAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000010 /* RestTimerAttributes.swift */; };
+		WE100000000000000000004 /* UnitWidgetExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = WE000000000000000000001 /* UnitWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		WE800000000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A70000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = WE500000000000000000001;
+			remoteInfo = UnitWidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		WE900000000000000000001 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				WE100000000000000000004 /* UnitWidgetExtension.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		541C84E72F5B818100D0DB57 /* Cycle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cycle.swift; sourceTree = "<group>"; };
@@ -102,10 +134,23 @@
 		UI000000000000000000005 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
 		SUB000000000000000000001 /* StoreManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreManager.swift; sourceTree = "<group>"; };
 		SUB000000000000000000002 /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
+		FT000000000000000000001 /* Inter-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Inter-Regular.ttf"; sourceTree = "<group>"; };
+		FT000000000000000000002 /* Inter-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Inter-Medium.ttf"; sourceTree = "<group>"; };
+		FT000000000000000000003 /* Inter-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Inter-SemiBold.ttf"; sourceTree = "<group>"; };
+		FT000000000000000000004 /* Inter-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Inter-Bold.ttf"; sourceTree = "<group>"; };
+		FT000000000000000000005 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		WE000000000000000000001 /* UnitWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = UnitWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		A30000000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		WE300000000000000000001 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -146,6 +191,7 @@
 		A40000000000000000000002 /* Unit */ = {
 			isa = PBXGroup;
 			children = (
+				FT000000000000000000005 /* Info.plist */,
 				544D8D052F5F58C100E4C17E /* Unit.entitlements */,
 				A20000000000000000000001 /* UnitApp.swift */,
 				A20000000000000000000002 /* ContentView.swift */,
@@ -154,6 +200,7 @@
 				A40000000000000000000005 /* Features */,
 				A2000000000000000000000F /* Assets.xcassets */,
 				541C84E52F5B815D00D0DB57 /* Engine */,
+				FT200000000000000000002 /* Resources */,
 			);
 			path = Unit;
 			sourceTree = "<group>";
@@ -162,6 +209,7 @@
 			isa = PBXGroup;
 			children = (
 				A20000000000000000000000 /* Unit.app */,
+				WE000000000000000000001 /* UnitWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -281,6 +329,25 @@
 			path = UI;
 			sourceTree = "<group>";
 		};
+		FT200000000000000000002 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				FT200000000000000000001 /* Fonts */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		FT200000000000000000001 /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				FT000000000000000000001 /* Inter-Regular.ttf */,
+				FT000000000000000000002 /* Inter-Medium.ttf */,
+				FT000000000000000000003 /* Inter-SemiBold.ttf */,
+				FT000000000000000000004 /* Inter-Bold.ttf */,
+			);
+			path = Fonts;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -291,15 +358,34 @@
 				A50000000000000000000002 /* Sources */,
 				A30000000000000000000001 /* Frameworks */,
 				A50000000000000000000003 /* Resources */,
+				WE900000000000000000001 /* Embed App Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				WE800000000000000000002 /* PBXTargetDependency */,
 			);
 			name = Unit;
 			productName = Unit;
 			productReference = A20000000000000000000000 /* Unit.app */;
 			productType = "com.apple.product-type.application";
+		};
+		WE500000000000000000001 /* UnitWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = WE600000000000000000001 /* Build configuration list for PBXNativeTarget "UnitWidgetExtension" */;
+			buildPhases = (
+				WE200000000000000000001 /* Sources */,
+				WE300000000000000000001 /* Frameworks */,
+				WE400000000000000000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = UnitWidgetExtension;
+			productName = UnitWidgetExtension;
+			productReference = WE000000000000000000001 /* UnitWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -325,6 +411,7 @@
 			projectRoot = "";
 			targets = (
 				A50000000000000000000001 /* Unit */,
+				WE500000000000000000001 /* UnitWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -335,6 +422,17 @@
 			buildActionMask = 2147483647;
 			files = (
 				A1000000000000000000000F /* Assets.xcassets in Resources */,
+				FT100000000000000000001 /* Inter-Regular.ttf in Resources */,
+				FT100000000000000000002 /* Inter-Medium.ttf in Resources */,
+				FT100000000000000000003 /* Inter-SemiBold.ttf in Resources */,
+				FT100000000000000000004 /* Inter-Bold.ttf in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		WE400000000000000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -391,7 +489,25 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		WE200000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				WE100000000000000000001 /* RestTimerLiveActivity.swift in Sources */,
+				WE100000000000000000002 /* UnitWidgetBundle.swift in Sources */,
+				WE100000000000000000003 /* RestTimerAttributes.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		WE800000000000000000002 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = WE500000000000000000001 /* UnitWidgetExtension */;
+			targetProxy = WE800000000000000000001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		A80000000000000000000001 /* Debug */ = {
@@ -514,6 +630,7 @@
 				DEVELOPMENT_ASSET_PATHS = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Unit/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Unit";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -553,6 +670,7 @@
 				DEVELOPMENT_ASSET_PATHS = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Unit/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Unit";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -568,6 +686,68 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.atlaslog.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		WE700000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = R2BR5SX98Y;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Unit Widget";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.atlaslog.app.UnitWidgetExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		WE700000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = R2BR5SX98Y;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Unit Widget";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.atlaslog.app.UnitWidgetExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -596,6 +776,15 @@
 			buildConfigurations = (
 				A80000000000000000000003 /* Debug */,
 				A80000000000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		WE600000000000000000001 /* Build configuration list for PBXNativeTarget "UnitWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				WE700000000000000000001 /* Debug */,
+				WE700000000000000000002 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

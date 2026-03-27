@@ -1,6 +1,6 @@
 # Unit — Visual language
 
-**Light-first, calm, performance-focused.** The UI is built with the **atomic design system** (`atomic-design-system.md`): tokens live in `AppAtoms.swift`, screens compose through `AppScreen` and shared molecules/organisms.
+**Adaptive (light/dark), calm, performance-focused.** The UI is built with the **atomic design system** (`atomic-design-system.md`): tokens live in `AppAtoms.swift`, screens compose through `AppScreen` and shared molecules/organisms.
 
 **Core test:** Can a tired user read the screen and log a set in under 3 seconds?
 
@@ -8,20 +8,23 @@
 
 ## 1. Color
 
-### Surfaces (light baseline)
+### Theme mode (auto)
+All key palette roles are **adaptive**. When the iPhone switches light/dark appearance, the app’s UI colors update automatically via the system trait environment.
 
-- **Page background** (`AppColor.background`): Milk `#EBEBEB` — calm, neutral, and softer than pure white.
-- **Elevated / nav surface** (`AppColor.surface`): White `#F6F6F6`.
-- **Card surface** (`AppColor.cardBackground`): White `#F6F6F6` — cards separate from the page through **fill contrast**, not shadows.
+### Surfaces (role-based; light baseline values)
+- **Page background** (`AppColor.background`): Milk `#EBEBEB` (light) — calm, neutral, and softer than pure white.
+- **Elevated / nav surface** (`AppColor.barBackground`): `#EBEBEB` (light baseline for bars).
+- **Card surface** (`AppColor.cardBackground`): White `#F6F6F6` (light) — cards separate from the page through **fill contrast**, not shadows.
 
 ### Text
 
 - **Primary** (`AppColor.textPrimary`): Black `#0A0A0A` for body, titles, and key data.
 - **Secondary / muted** (`AppColor.textSecondary`, `AppColor.mutedText`): `#919191` and `#646464` for labels, subtitles, and helper copy.
 
-### Accent and primary CTA
-
-- **Interactive accent** (`AppColor.accent`): Black `#0A0A0A` for primary actions. Restrained: **one obvious primary action** per screen where the Gym Test applies.
+### Accent and primary CTA (high contrast)
+- **Primary CTA background** (`AppColor.accent`): Ink ink in light mode, near-white in dark mode.
+- **Primary CTA foreground** (`AppColor.accentForeground`): Text/icon color chosen to keep the CTA **high contrast** on `AppColor.accent`.
+- **Rule**: Restrained — **one obvious primary action** per screen where the Gym Test applies.
 - **Accent soft** (`AppColor.accentSoft`): Milk `#EBEBEB` for subtle fills and iOS-style utility controls.
 
 ### Supporting
@@ -47,7 +50,11 @@ Keep the token set **small**. New roles need a Gym Test or clarity justification
 ## 3. Typography
 
 - **Hierarchy**: Weight, reps, timers, and targets dominate. Exercise names and metadata are secondary.
-- **Font**: System (San Francisco). Use **`AppFont`** cases from atoms — Dynamic Type–friendly paths should stay available as you refine screens.
+- **Font**: **SF Pro** (via `.system`), using **`AppFont`** variants.
+  - **Title / headings**: `AppFont.largeTitle`, `AppFont.title`, `AppFont.sectionHeader`, `AppFont.productHeading`.
+  - **Body / labels**: `AppFont.body`, `AppFont.label`, `AppFont.caption`, `AppFont.muted`.
+  - **Workout numerics**: `AppFont.numericDisplay` / `AppFont.numericLarge` (monospaced digits) for fast fatigue-friendly reading.
+- Prefer `AppFont` cases over inline `.font(.system(...))` so typography stays consistent.
 - **Rule**: If text doesn’t help log or understand state, remove or demote it.
 
 ---
@@ -63,15 +70,18 @@ Keep the token set **small**. New roles need a Gym Test or clarity justification
 ---
 
 ## 5. Components and patterns
+Pick the simplest UI that still satisfies the Gym Test. Keep the component surface area minimal in core flows:
+- `AppScreen` (page wrapper) + `ProductTopBar` when a shared header is needed
+- `AppCard` / `appCardStyle()` for card chrome
+- `AppPrimaryButton` as the single dominant CTA (high contrast)
+- `AppListRow` and `AppStepper` for fast, compact controls
+- Session: `WorkoutCommandCard` (target + set progress) + `SessionStateBar` (rest/ready/next)
+- Today: `WeeklyProgressStepper` + `ExercisePreviewStrip` (horizontal rail + overflow fade)
 
-- **Set logging**: Large tap targets, defaults from last session, minimal steps (Gym Test).
-- **Command panels**: Active session screens should collapse around one dominant `WorkoutCommandCard` and one bottom `SessionStateBar`, not multiple competing cards.
-- **Weekly progress**: Today uses `WeeklyProgressStepper` for cycle-week completion/miss/current/upcoming state. Logging uses set progress, not cycle-week progress.
-- **Preview rails**: Day previews use `ExercisePreviewStrip` with horizontal scroll and trailing fade cue when overflow exists.
-- **Success feedback**: Clear completion state (checkmark, row styling) — no “did it save?” ambiguity.
-- **Sheets**: Focused sub-tasks; keep users in context.
-- **Simple chrome**: `ProductTopBarAction` and `UnitTabBar` are custom product chrome, but interactions still follow native iOS expectations.
-- **RIR / effort**: Steppers or capsules ≥ 44pt where used; failure state visually distinct + labeled.
+Patterns we rely on:
+- Large tap targets and minimal steps for logging
+- Clear success/failure feedback (no “did it save?” ambiguity)
+- Avoid adding new bespoke components unless the pattern is missing from the atomic layers
 
 ---
 
@@ -101,7 +111,7 @@ Keep the token set **small**. New roles need a Gym Test or clarity justification
 ## 9. What we are not doing
 
 - No gratuitous gradients, glows, or decorative illustration in core flows
-- No shadow stacks to “lift” cards — rely on surface tokens
+- No shadows or “elevated” card illusions — rely on surface/background contrast and borders
 - No unbounded one-off components in page files — extend atoms/molecules/organisms first
 - No native UITabBar chrome on root screens
 - No floating text-only header actions without a clear tap container

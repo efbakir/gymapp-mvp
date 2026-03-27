@@ -1851,6 +1851,9 @@ struct AppScreen<Content: View>: View {
         !hidesNavigationBar && (title != nil || leadingAction != nil || trailingAction != nil || trailingText != nil)
     }
 
+    /// Max content width — keeps the mobile layout on iPad / Mac.
+    private var maxContentWidth: CGFloat { 430 }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: AppSpacing.md) {
@@ -1859,6 +1862,8 @@ struct AppScreen<Content: View>: View {
             .padding(.horizontal, AppSpacing.md)
             .padding(.top, showsNativeNavigationBar ? AppSpacing.sm : (customHeader == nil ? AppSpacing.md : AppSpacing.sm))
             .padding(.bottom, primaryButton != nil ? 100 : AppSpacing.md)
+            .frame(maxWidth: maxContentWidth)
+            .frame(maxWidth: .infinity)
         }
         .coordinateSpace(name: appScreenScrollCoordinateSpace)
         .appScrollEdgeSoftTop(enabled: !hidesNavigationBar || showsNativeNavigationBar)
@@ -1912,8 +1917,10 @@ struct AppScreen<Content: View>: View {
                         isEnabled: primaryButton.isEnabled,
                         action: primaryButton.action
                     )
+                    .frame(maxWidth: maxContentWidth - AppSpacing.md * 2)
                     .padding(.horizontal, AppSpacing.md)
                     .padding(.bottom, AppSpacing.lg)
+                    .frame(maxWidth: .infinity)
                     .background(AppColor.barBackground)
                 }
             }

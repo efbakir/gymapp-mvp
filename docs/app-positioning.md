@@ -1,42 +1,67 @@
-# Unit — App Positioning
+# Unit — Positioning
 
-## Single Differentiator
-
-**The only gym logger that auto-adjusts your 8-week plan when you fail.**
-
-Strong logs sets. Hevy tracks volume. Unit computes your next target and recalibrates the entire cycle the moment you miss one.
+> One-pager for anyone writing copy, pitching the app, or making scope decisions.
+> Source of truth: `product-compass.md`.
 
 ---
 
-## Target User
+## One-liner
 
-A serious lifter (intermediate–advanced) who follows a structured program, cares about progressive overload, and is frustrated that their current app records history but offers no guidance on what to lift next.
+Unit is the gym notebook you already keep in your head — except it remembers everything, fills in the blanks, and never slows you down.
 
-Not a beginner looking for workout ideas. Not a casual exerciser. A person who trains with a plan and wants the plan to be smarter than a spreadsheet.
+## Positioning statement
 
----
-
-## Key Benefit
-
-Zero cognitive load at the bar. The target weight is on screen before you touch the bar. You either hit it or you don't. The app handles the rest.
-
----
-
-## Against Strong and Hevy
-
-| Feature | Strong | Hevy | Unit |
-|---------|--------|------|-----------|
-| Set logging | ✓ | ✓ | ✓ |
-| Historical PRs | ✓ | ✓ | ✓ |
-| Auto-progression logic | — | — | ✓ |
-| 8-week cycle container | — | — | ✓ |
-| Failure detection + deload | — | — | ✓ |
-| Target shown before set | — | — | ✓ |
-
-Strong and Hevy are excellent loggers. They are not coaches. Unit is built on the premise that showing you what happened is not enough — the app must tell you what's next.
+**For** intermediate-to-advanced lifters who already know their program,
+**who are frustrated** by trackers that are slower than paper or smarter than they need to be,
+**Unit is** a zero-friction logging tool
+**that** lets you log a set in under 3 seconds with one tap — no typing, no menus, no algorithms deciding for you.
+**Unlike** AI coaches (Fitbod, RP) or social trackers (Hevy, Strong),
+**Unit** respects your expertise, shows what you did last time, and gets out of the way.
 
 ---
 
-## Pricing Consideration
+## The notebook gap
 
-Premium one-time purchase or subscription. The engine is the differentiator — free tiers can allow unlimited logging but gate cycle creation and auto-progression to paid. A serious lifter who trains 4× per week will recoup the cost in the first week of eliminated guesswork.
+The fitness app market is split between two camps: rigid AI coaches that impose algorithmic plans, and social trackers that bury logging under feeds and paywalls. Neither serves the lifter who already has a program and just wants to execute it fast.
+
+These athletes often default to the Notes app or a paper notebook — not because those tools are better, but because every "pro" tracker adds friction that a simple list doesn't. Unit fills that gap: structured enough to track progress over time, fast enough to beat a notebook.
+
+---
+
+## Key messages (ranked)
+
+1. **Log a set in one tap.** Ghost values pre-fill your weight and reps from last session. Just tap Done.
+2. **Your program, your way.** Import from Notes/WhatsApp, convert a past workout, or build from scratch. No mandatory cycles or rigid scheduling.
+3. **History is your coach.** See what you lifted last time. You decide when to add weight.
+4. **Works offline, always.** Local-first. No account required. Your data stays on your device.
+5. **Invisible when you're lifting.** Auto rest timer on your Lock Screen. Haptic confirmation. The app does its job without demanding your attention.
+
+---
+
+## What Unit is NOT
+
+- Not an AI coach. We don't tell you what to lift.
+- Not a social platform. No feed, no likes, no sharing prompts.
+- Not a beginner's guide. We assume you know your way around a barbell.
+- Not subscription-locked at the core. Logging is not a premium feature.
+
+---
+
+## Voice guidelines
+
+| Do | Don't |
+|----|-------|
+| Speak directly: "Log a set. One tap." | Hype: "Revolutionary AI-powered training" |
+| Be specific: "Under 3 seconds" | Be vague: "Fast and easy" |
+| Trust the lifter: "You decide when to progress" | Patronise: "We'll tell you what's best" |
+| Name the problem: "Your tracker is slower than paper" | Attack competitors by name on the site |
+| Keep it short. Every word earns its place. | Write paragraphs where a sentence will do |
+
+---
+
+## Tagline options (test and iterate)
+
+- *Faster than paper. Smarter than Notes.*
+- *Your gym notebook, upgraded.*
+- *Log. Lift. Done.*
+- *The tracker that gets out of your way.*
