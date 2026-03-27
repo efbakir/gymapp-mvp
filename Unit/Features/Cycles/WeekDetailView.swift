@@ -73,7 +73,9 @@ struct WeekDetailView: View {
         )
         let weekTarget = allTargets.first(where: { $0.weekNumber == weekNumber })
 
-        let name = exercises.first(where: { $0.id == rule.exerciseId })?.displayName ?? "Exercise"
+        let exercise = exercises.first(where: { $0.id == rule.exerciseId })
+        let name = exercise?.displayName ?? "Exercise"
+        let isBW = exercise?.isBodyweight ?? false
         let actualSets = weekSessions.flatMap { $0.setEntries }.filter { $0.exerciseId == rule.exerciseId && $0.isCompleted }
 
         return AppCard {
@@ -104,15 +106,15 @@ struct WeekDetailView: View {
                                 weightKg: target.weightKg,
                                 setCount: max(actualSets.count, 1),
                                 reps: target.reps,
-                                isBodyweight: false
-                            ) ?? "\(max(actualSets.count, 1)) × \(target.reps) × \(target.weightKg.weightString)kg"
+                                isBodyweight: isBW
+                            ) ?? "\(max(actualSets.count, 1)) × \(target.reps) × \(WorkoutTargetFormatter.weightDisplay(target.weightKg))"
                         )
                             .font(AppFont.body.font)
                             .foregroundStyle(AppColor.textSecondary)
                             .monospacedDigit()
                     }
                     .accessibilityElement(children: .combine)
-                    .accessibilityValue("Target: \(WorkoutTargetFormatter.trustedTargetText(weightKg: target.weightKg, setCount: max(actualSets.count, 1), reps: target.reps, isBodyweight: false) ?? "\(max(actualSets.count, 1)) × \(target.reps) × \(target.weightKg.weightString)kg")")
+                    .accessibilityValue("Target: \(WorkoutTargetFormatter.trustedTargetText(weightKg: target.weightKg, setCount: max(actualSets.count, 1), reps: target.reps, isBodyweight: isBW) ?? "\(max(actualSets.count, 1)) × \(target.reps) × \(WorkoutTargetFormatter.weightDisplay(target.weightKg))")")
                 }
 
                 // Actual sets

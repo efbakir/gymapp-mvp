@@ -11,6 +11,7 @@ import SwiftUI
 struct ExerciseProgressView: View {
     let exerciseId: UUID
     let exerciseName: String
+    let isBodyweight: Bool
     let sessions: [WorkoutSession]
     let templates: [DayTemplate]
 
@@ -91,7 +92,7 @@ struct ExerciseProgressView: View {
                 Text("Best Set")
                     .font(AppFont.caption.font)
                     .foregroundStyle(AppColor.textSecondary)
-                Text(WorkoutTargetFormatter.actualText(weightKg: pr.weight, setCount: 1, reps: pr.reps, isBodyweight: false))
+                Text(WorkoutTargetFormatter.actualText(weightKg: pr.weight, setCount: 1, reps: pr.reps, isBodyweight: isBodyweight))
                     .font(AppFont.title.font)
                     .monospacedDigit()
             }
@@ -99,7 +100,7 @@ struct ExerciseProgressView: View {
                 Text("Est. 1RM")
                     .font(AppFont.caption.font)
                     .foregroundStyle(AppColor.textSecondary)
-                Text("\(e1rm.weightString)kg")
+                Text(WorkoutTargetFormatter.weightDisplay(e1rm))
                     .font(AppFont.title.font)
                     .foregroundStyle(AppColor.accent)
                     .monospacedDigit()
@@ -193,7 +194,7 @@ struct ExerciseProgressView: View {
             }
             Spacer(minLength: 0)
             VStack(alignment: .trailing, spacing: 2) {
-                Text(WorkoutTargetFormatter.actualText(weightKg: point.weight, setCount: 1, reps: point.reps, isBodyweight: false))
+                Text(WorkoutTargetFormatter.actualText(weightKg: point.weight, setCount: 1, reps: point.reps, isBodyweight: isBodyweight))
                     .font(AppFont.body.font)
                     .monospacedDigit()
                 if let d = delta {

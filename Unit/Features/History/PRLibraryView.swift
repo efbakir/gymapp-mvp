@@ -27,7 +27,7 @@ struct PRLibraryView: View {
             }) else {
                 return nil
             }
-            return PRRecord(exerciseName: exercise.displayName, weight: best.weight, reps: best.reps)
+            return PRRecord(exerciseName: exercise.displayName, weight: best.weight, reps: best.reps, isBodyweight: exercise.isBodyweight)
         }
         .sorted { $0.exerciseName < $1.exerciseName }
     }
@@ -58,7 +58,7 @@ struct PRLibraryView: View {
                                 title: record.exerciseName,
                                 subtitle: "Best set"
                             ) {
-                                Text(WorkoutTargetFormatter.actualText(weightKg: record.weight, setCount: 1, reps: record.reps, isBodyweight: false))
+                                Text(WorkoutTargetFormatter.actualText(weightKg: record.weight, setCount: 1, reps: record.reps, isBodyweight: record.isBodyweight))
                                     .font(AppFont.body.font)
                                     .foregroundStyle(AppColor.textPrimary)
                                     .monospacedDigit()
@@ -76,6 +76,7 @@ private struct PRRecord: Identifiable {
     let exerciseName: String
     let weight: Double
     let reps: Int
+    let isBodyweight: Bool
 }
 
 #Preview {

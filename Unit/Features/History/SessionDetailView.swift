@@ -60,7 +60,7 @@ struct SessionDetailView: View {
                                         weightKg: entry.weight,
                                         setCount: 1,
                                         reps: entry.reps,
-                                        isBodyweight: false
+                                        isBodyweight: section.exercise.isBodyweight
                                     )
                                 )
                                     .font(AppFont.body.font)

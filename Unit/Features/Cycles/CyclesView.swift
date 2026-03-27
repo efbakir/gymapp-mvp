@@ -182,7 +182,7 @@ struct CyclesView: View {
                 VStack(alignment: .leading, spacing: AppSpacing.xs) {
                     Text(cycle.name)
                         .appFont(.largeTitle)
-                    Text("Week \(cycle.currentWeekNumber) of \(cycle.weekCount)")
+                    Text("Week \(cycle.currentWeekNumber)")
                         .font(AppFont.caption.font)
                         .foregroundStyle(AppColor.textSecondary)
                 }
@@ -198,10 +198,6 @@ struct CyclesView: View {
                         .clipShape(Circle())
                 }
                 .buttonStyle(.plain)
-                ProgressRing(
-                    progress: Double(cycle.currentWeekNumber) / Double(cycle.weekCount)
-                )
-                .frame(width: 56, height: 56)
             }
             .appCardStyle()
 
@@ -223,7 +219,7 @@ struct CyclesView: View {
                 Text(cycle.name)
                     .font(AppFont.sectionHeader.font)
                     .foregroundStyle(AppColor.textPrimary)
-                Text("Week \(cycle.currentWeekNumber) of \(cycle.weekCount)")
+                Text("Week \(cycle.currentWeekNumber)")
                     .font(AppFont.caption.font)
                     .foregroundStyle(AppColor.textSecondary)
             }
@@ -451,7 +447,9 @@ private struct ProjectedWeekSheet: View {
 
                     ForEach(rules.filter { $0.cycleId == cycle.id }, id: \.id) { rule in
                         if let target = ProgressionEngine.target(for: weekNumber, rule: rule.snapshot(weekCount: cycle.weekCount), outcomes: []) {
-                            let name = exercises.first(where: { $0.id == rule.exerciseId })?.displayName ?? "Exercise"
+                            let exercise = exercises.first(where: { $0.id == rule.exerciseId })
+                            let name = exercise?.displayName ?? "Exercise"
+                            let isBW = exercise?.isBodyweight ?? false
                             HStack {
                                 Text(name)
                                     .font(AppFont.body.font)
@@ -461,8 +459,8 @@ private struct ProjectedWeekSheet: View {
                                         weightKg: target.weightKg,
                                         setCount: 3,
                                         reps: target.reps,
-                                        isBodyweight: false
-                                    ) ?? "3 × \(target.reps) × \(target.weightKg.weightString)kg"
+                                        isBodyweight: isBW
+                                    ) ?? "3 × \(target.reps) × \(WorkoutTargetFormatter.weightDisplay(target.weightKg))"
                                 )
                                     .font(AppFont.body.font)
                                     .foregroundStyle(AppColor.textSecondary)
