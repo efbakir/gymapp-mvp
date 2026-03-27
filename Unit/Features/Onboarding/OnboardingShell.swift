@@ -39,7 +39,7 @@ struct OnboardingShell<Content: View>: View {
                 )
 
                 Text(title)
-                    .font(AppFont.largeTitle.font)
+                    .appFont(.largeTitle)
                     .foregroundStyle(AppColor.textPrimary)
 
                 content()
@@ -84,7 +84,7 @@ struct OnboardingProgress: View {
                 .font(AppFont.caption.font)
                 .foregroundStyle(AppColor.textSecondary)
 
-            HStack(spacing: 6) {
+            HStack(spacing: AppSpacing.xs) {
                 ForEach(0..<total, id: \.self) { index in
                     Capsule()
                         .fill(index < step ? AppColor.accent : AppColor.border)
@@ -110,7 +110,7 @@ struct OnboardingOptionCard: View {
                     .background(AppColor.accentSoft)
                     .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
 
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: AppSpacing.xs) {
                     Text(title)
                         .font(AppFont.sectionHeader.font)
                         .foregroundStyle(AppColor.textPrimary)

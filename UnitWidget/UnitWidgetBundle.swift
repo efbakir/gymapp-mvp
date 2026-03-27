@@ -29,7 +29,7 @@ struct RestTimerLiveActivityWidget: Widget {
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.center) {
-                    Text(timerInterval: context.state.endDate, countsDown: true)
+                    Text(timerInterval: Date.now...context.state.endDate, countsDown: true)
                         .font(.title2.monospacedDigit())
                 }
                 DynamicIslandExpandedRegion(.leading) {
@@ -40,7 +40,7 @@ struct RestTimerLiveActivityWidget: Widget {
                 Text("Rest")
                     .font(.caption2)
             } compactTrailing: {
-                Text(timerInterval: context.state.endDate, countsDown: true)
+                Text(timerInterval: Date.now...context.state.endDate, countsDown: true)
                     .font(.caption2.monospacedDigit())
             } minimal: {
                 Image(systemName: "timer")

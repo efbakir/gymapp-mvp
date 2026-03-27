@@ -24,7 +24,7 @@ final class StoreManager {
     var purchaseError: String?
 
     private let logger = Logger(subsystem: "com.unit.app", category: "StoreManager")
-    nonisolated(unsafe) private var transactionListener: Task<Void, Never>?
+    @ObservationIgnored nonisolated(unsafe) private var transactionListener: Task<Void, Never>?
 
     // MARK: - Init
 

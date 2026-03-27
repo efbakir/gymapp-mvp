@@ -119,7 +119,7 @@ struct TodayView: View {
             }
         }
         .navigationTitle("Today")
-        .navigationBarTitleDisplayMode(.large)
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
@@ -239,6 +239,7 @@ private struct ReadyTodayCard: View {
                     VStack(spacing: AppSpacing.xs) {
                         Text(context.templateName)
                             .font(AppFont.productHeading)
+                            .tracking(AppFont.productHeadingTracking)
                             .foregroundStyle(AppColor.textPrimary)
                             .multilineTextAlignment(.center)
                             .fixedSize(horizontal: false, vertical: true)
@@ -301,6 +302,7 @@ private struct TodayWorkoutDetailsSheet: View {
                         VStack(alignment: .center, spacing: AppSpacing.sm) {
                             Text(context.templateName)
                                 .font(AppFont.productHeading)
+                                .tracking(AppFont.productHeadingTracking)
                                 .foregroundStyle(AppColor.textPrimary)
                                 .multilineTextAlignment(.center)
                                 .fixedSize(horizontal: false, vertical: true)
@@ -362,6 +364,7 @@ private struct SetupIncompleteCard: View {
                 VStack(alignment: .center, spacing: AppSpacing.xs) {
                     Text(context.title)
                         .font(AppFont.productHeading)
+                        .tracking(AppFont.productHeadingTracking)
                         .foregroundStyle(AppColor.textPrimary)
                         .multilineTextAlignment(.center)
 
@@ -391,6 +394,7 @@ private struct NoProgramCard: View {
                 VStack(alignment: .center, spacing: AppSpacing.xs) {
                     Text("Build your first program")
                         .font(AppFont.productHeading)
+                        .tracking(AppFont.productHeadingTracking)
                         .foregroundStyle(AppColor.textPrimary)
                         .multilineTextAlignment(.center)
 

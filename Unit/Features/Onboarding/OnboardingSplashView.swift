@@ -22,12 +22,12 @@ struct OnboardingSplashView: View {
 
                     VStack(alignment: .leading, spacing: 0) {
                         Text("Welcome to Unit —")
-                            .font(AppFont.largeTitle.font)
+                            .appFont(.largeTitle)
                             .foregroundStyle(AppColor.textPrimary)
                             .fixedSize(horizontal: false, vertical: true)
 
                         Text("your gym notebook,\nupgraded.")
-                            .font(AppFont.largeTitle.font)
+                            .appFont(.largeTitle)
                             .foregroundStyle(AppColor.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }

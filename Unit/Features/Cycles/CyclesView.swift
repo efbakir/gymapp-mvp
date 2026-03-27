@@ -181,7 +181,7 @@ struct CyclesView: View {
             HStack {
                 VStack(alignment: .leading, spacing: AppSpacing.xs) {
                     Text(cycle.name)
-                        .font(AppFont.largeTitle.font)
+                        .appFont(.largeTitle)
                     Text("Week \(cycle.currentWeekNumber) of \(cycle.weekCount)")
                         .font(AppFont.caption.font)
                         .foregroundStyle(AppColor.textSecondary)
@@ -384,7 +384,7 @@ private struct WeekRowView: View {
             .font(AppFont.caption.font)
             .foregroundStyle(AppColor.error)
         case .current:
-            HStack(spacing: 4) {
+            HStack(spacing: AppSpacing.xs) {
                 Circle()
                     .fill(AppColor.accent)
                     .frame(width: 8, height: 8)

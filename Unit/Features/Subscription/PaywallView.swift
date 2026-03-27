@@ -30,6 +30,7 @@ struct PaywallView: View {
 
                         Text("Unlock Unit")
                             .font(AppFont.display)
+                            .tracking(AppFont.displayTracking)
                             .foregroundStyle(AppColor.textPrimary)
                     }
                     .padding(.top, AppSpacing.xxl)
@@ -153,6 +154,7 @@ struct PaywallView: View {
 
                 Text(store.product?.displayPrice ?? "€24.99")
                     .font(AppFont.productHeading)
+                    .tracking(AppFont.productHeadingTracking)
                     .foregroundStyle(AppColor.textPrimary)
             }
 

@@ -19,7 +19,7 @@ struct RestTimerLiveActivityView: View {
             Text("Rest")
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            Text(timerInterval: context.state.endDate, countsDown: true)
+            Text(timerInterval: Date.now...context.state.endDate, countsDown: true)
                 .font(.title2.monospacedDigit())
                 .fontWeight(.semibold)
         }

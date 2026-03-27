@@ -211,7 +211,7 @@ struct ExerciseDetailView: View {
             VStack(alignment: .leading, spacing: AppSpacing.md) {
                 VStack(alignment: .leading, spacing: AppSpacing.xs) {
                     Text(exercise.displayName)
-                        .font(AppFont.largeTitle.font)
+                        .appFont(.largeTitle)
                     Text("Brzycki 1RM and session volume")
                         .font(AppFont.caption.font)
                         .foregroundStyle(AppColor.textSecondary)

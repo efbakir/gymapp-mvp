@@ -140,7 +140,7 @@ private struct StartOptionRow: View {
                     }
                 }
 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: AppSpacing.xs) {
                     Text(label)
                         .font(AppFont.body.font)
                         .foregroundStyle(AppColor.textPrimary)

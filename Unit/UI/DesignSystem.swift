@@ -79,17 +79,17 @@ enum AppFont {
     var font: Font {
         switch self {
         case .largeTitle:
-            return .system(.title2, weight: .bold)
+            return .custom("Inter-Bold", size: 22)
         case .title:
-            return .system(.title3, weight: .semibold)
+            return .custom("Inter-SemiBold", size: 20)
         case .sectionHeader:
-            return .system(.headline)
+            return .custom("Inter-SemiBold", size: 17)
         case .body:
-            return .system(.body)
+            return .custom("Inter-Regular", size: 17)
         case .label:
-            return .system(.body, weight: .semibold)
+            return .custom("Inter-SemiBold", size: 17)
         case .caption, .muted:
-            return .system(.caption)
+            return .custom("Inter-Regular", size: 12)
         }
     }
 
@@ -102,14 +102,37 @@ enum AppFont {
         }
     }
 
-    static let overline: Font = .system(size: 10, weight: .semibold)
-    static let smallLabel: Font = .system(size: 11, weight: .medium)
-    static let display: Font = .system(size: 36, weight: .bold)
-    static let numericDisplay: Font = .system(size: 36, weight: .bold).monospacedDigit()
-    static let numericLarge: Font = .system(size: 28, weight: .bold).monospacedDigit()
-    static let stepIndicator: Font = .system(size: 14, weight: .semibold)
-    static let productHeading: Font = .system(size: 24, weight: .semibold)
-    static let productAction: Font = .system(size: 17, weight: .semibold)
+    /// Tracking value for display-level text (tighter spacing for large sizes).
+    var tracking: CGFloat {
+        switch self {
+        case .largeTitle:
+            return -0.4
+        default:
+            return 0
+        }
+    }
+
+    static let overline: Font = .custom("Inter-SemiBold", size: 10)
+    static let smallLabel: Font = .custom("Inter-Medium", size: 11)
+    static let display: Font = .custom("Inter-Bold", size: 36)
+    static let numericDisplay: Font = .custom("Inter-Bold", fixedSize: 36)
+    static let numericLarge: Font = .custom("Inter-Bold", fixedSize: 28)
+    static let stepIndicator: Font = .custom("Inter-SemiBold", size: 14)
+    static let productHeading: Font = .custom("Inter-SemiBold", size: 24)
+    static let productAction: Font = .custom("Inter-SemiBold", size: 17)
+
+    /// Tracking for static font properties (display-level gets tighter spacing).
+    static let displayTracking: CGFloat = -0.6
+    static let productHeadingTracking: CGFloat = -0.3
+    static let numericDisplayTracking: CGFloat = -0.6
+    static let numericLargeTracking: CGFloat = -0.4
+}
+
+extension Text {
+    /// Applies an AppFont style with its associated tracking.
+    func appFont(_ style: AppFont) -> Text {
+        self.font(style.font).tracking(style.tracking)
+    }
 }
 
 enum AppSpacing {
@@ -195,7 +218,7 @@ enum AppIcon: String {
 
     func image(size: CGFloat = 17, weight: Font.Weight = .semibold) -> some View {
         Image(systemName: systemName)
-            .font(.system(size: size, weight: weight))
+            .font(.system(size: size, weight: weight))  // SF Symbols require system font
     }
 }
 
@@ -631,7 +654,7 @@ struct ProductTopBar: View {
                 .foregroundStyle(AppColor.textSecondary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.85)
-                .tracking(-0.2)
+                .tracking(AppFont.productHeadingTracking)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             HStack(spacing: AppSpacing.sm) {
@@ -925,6 +948,7 @@ struct MetricDisplay: View {
         VStack(spacing: AppSpacing.xs) {
             Text(value)
                 .font(valueFont)
+                .tracking(valueTracking)
                 .foregroundStyle(valueColor)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
@@ -947,6 +971,17 @@ struct MetricDisplay: View {
             return AppFont.numericLarge
         case .placeholder:
             return AppFont.title.font
+        }
+    }
+
+    private var valueTracking: CGFloat {
+        switch style {
+        case .metric:
+            return AppFont.numericDisplayTracking
+        case .subdued:
+            return AppFont.numericLargeTracking
+        case .placeholder:
+            return 0
         }
     }
 
@@ -983,6 +1018,7 @@ struct RestTimerControl: View {
                 HStack(spacing: AppSpacing.sm) {
                     Text(timeText)
                         .font(AppFont.productHeading)
+                        .tracking(AppFont.productHeadingTracking)
                         .foregroundStyle(AppColor.textPrimary)
                         .monospacedDigit()
 
@@ -1154,6 +1190,7 @@ struct SheetHeader: View {
 
             Text(title)
                 .font(AppFont.productHeading)
+                .tracking(AppFont.productHeadingTracking)
                 .foregroundStyle(AppColor.textPrimary)
 
             Spacer()
@@ -1281,6 +1318,7 @@ struct HeroWorkoutCard: View {
                     VStack(spacing: AppSpacing.xs) {
                         Text(title)
                             .font(AppFont.productHeading)
+                            .tracking(AppFont.productHeadingTracking)
                             .foregroundStyle(AppColor.textPrimary)
                             .multilineTextAlignment(.center)
                             .fixedSize(horizontal: false, vertical: true)
@@ -1337,6 +1375,7 @@ struct WorkoutCommandCard: View {
                 VStack(spacing: AppSpacing.sm) {
                     Text(exerciseName)
                         .font(AppFont.productHeading)
+                        .tracking(AppFont.productHeadingTracking)
                         .foregroundStyle(AppColor.textPrimary)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
@@ -1344,6 +1383,7 @@ struct WorkoutCommandCard: View {
                     HStack(spacing: AppSpacing.xs) {
                         Text(metricValue)
                             .font(AppFont.productHeading)
+                            .tracking(AppFont.productHeadingTracking)
                             .foregroundStyle(AppColor.textSecondary)
                             .multilineTextAlignment(.center)
 
@@ -1647,6 +1687,7 @@ struct AppTabHeader<Trailing: View>: View {
             HStack(alignment: .center, spacing: AppSpacing.md) {
                 Text(title)
                     .font(AppFont.display)
+                    .tracking(AppFont.displayTracking)
                     .foregroundStyle(AppColor.textPrimary)
                     .frame(maxWidth: .infinity, alignment: .leading)
 

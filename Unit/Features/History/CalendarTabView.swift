@@ -163,7 +163,7 @@ private struct CalendarMonthCard: View {
                 HStack(alignment: .top, spacing: AppSpacing.md) {
                     VStack(alignment: .leading, spacing: AppSpacing.xs) {
                         Text(displayMonth.formatted(.dateTime.month(.wide).year()))
-                            .font(AppFont.largeTitle.font)
+                            .appFont(.largeTitle)
                             .foregroundStyle(AppColor.textPrimary)
 
                         Text("\(sessionCount) session\(sessionCount == 1 ? "" : "s") logged")

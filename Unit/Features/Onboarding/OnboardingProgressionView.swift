@@ -75,6 +75,7 @@ private struct IncrementSelectorRow: View {
 
                 Text(value)
                     .font(AppFont.numericLarge)
+                    .tracking(AppFont.numericLargeTracking)
                     .foregroundStyle(AppColor.textPrimary)
 
                 Spacer()

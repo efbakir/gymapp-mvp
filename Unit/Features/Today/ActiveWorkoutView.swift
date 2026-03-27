@@ -28,6 +28,9 @@ struct ActiveWorkoutView: View {
     @State private var selectedExerciseIndex = 0
     @State private var showsReadyState = false
     @State private var showsCancelConfirmation = false
+    @State private var showsAddExercise = false
+    @State private var pendingExerciseForSetup: Exercise?
+    @State private var customSetCounts: [UUID: Int] = [:]
 
     private var template: DayTemplate? {
         templates.first(where: { $0.id == session.templateId })
@@ -118,7 +121,7 @@ struct ActiveWorkoutView: View {
     }
 
     private var currentMetricValue: String {
-        guard let currentSection else { return "Target unavailable" }
+        guard let currentSection else { return "" }
 
         if let target = currentSection.weekTarget {
             if currentSection.exercise.isBodyweight {
@@ -130,14 +133,28 @@ struct ActiveWorkoutView: View {
             }
         }
 
-        return currentSection.targetText ?? "Target unavailable"
+        // Show values from previous set in this session
+        if let lastValues = lastLoggedValues(for: currentSection.exercise.id) {
+            if currentSection.exercise.isBodyweight {
+                return "\(lastValues.reps) x Bodyweight"
+            }
+            return "\(lastValues.reps) x \(WorkoutTargetFormatter.weightDisplay(lastValues.weight))"
+        }
+
+        if let lastActual = currentSection.lastActualText {
+            return lastActual
+        }
+        return "Log your set"
     }
 
     private var currentMetricSupportingText: String? {
         guard let currentSection else { return nil }
 
         if currentSection.targetText == nil {
-            return "Use Edit to log a result."
+            if !currentEntries(for: currentSection.exercise.id).isEmpty {
+                return nil
+            }
+            return currentSection.lastActualText != nil ? "Last session" : nil
         }
 
         if currentSection.hasReachedPlannedSetGoal {
@@ -184,7 +201,7 @@ struct ActiveWorkoutView: View {
         if currentSection.hasReachedPlannedSetGoal {
             return .completed
         }
-        return currentSection.targetText == nil ? .disabled : .active
+        return .active
     }
 
     private var workoutCommandCardState: WorkoutCommandCard.State {
@@ -233,10 +250,12 @@ struct ActiveWorkoutView: View {
                         onTimerToggle: toggleRestTimerAction,
                         onTimerIncrease: increaseRestTimerAction
                     )
+
+                    addExerciseButton
                 }
                 .frame(maxWidth: .infinity, alignment: .top)
             } else {
-                emptyWorkoutState
+                addExercisePrompt
             }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -264,9 +283,16 @@ struct ActiveWorkoutView: View {
                     Image(systemName: AppIcon.close.systemName)
                 }
             }
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("List") {
-                    showLineup = true
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                if !sectionModels.isEmpty {
+                    Button("List") {
+                        showLineup = true
+                    }
+                }
+                if session.setEntries.contains(where: { $0.isCompleted }) && !isWorkoutComplete {
+                    Button("Finish") {
+                        finishWorkout()
+                    }
                 }
             }
         }
@@ -299,6 +325,22 @@ struct ActiveWorkoutView: View {
             .presentationDetents([.medium, .large])
             .appBottomSheetChrome()
         }
+        .sheet(isPresented: $showsAddExercise) {
+            AddExerciseSheet(
+                existingIds: Set(template?.orderedExerciseIds ?? [])
+            ) { exercise in
+                addExerciseToWorkout(exercise)
+            }
+            .presentationDetents([.medium, .large])
+            .appBottomSheetChrome()
+        }
+        .sheet(item: $pendingExerciseForSetup) { exercise in
+            SetCountPickerSheet(exerciseName: exercise.displayName) { count in
+                customSetCounts[exercise.id] = count
+            }
+            .presentationDetents([.height(240)])
+            .appBottomSheetChrome()
+        }
         .alert("Cancel Workout", isPresented: $showsCancelConfirmation) {
             Button("Cancel Workout", role: .destructive) {
                 cancelWorkout()
@@ -326,17 +368,39 @@ struct ActiveWorkoutView: View {
         }
     }
 
-    private var emptyWorkoutState: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.sm) {
-            Text("No exercises in this day")
-                .font(AppFont.sectionHeader.font)
-                .foregroundStyle(AppColor.textPrimary)
+    private var addExercisePrompt: some View {
+        AppCard {
+            VStack(alignment: .center, spacing: AppSpacing.md) {
+                Text("Add your first exercise")
+                    .font(AppFont.productHeading)
+                    .foregroundStyle(AppColor.textPrimary)
 
-            Text("Add exercises in Program before starting this workout.")
-                .font(AppFont.body.font)
-                .foregroundStyle(AppColor.textSecondary)
+                Text("Search existing exercises or create a new one.")
+                    .font(AppFont.body.font)
+                    .foregroundStyle(AppColor.textSecondary)
+                    .multilineTextAlignment(.center)
+
+                AppPrimaryButton("Add Exercise") {
+                    showsAddExercise = true
+                }
+            }
+            .frame(maxWidth: .infinity)
         }
-        .appCardStyle()
+    }
+
+    private var addExerciseButton: some View {
+        Button {
+            showsAddExercise = true
+        } label: {
+            HStack(spacing: AppSpacing.xs) {
+                AppIcon.add.image()
+                Text("Add Exercise")
+            }
+            .font(AppFont.productAction)
+            .foregroundStyle(AppColor.textSecondary)
+            .frame(maxWidth: .infinity)
+            .frame(height: 44)
+        }
     }
 
     private var exerciseListSheet: some View {
@@ -435,6 +499,12 @@ struct ActiveWorkoutView: View {
             return "\(entry.reps) x BW"
         }
         return "\(entry.reps) x \(WorkoutTargetFormatter.weightDisplay(entry.weight))"
+    }
+
+    private func lastLoggedValues(for exerciseID: UUID) -> (weight: Double, reps: Int)? {
+        let entries = currentEntries(for: exerciseID)
+        guard let last = entries.last else { return nil }
+        return (last.weight, last.reps)
     }
 
     private func currentEntries(for exerciseID: UUID) -> [SetEntry] {
@@ -572,6 +642,18 @@ struct ActiveWorkoutView: View {
             return
         }
 
+        // Auto-complete with values from previous set in this session
+        if let lastValues = lastLoggedValues(for: exercise.id) {
+            completeSet(
+                exercise: exercise,
+                rule: rule,
+                weight: lastValues.weight,
+                reps: lastValues.reps
+            )
+            return
+        }
+
+        // First set: open manual entry
         adjustResultPayload = AdjustResultPayload(
             exercise: exercise,
             rule: rule,
@@ -652,6 +734,17 @@ struct ActiveWorkoutView: View {
         }
     }
 
+    private func addExerciseToWorkout(_ exercise: Exercise) {
+        guard let template else { return }
+        var ids = template.orderedExerciseIds
+        guard !ids.contains(exercise.id) else { return }
+        ids.append(exercise.id)
+        template.orderedExerciseIds = ids
+        try? modelContext.save()
+        selectedExerciseIndex = ids.count - 1
+        pendingExerciseForSetup = exercise
+    }
+
     private func cancelWorkout() {
         restTimer.stop()
         modelContext.delete(session)
@@ -659,6 +752,9 @@ struct ActiveWorkoutView: View {
     }
 
     private func plannedSetCount(for exerciseID: UUID) -> Int {
+        if let custom = customSetCounts[exerciseID] {
+            return custom
+        }
         if let latestTemplateCount = latestCompletedSetCount(for: exerciseID, matchingTemplate: true) {
             return latestTemplateCount
         }
@@ -784,7 +880,7 @@ private struct AdjustResultSheet: View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: AppSpacing.xs) {
                 Text(exerciseName)
-                    .font(AppFont.largeTitle.font)
+                    .appFont(.largeTitle)
                     .foregroundStyle(AppColor.textPrimary)
                     .fixedSize(horizontal: false, vertical: true)
 
@@ -818,6 +914,145 @@ private struct AdjustResultSheet: View {
                 .multilineTextAlignment(.center)
                 .appInputFieldStyle(height: 64, horizontalPadding: AppSpacing.sm)
         }
+    }
+}
+
+private struct SetCountPickerSheet: View {
+    let exerciseName: String
+    let onSelect: (Int) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var selectedCount = 3
+
+    var body: some View {
+        VStack(spacing: AppSpacing.md) {
+            Text(exerciseName)
+                .font(AppFont.productHeading)
+                .foregroundStyle(AppColor.textPrimary)
+
+            Text("How many sets?")
+                .font(AppFont.body.font)
+                .foregroundStyle(AppColor.textSecondary)
+
+            HStack(spacing: AppSpacing.sm) {
+                ForEach(1...6, id: \.self) { count in
+                    Button {
+                        selectedCount = count
+                    } label: {
+                        Text("\(count)")
+                            .font(AppFont.sectionHeader.font)
+                            .foregroundStyle(count == selectedCount ? AppColor.accentForeground : AppColor.textPrimary)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 48)
+                            .background(count == selectedCount ? AppColor.accent : AppColor.controlBackground)
+                            .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+
+            AppPrimaryButton("Start") {
+                onSelect(selectedCount)
+                dismiss()
+            }
+        }
+        .padding(.horizontal, AppSpacing.md)
+        .padding(.top, AppSpacing.md)
+    }
+}
+
+private struct AddExerciseSheet: View {
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
+    @Query(sort: \Exercise.displayName) private var exercises: [Exercise]
+
+    let existingIds: Set<UUID>
+    let onSelect: (Exercise) -> Void
+
+    @State private var query = ""
+
+    private var filteredExercises: [Exercise] {
+        let available = exercises.filter { !existingIds.contains($0.id) }
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return available }
+        let needle = trimmed.lowercased()
+        return available.filter { exercise in
+            exercise.displayName.lowercased().contains(needle) ||
+            exercise.aliases.contains { $0.lowercased().contains(needle) }
+        }
+    }
+
+    private var canCreateNew: Bool {
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return false }
+        return !exercises.contains { $0.displayName.lowercased() == trimmed.lowercased() }
+    }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                if canCreateNew {
+                    Button {
+                        createAndSelect(name: query.trimmingCharacters(in: .whitespacesAndNewlines))
+                    } label: {
+                        HStack(spacing: AppSpacing.sm) {
+                            AppIcon.addCircle.image()
+                                .foregroundStyle(AppColor.accent)
+                            Text("Create \"\(query.trimmingCharacters(in: .whitespacesAndNewlines))\"")
+                                .font(AppFont.body.font)
+                                .foregroundStyle(AppColor.textPrimary)
+                        }
+                        .frame(minHeight: 44, alignment: .leading)
+                    }
+                    .listRowBackground(AppColor.cardBackground)
+                }
+
+                ForEach(filteredExercises, id: \.id) { exercise in
+                    Button {
+                        onSelect(exercise)
+                        dismiss()
+                    } label: {
+                        VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                            HStack(spacing: AppSpacing.sm) {
+                                Text(exercise.displayName)
+                                    .font(AppFont.body.font)
+                                    .foregroundStyle(AppColor.textPrimary)
+                                if exercise.isBodyweight {
+                                    Text("BW")
+                                        .font(AppFont.caption.font)
+                                        .foregroundStyle(AppColor.textSecondary)
+                                }
+                            }
+                            if !exercise.aliases.isEmpty {
+                                Text(exercise.aliases.joined(separator: " · "))
+                                    .font(AppFont.caption.font)
+                                    .foregroundStyle(AppColor.textSecondary)
+                            }
+                        }
+                        .frame(minHeight: 44, alignment: .leading)
+                    }
+                    .listRowBackground(AppColor.cardBackground)
+                }
+            }
+            .scrollContentBackground(.hidden)
+            .background(AppColor.sheetBackground.ignoresSafeArea())
+            .navigationTitle("Add Exercise")
+            .navigationBarTitleDisplayMode(.inline)
+            .searchable(text: $query, prompt: "Search or create new")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") { dismiss() }
+                }
+            }
+        }
+    }
+
+    private func createAndSelect(name: String) {
+        let exercise = Exercise(displayName: name)
+        modelContext.insert(exercise)
+        try? modelContext.save()
+        onSelect(exercise)
+        dismiss()
     }
 }
 
@@ -921,6 +1156,7 @@ final class RestTimerManager {
 
     private var task: Task<Void, Never>?
     private var activity: Activity<RestTimerAttributes>?
+    private var endDate: Date?
 
     var label: String {
         let minutes = secondsRemaining / 60
@@ -932,24 +1168,26 @@ final class RestTimerManager {
         stop()
         totalDuration = totalSeconds
         secondsRemaining = totalSeconds
+        endDate = Date().addingTimeInterval(TimeInterval(totalSeconds))
         isRunning = true
-        startActivity(secondsRemaining: totalSeconds)
+        startActivity()
         startCountdownTask()
     }
 
     func pause() {
-        guard secondsRemaining > 0 else { return }
+        guard isRunning, secondsRemaining > 0 else { return }
         task?.cancel()
         task = nil
         isRunning = false
+        endDate = nil
         endActivity()
     }
 
     func resume() {
-        guard secondsRemaining > 0 else { return }
-        guard !isRunning else { return }
+        guard !isRunning, secondsRemaining > 0 else { return }
         isRunning = true
-        startActivity(secondsRemaining: secondsRemaining)
+        endDate = Date().addingTimeInterval(TimeInterval(secondsRemaining))
+        startActivity()
         startCountdownTask()
     }
 
@@ -961,9 +1199,10 @@ final class RestTimerManager {
         secondsRemaining = updatedRemaining
         totalDuration = updatedTotal
 
-        guard isRunning else { return }
-
-        updateActivity(secondsRemaining: updatedRemaining)
+        if isRunning {
+            endDate = Date().addingTimeInterval(TimeInterval(updatedRemaining))
+            updateActivity()
+        }
     }
 
     func stop() {
@@ -972,6 +1211,7 @@ final class RestTimerManager {
         isRunning = false
         secondsRemaining = 0
         totalDuration = 0
+        endDate = nil
         endActivity()
     }
 
@@ -979,6 +1219,7 @@ final class RestTimerManager {
         secondsRemaining = 0
         isRunning = false
         totalDuration = 0
+        endDate = nil
         completionCount += 1
         endActivity()
     }
@@ -987,22 +1228,22 @@ final class RestTimerManager {
         task?.cancel()
         task = Task { [weak self] in
             while !Task.isCancelled {
-                guard let manager = self else { return }
-                guard manager.secondsRemaining > 0 else {
+                guard let manager = self, let end = manager.endDate else { return }
+
+                let remaining = Int(ceil(end.timeIntervalSinceNow))
+                if remaining <= 0 {
                     manager.completeIfFinished()
                     return
                 }
 
-                try? await Task.sleep(for: .seconds(1))
-
-                if Task.isCancelled { return }
-                manager.secondsRemaining -= 1
+                manager.secondsRemaining = remaining
+                try? await Task.sleep(for: .milliseconds(500))
             }
         }
     }
 
-    private func startActivity(secondsRemaining: Int) {
-        let endDate = Date().addingTimeInterval(TimeInterval(secondsRemaining))
+    private func startActivity() {
+        guard let endDate else { return }
         let attributes = RestTimerAttributes()
         let state = RestTimerAttributes.ContentState(endDate: endDate)
         let content = ActivityContent(state: state, staleDate: endDate.addingTimeInterval(60))
@@ -1013,8 +1254,8 @@ final class RestTimerManager {
         )
     }
 
-    private func updateActivity(secondsRemaining: Int) {
-        let endDate = Date().addingTimeInterval(TimeInterval(secondsRemaining))
+    private func updateActivity() {
+        guard let endDate else { return }
         let updatedState = RestTimerAttributes.ContentState(endDate: endDate)
         let updatedContent = ActivityContent(state: updatedState, staleDate: endDate.addingTimeInterval(60))
         let currentActivity = activity

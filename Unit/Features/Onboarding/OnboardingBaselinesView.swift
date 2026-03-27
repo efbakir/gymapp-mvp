@@ -173,7 +173,7 @@ private struct BaselineRow: View {
             .frame(maxWidth: .infinity, alignment: .leading)
 
             // Weight field
-            HStack(spacing: 3) {
+            HStack(spacing: AppSpacing.xs) {
                 if isBodyweight {
                     Text("BW")
                         .font(AppFont.label.font)

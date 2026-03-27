@@ -544,7 +544,7 @@ private struct CalendarMonthHeader: View {
         VStack(alignment: .leading, spacing: AppSpacing.xs) {
             HStack(alignment: .center, spacing: AppSpacing.md) {
                 Text(monthTitle)
-                    .font(AppFont.largeTitle.font)
+                    .appFont(.largeTitle)
                     .foregroundStyle(AppColor.textPrimary)
 
                 Spacer(minLength: 0)
@@ -778,7 +778,7 @@ struct SessionSummarySheet: View {
                         .foregroundStyle(AppColor.textSecondary)
 
                     Text("\(payload.sessions.count) session\(payload.sessions.count == 1 ? "" : "s")")
-                        .font(AppFont.largeTitle.font)
+                        .appFont(.largeTitle)
                         .foregroundStyle(AppColor.textPrimary)
                 }
 

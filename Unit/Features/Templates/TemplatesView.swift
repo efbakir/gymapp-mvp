@@ -35,7 +35,7 @@ struct TemplatesView: View {
                 }
             }
             .navigationTitle("Templates")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
@@ -132,7 +132,7 @@ struct TemplatesView: View {
     private var emptyState: some View {
         VStack(alignment: .leading, spacing: AppSpacing.md) {
             Text("Build your first program")
-                .font(AppFont.largeTitle.font)
+                .appFont(.largeTitle)
                 .foregroundStyle(AppColor.textPrimary)
 
             Text("Add your training days, exercises, and starting weights so Unit can prepare the next target.")
@@ -167,7 +167,7 @@ struct TemplatesView: View {
                     }
 
                     Text(displayName)
-                        .font(AppFont.largeTitle.font)
+                        .appFont(.largeTitle)
                         .foregroundStyle(AppColor.textPrimary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
