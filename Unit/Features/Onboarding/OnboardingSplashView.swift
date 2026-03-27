@@ -3,7 +3,7 @@
 //  Unit
 //
 //  Screen 1 — Value prop splash. No data collected.
-//  Copy: "Your program. Auto-adjusted every week."
+//  Copy: "your gym notebook, upgraded."
 //
 
 import SwiftUI
@@ -26,7 +26,7 @@ struct OnboardingSplashView: View {
                             .foregroundStyle(AppColor.textPrimary)
                             .fixedSize(horizontal: false, vertical: true)
 
-                        Text("adaptive training,\nsimplified.")
+                        Text("your gym notebook,\nupgraded.")
                             .font(AppFont.largeTitle.font)
                             .foregroundStyle(AppColor.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
@@ -40,7 +40,7 @@ struct OnboardingSplashView: View {
                             .font(AppFont.sectionHeader.font)
                             .foregroundStyle(AppColor.textSecondary)
 
-                        Text("Build your plan in a few quick steps.")
+                        Text("Set up your routine in a few quick steps.")
                             .font(AppFont.caption.font)
                             .foregroundStyle(AppColor.textSecondary)
                     }

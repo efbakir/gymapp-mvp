@@ -2,7 +2,7 @@
 //  TemplateDetailView.swift
 //  Unit
 //
-//  Day detail: exercise list with targets (ProgressionEngine), edit control in nav bar.
+//  Day detail: exercise list with ghost values, edit control in nav bar.
 //
 
 import SwiftUI
@@ -14,16 +14,8 @@ struct TemplateDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Exercise.displayName) private var exercises: [Exercise]
     @Query(sort: \WorkoutSession.date, order: .reverse) private var sessions: [WorkoutSession]
-    @Query(sort: \Cycle.startDate, order: .reverse) private var cycles: [Cycle]
-    @Query private var rules: [ProgressionRule]
-
     @State private var showingAddExercise = false
     @State private var isEditing = false
-
-    private var activeCycle: Cycle? {
-        cycles.first(where: { $0.isActive && !$0.isCompleted })
-            ?? cycles.first(where: { !$0.isCompleted })
-    }
 
     private var orderedExercises: [Exercise] {
         template.orderedExerciseIds.compactMap { id in
@@ -210,7 +202,7 @@ struct TemplateDetailView: View {
                     .foregroundStyle(AppColor.textPrimary)
                     .monospacedDigit()
 
-                Text("Next")
+                Text("Last")
                     .font(AppFont.caption.font)
                     .foregroundStyle(AppColor.textSecondary)
 
@@ -236,28 +228,31 @@ struct TemplateDetailView: View {
     }
 
     private func plannedTargetDisplay(for exercise: Exercise) -> PlannedTargetDisplay? {
-        guard let cycle = activeCycle, cycle.currentWeekNumber > 0,
-              let rule = rules.first(where: { $0.cycleId == cycle.id && $0.exerciseId == exercise.id })
-        else {
+        // Ghost value: last completed set for this exercise across all sessions
+        guard let lastSession = sessions.first(where: {
+            $0.isCompleted &&
+            $0.setEntries.contains(where: { $0.exerciseId == exercise.id && $0.isCompleted && !$0.isWarmup })
+        }) else {
             return nil
         }
-        let snapshot = rule.snapshot(weekCount: cycle.weekCount)
-        let outcomes = rule.buildOutcomes(from: sessions)
-        guard let target = ProgressionEngine.target(for: cycle.currentWeekNumber, rule: snapshot, outcomes: outcomes) else {
-            return nil
-        }
-        guard target.reps > 0 else { return nil }
-        let setCount = max(lastWorkingSetCount(exerciseId: exercise.id), 1)
+
+        let sets = lastSession.setEntries
+            .filter { $0.exerciseId == exercise.id && $0.isCompleted && !$0.isWarmup }
+            .sorted { $0.setIndex < $1.setIndex }
+
+        guard let lastSet = sets.last, lastSet.reps > 0 else { return nil }
+
+        let setCount = max(sets.count, 1)
 
         if exercise.isBodyweight {
-            if target.weightKg == 0 {
-                return PlannedTargetDisplay(setCount: setCount, reps: target.reps, weightLine: "Bodyweight")
+            if lastSet.weight == 0 {
+                return PlannedTargetDisplay(setCount: setCount, reps: lastSet.reps, weightLine: "Bodyweight")
             }
-            return PlannedTargetDisplay(setCount: setCount, reps: target.reps, weightLine: "\(WorkoutTargetFormatter.weightDisplay(target.weightKg)) added")
+            return PlannedTargetDisplay(setCount: setCount, reps: lastSet.reps, weightLine: "\(WorkoutTargetFormatter.weightDisplay(lastSet.weight)) added")
         }
 
-        guard target.weightKg > 0 else { return nil }
-        return PlannedTargetDisplay(setCount: setCount, reps: target.reps, weightLine: WorkoutTargetFormatter.weightDisplay(target.weightKg))
+        guard lastSet.weight > 0 else { return nil }
+        return PlannedTargetDisplay(setCount: setCount, reps: lastSet.reps, weightLine: WorkoutTargetFormatter.weightDisplay(lastSet.weight))
     }
 
     private func lastWorkingSetCount(exerciseId: UUID) -> Int {
