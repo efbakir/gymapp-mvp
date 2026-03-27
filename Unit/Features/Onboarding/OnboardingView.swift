@@ -125,7 +125,7 @@ struct OnboardingView: View {
         .alert("Something went wrong", isPresented: $commitError) {
             Button("Try Again", role: .cancel) { }
         } message: {
-            Text("Could not save your cycle. Please try again.")
+            Text("Could not save your program. Please try again.")
         }
         .onAppear {
             guard !didLoadPreferences else { return }

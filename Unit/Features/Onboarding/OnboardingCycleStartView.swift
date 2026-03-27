@@ -82,7 +82,7 @@ struct OnboardingCycleStartView: View {
 
                 AppCard {
                     VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                        Text("Estimated end date (8 weeks)")
+                        Text("Estimated end date")
                             .font(AppFont.caption.font)
                             .foregroundStyle(AppColor.textSecondary)
 

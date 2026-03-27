@@ -253,11 +253,11 @@ struct TemplateDetailView: View {
             if target.weightKg == 0 {
                 return PlannedTargetDisplay(setCount: setCount, reps: target.reps, weightLine: "Bodyweight")
             }
-            return PlannedTargetDisplay(setCount: setCount, reps: target.reps, weightLine: "\(target.weightKg.weightString) kg added")
+            return PlannedTargetDisplay(setCount: setCount, reps: target.reps, weightLine: "\(WorkoutTargetFormatter.weightDisplay(target.weightKg)) added")
         }
 
         guard target.weightKg > 0 else { return nil }
-        return PlannedTargetDisplay(setCount: setCount, reps: target.reps, weightLine: "\(target.weightKg.weightString) kg")
+        return PlannedTargetDisplay(setCount: setCount, reps: target.reps, weightLine: WorkoutTargetFormatter.weightDisplay(target.weightKg))
     }
 
     private func lastWorkingSetCount(exerciseId: UUID) -> Int {
