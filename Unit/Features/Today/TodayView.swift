@@ -41,7 +41,6 @@ struct SetupIncompleteContext {
 struct TodayView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.appTabSelection) private var appTabSelection
-    @AppStorage("pendingFeelingSessionId") private var pendingFeelingSessionId = ""
 
     @Query(sort: \DayTemplate.name) private var templates: [DayTemplate]
     @Query(sort: \Split.name) private var splits: [Split]
@@ -49,9 +48,9 @@ struct TodayView: View {
     @Query(sort: \WorkoutSession.date, order: .reverse) private var sessions: [WorkoutSession]
 
     @State private var viewModel = TodayDashboardViewModel()
-    @State private var feelingPromptPayload: FeelingPromptPayload?
     @State private var workoutDetailContext: ReadyTodayContext?
     @State private var showsHistory = false
+    @State private var completedSessionDetail: WorkoutSession?
 
     private var activeSession: WorkoutSession? {
         sessions.first(where: { !$0.isCompleted })
@@ -73,12 +72,14 @@ struct TodayView: View {
             .navigationDestination(isPresented: $showsHistory) {
                 RecentSessionsView(showsCloseButton: true, initialMode: .list)
             }
-            .sheet(item: $feelingPromptPayload) { payload in
-                PostWorkoutFeelingPrompt(session: payload.session) {
-                    pendingFeelingSessionId = ""
+            .navigationDestination(isPresented: Binding(
+                get: { completedSessionDetail != nil },
+                set: { if !$0 { completedSessionDetail = nil } }
+            )) {
+                if let session = completedSessionDetail {
+                    let templateName = templates.first(where: { $0.id == session.templateId })?.name ?? "Workout"
+                    SessionDetailView(session: session, templateName: templateName)
                 }
-                .presentationDetents([.height(220)])
-                .appBottomSheetChrome()
             }
             .sheet(item: $workoutDetailContext) { context in
                 TodayWorkoutDetailsSheet(context: context) {
@@ -91,10 +92,13 @@ struct TodayView: View {
             .tint(AppColor.accent)
             .onAppear {
                 abandonStaleSession()
-                presentPendingFeelingPromptIfNeeded()
             }
-            .onChange(of: sessions.count) { _, _ in
-                presentPendingFeelingPromptIfNeeded()
+            .onChange(of: activeSession) { oldValue, newValue in
+                if oldValue != nil && newValue == nil {
+                    if let justCompleted = sessions.first(where: { $0.isCompleted }) {
+                        completedSessionDetail = justCompleted
+                    }
+                }
             }
         }
     }
@@ -113,7 +117,7 @@ struct TodayView: View {
             VStack(spacing: AppSpacing.md) {
                 stateCard(for: state)
 
-                AppSecondaryButton("Start Empty Workout") {
+                AppSecondaryButton("Quick Start") {
                     startEmptyWorkout()
                 }
             }
@@ -180,7 +184,7 @@ struct TodayView: View {
 
     private func startEmptyWorkout() {
         let emptyTemplate = DayTemplate(
-            name: "Freestyle",
+            name: "Quick Start",
             splitId: activeSplit?.id,
             orderedExerciseIds: []
         )
@@ -204,17 +208,6 @@ struct TodayView: View {
             modelContext.delete(session)
             try? modelContext.save()
         }
-    }
-
-    private func presentPendingFeelingPromptIfNeeded() {
-        guard activeSession == nil else { return }
-        guard !pendingFeelingSessionId.isEmpty else { return }
-        guard let sessionID = UUID(uuidString: pendingFeelingSessionId) else {
-            pendingFeelingSessionId = ""
-            return
-        }
-        guard let session = sessions.first(where: { $0.id == sessionID && $0.isCompleted }) else { return }
-        feelingPromptPayload = FeelingPromptPayload(session: session)
     }
 
 }
@@ -257,6 +250,7 @@ private struct ReadyTodayCard: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.horizontal, AppSpacing.lg)
+                    .padding(.vertical, AppSpacing.md)
 
                     if !context.previewTargets.isEmpty {
                         ExercisePreviewStrip(
@@ -413,85 +407,6 @@ private struct NoProgramCard: View {
 
 // MARK: - Post-Workout Feeling
 
-private struct FeelingPromptPayload: Identifiable {
-    let id = UUID()
-    let session: WorkoutSession
-}
-
-private struct PostWorkoutFeelingPrompt: View {
-    @Bindable var session: WorkoutSession
-    @Environment(\.modelContext) private var modelContext
-    @Environment(\.dismiss) private var dismiss
-
-    let onDismiss: () -> Void
-
-    @State private var savedFeeling: Int?
-
-    var body: some View {
-        VStack(spacing: 0) {
-            VStack(alignment: .leading, spacing: AppSpacing.md) {
-                if let saved = savedFeeling {
-                    VStack(spacing: AppSpacing.sm) {
-                        AppIcon.checkmarkFilled.image(size: 28, weight: .semibold)
-                            .foregroundStyle(AppColor.success)
-                        Text("Saved — \(saved)/5")
-                            .font(AppFont.title.font)
-                            .foregroundStyle(AppColor.textPrimary)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, AppSpacing.lg)
-                } else {
-                    Text("How did it feel?")
-                        .font(AppFont.title.font)
-                        .foregroundStyle(AppColor.textPrimary)
-
-                    HStack(spacing: AppSpacing.sm) {
-                        ForEach(1...5, id: \.self) { value in
-                            feelingButton(value)
-                        }
-                    }
-
-                    AppSecondaryButton("Skip") {
-                        onDismiss()
-                        dismiss()
-                    }
-                }
-            }
-            .padding(.horizontal, AppSpacing.md)
-            .padding(.top, AppSpacing.md)
-
-            Spacer(minLength: 0)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background(AppColor.sheetBackground.ignoresSafeArea())
-        .onDisappear {
-            onDismiss()
-        }
-    }
-
-    private func feelingButton(_ value: Int) -> some View {
-        Button {
-            session.overallFeeling = value
-            try? modelContext.save()
-            withAnimation(.easeInOut(duration: 0.2)) {
-                savedFeeling = value
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-                onDismiss()
-                dismiss()
-            }
-        } label: {
-            Text("\(value)")
-                .font(AppFont.sectionHeader.font)
-                .foregroundStyle(session.overallFeeling == value ? AppColor.accentForeground : AppColor.textPrimary)
-                .frame(maxWidth: .infinity)
-                .frame(height: 52)
-                .background(session.overallFeeling == value ? AppColor.accent : AppColor.controlBackground)
-                .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
-        }
-        .buttonStyle(.plain)
-    }
-}
 
 // MARK: - View Model
 
@@ -618,7 +533,7 @@ final class TodayDashboardViewModel {
                     isBodyweight: exercise.isBodyweight
                 )
             } else {
-                displayTarget = "No history yet"
+                displayTarget = "–"
             }
 
             let lastPerformanceLabel = lastSets.last.map {

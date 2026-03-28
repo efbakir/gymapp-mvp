@@ -136,6 +136,7 @@ extension Text {
 }
 
 enum AppSpacing {
+    static let xxs: CGFloat = 2
     static let xs: CGFloat = 4
     static let sm: CGFloat = 8
     static let md: CGFloat = 16
@@ -850,15 +851,15 @@ struct SetProgressIndicator: View {
     let steps: [Step]
 
     var body: some View {
-        HStack(spacing: AppSpacing.xs) {
+        HStack(spacing: AppSpacing.sm) {
             ForEach(steps) { step in
                 Group {
                     if step.state == .current {
                         Text("Set \(step.label)")
                             .font(AppFont.stepIndicator)
                             .foregroundStyle(AppColor.accentForeground)
-                            .padding(.horizontal, AppSpacing.sm)
-                            .frame(height: 20)
+                            .padding(.horizontal, AppSpacing.smd)
+                            .frame(height: 24)
                             .background(Capsule().fill(AppColor.accent))
                     } else {
                         ZStack {
@@ -868,7 +869,7 @@ struct SetProgressIndicator: View {
                                     Circle()
                                         .stroke(borderColor(for: step.state), lineWidth: 1)
                                 }
-                                .frame(width: 20, height: 20)
+                                .frame(width: 24, height: 24)
 
                             switch step.state {
                             case .completed:
@@ -898,7 +899,7 @@ struct SetProgressIndicator: View {
         case .disabled:
             return AppColor.background
         case .completed, .failed, .upcoming:
-            return AppColor.mutedFill
+            return AppColor.controlBackground
         }
     }
 
@@ -1017,17 +1018,17 @@ struct RestTimerControl: View {
             Button(action: { onToggle?() }) {
                 HStack(spacing: AppSpacing.sm) {
                     Text(timeText)
-                        .font(AppFont.productHeading)
-                        .tracking(AppFont.productHeadingTracking)
+                        .font(AppFont.numericLarge)
+                        .tracking(AppFont.numericLargeTracking)
                         .foregroundStyle(AppColor.textPrimary)
                         .monospacedDigit()
 
                     if let indicatorIcon {
-                        indicatorIcon.image(size: 14, weight: .semibold)
+                        indicatorIcon.image(size: 16, weight: .semibold)
                             .foregroundStyle(AppColor.textSecondary)
                     }
                 }
-                .frame(height: 48)
+                .frame(height: 56)
                 .padding(.horizontal, AppSpacing.md)
                 .background(showsTimerBackground ? AppColor.controlBackground : .clear)
                 .clipShape(Capsule())
@@ -1058,9 +1059,9 @@ struct RestTimerControl: View {
 
     private func adjustButton(icon: AppIcon, action: (() -> Void)?) -> some View {
         Button(action: { action?() }) {
-            icon.image(size: 22, weight: .semibold)
+            icon.image(size: 26, weight: .semibold)
                 .foregroundStyle(AppColor.textSecondary)
-                .frame(width: 48, height: 48)
+                .frame(width: 56, height: 56)
                 .background(AppColor.controlBackground)
                 .clipShape(Circle())
         }
@@ -1380,21 +1381,28 @@ struct WorkoutCommandCard: View {
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
 
-                    HStack(spacing: AppSpacing.xs) {
+                    if onSecondaryAction != nil {
+                        Button(action: { onSecondaryAction?() }) {
+                            HStack(spacing: AppSpacing.xs) {
+                                Text(metricValue)
+                                    .font(AppFont.productHeading)
+                                    .tracking(AppFont.productHeadingTracking)
+                                    .foregroundStyle(AppColor.textSecondary)
+                                    .multilineTextAlignment(.center)
+
+                                AppIcon.edit.image(size: 18, weight: .semibold)
+                                    .foregroundStyle(AppColor.disabledSurface)
+                                    .frame(width: 44, height: 44)
+                            }
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(ScaleButtonStyle())
+                    } else {
                         Text(metricValue)
                             .font(AppFont.productHeading)
                             .tracking(AppFont.productHeadingTracking)
                             .foregroundStyle(AppColor.textSecondary)
                             .multilineTextAlignment(.center)
-
-                        if onSecondaryAction != nil {
-                            Button(action: { onSecondaryAction?() }) {
-                                AppIcon.edit.image(size: 14, weight: .semibold)
-                                    .foregroundStyle(AppColor.disabledSurface)
-                                    .frame(width: 24, height: 24)
-                            }
-                            .buttonStyle(ScaleButtonStyle())
-                        }
                     }
                 }
                 .padding(.vertical, AppSpacing.md)
@@ -1422,7 +1430,8 @@ struct WorkoutCommandCard: View {
                     onToggle: onTimerToggle,
                     onIncrease: onTimerIncrease
                 )
-                .padding(AppSpacing.md)
+                .padding(.horizontal, AppSpacing.md)
+                .padding(.vertical, AppSpacing.lg)
             }
         }
         .frame(maxWidth: .infinity)
@@ -2056,6 +2065,9 @@ extension View {
 private struct AppBottomSheetChromeModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
+            .safeAreaInset(edge: .top, spacing: 0) {
+                Color.clear.frame(height: AppSpacing.smd)
+            }
             .presentationDragIndicator(.visible)
             .presentationCornerRadius(AppRadius.sheet)
             .presentationBackground(AppColor.background)

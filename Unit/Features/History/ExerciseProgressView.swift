@@ -184,7 +184,7 @@ struct ExerciseProgressView: View {
         let delta = prev.map { point.weight - $0.weight }
 
         return HStack {
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: AppSpacing.xxs) {
                 Text(templateName)
                     .font(AppFont.body.font)
                     .lineLimit(1)
@@ -193,7 +193,7 @@ struct ExerciseProgressView: View {
                     .foregroundStyle(AppColor.textSecondary)
             }
             Spacer(minLength: 0)
-            VStack(alignment: .trailing, spacing: 2) {
+            VStack(alignment: .trailing, spacing: AppSpacing.xxs) {
                 Text(WorkoutTargetFormatter.actualText(weightKg: point.weight, setCount: 1, reps: point.reps, isBodyweight: isBodyweight))
                     .font(AppFont.body.font)
                     .monospacedDigit()

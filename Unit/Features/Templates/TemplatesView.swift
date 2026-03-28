@@ -279,43 +279,38 @@ struct EditProgramView: View {
             trailingText: NavTextAction(label: "Done", action: { dismiss() })
         ) {
             VStack(alignment: .leading, spacing: AppSpacing.md) {
-                AppCard {
-                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                        Text("Program Name")
-                            .font(AppFont.caption.font)
-                            .foregroundStyle(AppColor.textSecondary)
+                VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                    Text("Program Name")
+                        .font(AppFont.caption.font)
+                        .foregroundStyle(AppColor.textSecondary)
+                        .padding(.leading, AppSpacing.xs)
 
-                        TextField("Program name", text: $split.name)
-                            .font(AppFont.body.font)
-                            .foregroundStyle(AppColor.textPrimary)
-                            .textInputAutocapitalization(.words)
-                            .frame(minHeight: 44)
-                    }
+                    TextField("Program name", text: $split.name)
+                        .font(AppFont.body.font)
+                        .foregroundStyle(AppColor.textPrimary)
+                        .textInputAutocapitalization(.words)
+                        .appInputFieldStyle()
                 }
 
-                AppCard {
-                    VStack(alignment: .leading, spacing: AppSpacing.md) {
-                        Text("Routine Names")
-                            .font(AppFont.caption.font)
+                VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                    Text("Routines")
+                        .font(AppFont.caption.font)
+                        .foregroundStyle(AppColor.textSecondary)
+                        .padding(.leading, AppSpacing.xs)
+
+                    if orderedTemplates.isEmpty {
+                        Text("No routines in this program yet.")
+                            .font(AppFont.body.font)
                             .foregroundStyle(AppColor.textSecondary)
-
-                        if orderedTemplates.isEmpty {
-                            Text("No routines in this program yet.")
-                                .font(AppFont.body.font)
-                                .foregroundStyle(AppColor.textSecondary)
-                        } else {
-                            ForEach(Array(orderedTemplates.enumerated()), id: \.element.id) { index, template in
-                                VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                                    TextField("Routine name", text: binding(for: template))
-                                        .font(AppFont.body.font)
-                                        .foregroundStyle(AppColor.textPrimary)
-                                        .textInputAutocapitalization(.words)
-                                        .frame(minHeight: 44)
-
-                                    if index < orderedTemplates.count - 1 {
-                                        AppDivider()
-                                    }
-                                }
+                            .padding(AppSpacing.md)
+                    } else {
+                        VStack(spacing: AppSpacing.sm) {
+                            ForEach(orderedTemplates, id: \.id) { template in
+                                TextField("Routine name", text: binding(for: template))
+                                    .font(AppFont.body.font)
+                                    .foregroundStyle(AppColor.textPrimary)
+                                    .textInputAutocapitalization(.words)
+                                    .appInputFieldStyle()
                             }
                         }
                     }

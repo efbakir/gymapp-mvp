@@ -13,6 +13,7 @@ struct ActiveWorkoutView: View {
     @Bindable var session: WorkoutSession
 
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.scenePhase) private var scenePhase
     @Query(sort: \Exercise.displayName) private var exercises: [Exercise]
     @Query(sort: \WorkoutSession.date, order: .reverse) private var sessions: [WorkoutSession]
     @Query(sort: \DayTemplate.name) private var templates: [DayTemplate]
@@ -21,19 +22,27 @@ struct ActiveWorkoutView: View {
 
     @State private var viewModel = ActiveWorkoutViewModel()
     @State private var restTimer = RestTimerManager()
-    @State private var restDurationSeconds = 180
+    @State private var restDurationSeconds = 30
     @State private var showLineup = false
     @State private var showLogs = false
     @State private var adjustResultPayload: AdjustResultPayload?
     @State private var selectedExerciseIndex = 0
     @State private var showsReadyState = false
     @State private var showsCancelConfirmation = false
+    @State private var showsSkipExerciseConfirmation = false
+    @State private var showsFinishConfirmation = false
+    @State private var showsRenamePrompt = false
+    @State private var renameDraft = ""
     @State private var showsAddExercise = false
     @State private var pendingExerciseForSetup: Exercise?
     @State private var customSetCounts: [UUID: Int] = [:]
 
     private var template: DayTemplate? {
         templates.first(where: { $0.id == session.templateId })
+    }
+
+    private var isQuickStartSession: Bool {
+        template?.name == "Quick Start"
     }
 
     private var activeCycle: Cycle? {
@@ -111,7 +120,7 @@ struct ActiveWorkoutView: View {
     private var primaryButton: PrimaryButtonConfig? {
         guard isWorkoutComplete else { return nil }
         return PrimaryButtonConfig(label: "Finish Session") {
-            finishWorkout()
+            showsFinishConfirmation = true
         }
     }
 
@@ -228,7 +237,7 @@ struct ActiveWorkoutView: View {
                         metricValue: currentMetricValue,
                         metricSupportingText: currentMetricSupportingText,
                         state: workoutCommandCardState,
-                        primaryLabel: "Done",
+                        primaryLabel: "Log",
                         onPrimaryAction: currentSection.hasReachedPlannedSetGoal ? nil : {
                             completeSuggestedSet(
                                 exercise: currentSection.exercise,
@@ -251,7 +260,9 @@ struct ActiveWorkoutView: View {
                         onTimerIncrease: increaseRestTimerAction
                     )
 
-                    addExerciseButton
+                    if isQuickStartSession {
+                        addExerciseButton
+                    }
                 }
                 .frame(maxWidth: .infinity, alignment: .top)
             } else {
@@ -285,13 +296,17 @@ struct ActiveWorkoutView: View {
             }
             ToolbarItemGroup(placement: .topBarTrailing) {
                 if !sectionModels.isEmpty {
-                    Button("List") {
+                    Button {
                         showLineup = true
+                    } label: {
+                        Image(systemName: AppIcon.list.systemName)
                     }
                 }
                 if session.setEntries.contains(where: { $0.isCompleted }) && !isWorkoutComplete {
-                    Button("Finish") {
-                        finishWorkout()
+                    Button {
+                        showsFinishConfirmation = true
+                    } label: {
+                        Image(systemName: AppIcon.checkmark.systemName)
                     }
                 }
             }
@@ -349,6 +364,42 @@ struct ActiveWorkoutView: View {
         } message: {
             Text("Are you sure you want to cancel this workout? All logged sets will be lost.")
         }
+        .alert("Skip Exercise?", isPresented: $showsSkipExerciseConfirmation) {
+            Button("Skip", role: .destructive) {
+                goToNextExercise()
+            }
+            Button("Keep Logging", role: .cancel) {}
+        } message: {
+            if let currentSection {
+                let remaining = currentSection.plannedSetCount - currentSection.entries.count
+                Text("You have \(remaining) unlogged set\(remaining == 1 ? "" : "s") for \(currentSection.exercise.displayName).")
+            }
+        }
+        .alert("Finish Session", isPresented: $showsFinishConfirmation) {
+            Button("Finish") {
+                finishWorkout()
+                if template?.name == "Quick Start" {
+                    renameDraft = ""
+                    showsRenamePrompt = true
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This will finish and save your session. Are you ready?")
+        }
+        .alert("Name this workout", isPresented: $showsRenamePrompt) {
+            TextField("Workout name", text: $renameDraft)
+            Button("Save") {
+                let trimmed = renameDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+                if let template, !trimmed.isEmpty {
+                    template.name = trimmed
+                    try? modelContext.save()
+                }
+            }
+            Button("Skip", role: .cancel) {}
+        } message: {
+            Text("Give this session a name so you can find it later.")
+        }
         .onAppear {
             selectedExerciseIndex = recommendedExerciseIndex
         }
@@ -365,6 +416,11 @@ struct ActiveWorkoutView: View {
         }
         .onDisappear {
             restTimer.stop()
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active, restTimer.endDate != nil {
+                restTimer.resumeFromBackground()
+            }
         }
     }
 
@@ -404,7 +460,11 @@ struct ActiveWorkoutView: View {
     }
 
     private var exerciseListSheet: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
+            SheetHeader(title: "Exercises") {
+                showLineup = false
+            }
+
             ScrollView {
                 VStack(spacing: 0) {
                     ForEach(Array(sectionModels.enumerated()), id: \.element.id) { index, section in
@@ -421,7 +481,14 @@ struct ActiveWorkoutView: View {
                             if isCurrent && !isDone {
                                 AppTag(text: "Current", style: .accent)
                             } else if isDone {
-                                IconChip(icon: .checkmark)
+                                ZStack {
+                                    Circle()
+                                        .fill(AppColor.success.opacity(0.1))
+                                        .frame(width: 24, height: 24)
+
+                                    AppIcon.checkmark.image(size: 12, weight: .bold)
+                                        .foregroundStyle(AppColor.success)
+                                }
                             }
                         }
                         .contentShape(Rectangle())
@@ -435,17 +502,8 @@ struct ActiveWorkoutView: View {
                 .clipShape(RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous))
                 .padding(AppSpacing.md)
             }
-            .background(AppColor.sheetBackground.ignoresSafeArea())
-            .navigationTitle("Exercise List")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") {
-                        showLineup = false
-                    }
-                }
-            }
         }
+        .background(AppColor.sheetBackground.ignoresSafeArea())
     }
 
     private func exerciseListSubtitle(for section: WorkoutExerciseSectionModel) -> String? {
@@ -562,7 +620,13 @@ struct ActiveWorkoutView: View {
 
     private var goToNextExerciseAction: (() -> Void)? {
         guard nextSection != nil else { return nil }
-        return { goToNextExercise() }
+        return {
+            if let currentSection, !currentSection.hasReachedPlannedSetGoal {
+                showsSkipExerciseConfirmation = true
+            } else {
+                goToNextExercise()
+            }
+        }
     }
 
     private func lastActualText(for exercise: Exercise) -> String? {
@@ -728,10 +792,6 @@ struct ActiveWorkoutView: View {
         session.isCompleted = true
         try? modelContext.save()
         UINotificationFeedbackGenerator().notificationOccurred(.success)
-
-        if session.overallFeeling == 0 {
-            UserDefaults.standard.set(session.id.uuidString, forKey: "pendingFeelingSessionId")
-        }
     }
 
     private func addExerciseToWorkout(_ exercise: Exercise) {
@@ -835,11 +895,12 @@ private struct AdjustResultSheet: View {
         Int(repsText) ?? 0
     }
 
+    private var effectiveIsBodyweight: Bool {
+        isBodyweight || (!isBodyweight && parsedWeight == 0 && !weightText.isEmpty)
+    }
+
     private var canSave: Bool {
-        if isBodyweight {
-            return parsedReps > 0
-        }
-        return parsedWeight > 0 && parsedReps > 0
+        parsedReps > 0
     }
 
     var body: some View {
@@ -847,22 +908,33 @@ private struct AdjustResultSheet: View {
             VStack(alignment: .leading, spacing: AppSpacing.md) {
                 sheetHeader
 
-                if !isBodyweight {
-                    manualInputField(title: "WEIGHT (kg)", text: $weightText, keyboardType: .decimalPad)
-                }
+                HStack(spacing: AppSpacing.sm) {
+                    manualInputField(
+                        title: isBodyweight ? "Weight" : "Weight (kg)",
+                        text: $weightText,
+                        keyboardType: .decimalPad,
+                        suffix: effectiveIsBodyweight ? "BW" : nil
+                    )
 
-                manualInputField(title: "REPS", text: $repsText, keyboardType: .numberPad)
+                    manualInputField(
+                        title: "Reps",
+                        text: $repsText,
+                        keyboardType: .numberPad
+                    )
+                }
 
                 TextField("Optional note", text: $noteText)
                     .font(AppFont.body.font)
                     .appInputFieldStyle()
 
                 AppPrimaryButton("Save", isEnabled: canSave) {
-                    onSave(isBodyweight ? 0 : parsedWeight, parsedReps, noteText)
+                    onSave(effectiveIsBodyweight ? 0 : parsedWeight, parsedReps, noteText)
                     dismiss()
                 }
             }
-            .padding(AppSpacing.md)
+            .padding(.horizontal, AppSpacing.md)
+            .padding(.bottom, AppSpacing.md)
+            .padding(.top, AppSpacing.lg)
         }
         .scrollDismissesKeyboard(.interactively)
         .onAppear {
@@ -885,7 +957,7 @@ private struct AdjustResultSheet: View {
                     .fixedSize(horizontal: false, vertical: true)
 
                 Text("Log a different result for this set.")
-                    .font(AppFont.caption.font)
+                    .font(AppFont.body.font)
                     .foregroundStyle(AppColor.textSecondary)
             }
 
@@ -901,18 +973,27 @@ private struct AdjustResultSheet: View {
     private func manualInputField(
         title: String,
         text: Binding<String>,
-        keyboardType: UIKeyboardType
+        keyboardType: UIKeyboardType,
+        suffix: String? = nil
     ) -> some View {
         VStack(alignment: .leading, spacing: AppSpacing.xs) {
             Text(title)
                 .font(AppFont.caption.font)
                 .foregroundStyle(AppColor.textSecondary)
 
-            TextField("0", text: text)
-                .keyboardType(keyboardType)
-                .font(AppFont.numericDisplay)
-                .multilineTextAlignment(.center)
-                .appInputFieldStyle(height: 64, horizontalPadding: AppSpacing.sm)
+            HStack(spacing: AppSpacing.xs) {
+                TextField("0", text: text)
+                    .keyboardType(keyboardType)
+                    .font(AppFont.numericDisplay)
+                    .multilineTextAlignment(.center)
+
+                if let suffix {
+                    Text(suffix)
+                        .font(AppFont.productAction)
+                        .foregroundStyle(AppColor.textSecondary)
+                }
+            }
+            .appInputFieldStyle(height: 64, horizontalPadding: AppSpacing.sm)
         }
     }
 }
@@ -957,7 +1038,7 @@ private struct SetCountPickerSheet: View {
             }
         }
         .padding(.horizontal, AppSpacing.md)
-        .padding(.top, AppSpacing.md)
+        .padding(.top, AppSpacing.lg)
     }
 }
 
@@ -1156,7 +1237,7 @@ final class RestTimerManager {
 
     private var task: Task<Void, Never>?
     private var activity: Activity<RestTimerAttributes>?
-    private var endDate: Date?
+    private(set) var endDate: Date?
 
     var label: String {
         let minutes = secondsRemaining / 60
@@ -1189,6 +1270,18 @@ final class RestTimerManager {
         endDate = Date().addingTimeInterval(TimeInterval(secondsRemaining))
         startActivity()
         startCountdownTask()
+    }
+
+    func resumeFromBackground() {
+        guard let end = endDate else { return }
+        let remaining = Int(ceil(end.timeIntervalSinceNow))
+        if remaining <= 0 {
+            completeIfFinished()
+        } else {
+            secondsRemaining = remaining
+            isRunning = true
+            startCountdownTask()
+        }
     }
 
     func adjust(by delta: Int, minimumSeconds: Int = 30) {

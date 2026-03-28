@@ -416,6 +416,33 @@ struct RecentSessionListRow: View {
     }
 }
 
+private struct SessionStatusBadge: View {
+    let state: SessionReviewState
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(state.markerColor.opacity(0.1))
+                .frame(width: 24, height: 24)
+
+            icon
+                .foregroundStyle(state.markerColor)
+        }
+    }
+
+    @ViewBuilder
+    private var icon: some View {
+        switch state {
+        case .completed:
+            AppIcon.checkmark.image(size: 12, weight: .bold)
+        case .partial:
+            AppIcon.remove.image(size: 12, weight: .bold)
+        case .skipped:
+            AppIcon.remove.image(size: 12, weight: .bold)
+        }
+    }
+}
+
 private struct DaySessionCard: View {
     let date: Date
     let sessions: [SessionSnapshot]
@@ -443,15 +470,7 @@ private struct DaySessionCard: View {
 
                 Spacer(minLength: 0)
 
-                HStack(spacing: AppSpacing.xs) {
-                    Circle()
-                        .fill(overallState.markerColor)
-                        .frame(width: 6, height: 6)
-
-                    Text(overallState.title)
-                        .font(AppFont.caption.font)
-                        .foregroundStyle(overallState.markerColor)
-                }
+                SessionStatusBadge(state: overallState)
             }
 
             // Show template names (deduplicated)
@@ -503,15 +522,7 @@ fileprivate func sessionPreviewCardContent(snapshot: SessionSnapshot, showDisclo
 
             Spacer(minLength: 0)
 
-            HStack(spacing: AppSpacing.xs) {
-                Circle()
-                    .fill(snapshot.sessionStatusTint)
-                    .frame(width: 6, height: 6)
-
-                Text(snapshot.state.title)
-                    .font(AppFont.caption.font)
-                    .foregroundStyle(snapshot.sessionStatusTint)
-            }
+            SessionStatusBadge(state: snapshot.state)
         }
 
         Text(snapshot.templateName)
@@ -769,27 +780,29 @@ private struct CalendarSessionCard: View {
 struct SessionSummarySheet: View {
     let payload: SelectedSessionsPayload
 
+    @Environment(\.dismiss) private var dismiss
+
+    private var headerTitle: String {
+        let count = payload.sessions.count
+        return "\(count) session\(count == 1 ? "" : "s")"
+    }
+
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: AppSpacing.md) {
-                VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                    Text(payload.date, format: .dateTime.weekday(.wide).month(.wide).day())
-                        .font(AppFont.caption.font)
-                        .foregroundStyle(AppColor.textSecondary)
-
-                    Text("\(payload.sessions.count) session\(payload.sessions.count == 1 ? "" : "s")")
-                        .appFont(.largeTitle)
-                        .foregroundStyle(AppColor.textPrimary)
-                }
-
-                ForEach(payload.sessions) { snapshot in
-                    SessionSummaryCard(snapshot: snapshot)
-                }
+        VStack(spacing: 0) {
+            SheetHeader(title: headerTitle) {
+                dismiss()
             }
-            .padding(.horizontal, AppSpacing.md)
-            .padding(.vertical, AppSpacing.lg)
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: AppSpacing.md) {
+                    ForEach(payload.sessions) { snapshot in
+                        SessionSummaryCard(snapshot: snapshot)
+                    }
+                }
+                .padding(.horizontal, AppSpacing.md)
+                .padding(.bottom, AppSpacing.lg)
+            }
         }
-        .appScrollEdgeSoftTop(enabled: true)
         .background(AppColor.background.ignoresSafeArea())
     }
 }
@@ -812,9 +825,15 @@ private struct SessionSummaryCard: View {
                 }
             }
 
-            VStack(alignment: .leading, spacing: AppSpacing.smd) {
-                ForEach(snapshot.exercises) { exercise in
+            VStack(alignment: .leading, spacing: 0) {
+                ForEach(Array(snapshot.exercises.enumerated()), id: \.element.id) { index, exercise in
+                    if index > 0 {
+                        AppDivider()
+                            .padding(.horizontal, -AppSpacing.md)
+                    }
+
                     SessionExerciseSummary(exercise: exercise)
+                        .padding(.vertical, AppSpacing.smd)
                 }
             }
         }
@@ -844,7 +863,7 @@ private struct SessionExerciseSummary: View {
 
                 VStack(alignment: .leading, spacing: AppSpacing.xs) {
                     HStack(alignment: hasTarget && !isGood ? .top : .firstTextBaseline, spacing: AppSpacing.sm) {
-                        VStack(alignment: .leading, spacing: 2) {
+                        VStack(alignment: .leading, spacing: AppSpacing.xxs) {
                             Text(setOrdinalLabel(for: set))
                                 .font(AppFont.caption.font)
                                 .foregroundStyle(AppColor.textSecondary)
@@ -868,7 +887,7 @@ private struct SessionExerciseSummary: View {
                                 .foregroundStyle(AppColor.warning)
                                 .padding(.top, 2)
                         } else {
-                            VStack(alignment: .trailing, spacing: 2) {
+                            VStack(alignment: .trailing, spacing: AppSpacing.xxs) {
                                 Text(actualText(for: set))
                                     .font(AppFont.label.font)
                                     .foregroundStyle(AppColor.textPrimary)

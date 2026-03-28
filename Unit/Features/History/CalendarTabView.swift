@@ -373,7 +373,7 @@ private struct CalendarDaySummaryCard: View {
                     AppTag(text: summary.status.label, style: summary.status.tagStyle)
                 }
 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: AppSpacing.xxs) {
                     Text(summary.primaryTitle)
                         .font(AppFont.title.font)
                         .foregroundStyle(AppColor.textPrimary)

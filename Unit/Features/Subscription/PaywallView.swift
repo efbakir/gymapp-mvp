@@ -121,7 +121,7 @@ struct PaywallView: View {
                 .background(AppColor.accentSoft)
                 .clipShape(RoundedRectangle(cornerRadius: AppRadius.sm, style: .continuous))
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: AppSpacing.xxs) {
                 Text(title)
                     .font(AppFont.label.font)
                     .foregroundStyle(AppColor.textPrimary)

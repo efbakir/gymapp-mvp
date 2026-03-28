@@ -46,11 +46,18 @@ struct SessionDetailView: View {
 
             ForEach(setsByExercise, id: \.exercise.id) { section in
                 AppCard {
-                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                    VStack(alignment: .leading, spacing: 0) {
                         Text(section.exercise.displayName)
-                            .font(AppFont.sectionHeader.font)
+                            .font(AppFont.productHeading)
+                            .tracking(AppFont.productHeadingTracking)
+                            .foregroundStyle(AppColor.textPrimary)
+                            .padding(.bottom, AppSpacing.sm)
 
                         ForEach(Array(section.entries.enumerated()), id: \.element.id) { index, entry in
+                            if index > 0 {
+                                AppDivider()
+                                    .padding(.horizontal, -AppSpacing.md)
+                            }
                             AppListRow(
                                 title: "Set \(entry.setIndex + 1)",
                                 subtitle: entry.rpe > 0 ? "RPE \(formatWeight(entry.rpe))" : nil
@@ -64,11 +71,9 @@ struct SessionDetailView: View {
                                     )
                                 )
                                     .font(AppFont.body.font)
-                                    .foregroundStyle(AppColor.textPrimary)
+                                    .foregroundStyle(AppColor.textSecondary)
                             }
-                            if index < section.entries.count - 1 {
-                                AppDivider()
-                            }
+                            .padding(.horizontal, -AppSpacing.md)
                         }
                     }
                 }
