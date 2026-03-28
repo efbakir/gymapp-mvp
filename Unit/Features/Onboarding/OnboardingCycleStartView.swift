@@ -2,8 +2,8 @@
 //  OnboardingCycleStartView.swift
 //  Unit
 //
-//  Screen 8 — Cycle start date.
-//  This is the commit point: "Create My Cycle" writes all data to SwiftData.
+//  Screen 8 — Program start date.
+//  This is the commit point: creates the program and writes data to SwiftData.
 //
 
 import SwiftUI
@@ -21,9 +21,7 @@ struct OnboardingCycleStartView: View {
         return f
     }()
 
-    private var endDate: Date {
-        Calendar.current.date(byAdding: .weekOfYear, value: 8, to: vm.startDate) ?? vm.startDate
-    }
+    // End date removed: 8-week cycles demoted per compass 2026-03-26.
 
     var body: some View {
         @Bindable var vm = vm
@@ -80,17 +78,7 @@ struct OnboardingCycleStartView: View {
                 .background(AppColor.cardBackground)
                 .clipShape(RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous))
 
-                AppCard {
-                    VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                        Text("Estimated end date")
-                            .font(AppFont.caption.font)
-                            .foregroundStyle(AppColor.textSecondary)
-
-                        Text(dateFormatter.string(from: endDate))
-                            .font(AppFont.body.font)
-                            .foregroundStyle(AppColor.textSecondary)
-                    }
-                }
+                // "Estimated end date" card removed — 8-week cycles demoted per compass 2026-03-26.
             }
         }
     }

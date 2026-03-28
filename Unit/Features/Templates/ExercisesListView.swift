@@ -207,92 +207,89 @@ struct ExerciseDetailView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: AppSpacing.md) {
-                VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                    Text(exercise.displayName)
-                        .appFont(.largeTitle)
-                    Text("Brzycki 1RM and session volume")
-                        .font(AppFont.caption.font)
-                        .foregroundStyle(AppColor.textSecondary)
+        AppScreen(
+            showsNativeNavigationBar: true
+        ) {
+            VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                Text(exercise.displayName)
+                    .appFont(.largeTitle)
+                Text("Brzycki 1RM and session volume")
+                    .font(AppFont.caption.font)
+                    .foregroundStyle(AppColor.textSecondary)
+            }
+            .appCardStyle()
+
+            if summaries.isEmpty {
+                Text("No logged sessions yet.")
+                    .font(AppFont.body.font)
+                    .foregroundStyle(AppColor.textSecondary)
+                    .appCardStyle()
+            } else {
+                VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                    Text("Estimated 1RM Trend")
+                        .font(AppFont.sectionHeader.font)
+                    Chart(trendAscending) { item in
+                        LineMark(
+                            x: .value("Date", item.sessionDate),
+                            y: .value("1RM", item.estimatedOneRM)
+                        )
+                        .foregroundStyle(AppColor.textPrimary)
+                        PointMark(
+                            x: .value("Date", item.sessionDate),
+                            y: .value("1RM", item.estimatedOneRM)
+                        )
+                        .foregroundStyle(AppColor.textPrimary)
+                    }
+                    .frame(height: 180)
                 }
                 .appCardStyle()
 
-                if summaries.isEmpty {
-                    Text("No logged sessions yet.")
-                        .font(AppFont.body.font)
-                        .foregroundStyle(AppColor.textSecondary)
-                        .appCardStyle()
-                } else {
-                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                        Text("Estimated 1RM Trend")
-                            .font(AppFont.sectionHeader.font)
-                        Chart(trendAscending) { item in
-                            LineMark(
-                                x: .value("Date", item.sessionDate),
-                                y: .value("1RM", item.estimatedOneRM)
-                            )
-                            .foregroundStyle(AppColor.textPrimary)
-                            PointMark(
-                                x: .value("Date", item.sessionDate),
-                                y: .value("1RM", item.estimatedOneRM)
-                            )
-                            .foregroundStyle(AppColor.textPrimary)
-                        }
-                        .frame(height: 180)
+                VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                    Text("Session Volume")
+                        .font(AppFont.sectionHeader.font)
+                    Chart(trendAscending) { item in
+                        BarMark(
+                            x: .value("Date", item.sessionDate),
+                            y: .value("Volume", item.totalVolume)
+                        )
+                        .foregroundStyle(AppColor.accentSoft)
                     }
-                    .appCardStyle()
-
-                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                        Text("Session Volume")
-                            .font(AppFont.sectionHeader.font)
-                        Chart(trendAscending) { item in
-                            BarMark(
-                                x: .value("Date", item.sessionDate),
-                                y: .value("Volume", item.totalVolume)
-                            )
-                            .foregroundStyle(AppColor.accentSoft)
-                        }
-                        .frame(height: 160)
-                    }
-                    .appCardStyle()
-
-                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                        Text("Past Sessions")
-                            .font(AppFont.sectionHeader.font)
-
-                        ForEach(summaries) { summary in
-                            VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                                HStack {
-                                    Text(summary.templateName)
-                                        .font(AppFont.body.font)
-                                    Spacer(minLength: 0)
-                                    Text(summary.sessionDate, style: .date)
-                                        .font(AppFont.caption.font)
-                                        .foregroundStyle(AppColor.textSecondary)
-                                }
-                                Text("Top set: \(summary.topSetText)")
-                                    .font(AppFont.caption.font)
-                                    .foregroundStyle(AppColor.textSecondary)
-                                Text("Est. 1RM: \(formatWeight(summary.estimatedOneRM)) kg • Volume: \(Int(summary.totalVolume))")
-                                    .font(AppFont.caption.font)
-                                    .foregroundStyle(AppColor.textSecondary)
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.vertical, AppSpacing.sm)
-
-                            if summary.id != summaries.last?.id {
-                                AppDivider()
-                            }
-                        }
-                    }
-                    .appCardStyle()
+                    .frame(height: 160)
                 }
+                .appCardStyle()
+
+                VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                    Text("Past Sessions")
+                        .font(AppFont.sectionHeader.font)
+
+                    ForEach(summaries) { summary in
+                        VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                            HStack {
+                                Text(summary.templateName)
+                                    .font(AppFont.body.font)
+                                Spacer(minLength: 0)
+                                Text(summary.sessionDate, style: .date)
+                                    .font(AppFont.caption.font)
+                                    .foregroundStyle(AppColor.textSecondary)
+                            }
+                            Text("Top set: \(summary.topSetText)")
+                                .font(AppFont.caption.font)
+                                .foregroundStyle(AppColor.textSecondary)
+                            Text("Est. 1RM: \(formatWeight(summary.estimatedOneRM)) kg • Volume: \(Int(summary.totalVolume))")
+                                .font(AppFont.caption.font)
+                                .foregroundStyle(AppColor.textSecondary)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.vertical, AppSpacing.sm)
+
+                        if summary.id != summaries.last?.id {
+                            AppDivider()
+                        }
+                    }
+                }
+                .appCardStyle()
             }
-            .padding(AppSpacing.md)
         }
-        .appScrollEdgeSoftTop(enabled: true)
-        .background(AppColor.background)
         .navigationTitle("Exercise")
         .navigationBarTitleDisplayMode(.inline)
         .appNavigationBarChrome()

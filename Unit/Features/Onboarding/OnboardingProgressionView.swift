@@ -2,8 +2,8 @@
 //  OnboardingProgressionView.swift
 //  Unit
 //
-//  Screen 7 — Default weekly increment.
-//  Global only — per-exercise overrides live in CycleSettingsView post-launch.
+//  Screen 7 — Default increment.
+//  Global only — per-exercise overrides may be added post-launch.
 //
 
 import SwiftUI
