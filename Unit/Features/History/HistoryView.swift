@@ -885,7 +885,7 @@ private struct SessionExerciseSummary: View {
                             Text("Fail")
                                 .font(AppFont.label.font)
                                 .foregroundStyle(AppColor.warning)
-                                .padding(.top, 2)
+                                .padding(.top, AppSpacing.xxs)
                         } else {
                             VStack(alignment: .trailing, spacing: AppSpacing.xxs) {
                                 Text(actualText(for: set))
