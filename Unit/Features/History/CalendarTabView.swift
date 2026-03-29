@@ -18,6 +18,7 @@ struct CalendarTabView: View {
     @State private var displayMonth = Calendar.current.startOfMonth(for: Date())
     @State private var selectedDate: Date?
     @State private var selectedPayload: SelectedSessionsPayload?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var templateNamesByID: [UUID: String] {
         Dictionary(uniqueKeysWithValues: templates.map { ($0.id, $0.name) })
@@ -85,7 +86,7 @@ struct CalendarTabView: View {
             selectedPayload = SelectedSessionsPayload(date: day, sessions: summary.sessions)
             return
         }
-        withAnimation(.easeInOut(duration: 0.2)) {
+        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) {
             if let selectedDate, Calendar.current.isDate(selectedDate, inSameDayAs: day) {
                 self.selectedDate = nil
             } else {

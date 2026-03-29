@@ -19,6 +19,7 @@ struct OnboardingExercisesView: View {
     @State private var showingAddSheet: Bool = false
     @FocusState private var focusedExerciseID: UUID?
     @State private var draggedExerciseID: UUID?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private func exerciseNameBinding(dayIndex: Int, exerciseIndex: Int) -> Binding<String> {
         Binding(
@@ -121,7 +122,8 @@ struct OnboardingExercisesView: View {
                                 delegate: ExerciseReorderDropDelegate(
                                     targetExerciseID: ex.id,
                                     exercises: $vm.dayExercises[selectedDayIndex],
-                                    draggedExerciseID: $draggedExerciseID
+                                    draggedExerciseID: $draggedExerciseID,
+                                    reduceMotion: reduceMotion
                                 )
                             )
                         }
@@ -173,6 +175,7 @@ private struct ExerciseReorderDropDelegate: DropDelegate {
     let targetExerciseID: UUID
     @Binding var exercises: [OnboardingExercise]
     @Binding var draggedExerciseID: UUID?
+    var reduceMotion: Bool = false
 
     func dropEntered(info: DropInfo) {
         guard let draggedExerciseID,
@@ -182,7 +185,7 @@ private struct ExerciseReorderDropDelegate: DropDelegate {
             return
         }
 
-        withAnimation(.spring(response: 0.22, dampingFraction: 0.9)) {
+        withAnimation(reduceMotion ? nil : .spring(response: 0.22, dampingFraction: 0.9)) {
             let movedExercise = exercises.remove(at: fromIndex)
             exercises.insert(movedExercise, at: toIndex)
         }

@@ -28,6 +28,7 @@ struct ActiveWorkoutView: View {
     @State private var adjustResultPayload: AdjustResultPayload?
     @State private var selectedExerciseIndex = 0
     @State private var showsReadyState = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showsCancelConfirmation = false
     @State private var showsSkipExerciseConfirmation = false
     @State private var showsFinishConfirmation = false
@@ -685,7 +686,7 @@ struct ActiveWorkoutView: View {
         guard selectedExerciseIndex < sectionModels.count - 1 else { return }
         showsReadyState = false
         restTimer.stop()
-        withAnimation(.easeInOut(duration: 0.18)) {
+        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.18)) {
             selectedExerciseIndex += 1
         }
     }

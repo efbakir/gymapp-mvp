@@ -16,6 +16,7 @@ struct TemplateDetailView: View {
     @Query(sort: \WorkoutSession.date, order: .reverse) private var sessions: [WorkoutSession]
     @State private var showingAddExercise = false
     @State private var isEditing = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var orderedExercises: [Exercise] {
         template.orderedExerciseIds.compactMap { id in
@@ -101,7 +102,7 @@ struct TemplateDetailView: View {
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
-                    withAnimation(.easeInOut(duration: 0.18)) {
+                    withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.18)) {
                         isEditing.toggle()
                     }
                 } label: {
