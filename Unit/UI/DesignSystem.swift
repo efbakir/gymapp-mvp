@@ -1628,7 +1628,7 @@ struct ExerciseRow: View {
     }
 
     private var displayValue: String {
-        let load = isBodyweight && weightText == "0 kg" ? "BW" : weightText
+        let load = isBodyweight && (weightText == "0kg" || weightText == "0lb") ? "BW" : weightText
         return "\(load) × 1 × \(repsText)"
     }
 }

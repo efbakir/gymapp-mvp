@@ -387,10 +387,10 @@ private struct CalendarDaySummaryCard: View {
             }
         }
         .overlay {
-            RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous)
+            RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
                 .stroke(borderColor, lineWidth: borderLineWidth)
         }
-        .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous))
     }
 
     private var borderColor: Color {
