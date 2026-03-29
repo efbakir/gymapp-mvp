@@ -78,9 +78,7 @@ struct OnboardingSplitBuilderView: View {
                         .disabled(vm.dayCount >= 6)
                     }
                 }
-                .padding(AppSpacing.md)
-                .background(AppColor.cardBackground)
-                .clipShape(RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous))
+                .appCardStyle()
 
                 // Day name fields
                 VStack(spacing: AppSpacing.sm) {

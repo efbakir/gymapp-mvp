@@ -162,9 +162,7 @@ struct PaywallView: View {
                 .font(AppFont.caption.font)
                 .foregroundStyle(AppColor.textSecondary)
         }
-        .padding(AppSpacing.md)
-        .background(AppColor.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous))
+        .appCardStyle()
         .overlay {
             RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
                 .stroke(AppColor.border.opacity(0.6), lineWidth: 1)

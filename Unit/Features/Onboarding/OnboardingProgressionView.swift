@@ -38,9 +38,7 @@ struct OnboardingProgressionView: View {
                         onIncrease: { vm.stepUp(.isolation) }
                     )
                 }
-                .padding(AppSpacing.md)
-                .background(AppColor.cardBackground)
-                .clipShape(RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous))
+                .appCardStyle()
 
                 Text("Main lifts usually start at 2.5–5 \(vm.weightUnitLabel). Isolation usually stays at 0–2.5 \(vm.weightUnitLabel), including 0 if you want it fixed.")
                     .font(AppFont.caption.font)
