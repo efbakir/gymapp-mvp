@@ -50,35 +50,32 @@ struct ExerciseProgressView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: AppSpacing.lg) {
-                if let pr = allTimePR, let e1rm = epley1RM {
-                    prCard(pr: pr, e1rm: e1rm)
-                }
-
-                if sessionPoints.count > 1 {
-                    chartCard
-                }
-
-                if !sessionPoints.isEmpty {
-                    sessionListCard
-                } else {
-                    VStack(spacing: AppSpacing.sm) {
-                        AppIcon.chart.image(size: 32, weight: .light)
-                            .foregroundStyle(AppColor.textSecondary)
-                        Text("No data yet for \(exerciseName).")
-                            .font(AppFont.body.font)
-                            .foregroundStyle(AppColor.textSecondary)
-                            .multilineTextAlignment(.center)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, AppSpacing.xl)
-                }
+        AppScreen(
+            showsNativeNavigationBar: true
+        ) {
+            if let pr = allTimePR, let e1rm = epley1RM {
+                prCard(pr: pr, e1rm: e1rm)
             }
-            .padding(AppSpacing.md)
+
+            if sessionPoints.count > 1 {
+                chartCard
+            }
+
+            if !sessionPoints.isEmpty {
+                sessionListCard
+            } else {
+                VStack(spacing: AppSpacing.sm) {
+                    AppIcon.chart.image(size: 32, weight: .light)
+                        .foregroundStyle(AppColor.textSecondary)
+                    Text("No data yet for \(exerciseName).")
+                        .font(AppFont.body.font)
+                        .foregroundStyle(AppColor.textSecondary)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, AppSpacing.xl)
+            }
         }
-        .appScrollEdgeSoftTop(enabled: true)
-        .background(AppColor.background)
         .navigationBarTitleTruncated(exerciseName)
         .navigationBarTitleDisplayMode(.inline)
         .appNavigationBarChrome()

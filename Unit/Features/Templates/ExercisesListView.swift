@@ -275,7 +275,7 @@ struct ExerciseDetailView: View {
                             Text("Top set: \(summary.topSetText)")
                                 .font(AppFont.caption.font)
                                 .foregroundStyle(AppColor.textSecondary)
-                            Text("Est. 1RM: \(formatWeight(summary.estimatedOneRM)) kg • Volume: \(Int(summary.totalVolume))")
+                            Text("Est. 1RM: \(WorkoutTargetFormatter.weightDisplay(summary.estimatedOneRM)) • Volume: \(Int(summary.totalVolume))")
                                 .font(AppFont.caption.font)
                                 .foregroundStyle(AppColor.textSecondary)
                         }
