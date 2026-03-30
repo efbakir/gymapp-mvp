@@ -151,6 +151,7 @@ enum AppRadius {
     static let sm: CGFloat = 8
     static let md: CGFloat = 12
     static let lg: CGFloat = 20
+    static let card: CGFloat = 20
     static let sheet: CGFloat = 40
 }
 
@@ -1770,11 +1771,11 @@ struct UnitTabItem: View {
     }
 
     private var iconColor: Color {
-        isActive ? AppColor.textSecondary : AppColor.textSecondary
+        isActive ? AppColor.textPrimary : AppColor.textSecondary
     }
 
     private var textColor: Color {
-        isActive ? AppColor.textSecondary : AppColor.textSecondary
+        isActive ? AppColor.textPrimary : AppColor.textSecondary
     }
 }
 
