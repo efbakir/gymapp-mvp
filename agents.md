@@ -4,9 +4,9 @@ This file orients AI agents (e.g. Claude Code, Cursor) working on the Unit codeb
 
 ## What this project is
 
-Unit is an **Adaptive Periodization Engine** for iOS. The primary user container is the **8-Week Cycle**. The core UI paradigm is **Target vs. Actual** — the app computes the target weight before every set, then adjusts future weeks automatically when the user fails.
+Unit is a **zero-friction gym logging tool** for iOS. The primary program unit is the **Template** — a lightweight repeatable routine. The core UI paradigm is **ghost values** — the app pre-fills weight and reps from the last session so the user can log a set with a single tap.
 
-The **Gym Test** still applies: logging a set (weight, reps, RIR) in **under 3 seconds** under physical stress.
+The **Gym Test** applies: logging a set (weight, reps) in **under 3 seconds** under physical stress. The `ProgressionEngine` (auto-increment, cycles) is **deferred to post-v1**; it exists in code for data compatibility but is not user-facing in the template-based flow.
 
 ## Tech stack
 
@@ -35,24 +35,29 @@ The **Gym Test** still applies: logging a set (weight, reps, RIR) in **under 3 s
 
 | Folder | Contents |
 |--------|----------|
-| `AtlasLog/Models/` | SwiftData models: Split, Exercise, DayTemplate, WorkoutSession, SetEntry, Cycle, ProgressionRule |
-| `AtlasLog/Engine/` | `ProgressionEngine.swift` — pure functional progression logic |
-| `AtlasLog/Features/Today/` | TodayView, ActiveWorkoutView (target column, RIR stepper, failure modal, toast) |
-| `AtlasLog/Features/Cycles/` | CyclesView, WeekDetailView, CreateCycleView, CycleSettingsView |
-| `AtlasLog/Features/Templates/` | Split and day template management |
-| `AtlasLog/Features/History/` | HistoryView (heatmap), SessionDetailView, PRLibraryView |
+| `Unit/Models/` | SwiftData models: Split, Exercise, DayTemplate, WorkoutSession, SetEntry, Cycle, ProgressionRule |
+| `Unit/Engine/` | `ProgressionEngine.swift` — pure functional progression logic (deferred to post-v1) |
+| `Unit/Features/Today/` | TodayView (template dashboard), ActiveWorkoutView (command-panel logging, rest timer) |
+| `Unit/Features/Templates/` | TemplatesView, TemplateDetailView, AddTemplateView, ExercisesListView |
+| `Unit/Features/History/` | HistoryView (list + calendar), SessionDetailView, PRLibraryView, ExerciseProgressView |
+| `Unit/Features/Onboarding/` | Multi-step onboarding: splash, import, split builder, exercises, baselines, start date |
+| `Unit/Features/Cycles/` | Legacy cycle views (unreachable from main navigation; retained for data compatibility) |
+| `Unit/Features/Settings/` | SettingsView (weight unit, restart onboarding) |
+| `Unit/Features/Subscription/` | PaywallView (one-time lifetime purchase) |
+| `Unit/UI/` | `DesignSystem.swift` — atoms, molecules, organisms, and screen wrapper |
 
 ## Critical rules
 
-- **All target calculations must go through `ProgressionEngine.swift`. No view or ViewModel may compute targets directly.**
-- Follow SwiftData schema (see `AtlasLog/Models/`). New optional fields with defaults use lightweight migration automatically — no `VersionedSchema` needed.
-- Optimize for the Gym Test: defaults, one-tap set completion, RIR stepper (not RPE menu), large CTAs.
-- **Light-first shipped UI**: the app is **light appearance only** (`UIUserInterfaceStyle` = Light, root `preferredColorScheme(.light)`). Use design tokens (`Unit/UI/DesignSystem.swift`, `AppColor` / `AppFont` / etc.) — they may include dark variants for future use, but **do not** build new screens against system Dark Mode or optimize for dark-only. Prefer semantic neutrals from tokens over raw `Color(.systemBackground)` for new work.
+- **Ghost values** are the primary way to pre-fill sets. The app looks up the last completed session for the same exercise (any template) and pre-fills weight + reps.
+- `ProgressionEngine` is **deferred to post-v1**. It exists in code for backward compatibility with cycle-linked sessions but must not be surfaced in new template-based UI.
+- Follow SwiftData schema (see `Unit/Models/`). New optional fields with defaults use lightweight migration automatically — no `VersionedSchema` needed.
+- Optimize for the Gym Test: defaults, one-tap set completion, large CTAs.
+- **Adaptive appearance**: Use design tokens (`Unit/UI/DesignSystem.swift`, `AppColor` / `AppFont` / etc.) — they support both light and dark modes via adaptive `UIColor`. All new UI must use tokens, not raw `Color(...)` or `.font(.system(...))`.
 - HIG compliance: all interactive elements ≥ 44pt; never color alone for meaning; guard animated transitions with `@Environment(\.accessibilityReduceMotion)`.
 - No social feed, no videos, no exercise discovery in core flow.
 
 ## Conventions
 
-- `AtlasTheme` in `ContentView.swift` is the single source of design tokens. Add new tokens there.
-- `PreviewSampleData` in `AtlasLogApp.swift` seeds 1 Cycle + ProgressionRules. Keep it up to date when adding models.
+- `Unit/UI/DesignSystem.swift` is the single source of design tokens (`AppColor`, `AppFont`, `AppSpacing`, `AppRadius`, `AppIcon`, etc.). Add new tokens there.
+- `PreviewSampleData` in `UnitApp.swift` seeds sample data for previews. Keep it up to date when adding models.
 - Engine types (`WeekTarget`, `SessionOutcome`, `ProgressionRuleSnapshot`) are pure value types — no `@Model`, no SwiftUI imports in `ProgressionEngine.swift`.
