@@ -28,6 +28,14 @@ struct ReadyTodayContext {
     let lastPerformedLabel: String?
     let previewTargets: [ExerciseTarget]
     let lastSessionDate: Date?
+    /// Position of the suggested routine in the program order (1-based).
+    let trainingDayOrdinal: Int
+    let trainingDayTotal: Int
+    /// Current cycle week number (1-based), or 1 if no cycle.
+    let cycleWeekNumber: Int
+    let weekStripItems: [TodayWeekStripItem]
+    let weekOverviewTabs: [TodayWeekOverviewSheet.WeekOverviewTab]
+    let initialWeekOverviewTabID: String
 }
 
 struct SetupIncompleteContext {
@@ -46,6 +54,7 @@ struct TodayView: View {
     @Query(sort: \Split.name) private var splits: [Split]
     @Query(sort: \Exercise.displayName) private var exercises: [Exercise]
     @Query(sort: \WorkoutSession.date, order: .reverse) private var sessions: [WorkoutSession]
+    @Query(sort: \Cycle.startDate, order: .reverse) private var cycles: [Cycle]
 
     @State private var viewModel = TodayDashboardViewModel()
     @State private var workoutDetailContext: ReadyTodayContext?
@@ -108,7 +117,8 @@ struct TodayView: View {
             sessions: sessions,
             templates: templates,
             splits: splits,
-            exercises: exercises
+            exercises: exercises,
+            cycles: cycles
         )
 
         return AppScreen(
@@ -225,47 +235,56 @@ private struct ReadyTodayCard: View {
     let onOpenPreview: () -> Void
     let onStart: () -> Void
 
+    @State private var showsWeekOverview = false
+
     var body: some View {
         AppCard {
-            VStack(alignment: .center, spacing: AppSpacing.md) {
-                VStack(spacing: AppSpacing.lg) {
-                    VStack(spacing: AppSpacing.xs) {
-                        Text(context.templateName)
-                            .font(AppFont.productHeading)
-                            .tracking(AppFont.productHeadingTracking)
-                            .foregroundStyle(AppColor.textPrimary)
-                            .multilineTextAlignment(.center)
-                            .fixedSize(horizontal: false, vertical: true)
+            VStack(alignment: .center, spacing: AppSpacing.lg) {
+                AppTag(
+                    text: "Week \(context.cycleWeekNumber) · Day \(context.trainingDayOrdinal)",
+                    style: .custom(fg: AppColor.textSecondary, bg: AppColor.controlBackground)
+                )
 
-                        Text(context.programName)
-                            .font(AppFont.productAction)
-                            .foregroundStyle(AppColor.textSecondary)
-                            .multilineTextAlignment(.center)
+                VStack(spacing: AppSpacing.xs) {
+                    Text(context.templateName)
+                        .font(AppFont.productHeading)
+                        .tracking(AppFont.productHeadingTracking)
+                        .foregroundStyle(AppColor.textPrimary)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
 
-                        if let lastLabel = context.lastPerformedLabel {
-                            Text(lastLabel)
-                                .font(AppFont.caption.font)
-                                .foregroundStyle(AppColor.textSecondary)
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.horizontal, AppSpacing.lg)
-                    .padding(.vertical, AppSpacing.md)
+                    Text(context.programName)
+                        .font(AppFont.productAction)
+                        .foregroundStyle(AppColor.textSecondary)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
 
-                    if !context.previewTargets.isEmpty {
-                        ExercisePreviewStrip(
-                            items: context.previewTargets.map {
-                                ExercisePreviewStrip.Item(title: $0.exerciseName, detail: $0.displayTarget)
+                if !context.previewTargets.isEmpty {
+                    Button {
+                        onOpenPreview()
+                    } label: {
+                        PreviewListContainer {
+                            ForEach(Array(context.previewTargets.enumerated()), id: \.offset) { _, target in
+                                PreviewListRow(
+                                    title: target.exerciseName,
+                                    subtitle: target.displayTarget
+                                )
                             }
-                        ) { _ in
-                            onOpenPreview()
                         }
                     }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, -AppSpacing.md)
                 }
 
                 AppPrimaryButton("Start", action: onStart)
             }
-            .frame(maxWidth: .infinity)
+        }
+        .sheet(isPresented: $showsWeekOverview) {
+            TodayWeekOverviewSheet(
+                tabs: context.weekOverviewTabs,
+                initialTabID: context.initialWeekOverviewTabID
+            )
         }
     }
 }
@@ -381,7 +400,7 @@ private struct NoProgramCard: View {
     var body: some View {
         AppCard {
             VStack(alignment: .center, spacing: AppSpacing.md) {
-                Text("Templates")
+                Text("Programs")
                     .font(AppFont.caption.font)
                     .foregroundStyle(AppColor.textSecondary)
 
@@ -398,7 +417,7 @@ private struct NoProgramCard: View {
                         .multilineTextAlignment(.center)
                 }
 
-                AppPrimaryButton("Go to Templates", action: onGoToProgram)
+                AppPrimaryButton("Go to Programs", action: onGoToProgram)
             }
             .frame(maxWidth: .infinity)
         }
@@ -417,7 +436,8 @@ final class TodayDashboardViewModel {
         sessions: [WorkoutSession],
         templates: [DayTemplate],
         splits: [Split],
-        exercises: [Exercise]
+        exercises: [Exercise],
+        cycles: [Cycle]
     ) -> TodayDashboardState {
         guard let split = splits.first else { return .noProgram }
 
@@ -425,7 +445,7 @@ final class TodayDashboardViewModel {
         guard !orderedTemplates.isEmpty else {
             return .setupIncomplete(
                 SetupIncompleteContext(
-                    eyebrow: "Templates",
+                    eyebrow: "Programs",
                     title: "Finish set up",
                     message: "Add at least one routine before starting workouts."
                 )
@@ -437,19 +457,25 @@ final class TodayDashboardViewModel {
             .sorted { ($0.lastPerformedDate ?? .distantPast) < ($1.lastPerformedDate ?? .distantPast) }
             .first!
 
+        let activeCycle = cycles.first(where: { $0.splitId == split.id && $0.isActive })
+
         return stateForTemplate(
             nextTemplate,
             split: split,
+            templates: templates,
             sessions: sessions,
-            exercises: exercises
+            exercises: exercises,
+            cycleWeekNumber: activeCycle?.currentWeekNumber ?? 1
         )
     }
 
     private func stateForTemplate(
         _ template: DayTemplate,
         split: Split,
+        templates: [DayTemplate],
         sessions: [WorkoutSession],
-        exercises: [Exercise]
+        exercises: [Exercise],
+        cycleWeekNumber: Int
     ) -> TodayDashboardState {
         if template.orderedExerciseIds.isEmpty {
             return .setupIncomplete(
@@ -487,13 +513,52 @@ final class TodayDashboardViewModel {
             }
         }
 
+        let orderedRoutines = orderedTemplates(for: split, templates: templates)
+        let routineIDs: [UUID] = orderedRoutines.map(\DayTemplate.id)
+        let templateIndex = orderedRoutines.firstIndex { $0.id == template.id }
+        let dayOrdinal = templateIndex.map { $0 + 1 } ?? 1
+        let dayTotal = max(orderedRoutines.count, 1)
+
+        let weekStrip = TrainingWeekProgressBuilder.weekStripItems(
+            routineTemplateIDs: routineIDs,
+            sessions: sessions
+        )
+        var weekTabs: [TodayWeekOverviewSheet.WeekOverviewTab] = []
+        weekTabs.reserveCapacity(weekStrip.count)
+        for item in weekStrip {
+            let days = TrainingWeekProgressBuilder.overviewDays(
+                weekStart: item.weekStart,
+                routineTemplateIDs: routineIDs,
+                sessions: sessions
+            )
+            let tab = TodayWeekOverviewSheet.WeekOverviewTab(
+                id: item.id,
+                segmentTitle: item.shortLabel,
+                navigationTitle: TrainingWeekProgressBuilder.weekRangeTitle(weekStart: item.weekStart),
+                days: days
+            )
+            weekTabs.append(tab)
+        }
+        let chipWeekID = weekStrip.first { item in
+            if case .chip = item.presentation { return true }
+            return false
+        }?.id
+        let middleFallback = weekStrip[safe: 1]?.id
+        let initialWeekTabID = chipWeekID ?? middleFallback ?? weekStrip.first?.id ?? ""
+
         return .readyToday(
             ReadyTodayContext(
                 programName: split.name,
                 templateName: template.name,
                 lastPerformedLabel: lastLabel,
                 previewTargets: previewTargets,
-                lastSessionDate: lastDate
+                lastSessionDate: lastDate,
+                trainingDayOrdinal: dayOrdinal,
+                trainingDayTotal: dayTotal,
+                cycleWeekNumber: cycleWeekNumber,
+                weekStripItems: weekStrip,
+                weekOverviewTabs: weekTabs,
+                initialWeekOverviewTabID: initialWeekTabID
             )
         )
     }

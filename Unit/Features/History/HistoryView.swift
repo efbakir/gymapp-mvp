@@ -848,7 +848,7 @@ private struct SessionSummaryCard: View {
     }
 }
 
-private struct SessionExerciseSummary: View {
+struct SessionExerciseSummary: View {
     let exercise: SessionExerciseSnapshot
 
     var body: some View {

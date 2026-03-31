@@ -12,24 +12,40 @@ struct SessionDetailView: View {
     let session: WorkoutSession
     let templateName: String
 
-    @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Exercise.displayName) private var exercises: [Exercise]
     @State private var showingFeelingPicker = false
 
-    private var setsByExercise: [(exercise: Exercise, entries: [SetEntry])] {
+    private var exerciseSnapshots: [SessionExerciseSnapshot] {
         let grouped = Dictionary(grouping: session.setEntries.filter(\.isCompleted), by: \.exerciseId)
-        return grouped.compactMap { exerciseID, entries in
+        return grouped.compactMap { exerciseID, entries -> SessionExerciseSnapshot? in
             guard let exercise = exercises.first(where: { $0.id == exerciseID }) else { return nil }
-            return (exercise, entries.sorted { $0.setIndex < $1.setIndex })
+            let sortedEntries = entries.sorted { $0.setIndex < $1.setIndex }
+            let sets = sortedEntries.map { entry in
+                SessionSetSnapshot(
+                    id: entry.id,
+                    setIndex: entry.setIndex,
+                    targetWeight: entry.targetWeight,
+                    targetReps: entry.targetReps,
+                    actualWeight: entry.weight,
+                    actualReps: entry.reps,
+                    metTarget: entry.targetWeight > 0 || entry.targetReps > 0 ? entry.metTarget : true,
+                    note: entry.note.trimmingCharacters(in: .whitespacesAndNewlines)
+                )
+            }
+            return SessionExerciseSnapshot(
+                id: exerciseID,
+                name: exercise.displayName,
+                isBodyweight: exercise.isBodyweight,
+                sets: sets
+            )
         }
-        .sorted { $0.exercise.displayName < $1.exercise.displayName }
+        .sorted { $0.name < $1.name }
     }
 
     var body: some View {
         AppScreen(
-            title: "Session",
-            navigationBarTitleDisplayMode: .inline
+            showsNativeNavigationBar: true
         ) {
             AppCard {
                 VStack(alignment: .leading, spacing: AppSpacing.xs) {
@@ -44,37 +60,16 @@ struct SessionDetailView: View {
                 }
             }
 
-            ForEach(setsByExercise, id: \.exercise.id) { section in
-                AppCard {
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text(section.exercise.displayName)
-                            .font(AppFont.productHeading)
-                            .tracking(AppFont.productHeadingTracking)
-                            .foregroundStyle(AppColor.textPrimary)
-                            .padding(.bottom, AppSpacing.sm)
-
-                        ForEach(Array(section.entries.enumerated()), id: \.element.id) { index, entry in
-                            if index > 0 {
-                                AppDivider()
-                                    .padding(.horizontal, -AppSpacing.md)
-                            }
-                            AppListRow(
-                                title: "Set \(entry.setIndex + 1)",
-                                subtitle: entry.rpe > 0 ? "RPE \(formatWeight(entry.rpe))" : nil
-                            ) {
-                                Text(
-                                    WorkoutTargetFormatter.actualText(
-                                        weightKg: entry.weight,
-                                        setCount: 1,
-                                        reps: entry.reps,
-                                        isBodyweight: section.exercise.isBodyweight
-                                    )
-                                )
-                                    .font(AppFont.body.font)
-                                    .foregroundStyle(AppColor.textSecondary)
-                            }
-                            .padding(.horizontal, -AppSpacing.md)
+            AppCard {
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(Array(exerciseSnapshots.enumerated()), id: \.element.id) { index, exercise in
+                        if index > 0 {
+                            AppDivider()
+                                .padding(.horizontal, -AppSpacing.md)
                         }
+
+                        SessionExerciseSummary(exercise: exercise)
+                            .padding(.vertical, AppSpacing.smd)
                     }
                 }
             }
@@ -98,15 +93,16 @@ struct SessionDetailView: View {
                 .buttonStyle(.plain)
             }
         }
+        .navigationTitle("Session")
+        .navigationBarTitleDisplayMode(.inline)
+        .appNavigationBarChrome()
+        .toolbar(.hidden, for: .tabBar)
         .sheet(isPresented: $showingFeelingPicker) {
             FeelingPickerView(session: session)
                 .appBottomSheetChrome()
         }
     }
 
-    private func formatWeight(_ value: Double) -> String {
-        value == floor(value) ? "\(Int(value))" : String(format: "%.1f", value)
-    }
 }
 
 private struct FeelingPickerView: View {
@@ -154,7 +150,7 @@ private struct FeelingPickerView: View {
         let container = PreviewSampleData.makePreviewContainer()
         let session = (try? container.mainContext.fetch(FetchDescriptor<WorkoutSession>()))?.first
 
-        return Group {
+        Group {
             if let session {
                 SessionDetailView(session: session, templateName: "Push")
                     .modelContainer(container)

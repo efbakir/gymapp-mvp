@@ -13,12 +13,17 @@ struct TemplatesView: View {
     @Query(sort: \DayTemplate.name) private var templates: [DayTemplate]
     @Query(sort: \Exercise.displayName) private var exercises: [Exercise]
     @Query(sort: \WorkoutSession.date, order: .reverse) private var sessions: [WorkoutSession]
+    // Cycle query removed — cycles are deferred to post-v1 (compass 2026-03-26).
 
     @State private var showingOnboarding = false
     @State private var showingSettings = false
 
     private var activeSplit: Split? {
         splits.first
+    }
+
+    private var inactiveSplits: [Split] {
+        Array(splits.dropFirst())
     }
 
     var body: some View {
@@ -34,7 +39,7 @@ struct TemplatesView: View {
                     }
                 }
             }
-            .navigationTitle("Templates")
+            .navigationTitle("Programs")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -70,62 +75,54 @@ struct TemplatesView: View {
         let days = orderedTemplates(for: split)
 
         VStack(alignment: .leading, spacing: AppSpacing.md) {
+            // MARK: Active Program section
+            Text("Active Program")
+                .font(AppFont.sectionHeader.font)
+                .foregroundStyle(AppColor.textPrimary)
+                .padding(.leading, AppSpacing.md)
+
             activeProgramCard(split: split, days: days)
 
-            if days.isEmpty {
-                AppCard {
-                    VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                        Text("No routines yet")
-                            .font(AppFont.sectionHeader.font)
-                            .foregroundStyle(AppColor.textPrimary)
+            // MARK: Recent Sessions
+            NavigationLink {
+                RecentSessionsView(showsCloseButton: false)
+            } label: {
+                Text("Recent Sessions")
+                    .font(AppFont.label.font)
+                    .foregroundStyle(AppColor.textPrimary)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 52)
+                    .background(AppColor.cardBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
+            }
+            .buttonStyle(.plain)
 
-                        Text("Finish your program setup to add training routines and exercises.")
-                            .font(AppFont.body.font)
-                            .foregroundStyle(AppColor.textSecondary)
-                    }
-                }
-            } else {
-                Text("Routines")
+            // MARK: All Programs (inactive splits)
+            if !inactiveSplits.isEmpty {
+                Text("All Programs")
                     .font(AppFont.sectionHeader.font)
                     .foregroundStyle(AppColor.textPrimary)
-                    .padding(.top, AppSpacing.lg)
+                    .padding(.top, AppSpacing.md)
                     .padding(.leading, AppSpacing.md)
 
                 AppCard {
-                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                        ForEach(Array(days.enumerated()), id: \.element.id) { index, template in
-                            NavigationLink(value: template) {
-                                RoutineRow(
-                                    title: template.displayName,
-                                    subtitle: routineSummary(for: template)
-                                )
-                            }
-                            .buttonStyle(.plain)
+                    VStack(alignment: .leading, spacing: 0) {
+                        ForEach(Array(inactiveSplits.enumerated()), id: \.element.id) { index, split in
+                            let splitDays = orderedTemplates(for: split)
+                            let dayCount = splitDays.count
+                            let exerciseCount = splitDays.reduce(0) { $0 + $1.orderedExerciseIds.count }
+                            PreviewListRow(
+                                title: split.name.isEmpty ? "Untitled Program" : split.name,
+                                subtitle: "\(dayCount) day\(dayCount == 1 ? "" : "s") · \(exerciseCount) exercise\(exerciseCount == 1 ? "" : "s")"
+                            )
 
-                            if index < days.count - 1 {
+                            if index < inactiveSplits.count - 1 {
                                 AppDivider()
                             }
                         }
                     }
                 }
             }
-
-            Text("History")
-                .font(AppFont.sectionHeader.font)
-                .foregroundStyle(AppColor.textPrimary)
-                .padding(.top, AppSpacing.lg)
-                .padding(.leading, AppSpacing.md)
-
-            NavigationLink {
-                RecentSessionsView(showsCloseButton: false)
-            } label: {
-                AppCard {
-                    AppListRow(title: "Recent Sessions") {
-                        EmptyView()
-                    }
-                }
-            }
-            .buttonStyle(.plain)
         }
     }
 
@@ -151,35 +148,24 @@ struct TemplatesView: View {
         let displayName = split.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             ? "Untitled Program"
             : split.name
-        let previewDays = Array(days.prefix(3))
 
         return AppCard {
             VStack(alignment: .leading, spacing: AppSpacing.lg) {
-                VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                    HStack(spacing: AppSpacing.xs) {
-                        Circle()
-                            .fill(AppColor.success)
-                            .frame(width: 6, height: 6)
+                Text(displayName)
+                    .appFont(.largeTitle)
+                    .foregroundStyle(AppColor.textPrimary)
+                    .fixedSize(horizontal: false, vertical: true)
 
-                        Text("Active Program")
-                            .font(AppFont.caption.font)
-                            .foregroundStyle(AppColor.success)
-                    }
-
-                    Text(displayName)
-                        .appFont(.largeTitle)
-                        .foregroundStyle(AppColor.textPrimary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                if !previewDays.isEmpty {
-                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                        ForEach(Array(previewDays.enumerated()), id: \.element.id) { index, template in
-                            ProgramDayPreviewRow(
-                                title: template.displayName,
-                                subtitle: routineSummary(for: template),
-                                opacity: previewOpacity(for: index)
-                            )
+                if !days.isEmpty {
+                    PreviewListContainer {
+                        ForEach(Array(days.enumerated()), id: \.element.id) { index, template in
+                            NavigationLink(value: template) {
+                                PreviewListRow(
+                                    title: template.displayName,
+                                    subtitle: routineSummary(for: template)
+                                )
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
                 }
@@ -195,14 +181,6 @@ struct TemplatesView: View {
                 }
                 .buttonStyle(.plain)
             }
-        }
-    }
-
-    private func previewOpacity(for index: Int) -> Double {
-        switch index {
-        case 0: return 1
-        case 1: return 0.6
-        default: return 0.2
         }
     }
 
@@ -222,38 +200,6 @@ struct TemplatesView: View {
             return "Add exercises"
         }
         return "\(count) exercise\(count == 1 ? "" : "s")"
-    }
-}
-
-private struct RoutineRow: View {
-    let title: String
-    let subtitle: String
-
-    var body: some View {
-        AppListRow(title: title, subtitle: subtitle) {
-            EmptyView()
-        }
-    }
-}
-
-private struct ProgramDayPreviewRow: View {
-    let title: String
-    let subtitle: String
-    let opacity: Double
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.xs) {
-            Text(title)
-                .font(AppFont.label.font)
-                .foregroundStyle(AppColor.textPrimary)
-                .fixedSize(horizontal: false, vertical: true)
-
-            Text(subtitle)
-                .font(AppFont.caption.font)
-                .foregroundStyle(AppColor.textSecondary)
-        }
-        .padding(.vertical, AppSpacing.sm)
-        .opacity(opacity)
     }
 }
 

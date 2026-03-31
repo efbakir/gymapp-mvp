@@ -85,11 +85,11 @@ enum AppFont {
         case .sectionHeader:
             return .custom("Inter-SemiBold", size: 17)
         case .body:
-            return .custom("Inter-Regular", size: 17)
+            return .custom("Inter-Medium", size: 17)
         case .label:
             return .custom("Inter-SemiBold", size: 17)
         case .caption, .muted:
-            return .custom("Inter-Regular", size: 12)
+            return .custom("Inter-Medium", size: 12)
         }
     }
 
@@ -1178,6 +1178,84 @@ private struct ExercisePreviewViewportWidthKey: PreferenceKey {
     }
 }
 
+// MARK: - PreviewListRow + PreviewListContainer
+
+struct PreviewListRow: View {
+    let title: String
+    let subtitle: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.xs) {
+            Text(title)
+                .font(AppFont.sectionHeader.font)
+                .foregroundStyle(AppColor.textPrimary)
+
+            Text(subtitle)
+                .font(AppFont.caption.font)
+                .foregroundStyle(AppColor.textSecondary)
+        }
+        .padding(.vertical, AppSpacing.sm)
+    }
+}
+
+struct PreviewListContainer<Content: View>: View {
+    var maxHeight: CGFloat = 228
+    @ViewBuilder let content: () -> Content
+
+    @State private var contentHeight: CGFloat = 0
+
+    private var showsFade: Bool {
+        contentHeight > maxHeight
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                content()
+            }
+            .padding(AppSpacing.md)
+            .background(
+                GeometryReader { proxy in
+                    Color.clear.preference(
+                        key: PreviewListContentHeightKey.self,
+                        value: proxy.size.height
+                    )
+                }
+            )
+        }
+        .frame(maxHeight: maxHeight)
+        .onPreferenceChange(PreviewListContentHeightKey.self) { contentHeight = $0 }
+        .background(AppColor.controlBackground)
+        .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
+        .overlay(alignment: .bottom) {
+            if showsFade {
+                LinearGradient(
+                    colors: [AppColor.controlBackground.opacity(0), AppColor.controlBackground],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .frame(height: 24)
+                .clipShape(
+                    UnevenRoundedRectangle(
+                        bottomLeadingRadius: AppRadius.md,
+                        bottomTrailingRadius: AppRadius.md,
+                        style: .continuous
+                    )
+                )
+                .allowsHitTesting(false)
+            }
+        }
+    }
+}
+
+private struct PreviewListContentHeightKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
+    }
+}
+
 struct SheetHeader: View {
     let title: String
     var onDone: (() -> Void)? = nil
@@ -1383,21 +1461,29 @@ struct WorkoutCommandCard: View {
                         .fixedSize(horizontal: false, vertical: true)
 
                     if onSecondaryAction != nil {
-                        Button(action: { onSecondaryAction?() }) {
-                            HStack(spacing: AppSpacing.xs) {
-                                Text(metricValue)
-                                    .font(AppFont.productHeading)
-                                    .tracking(AppFont.productHeadingTracking)
-                                    .foregroundStyle(AppColor.textSecondary)
-                                    .multilineTextAlignment(.center)
+                        ZStack(alignment: .center) {
+                            Text(metricValue)
+                                .font(AppFont.productHeading)
+                                .tracking(AppFont.productHeadingTracking)
+                                .foregroundStyle(AppColor.textSecondary)
+                                .multilineTextAlignment(.center)
+                                .frame(maxWidth: .infinity)
 
-                                AppIcon.edit.image(size: 18, weight: .semibold)
-                                    .foregroundStyle(AppColor.disabledSurface)
-                                    .frame(width: 44, height: 44)
+                            HStack {
+                                Spacer(minLength: 0)
+                                Button(action: { onSecondaryAction?() }) {
+                                    Image(systemName: "square.and.pencil")
+                                        .font(.system(size: 21, weight: .semibold))
+                                        .foregroundStyle(AppColor.textSecondary)
+                                        .frame(width: 40, height: 40)
+                                        .contentShape(Rectangle())
+                                }
+                                .buttonStyle(ScaleButtonStyle())
+                                .accessibilityLabel("Adjust set")
+                                .offset(x: -28)
                             }
-                            .contentShape(Rectangle())
                         }
-                        .buttonStyle(ScaleButtonStyle())
+                        .frame(minHeight: 44)
                     } else {
                         Text(metricValue)
                             .font(AppFont.productHeading)

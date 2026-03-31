@@ -40,7 +40,7 @@ struct PRLibraryView: View {
             if records.isEmpty {
                 AppCard {
                     VStack(spacing: AppSpacing.sm) {
-                        AppIcon.trophy.image(size: 32, weight: .light)
+                        AppIcon.trophy.image(size: 32, weight: .medium)
                             .foregroundStyle(AppColor.textSecondary)
                         Text("No PRs yet. Complete workouts to build your library.")
                             .font(AppFont.body.font)

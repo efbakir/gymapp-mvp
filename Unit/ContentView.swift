@@ -127,7 +127,7 @@ enum RootTab: String, CaseIterable, Hashable {
         case .today:
             return "Today"
         case .program:
-            return "Templates"
+            return "Programs"
         }
     }
 

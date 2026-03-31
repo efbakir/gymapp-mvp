@@ -65,7 +65,7 @@ struct ExerciseProgressView: View {
                 sessionListCard
             } else {
                 VStack(spacing: AppSpacing.sm) {
-                    AppIcon.chart.image(size: 32, weight: .light)
+                    AppIcon.chart.image(size: 32, weight: .medium)
                         .foregroundStyle(AppColor.textSecondary)
                     Text("No data yet for \(exerciseName).")
                         .font(AppFont.body.font)
