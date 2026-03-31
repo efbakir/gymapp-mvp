@@ -121,7 +121,7 @@ struct OnboardingSplitBuilderView: View {
                     Text("SUGGESTIONS")
                         .font(AppFont.overline)
                         .foregroundStyle(AppColor.textSecondary)
-                        .tracking(1.0)
+                        .tracking(AppFont.uppercaseLabelTracking)
 
                     FlowLayout(spacing: AppSpacing.sm) {
                         ForEach(suggestions, id: \.self) { suggestion in

@@ -60,14 +60,13 @@ struct SessionDetailView: View {
                 }
             }
 
-            AppCard {
-                VStack(alignment: .leading, spacing: 0) {
-                    ForEach(Array(exerciseSnapshots.enumerated()), id: \.element.id) { index, exercise in
-                        if index > 0 {
-                            AppDivider()
-                                .padding(.horizontal, -AppSpacing.md)
-                        }
-
+            if !exerciseSnapshots.isEmpty {
+                AppCard {
+                    AppDividedList(
+                        exerciseSnapshots,
+                        dividerLeading: -AppSpacing.md,
+                        dividerTrailing: -AppSpacing.md
+                    ) { exercise in
                         SessionExerciseSummary(exercise: exercise)
                             .padding(.vertical, AppSpacing.smd)
                     }

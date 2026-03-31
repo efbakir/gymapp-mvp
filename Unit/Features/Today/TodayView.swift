@@ -16,7 +16,8 @@ enum TodayDashboardState {
     case readyToday(ReadyTodayContext)
 }
 
-struct ExerciseTarget {
+struct ExerciseTarget: Identifiable {
+    let id = UUID()
     let exerciseName: String
     let displayTarget: String
     let lastPerformanceLabel: String?
@@ -141,6 +142,7 @@ struct TodayView: View {
                 } label: {
                     Image(systemName: AppIcon.calendarPlain.systemName)
                 }
+                .accessibilityLabel("History")
             }
         }
         .appNavigationBarChrome()
@@ -150,12 +152,22 @@ struct TodayView: View {
     private func stateCard(for state: TodayDashboardState) -> some View {
         switch state {
         case .noProgram:
-            NoProgramCard {
+            EmptyStateCard(
+                eyebrow: "Programs",
+                title: "Build your first program",
+                message: "Set up one simple recurring program so Unit can show the last session before every set.",
+                buttonLabel: "Go to Programs"
+            ) {
                 appTabSelection(.program)
             }
 
         case .setupIncomplete(let context):
-            SetupIncompleteCard(context: context) {
+            EmptyStateCard(
+                eyebrow: context.eyebrow,
+                title: context.title,
+                message: context.message,
+                buttonLabel: "Finish set up"
+            ) {
                 appTabSelection(.program)
             }
 
@@ -241,7 +253,7 @@ private struct ReadyTodayCard: View {
         AppCard {
             VStack(alignment: .center, spacing: AppSpacing.lg) {
                 AppTag(
-                    text: "Week \(context.cycleWeekNumber) · Day \(context.trainingDayOrdinal)",
+                    text: "Day \(context.trainingDayOrdinal) of \(context.trainingDayTotal)",
                     style: .custom(fg: AppColor.textSecondary, bg: AppColor.controlBackground)
                 )
 
@@ -333,21 +345,15 @@ private struct TodayWorkoutDetailsSheet: View {
                         }
                         .frame(maxWidth: .infinity)
 
-                        VStack(alignment: .leading, spacing: 0) {
-                            ForEach(Array(context.previewTargets.enumerated()), id: \.offset) { index, target in
-                                AppListRow(
-                                    title: target.exerciseName,
-                                    subtitle: target.lastPerformanceLabel
-                                ) {
-                                    Text(target.displayTarget)
-                                        .font(AppFont.productAction)
-                                        .foregroundStyle(AppColor.textSecondary)
-                                        .monospacedDigit()
-                                }
-
-                                if index < context.previewTargets.count - 1 {
-                                    AppDivider()
-                                }
+                        AppDividedList(context.previewTargets) { target in
+                            AppListRow(
+                                title: target.exerciseName,
+                                subtitle: target.lastPerformanceLabel
+                            ) {
+                                Text(target.displayTarget)
+                                    .font(AppFont.productAction)
+                                    .foregroundStyle(AppColor.textSecondary)
+                                    .monospacedDigit()
                             }
                         }
                         .background(AppColor.controlBackground)
@@ -361,68 +367,6 @@ private struct TodayWorkoutDetailsSheet: View {
     }
 }
 
-// MARK: - Supporting Cards
-
-private struct SetupIncompleteCard: View {
-    let context: SetupIncompleteContext
-    let onOpenProgram: () -> Void
-
-    var body: some View {
-        AppCard {
-            VStack(alignment: .center, spacing: AppSpacing.md) {
-                Text(context.eyebrow)
-                    .font(AppFont.caption.font)
-                    .foregroundStyle(AppColor.textSecondary)
-
-                VStack(alignment: .center, spacing: AppSpacing.xs) {
-                    Text(context.title)
-                        .font(AppFont.productHeading)
-                        .tracking(AppFont.productHeadingTracking)
-                        .foregroundStyle(AppColor.textPrimary)
-                        .multilineTextAlignment(.center)
-
-                    Text(context.message)
-                        .font(AppFont.productAction)
-                        .foregroundStyle(AppColor.textSecondary)
-                        .multilineTextAlignment(.center)
-                }
-
-                AppPrimaryButton("Finish set up", action: onOpenProgram)
-            }
-            .frame(maxWidth: .infinity)
-        }
-    }
-}
-
-private struct NoProgramCard: View {
-    let onGoToProgram: () -> Void
-
-    var body: some View {
-        AppCard {
-            VStack(alignment: .center, spacing: AppSpacing.md) {
-                Text("Programs")
-                    .font(AppFont.caption.font)
-                    .foregroundStyle(AppColor.textSecondary)
-
-                VStack(alignment: .center, spacing: AppSpacing.xs) {
-                    Text("Build your first program")
-                        .font(AppFont.productHeading)
-                        .tracking(AppFont.productHeadingTracking)
-                        .foregroundStyle(AppColor.textPrimary)
-                        .multilineTextAlignment(.center)
-
-                    Text("Set up one simple recurring program so Unit can show the last session before every set.")
-                        .font(AppFont.productAction)
-                        .foregroundStyle(AppColor.textSecondary)
-                        .multilineTextAlignment(.center)
-                }
-
-                AppPrimaryButton("Go to Programs", action: onGoToProgram)
-            }
-            .frame(maxWidth: .infinity)
-        }
-    }
-}
 
 // MARK: - Post-Workout Feeling
 

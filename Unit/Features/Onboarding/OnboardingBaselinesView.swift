@@ -80,20 +80,20 @@ struct OnboardingBaselinesView: View {
                         Text("Exercise")
                             .font(AppFont.overline)
                             .foregroundStyle(AppColor.textSecondary)
-                            .tracking(1.0)
+                            .tracking(AppFont.uppercaseLabelTracking)
 
                         Spacer()
 
                         Text("Weight")
                             .font(AppFont.overline)
                             .foregroundStyle(AppColor.textSecondary)
-                            .tracking(1.0)
+                            .tracking(AppFont.uppercaseLabelTracking)
                             .frame(width: 72, alignment: .center)
 
                         Text("Reps")
                             .font(AppFont.overline)
                             .foregroundStyle(AppColor.textSecondary)
-                            .tracking(1.0)
+                            .tracking(AppFont.uppercaseLabelTracking)
                             .frame(width: 52, alignment: .center)
                     }
                     .padding(.horizontal, AppSpacing.md)

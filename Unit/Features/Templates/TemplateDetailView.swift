@@ -157,6 +157,8 @@ struct TemplateDetailView: View {
                         .frame(width: 32, height: 32)
                         .background(AppColor.background)
                         .clipShape(Circle())
+                        .frame(width: 44, height: 44)
+                        .contentShape(Circle())
                 }
                 .buttonStyle(.plain)
             }

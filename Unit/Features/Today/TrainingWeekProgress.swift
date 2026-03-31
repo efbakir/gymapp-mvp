@@ -386,12 +386,10 @@ struct TodayWeekOverviewSheet: View {
             AppIcon.checkmarkFilled.image(size: 20, weight: .semibold)
                 .foregroundStyle(AppColor.success)
         case .missed:
-            Image(systemName: "minus.circle")
-                .font(.system(size: 20, weight: .semibold))
+            AppIcon.minusCircle.image(size: 20, weight: .semibold)
                 .foregroundStyle(AppColor.textSecondary)
         case .upcoming:
-            Image(systemName: "circle")
-                .font(.system(size: 20, weight: .semibold))
+            AppIcon.circle.image(size: 20, weight: .semibold)
                 .foregroundStyle(AppColor.mutedFill)
         }
     }

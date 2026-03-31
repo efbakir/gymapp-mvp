@@ -332,7 +332,7 @@ private struct WeekRowView: View {
                 .buttonStyle(.plain)
                 .sheet(isPresented: $showingProjected) {
                     ProjectedWeekSheet(cycle: cycle, weekNumber: weekNumber, rules: rules, exercises: exercises)
-                        .presentationDetents([.medium])
+                        .presentationDetents([.medium, .large])
                         .appBottomSheetChrome()
                 }
             }

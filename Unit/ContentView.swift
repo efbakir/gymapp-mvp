@@ -34,6 +34,7 @@ struct ContentView: View {
                 mainTabView
             }
         }
+        .background(AppColor.background.ignoresSafeArea())
         .onAppear {
             configureNavigationBarAppearance()
             configureSegmentedControlAppearance()

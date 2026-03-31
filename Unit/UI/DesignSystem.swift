@@ -126,6 +126,7 @@ enum AppFont {
     static let productHeadingTracking: CGFloat = -0.3
     static let numericDisplayTracking: CGFloat = -0.6
     static let numericLargeTracking: CGFloat = -0.4
+    static let uppercaseLabelTracking: CGFloat = 1.0
 }
 
 extension Text {
@@ -173,7 +174,7 @@ enum AppShadow {
 }
 
 enum AppIcon: String {
-    case back = "arrow.left"
+    case back = "chevron.left"
     case forward = "arrow.right"
     case close = "xmark"
     case add = "plus"
@@ -215,6 +216,8 @@ enum AppIcon: String {
     case camera = "camera"
     case clipboard = "doc.on.clipboard"
     case keyboard = "keyboard"
+    case minusCircle = "minus.circle"
+    case circle = "circle"
 
     var systemName: String { rawValue }
 
@@ -518,7 +521,7 @@ struct AppTag: View {
             .font(AppFont.stepIndicator)
             .foregroundStyle(foregroundColor)
             .padding(.horizontal, AppSpacing.smd)
-            .padding(.vertical, 6)
+            .padding(.vertical, AppSpacing.sm)
             .background(backgroundColor)
             .clipShape(Capsule())
     }
@@ -866,10 +869,6 @@ struct SetProgressIndicator: View {
                         ZStack {
                             Circle()
                                 .fill(backgroundColor(for: step.state))
-                                .overlay {
-                                    Circle()
-                                        .stroke(borderColor(for: step.state), lineWidth: 1)
-                                }
                                 .frame(width: 24, height: 24)
 
                             switch step.state {
@@ -913,10 +912,6 @@ struct SetProgressIndicator: View {
         case .completed, .failed, .upcoming:
             return AppColor.textSecondary
         }
-    }
-
-    private func borderColor(for state: Step.State) -> Color {
-        .clear
     }
 
     private func accessibilityLabel(for step: Step) -> String {
@@ -1087,7 +1082,7 @@ struct ExercisePreviewItem: View {
 
                 Text(detail)
                     .font(AppFont.productAction)
-                    .foregroundStyle(AppColor.disabledSurface)
+                    .foregroundStyle(AppColor.textSecondary)
                     .lineLimit(1)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -1278,8 +1273,8 @@ struct SheetHeader: View {
             if let onDone {
                 Button(action: onDone) {
                     Text("Done")
-                        .font(AppFont.productAction)
-                        .foregroundStyle(AppColor.textSecondary)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(AppColor.accent)
                         .frame(width: 60, height: 48)
                 }
                 .buttonStyle(.plain)
@@ -1288,6 +1283,7 @@ struct SheetHeader: View {
                     .frame(width: 60, height: 48)
             }
         }
+        .padding(.top, AppSpacing.sm)
     }
 }
 
@@ -1380,6 +1376,79 @@ struct CardSectionDivider: View {
     }
 }
 
+struct EmptyStateCard: View {
+    let eyebrow: String
+    let title: String
+    let message: String
+    let buttonLabel: String
+    let action: () -> Void
+
+    var body: some View {
+        AppCard {
+            VStack(alignment: .center, spacing: AppSpacing.md) {
+                Text(eyebrow)
+                    .font(AppFont.caption.font)
+                    .foregroundStyle(AppColor.textSecondary)
+
+                VStack(alignment: .center, spacing: AppSpacing.xs) {
+                    Text(title)
+                        .font(AppFont.productHeading)
+                        .tracking(AppFont.productHeadingTracking)
+                        .foregroundStyle(AppColor.textPrimary)
+                        .multilineTextAlignment(.center)
+
+                    Text(message)
+                        .font(AppFont.productAction)
+                        .foregroundStyle(AppColor.textSecondary)
+                        .multilineTextAlignment(.center)
+                }
+
+                AppPrimaryButton(buttonLabel, action: action)
+            }
+            .frame(maxWidth: .infinity)
+        }
+    }
+}
+
+struct AppDividedList<Data, ID, RowContent>: View
+    where Data: RandomAccessCollection, ID: Hashable, RowContent: View
+{
+    let data: Data
+    let id: KeyPath<Data.Element, ID>
+    var dividerLeading: CGFloat = 0
+    var dividerTrailing: CGFloat = 0
+    @ViewBuilder let content: (Data.Element) -> RowContent
+
+    var body: some View {
+        let items = Array(data)
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(items.indices, id: \.self) { index in
+                if index > 0 {
+                    AppDivider()
+                        .padding(.leading, dividerLeading)
+                        .padding(.trailing, dividerTrailing)
+                }
+                content(items[index])
+            }
+        }
+    }
+}
+
+extension AppDividedList where Data.Element: Identifiable, ID == Data.Element.ID {
+    init(
+        _ data: Data,
+        dividerLeading: CGFloat = 0,
+        dividerTrailing: CGFloat = 0,
+        @ViewBuilder content: @escaping (Data.Element) -> RowContent
+    ) {
+        self.data = data
+        self.id = \.id
+        self.dividerLeading = dividerLeading
+        self.dividerTrailing = dividerTrailing
+        self.content = content
+    }
+}
+
 struct HeroWorkoutCard: View {
     let progressSteps: [WeeklyProgressStepper.Step]
     let title: String
@@ -1461,29 +1530,19 @@ struct WorkoutCommandCard: View {
                         .fixedSize(horizontal: false, vertical: true)
 
                     if onSecondaryAction != nil {
-                        ZStack(alignment: .center) {
-                            Text(metricValue)
-                                .font(AppFont.productHeading)
-                                .tracking(AppFont.productHeadingTracking)
-                                .foregroundStyle(AppColor.textSecondary)
-                                .multilineTextAlignment(.center)
-                                .frame(maxWidth: .infinity)
+                        Button(action: { onSecondaryAction?() }) {
+                            HStack(spacing: AppSpacing.xs) {
+                                Text(metricValue)
+                                    .font(AppFont.productHeading)
+                                    .tracking(AppFont.productHeadingTracking)
 
-                            HStack {
-                                Spacer(minLength: 0)
-                                Button(action: { onSecondaryAction?() }) {
-                                    Image(systemName: "square.and.pencil")
-                                        .font(.system(size: 21, weight: .semibold))
-                                        .foregroundStyle(AppColor.textSecondary)
-                                        .frame(width: 40, height: 40)
-                                        .contentShape(Rectangle())
-                                }
-                                .buttonStyle(ScaleButtonStyle())
-                                .accessibilityLabel("Adjust set")
-                                .offset(x: -28)
+                                AppIcon.edit.image(size: 17, weight: .semibold)
                             }
+                            .foregroundStyle(AppColor.textSecondary)
+                            .frame(minHeight: 44)
                         }
-                        .frame(minHeight: 44)
+                        .buttonStyle(ScaleButtonStyle())
+                        .accessibilityLabel("Adjust set")
                     } else {
                         Text(metricValue)
                             .font(AppFont.productHeading)
@@ -1504,7 +1563,7 @@ struct WorkoutCommandCard: View {
             }
             .padding(.horizontal, AppSpacing.md)
             .padding(.top, AppSpacing.md)
-            .padding(.bottom, 18)
+            .padding(.bottom, AppSpacing.md)
 
             // Bottom section: timer
             if let timerValue {
@@ -2153,7 +2212,7 @@ private struct AppBottomSheetChromeModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .safeAreaInset(edge: .top, spacing: 0) {
-                Color.clear.frame(height: AppSpacing.smd)
+                Color.clear.frame(height: AppSpacing.md)
             }
             .presentationDragIndicator(.visible)
             .presentationCornerRadius(AppRadius.sheet)

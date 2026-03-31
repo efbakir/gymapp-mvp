@@ -48,6 +48,7 @@ struct TemplatesView: View {
                     } label: {
                         Image(systemName: AppIcon.settingsOutline.systemName)
                     }
+                    .accessibilityLabel("Settings")
                 }
             }
             .appNavigationBarChrome()
@@ -106,20 +107,14 @@ struct TemplatesView: View {
                     .padding(.leading, AppSpacing.md)
 
                 AppCard {
-                    VStack(alignment: .leading, spacing: 0) {
-                        ForEach(Array(inactiveSplits.enumerated()), id: \.element.id) { index, split in
-                            let splitDays = orderedTemplates(for: split)
-                            let dayCount = splitDays.count
-                            let exerciseCount = splitDays.reduce(0) { $0 + $1.orderedExerciseIds.count }
-                            PreviewListRow(
-                                title: split.name.isEmpty ? "Untitled Program" : split.name,
-                                subtitle: "\(dayCount) day\(dayCount == 1 ? "" : "s") · \(exerciseCount) exercise\(exerciseCount == 1 ? "" : "s")"
-                            )
-
-                            if index < inactiveSplits.count - 1 {
-                                AppDivider()
-                            }
-                        }
+                    AppDividedList(inactiveSplits) { split in
+                        let splitDays = orderedTemplates(for: split)
+                        let dayCount = splitDays.count
+                        let exerciseCount = splitDays.reduce(0) { $0 + $1.orderedExerciseIds.count }
+                        PreviewListRow(
+                            title: split.name.isEmpty ? "Untitled Program" : split.name,
+                            subtitle: "\(dayCount) day\(dayCount == 1 ? "" : "s") · \(exerciseCount) exercise\(exerciseCount == 1 ? "" : "s")"
+                        )
                     }
                 }
             }

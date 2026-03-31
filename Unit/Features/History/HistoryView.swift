@@ -688,8 +688,9 @@ private struct CalendarDayCell: View {
                         .stroke(outlineColor, lineWidth: outlineLineWidth)
                 }
                 .clipShape(RoundedRectangle(cornerRadius: AppRadius.sm, style: .continuous))
-                .contentShape(Rectangle())
         }
+        .frame(minWidth: 44, minHeight: 44)
+        .contentShape(Rectangle())
         .buttonStyle(.plain)
         .disabled(!model.hasSessions)
         .accessibilityLabel(accessibilityLabel)
@@ -825,16 +826,13 @@ private struct SessionSummaryCard: View {
                 }
             }
 
-            VStack(alignment: .leading, spacing: 0) {
-                ForEach(Array(snapshot.exercises.enumerated()), id: \.element.id) { index, exercise in
-                    if index > 0 {
-                        AppDivider()
-                            .padding(.horizontal, -AppSpacing.md)
-                    }
-
-                    SessionExerciseSummary(exercise: exercise)
-                        .padding(.vertical, AppSpacing.smd)
-                }
+            AppDividedList(
+                snapshot.exercises,
+                dividerLeading: -AppSpacing.md,
+                dividerTrailing: -AppSpacing.md
+            ) { exercise in
+                SessionExerciseSummary(exercise: exercise)
+                    .padding(.vertical, AppSpacing.smd)
             }
         }
         .padding(AppSpacing.md)

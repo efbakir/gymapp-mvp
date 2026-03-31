@@ -26,7 +26,7 @@ struct PaywallView: View {
                             .font(AppFont.stepIndicator)
                             .foregroundStyle(AppColor.textSecondary)
                             .textCase(.uppercase)
-                            .kerning(0.6)
+                            .tracking(AppFont.uppercaseLabelTracking)
 
                         Text("Unlock Unit")
                             .font(AppFont.display)
