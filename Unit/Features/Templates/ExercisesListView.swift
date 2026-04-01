@@ -110,6 +110,7 @@ struct AddExerciseView: View {
                         .textInputAutocapitalization(.words)
                         .frame(minHeight: 44)
                 }
+                .listRowBackground(AppColor.cardBackground)
                 Section("Options") {
                     Toggle("Bodyweight", isOn: $isBodyweight)
                         .frame(minHeight: 44)
