@@ -175,11 +175,6 @@ struct RecentSessionsView: View {
         Dictionary(grouping: sessionSnapshots, by: { Calendar.current.startOfDay(for: $0.date) })
     }
 
-    private var monthSessionCount: Int {
-        let calendar = Calendar.current
-        return sessionSnapshots.filter { calendar.isDate($0.date, equalTo: displayMonth, toGranularity: .month) }.count
-    }
-
     private var selectedDaySessions: [SessionSnapshot] {
         guard let selectedDate else { return [] }
         return sessionsByDay[selectedDate] ?? []
@@ -206,6 +201,7 @@ struct RecentSessionsView: View {
         .navigationTitle("History")
         .navigationBarTitleDisplayMode(.inline)
         .appNavigationBarChrome()
+        .toolbar(.hidden, for: .tabBar)
         .sheet(item: $selectedPayload) { payload in
             SessionSummarySheet(payload: payload)
                 .presentationDetents([.medium, .large])
@@ -220,7 +216,7 @@ struct RecentSessionsView: View {
     }
 
     private var modeToggle: some View {
-        Picker("View", selection: $mode) {
+        Picker("History view", selection: $mode) {
             ForEach(SessionHistoryMode.allCases) { item in
                 Text(item.rawValue).tag(item)
             }
@@ -266,10 +262,7 @@ struct RecentSessionsView: View {
         VStack(alignment: .leading, spacing: AppSpacing.md) {
             AppCard {
                 VStack(alignment: .leading, spacing: AppSpacing.md) {
-                    CalendarMonthHeader(
-                        displayMonth: $displayMonth,
-                        sessionCount: monthSessionCount
-                    )
+                    CalendarMonthHeader(displayMonth: $displayMonth)
 
                     CalendarGrid(
                         displayMonth: displayMonth,
@@ -451,10 +444,6 @@ private struct DaySessionCard: View {
         sessions.reduce(0) { $0 + $1.completedExerciseCount }
     }
 
-    private var totalSets: Int {
-        sessions.reduce(0) { $0 + $1.setCount }
-    }
-
     private var overallState: SessionReviewState {
         if sessions.allSatisfy({ $0.state == .completed }) { return .completed }
         if sessions.contains(where: { $0.state == .skipped }) { return .skipped }
@@ -481,14 +470,8 @@ private struct DaySessionCard: View {
                 .foregroundStyle(AppColor.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
 
-            // Summary line
-            let parts = [
-                totalExercises > 0 ? "\(totalExercises) exercise\(totalExercises == 1 ? "" : "s")" : nil,
-                totalSets > 0 ? "\(totalSets) set\(totalSets == 1 ? "" : "s")" : nil
-            ].compactMap { $0 }
-
-            if !parts.isEmpty {
-                Text(parts.joined(separator: " · "))
+            if totalExercises > 0 {
+                Text("\(totalExercises) exercise\(totalExercises == 1 ? "" : "s")")
                     .font(AppFont.caption.font)
                     .foregroundStyle(AppColor.textSecondary)
             }
@@ -541,7 +524,6 @@ fileprivate func sessionPreviewCardContent(snapshot: SessionSnapshot, showDisclo
 
 private struct CalendarMonthHeader: View {
     @Binding var displayMonth: Date
-    let sessionCount: Int
 
     private var monthTitle: String {
         displayMonth.formatted(.dateTime.month(.wide).year())
@@ -552,40 +534,41 @@ private struct CalendarMonthHeader: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.xs) {
-            HStack(alignment: .center, spacing: AppSpacing.md) {
-                Text(monthTitle)
-                    .appFont(.largeTitle)
-                    .foregroundStyle(AppColor.textPrimary)
+        HStack(alignment: .center, spacing: AppSpacing.md) {
+            Text(monthTitle)
+                .appFont(.largeTitle)
+                .foregroundStyle(AppColor.textPrimary)
 
-                Spacer(minLength: 0)
+            Spacer(minLength: 0)
 
-                HStack(spacing: AppSpacing.xs) {
-                    monthButton(icon: .back) {
-                        shiftMonth(by: -1)
-                    }
+            HStack(spacing: AppSpacing.xs) {
+                monthNavChevron(icon: .back, accessibilityLabel: "Previous month") {
+                    shiftMonth(by: -1)
+                }
 
-                    monthButton(icon: .forward, isEnabled: canGoForward) {
-                        shiftMonth(by: 1)
-                    }
+                monthNavChevron(icon: .chevronRight, accessibilityLabel: "Next month", isEnabled: canGoForward) {
+                    shiftMonth(by: 1)
                 }
             }
-
-            Text("\(sessionCount) session\(sessionCount == 1 ? "" : "s") this month")
-                .font(AppFont.caption.font)
-                .foregroundStyle(AppColor.textSecondary)
         }
     }
 
-    private func monthButton(icon: AppIcon, isEnabled: Bool = true, action: @escaping () -> Void) -> some View {
+    private func monthNavChevron(
+        icon: AppIcon,
+        accessibilityLabel: String,
+        isEnabled: Bool = true,
+        action: @escaping () -> Void
+    ) -> some View {
         Button(action: action) {
-            Text(icon == .back ? "Back" : "Next")
-                .font(AppFont.label.font)
+            icon
+                .image(size: 17, weight: .semibold)
                 .foregroundStyle(isEnabled ? AppColor.textPrimary : AppColor.textSecondary.opacity(0.45))
-                .frame(minWidth: 44, minHeight: 44, alignment: .center)
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .disabled(!isEnabled)
+        .accessibilityLabel(accessibilityLabel)
     }
 
     private func shiftMonth(by value: Int) {
@@ -826,11 +809,7 @@ private struct SessionSummaryCard: View {
                 }
             }
 
-            AppDividedList(
-                snapshot.exercises,
-                dividerLeading: -AppSpacing.md,
-                dividerTrailing: -AppSpacing.md
-            ) { exercise in
+            AppDividedList(snapshot.exercises) { exercise in
                 SessionExerciseSummary(exercise: exercise)
                     .padding(.vertical, AppSpacing.smd)
             }
@@ -849,6 +828,12 @@ private struct SessionSummaryCard: View {
 struct SessionExerciseSummary: View {
     let exercise: SessionExerciseSnapshot
 
+    /// Uniform size for every “Set N” label (same face/size so numbering looks identical).
+    private static let setIndexFont = AppFont.caption.font
+    /// Smaller than previous `AppFont.label` (17) while staying legible.
+    private static let performanceFont = AppFont.compactLabel
+    private static let secondaryMetaFont = AppFont.smallLabel
+
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.xs) {
             Text(exercise.name)
@@ -860,43 +845,46 @@ struct SessionExerciseSummary: View {
                 let isGood = !hasTarget || set.metTarget
 
                 VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                    HStack(alignment: hasTarget && !isGood ? .top : .firstTextBaseline, spacing: AppSpacing.sm) {
+                    HStack(alignment: .top, spacing: AppSpacing.md) {
                         VStack(alignment: .leading, spacing: AppSpacing.xxs) {
                             Text(setOrdinalLabel(for: set))
-                                .font(AppFont.caption.font)
+                                .font(Self.setIndexFont)
                                 .foregroundStyle(AppColor.textSecondary)
 
                             if !isGood, hasTarget {
                                 Text("Target \(targetText(for: set))")
-                                    .font(AppFont.caption.font)
+                                    .font(Self.setIndexFont)
                                     .foregroundStyle(AppColor.textSecondary)
 
                                 Text("Met \(actualText(for: set))")
-                                    .font(AppFont.caption.font)
+                                    .font(Self.setIndexFont)
                                     .foregroundStyle(AppColor.textSecondary)
                             }
                         }
+                        .frame(minWidth: 76, alignment: .leading)
 
-                        Spacer(minLength: 0)
+                        Spacer(minLength: AppSpacing.sm)
 
                         if hasTarget, !isGood {
                             Text("Fail")
-                                .font(AppFont.label.font)
+                                .font(Self.performanceFont)
                                 .foregroundStyle(AppColor.warning)
-                                .padding(.top, AppSpacing.xxs)
+                                .frame(maxWidth: .infinity, alignment: .trailing)
                         } else {
                             VStack(alignment: .trailing, spacing: AppSpacing.xxs) {
                                 Text(actualText(for: set))
-                                    .font(AppFont.label.font)
+                                    .font(Self.performanceFont)
                                     .foregroundStyle(AppColor.textPrimary)
+                                    .multilineTextAlignment(.trailing)
                                     .monospacedDigit()
 
                                 if hasTarget {
                                     Text("Good")
-                                        .font(AppFont.caption.font)
+                                        .font(Self.secondaryMetaFont)
                                         .foregroundStyle(AppColor.textSecondary)
                                 }
                             }
+                            .frame(minWidth: 120, alignment: .trailing)
                         }
                     }
 

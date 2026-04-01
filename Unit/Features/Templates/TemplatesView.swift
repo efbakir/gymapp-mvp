@@ -53,7 +53,7 @@ struct TemplatesView: View {
             }
             .appNavigationBarChrome()
             .navigationDestination(for: Split.self) { split in
-                EditProgramView(split: split)
+                ProgramDetailView(split: split)
             }
             .navigationDestination(for: DayTemplate.self) { template in
                 TemplateDetailView(template: template)
@@ -76,27 +76,15 @@ struct TemplatesView: View {
         let days = orderedTemplates(for: split)
 
         VStack(alignment: .leading, spacing: AppSpacing.md) {
-            // MARK: Active Program section
-            Text("Active Program")
-                .font(AppFont.sectionHeader.font)
-                .foregroundStyle(AppColor.textPrimary)
-                .padding(.leading, AppSpacing.md)
-
             activeProgramCard(split: split, days: days)
 
             // MARK: Recent Sessions
             NavigationLink {
                 RecentSessionsView(showsCloseButton: false)
             } label: {
-                Text("Recent Sessions")
-                    .font(AppFont.label.font)
-                    .foregroundStyle(AppColor.textPrimary)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 52)
-                    .background(AppColor.cardBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
+                AppGhostButtonLabel(title: "Recent Sessions")
             }
-            .buttonStyle(.plain)
+            .buttonStyle(ScaleButtonStyle())
 
             // MARK: All Programs (inactive splits)
             if !inactiveSplits.isEmpty {
@@ -145,19 +133,34 @@ struct TemplatesView: View {
             : split.name
 
         return AppCard {
-            VStack(alignment: .leading, spacing: AppSpacing.lg) {
-                Text(displayName)
-                    .appFont(.largeTitle)
-                    .foregroundStyle(AppColor.textPrimary)
-                    .fixedSize(horizontal: false, vertical: true)
+            VStack(alignment: .center, spacing: AppSpacing.lg) {
+                HStack(alignment: .center, spacing: AppSpacing.sm) {
+                    Text(displayName)
+                        .font(AppFont.largeTitle.font)
+                        .tracking(AppFont.largeTitle.tracking)
+                        .foregroundStyle(AppColor.textPrimary)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    Text("Active")
+                        .font(AppFont.caption.font)
+                        .foregroundStyle(AppColor.textSecondary)
+                        .padding(.horizontal, AppSpacing.sm)
+                        .frame(height: 20)
+                        .background(AppColor.controlBackground)
+                        .clipShape(Capsule())
+                }
+                .frame(maxWidth: .infinity)
 
                 if !days.isEmpty {
-                    PreviewListContainer {
+                    PreviewListContainer(rowSpacing: AppSpacing.lg) {
                         ForEach(Array(days.enumerated()), id: \.element.id) { index, template in
                             NavigationLink(value: template) {
                                 PreviewListRow(
                                     title: template.displayName,
-                                    subtitle: routineSummary(for: template)
+                                    subtitle: programRoutineSubtitle(dayIndex: index, template: template),
+                                    style: .programRoutine
                                 )
                             }
                             .buttonStyle(.plain)
@@ -166,7 +169,7 @@ struct TemplatesView: View {
                 }
 
                 NavigationLink(value: split) {
-                    Text("Edit program")
+                    Text("Program Details")
                         .font(AppFont.label.font)
                         .foregroundStyle(AppColor.textPrimary)
                         .frame(maxWidth: .infinity)
@@ -177,6 +180,10 @@ struct TemplatesView: View {
                 .buttonStyle(.plain)
             }
         }
+    }
+
+    private func programRoutineSubtitle(dayIndex: Int, template: DayTemplate) -> String {
+        "Day \(dayIndex + 1) · \(routineSummary(for: template))"
     }
 
     private func orderedTemplates(for split: Split) -> [DayTemplate] {
@@ -205,6 +212,9 @@ struct EditProgramView: View {
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \DayTemplate.name) private var templates: [DayTemplate]
 
+    @State private var showDeleteConfirmation = false
+    @State private var showAddDay = false
+
     private var orderedTemplates: [DayTemplate] {
         let byID = Dictionary(uniqueKeysWithValues: templates.map { ($0.id, $0) })
         let linked = split.orderedTemplateIds.compactMap { byID[$0] }
@@ -215,11 +225,9 @@ struct EditProgramView: View {
     }
 
     var body: some View {
-        AppScreen(
-            title: "Edit Program",
-            trailingText: NavTextAction(label: "Done", action: { dismiss() })
-        ) {
-            VStack(alignment: .leading, spacing: AppSpacing.md) {
+        AppScreen(showsNativeNavigationBar: true) {
+            VStack(alignment: .leading, spacing: AppSpacing.lg) {
+                // MARK: Program Name
                 VStack(alignment: .leading, spacing: AppSpacing.sm) {
                     Text("Program Name")
                         .font(AppFont.caption.font)
@@ -233,6 +241,7 @@ struct EditProgramView: View {
                         .appInputFieldStyle()
                 }
 
+                // MARK: Routines
                 VStack(alignment: .leading, spacing: AppSpacing.sm) {
                     Text("Routines")
                         .font(AppFont.caption.font)
@@ -245,17 +254,50 @@ struct EditProgramView: View {
                             .foregroundStyle(AppColor.textSecondary)
                             .padding(AppSpacing.md)
                     } else {
-                        VStack(spacing: AppSpacing.sm) {
-                            ForEach(orderedTemplates, id: \.id) { template in
-                                TextField("Routine name", text: binding(for: template))
-                                    .font(AppFont.body.font)
-                                    .foregroundStyle(AppColor.textPrimary)
-                                    .textInputAutocapitalization(.words)
-                                    .appInputFieldStyle()
+                        VStack(spacing: 0) {
+                            ForEach(Array(orderedTemplates.enumerated()), id: \.element.id) { index, template in
+                                if index > 0 {
+                                    AppDivider()
+                                        .padding(.horizontal, AppSpacing.md)
+                                }
+
+                                editableRoutineRow(template, index: index)
                             }
                         }
+                        .background(AppColor.cardBackground)
+                        .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
                     }
+
+                    Button {
+                        showAddDay = true
+                    } label: {
+                        HStack(spacing: AppSpacing.sm) {
+                            AppIcon.addCircle.image()
+                            Text("Add Day")
+                                .font(AppFont.body.font)
+                        }
+                        .foregroundStyle(AppColor.accent)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 48)
+                        .background(AppColor.controlBackground)
+                        .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
                 }
+
+                // MARK: Delete
+                Button {
+                    showDeleteConfirmation = true
+                } label: {
+                    Text("Delete Program")
+                        .font(AppFont.body.font)
+                        .foregroundStyle(AppColor.error)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 48)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .padding(.top, AppSpacing.md)
             }
         }
         .onChange(of: split.name) { _, _ in
@@ -264,8 +306,100 @@ struct EditProgramView: View {
         .onAppear {
             syncTemplateOrderIfNeeded()
         }
-        .toolbarBackground(.hidden, for: .navigationBar)
+        .navigationTitle("Edit Program")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Done") { dismiss() }
+            }
+        }
+        .appNavigationBarChrome()
         .toolbar(.hidden, for: .tabBar)
+        .navigationDestination(for: DayTemplate.self) { template in
+            TemplateDetailView(template: template)
+        }
+        .sheet(isPresented: $showAddDay) {
+            AddTemplateView(split: split)
+                .appBottomSheetChrome()
+        }
+        .confirmationDialog(
+            "Delete Program",
+            isPresented: $showDeleteConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Delete Program", role: .destructive) {
+                deleteProgram()
+            }
+        } message: {
+            Text("This will permanently delete this program and all its routine days. This cannot be undone.")
+        }
+    }
+
+    @ViewBuilder
+    private func editableRoutineRow(_ template: DayTemplate, index: Int) -> some View {
+        HStack(spacing: AppSpacing.sm) {
+            VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                TextField("Routine name", text: binding(for: template))
+                    .font(AppFont.body.font)
+                    .foregroundStyle(AppColor.textPrimary)
+                    .textInputAutocapitalization(.words)
+
+                Text("\(template.orderedExerciseIds.count) exercise\(template.orderedExerciseIds.count == 1 ? "" : "s")")
+                    .font(AppFont.caption.font)
+                    .foregroundStyle(AppColor.textSecondary)
+            }
+
+            Spacer(minLength: 0)
+
+            // Reorder buttons
+            VStack(spacing: 0) {
+                Button {
+                    moveTemplate(at: index, direction: .up)
+                } label: {
+                    Image(systemName: "chevron.up")
+                        .font(AppFont.compactLabel)
+                        .foregroundStyle(index > 0 ? AppColor.textSecondary : AppColor.disabledSurface)
+                        .frame(width: 44, height: 36)
+                        .contentShape(Rectangle())
+                }
+                .disabled(index == 0)
+
+                Button {
+                    moveTemplate(at: index, direction: .down)
+                } label: {
+                    Image(systemName: "chevron.down")
+                        .font(AppFont.compactLabel)
+                        .foregroundStyle(index < orderedTemplates.count - 1 ? AppColor.textSecondary : AppColor.disabledSurface)
+                        .frame(width: 44, height: 36)
+                        .contentShape(Rectangle())
+                }
+                .disabled(index >= orderedTemplates.count - 1)
+            }
+            .buttonStyle(.plain)
+
+            // Navigate to day exercises
+            NavigationLink(value: template) {
+                AppIcon.forward.image(size: 14, weight: .semibold)
+                    .foregroundStyle(AppColor.textSecondary)
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, AppSpacing.md)
+        .padding(.vertical, AppSpacing.smd)
+        .frame(minHeight: 44)
+    }
+
+    private enum MoveDirection { case up, down }
+
+    private func moveTemplate(at index: Int, direction: MoveDirection) {
+        var ids = split.orderedTemplateIds
+        let targetIndex = direction == .up ? index - 1 : index + 1
+        guard targetIndex >= 0, targetIndex < ids.count else { return }
+        ids.swapAt(index, targetIndex)
+        split.orderedTemplateIds = ids
+        try? modelContext.save()
     }
 
     private func binding(for template: DayTemplate) -> Binding<String> {
@@ -285,6 +419,17 @@ struct EditProgramView: View {
                 .map(\.id)
             try? modelContext.save()
         }
+    }
+
+    private func deleteProgram() {
+        let splitId = split.id
+        let templatesToDelete = templates.filter { $0.splitId == splitId }
+        for t in templatesToDelete {
+            modelContext.delete(t)
+        }
+        modelContext.delete(split)
+        try? modelContext.save()
+        dismiss()
     }
 }
 

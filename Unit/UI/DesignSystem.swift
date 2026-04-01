@@ -117,6 +117,7 @@ enum AppFont {
     static let display: Font = .custom("Inter-Bold", size: 36)
     static let numericDisplay: Font = .custom("Inter-Bold", fixedSize: 36)
     static let numericLarge: Font = .custom("Inter-Bold", fixedSize: 28)
+    static let compactLabel: Font = .custom("Inter-SemiBold", size: 12)
     static let stepIndicator: Font = .custom("Inter-SemiBold", size: 14)
     static let productHeading: Font = .custom("Inter-SemiBold", size: 24)
     static let productAction: Font = .custom("Inter-SemiBold", size: 17)
@@ -156,11 +157,19 @@ enum AppRadius {
     static let sheet: CGFloat = 40
 }
 
+/// Shared sizing for day/week steppers and compact day badges (Paper e.g. node 2P1-0).
+enum AppProgressChipMetrics {
+    static let rowHeight: CGFloat = 20
+    static var compactHorizontalPadding: CGFloat { AppSpacing.sm }
+}
+
 struct AppDivider: View {
+    @Environment(\.pixelLength) private var pixelLength
+
     var body: some View {
         Rectangle()
             .fill(AppColor.border)
-            .frame(height: 0.5)
+            .frame(height: pixelLength)
             .frame(maxWidth: .infinity)
     }
 }
@@ -175,6 +184,7 @@ enum AppShadow {
 
 enum AppIcon: String {
     case back = "chevron.left"
+    case chevronRight = "chevron.right"
     case forward = "arrow.right"
     case close = "xmark"
     case add = "plus"
@@ -502,9 +512,53 @@ struct AppSecondaryButton: View {
     }
 }
 
+/// Text-only action (no fill). Full-width row with **centered** label and ≥44pt hit area.
+/// Use inside `NavigationLink` labels or with `AppGhostButton`.
+struct AppGhostButtonLabel: View {
+    let title: String
+    var isEnabled: Bool = true
+
+    var body: some View {
+        Text(title)
+            .font(AppFont.productAction)
+            .foregroundStyle(isEnabled ? AppColor.textPrimary : AppColor.textSecondary)
+            .multilineTextAlignment(.center)
+            .frame(maxWidth: .infinity)
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+    }
+}
+
+struct AppGhostButton: View {
+    let label: String
+    var isEnabled: Bool = true
+    let action: () -> Void
+
+    init(_ label: String, isEnabled: Bool = true, action: @escaping () -> Void) {
+        self.label = label
+        self.isEnabled = isEnabled
+        self.action = action
+    }
+
+    var body: some View {
+        Button(action: action) {
+            AppGhostButtonLabel(title: label, isEnabled: isEnabled)
+        }
+        .buttonStyle(ScaleButtonStyle())
+        .disabled(!isEnabled)
+    }
+}
+
 struct AppTag: View {
     let text: String
     var style: Style = .default
+    /// `.compactCapsule` matches Paper today “Day n of m” (node 2P1-0) and `WeeklyProgressStepper` chip height.
+    var layout: Layout = .regular
+
+    enum Layout {
+        case regular
+        case compactCapsule
+    }
 
     enum Style {
         case `default`
@@ -517,13 +571,26 @@ struct AppTag: View {
     }
 
     var body: some View {
-        Text(text)
-            .font(AppFont.stepIndicator)
-            .foregroundStyle(foregroundColor)
-            .padding(.horizontal, AppSpacing.smd)
-            .padding(.vertical, AppSpacing.sm)
-            .background(backgroundColor)
-            .clipShape(Capsule())
+        Group {
+            switch layout {
+            case .regular:
+                Text(text)
+                    .font(AppFont.stepIndicator)
+                    .foregroundStyle(foregroundColor)
+                    .padding(.horizontal, AppSpacing.smd)
+                    .padding(.vertical, AppSpacing.sm)
+                    .background(backgroundColor)
+                    .clipShape(Capsule())
+            case .compactCapsule:
+                Text(text)
+                    .font(AppFont.stepIndicator)
+                    .foregroundStyle(foregroundColor)
+                    .padding(.horizontal, AppProgressChipMetrics.compactHorizontalPadding)
+                    .frame(height: AppProgressChipMetrics.rowHeight)
+                    .background(backgroundColor)
+                    .clipShape(Capsule())
+            }
+        }
     }
 
     private var foregroundColor: Color {
@@ -763,23 +830,26 @@ struct WeeklyProgressStepper: View {
     }
 
     let steps: [Step]
+    /// e.g. `"Week"` on Today hero, `"Day"` on Programs active card (Paper reference).
+    var labelPrefix: String = "Week"
+    var verticalPadding: CGFloat = AppSpacing.sm
 
     var body: some View {
         HStack(spacing: AppSpacing.xs) {
             ForEach(steps) { step in
                 Group {
                     if step.state == .current {
-                        Text("Week \(step.label)")
+                        Text("\(labelPrefix) \(step.label)")
                             .font(AppFont.stepIndicator)
                             .foregroundStyle(AppColor.accentForeground)
-                            .padding(.horizontal, AppSpacing.sm)
-                            .frame(height: 20)
+                            .padding(.horizontal, AppProgressChipMetrics.compactHorizontalPadding)
+                            .frame(height: AppProgressChipMetrics.rowHeight)
                             .background(Capsule().fill(AppColor.accent))
                     } else {
                         ZStack {
                             Circle()
                                 .fill(backgroundColor(for: step.state))
-                                .frame(width: 20, height: 20)
+                                .frame(width: AppProgressChipMetrics.rowHeight, height: AppProgressChipMetrics.rowHeight)
 
                             switch step.state {
                             case .completed:
@@ -800,7 +870,7 @@ struct WeeklyProgressStepper: View {
                 .accessibilityLabel(accessibilityLabel(for: step))
             }
         }
-        .padding(.vertical, AppSpacing.sm)
+        .padding(.vertical, verticalPadding)
     }
 
     private func backgroundColor(for state: Step.State) -> Color {
@@ -826,13 +896,13 @@ struct WeeklyProgressStepper: View {
     private func accessibilityLabel(for step: Step) -> String {
         switch step.state {
         case .completed:
-            return "Week \(step.label), completed"
+            return "\(labelPrefix) \(step.label), completed"
         case .missed:
-            return "Week \(step.label), missed"
+            return "\(labelPrefix) \(step.label), missed"
         case .current:
-            return "Week \(step.label), current"
+            return "\(labelPrefix) \(step.label), current"
         case .upcoming:
-            return "Week \(step.label), upcoming"
+            return "\(labelPrefix) \(step.label), upcoming"
         }
     }
 }
@@ -1176,25 +1246,62 @@ private struct ExercisePreviewViewportWidthKey: PreferenceKey {
 // MARK: - PreviewListRow + PreviewListContainer
 
 struct PreviewListRow: View {
+    enum Style {
+        /// Default: dark title for exercise names (Today card, etc.).
+        case standard
+        /// Muted exercise list (Paper): title `#919191`, subtitle `#C7C7C7` light — Programs active card & Today hero preview.
+        case programRoutine
+    }
+
     let title: String
     let subtitle: String
+    var style: Style = .standard
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.xs) {
             Text(title)
                 .font(AppFont.sectionHeader.font)
-                .foregroundStyle(AppColor.textPrimary)
+                .foregroundStyle(titleColor)
 
             Text(subtitle)
-                .font(AppFont.caption.font)
-                .foregroundStyle(AppColor.textSecondary)
+                .font(subtitleFont)
+                .foregroundStyle(subtitleColor)
         }
         .padding(.vertical, AppSpacing.sm)
+    }
+
+    private var titleColor: Color {
+        switch style {
+        case .standard:
+            return AppColor.textPrimary
+        case .programRoutine:
+            return AppColor.textSecondary
+        }
+    }
+
+    private var subtitleFont: Font {
+        switch style {
+        case .standard:
+            return AppFont.caption.font
+        case .programRoutine:
+            return .custom("Inter-Medium", size: 12)
+        }
+    }
+
+    private var subtitleColor: Color {
+        switch style {
+        case .standard:
+            return AppColor.textSecondary
+        case .programRoutine:
+            return AppColor.disabledSurface
+        }
     }
 }
 
 struct PreviewListContainer<Content: View>: View {
     var maxHeight: CGFloat = 228
+    /// Vertical gap between rows (Paper program card uses `AppSpacing.lg`).
+    var rowSpacing: CGFloat = AppSpacing.sm
     @ViewBuilder let content: () -> Content
 
     @State private var contentHeight: CGFloat = 0
@@ -1205,9 +1312,10 @@ struct PreviewListContainer<Content: View>: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: AppSpacing.sm) {
+            VStack(alignment: .leading, spacing: rowSpacing) {
                 content()
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(AppSpacing.md)
             .background(
                 GeometryReader { proxy in
@@ -1218,6 +1326,8 @@ struct PreviewListContainer<Content: View>: View {
                 }
             )
         }
+        .scrollIndicators(.hidden)
+        .frame(maxWidth: .infinity)
         .frame(maxHeight: maxHeight)
         .onPreferenceChange(PreviewListContentHeightKey.self) { contentHeight = $0 }
         .background(AppColor.controlBackground)
@@ -1533,10 +1643,9 @@ struct WorkoutCommandCard: View {
                         Button(action: { onSecondaryAction?() }) {
                             HStack(spacing: AppSpacing.xs) {
                                 Text(metricValue)
-                                    .font(AppFont.productHeading)
-                                    .tracking(AppFont.productHeadingTracking)
+                                    .font(AppFont.productAction)
 
-                                AppIcon.edit.image(size: 17, weight: .semibold)
+                                AppIcon.edit.image(size: 15, weight: .semibold)
                             }
                             .foregroundStyle(AppColor.textSecondary)
                             .frame(minHeight: 44)
@@ -1545,8 +1654,7 @@ struct WorkoutCommandCard: View {
                         .accessibilityLabel("Adjust set")
                     } else {
                         Text(metricValue)
-                            .font(AppFont.productHeading)
-                            .tracking(AppFont.productHeadingTracking)
+                            .font(AppFont.productAction)
                             .foregroundStyle(AppColor.textSecondary)
                             .multilineTextAlignment(.center)
                     }
