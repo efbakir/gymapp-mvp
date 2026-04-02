@@ -184,7 +184,6 @@ enum AppShadow {
 
 enum AppIcon: String {
     case back = "chevron.left"
-    case chevronRight = "chevron.right"
     case forward = "arrow.right"
     case close = "xmark"
     case add = "plus"
