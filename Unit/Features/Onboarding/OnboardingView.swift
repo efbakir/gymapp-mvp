@@ -5,6 +5,12 @@
 //  Root coordinator for the onboarding flow. Uses NavigationStack so the
 //  user can navigate back at any point without losing their data.
 //
+//  Routing is state-driven: ContentView shows this view when there is no
+//  program data (new user) or when the user explicitly requests a restart
+//  from Settings. The view never sets a "hasCompletedOnboarding" boolean —
+//  instead, the commit writes real data (Split, DayTemplate, etc.) and
+//  ContentView derives the next screen from that data.
+//
 
 import SwiftUI
 import SwiftData
@@ -96,24 +102,37 @@ enum OnboardingRoute: Hashable {
     case exercises
     case baselines
     case progression
-    case cycleStart
 }
 
 // MARK: - Root View
 
 struct OnboardingView: View {
+    /// When true, this onboarding was triggered from Settings → "Start onboarding again".
+    /// The flow protects existing data by requiring explicit confirmation before replacing.
+    let isRestart: Bool
+
     @Environment(\.modelContext) private var modelContext
-    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @Environment(\.dismiss) private var dismiss
+
     @AppStorage("unitSystem") private var storedUnitSystem: String = "kg"
+    @AppStorage("showOnboardingRestart") private var showOnboardingRestart = false
 
     @State private var vm = OnboardingViewModel()
     @State private var path = NavigationPath()
     @State private var commitError: Bool = false
+    @State private var showReplaceConfirmation: Bool = false
     @State private var didLoadPreferences = false
+
+    init(isRestart: Bool = false) {
+        self.isRestart = isRestart
+    }
 
     var body: some View {
         NavigationStack(path: $path) {
-            OnboardingSplashView {
+            OnboardingSplashView(
+                showsDismiss: isRestart,
+                onDismiss: dismissOnboarding
+            ) {
                 path.append(OnboardingRoute.importMethod)
             }
             .navigationDestination(for: OnboardingRoute.self) { route in
@@ -126,6 +145,18 @@ struct OnboardingView: View {
             Button("Try Again", role: .cancel) { }
         } message: {
             Text("Could not save your program. Please try again.")
+        }
+        .confirmationDialog(
+            "Replace current program?",
+            isPresented: $showReplaceConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Replace Program", role: .destructive) {
+                performCommit(replacingExisting: true)
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("This will replace your existing program and routines. Your workout history will be kept.")
         }
         .onAppear {
             guard !didLoadPreferences else { return }
@@ -172,28 +203,38 @@ struct OnboardingView: View {
             }
 
         case .progression:
-            OnboardingProgressionView(progressStep: 5, progressTotal: totalRequiredSteps) {
-                path.append(OnboardingRoute.cycleStart)
-            }
-
-        case .cycleStart:
-            OnboardingCycleStartView(
-                progressStep: 6,
-                progressTotal: totalRequiredSteps
+            OnboardingProgressionView(
+                progressStep: 5,
+                progressTotal: totalRequiredSteps,
+                ctaLabel: "Create My Program"
             ) {
                 commitCycle()
             }
         }
     }
 
-    private var totalRequiredSteps: Int {
-        6
-    }
+    private var totalRequiredSteps: Int { 5 }
 
     // MARK: - Commit
 
     private func commitCycle() {
+        if isRestart {
+            // Check for existing programs — require explicit confirmation to replace
+            let descriptor = FetchDescriptor<Split>()
+            let existingSplits = (try? modelContext.fetch(descriptor)) ?? []
+            if !existingSplits.isEmpty {
+                showReplaceConfirmation = true
+                return
+            }
+        }
+        performCommit(replacingExisting: false)
+    }
+
+    private func performCommit(replacingExisting: Bool) {
         do {
+            if replacingExisting {
+                try deleteExistingProgramData()
+            }
             try vm.commit(modelContext: modelContext)
             storedUnitSystem = vm.unitSystem
             OnboardingPreferences.save(from: vm)
@@ -203,7 +244,25 @@ struct OnboardingView: View {
         }
     }
 
+    private func deleteExistingProgramData() throws {
+        let splits = try modelContext.fetch(FetchDescriptor<Split>())
+        let templates = try modelContext.fetch(FetchDescriptor<DayTemplate>())
+        let cycles = try modelContext.fetch(FetchDescriptor<Cycle>())
+        let rules = try modelContext.fetch(FetchDescriptor<ProgressionRule>())
+
+        for item in rules { modelContext.delete(item) }
+        for item in cycles { modelContext.delete(item) }
+        for item in templates { modelContext.delete(item) }
+        for item in splits { modelContext.delete(item) }
+    }
+
     private func finishOnboarding() {
-        hasCompletedOnboarding = true
+        showOnboardingRestart = false
+        dismiss()
+    }
+
+    private func dismissOnboarding() {
+        showOnboardingRestart = false
+        dismiss()
     }
 }

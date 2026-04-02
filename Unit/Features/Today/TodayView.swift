@@ -128,7 +128,7 @@ struct TodayView: View {
             VStack(spacing: AppSpacing.md) {
                 stateCard(for: state)
 
-                AppSecondaryButton("Quick Start") {
+                AppGhostButton("Quick Start") {
                     startEmptyWorkout()
                 }
             }
@@ -254,7 +254,8 @@ private struct ReadyTodayCard: View {
             VStack(alignment: .center, spacing: AppSpacing.lg) {
                 AppTag(
                     text: "Day \(context.trainingDayOrdinal) of \(context.trainingDayTotal)",
-                    style: .custom(fg: AppColor.textSecondary, bg: AppColor.controlBackground)
+                    style: .custom(fg: AppColor.textSecondary, bg: AppColor.controlBackground),
+                    layout: .compactCapsule
                 )
 
                 VStack(spacing: AppSpacing.xs) {
@@ -276,17 +277,19 @@ private struct ReadyTodayCard: View {
                     Button {
                         onOpenPreview()
                     } label: {
-                        PreviewListContainer {
+                        // Paper: today hero exercise list — #919191 titles, #C7C7C7 metrics, 24pt row gap (node 2P6-0).
+                        PreviewListContainer(rowSpacing: AppSpacing.lg) {
                             ForEach(Array(context.previewTargets.enumerated()), id: \.offset) { _, target in
                                 PreviewListRow(
                                     title: target.exerciseName,
-                                    subtitle: target.displayTarget
+                                    subtitle: target.displayTarget,
+                                    style: .programRoutine
                                 )
                             }
                         }
                     }
                     .buttonStyle(.plain)
-                    .padding(.horizontal, -AppSpacing.md)
+                    .frame(maxWidth: .infinity)
                 }
 
                 AppPrimaryButton("Start", action: onStart)
@@ -522,37 +525,59 @@ final class TodayDashboardViewModel {
         sessions: [WorkoutSession],
         exercises: [Exercise]
     ) -> [ExerciseTarget] {
-        let lastSession = sessions.first { $0.templateId == template.id && $0.isCompleted }
-
+        // Ghost values: last completed working sets per exercise from any session (newest first).
+        // Matches TemplateDetailView / ActiveWorkout prefill — not limited to this template.
         return template.orderedExerciseIds.compactMap { exerciseID in
             guard let exercise = exercises.first(where: { $0.id == exerciseID }) else {
                 return nil
             }
 
-            let lastSets = lastSession?.setEntries
+            guard let ghostSession = sessions.first(where: { session in
+                session.isCompleted &&
+                session.setEntries.contains(where: {
+                    $0.exerciseId == exerciseID && $0.isCompleted && !$0.isWarmup
+                })
+            }) else {
+                return ExerciseTarget(
+                    exerciseName: exercise.displayName,
+                    displayTarget: "–",
+                    lastPerformanceLabel: nil
+                )
+            }
+
+            let lastSets = ghostSession.setEntries
                 .filter { $0.exerciseId == exerciseID && $0.isCompleted && !$0.isWarmup }
-                .sorted { $0.setIndex < $1.setIndex } ?? []
+                .sorted { $0.setIndex < $1.setIndex }
 
-            let displayTarget: String
-            if let representative = lastSets.last {
-                displayTarget = WorkoutTargetFormatter.actualText(
-                    weightKg: representative.weight,
-                    setCount: max(lastSets.count, 1),
-                    reps: representative.reps,
-                    isBodyweight: exercise.isBodyweight
-                )
-            } else {
-                displayTarget = "–"
-            }
-
-            let lastPerformanceLabel = lastSets.last.map {
-                WorkoutTargetFormatter.lastText(
-                    weightKg: $0.weight,
-                    setCount: lastSets.count,
-                    reps: $0.reps,
-                    isBodyweight: exercise.isBodyweight
+            guard let representative = lastSets.last, representative.reps > 0 else {
+                return ExerciseTarget(
+                    exerciseName: exercise.displayName,
+                    displayTarget: "–",
+                    lastPerformanceLabel: nil
                 )
             }
+
+            if !exercise.isBodyweight, representative.weight <= 0 {
+                return ExerciseTarget(
+                    exerciseName: exercise.displayName,
+                    displayTarget: "–",
+                    lastPerformanceLabel: nil
+                )
+            }
+
+            let displayTarget = WorkoutTargetFormatter.actualText(
+                weightKg: representative.weight,
+                setCount: max(lastSets.count, 1),
+                reps: representative.reps,
+                isBodyweight: exercise.isBodyweight
+            )
+
+            let lastPerformanceLabel = WorkoutTargetFormatter.lastText(
+                weightKg: representative.weight,
+                setCount: lastSets.count,
+                reps: representative.reps,
+                isBodyweight: exercise.isBodyweight
+            )
 
             return ExerciseTarget(
                 exerciseName: exercise.displayName,

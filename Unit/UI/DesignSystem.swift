@@ -228,6 +228,8 @@ enum AppIcon: String {
     case keyboard = "keyboard"
     case minusCircle = "minus.circle"
     case circle = "circle"
+    case moveUp = "arrow.up"
+    case moveDown = "arrow.down"
 
     var systemName: String { rawValue }
 

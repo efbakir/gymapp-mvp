@@ -12,6 +12,7 @@ struct SessionDetailView: View {
     let session: WorkoutSession
     let templateName: String
 
+    @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Exercise.displayName) private var exercises: [Exercise]
     @State private var showingFeelingPicker = false
@@ -62,11 +63,7 @@ struct SessionDetailView: View {
 
             if !exerciseSnapshots.isEmpty {
                 AppCard {
-                    AppDividedList(
-                        exerciseSnapshots,
-                        dividerLeading: -AppSpacing.md,
-                        dividerTrailing: -AppSpacing.md
-                    ) { exercise in
+                    AppDividedList(exerciseSnapshots) { exercise in
                         SessionExerciseSummary(exercise: exercise)
                             .padding(.vertical, AppSpacing.smd)
                     }

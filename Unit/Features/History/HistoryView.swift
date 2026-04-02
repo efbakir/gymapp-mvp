@@ -546,7 +546,7 @@ private struct CalendarMonthHeader: View {
                     shiftMonth(by: -1)
                 }
 
-                monthNavChevron(icon: .chevronRight, accessibilityLabel: "Next month", isEnabled: canGoForward) {
+                monthNavChevron(icon: .forward, accessibilityLabel: "Next month", isEnabled: canGoForward) {
                     shiftMonth(by: 1)
                 }
             }

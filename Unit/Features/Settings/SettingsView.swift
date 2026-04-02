@@ -11,7 +11,7 @@ struct SettingsView: View {
     private let shouldShowCloseButton: Bool
 
     @AppStorage("unitSystem") private var unitSystem: String = "kg"
-    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @AppStorage("showOnboardingRestart") private var showOnboardingRestart = false
     @Environment(\.dismiss) private var dismiss
 
     @State private var showingRestartConfirmation = false
@@ -46,7 +46,7 @@ struct SettingsView: View {
                     .buttonStyle(.plain)
                 }
 
-                Text("This reopens onboarding without deleting your current data.")
+                Text("This reopens onboarding. You can choose to keep or replace your current program.")
                     .font(AppFont.caption.font)
                     .foregroundStyle(AppColor.textSecondary)
                     .padding(.horizontal, AppSpacing.md)
@@ -69,24 +69,13 @@ struct SettingsView: View {
             isPresented: $showingRestartConfirmation,
             titleVisibility: .visible
         ) {
-            Button("Start onboarding again", role: .destructive) {
-                let onboardingKeys = [
-                    OnboardingPreferencesKeys.dayCount,
-                    OnboardingPreferencesKeys.dayNames,
-                    OnboardingPreferencesKeys.compoundIncrementKg,
-                    OnboardingPreferencesKeys.isolationIncrementKg,
-                    OnboardingPreferencesKeys.startOption,
-                    OnboardingPreferencesKeys.customStartDate
-                ]
-                for key in onboardingKeys {
-                    UserDefaults.standard.removeObject(forKey: key)
-                }
+            Button("Start onboarding again") {
                 dismiss()
-                hasCompletedOnboarding = false
+                showOnboardingRestart = true
             }
             Button("Cancel", role: .cancel) { }
         } message: {
-            Text("This will reopen onboarding. Your current program and workout data will stay in the app.")
+            Text("This will reopen onboarding. Your current program and workout history will stay in the app.")
         }
     }
 }

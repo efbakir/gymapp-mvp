@@ -2,7 +2,8 @@
 //  OnboardingProgressionView.swift
 //  Unit
 //
-//  Screen 7 — Default increment.
+//  Screen 5 — Default increment.
+//  This is the final onboarding step and the commit point.
 //  Global only — per-exercise overrides may be added post-launch.
 //
 
@@ -12,12 +13,13 @@ struct OnboardingProgressionView: View {
     @Environment(OnboardingViewModel.self) private var vm
     var progressStep: Int
     var progressTotal: Int
+    var ctaLabel: String = "Continue"
     var onContinue: () -> Void
 
     var body: some View {
         OnboardingShell(
             title: "Default increment",
-            ctaLabel: "Continue",
+            ctaLabel: ctaLabel,
             progressStep: progressStep,
             progressTotal: progressTotal,
             onContinue: onContinue
@@ -92,7 +94,7 @@ private struct IncrementSelectorRow: View {
 
 #Preview {
     NavigationStack {
-        OnboardingProgressionView(progressStep: 5, progressTotal: 6) { }
+        OnboardingProgressionView(progressStep: 5, progressTotal: 5, ctaLabel: "Create My Program") { }
             .environment(OnboardingViewModel())
     }
     .tint(AppColor.accent)

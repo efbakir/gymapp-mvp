@@ -29,6 +29,8 @@ final class StoreManager {
     // MARK: - Init
 
     init() {
+        // StoreKit transaction streams often prevent the preview host from launching (Xcode: "Failed to launch …").
+        guard !ProcessInfo.processInfo.isSwiftUIPreview else { return }
         transactionListener = listenForTransactions()
         Task { await checkEntitlement() }
     }
@@ -133,5 +135,11 @@ final class StoreManager {
         case .verified(let value):
             return value
         }
+    }
+}
+
+private extension ProcessInfo {
+    var isSwiftUIPreview: Bool {
+        environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
     }
 }

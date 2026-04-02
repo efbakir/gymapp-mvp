@@ -38,6 +38,9 @@ struct ActiveWorkoutView: View {
     @State private var pendingExerciseForSetup: Exercise?
     @State private var customSetCounts: [UUID: Int] = [:]
 
+    /// Plus / minus on the rest timer adjust by this many seconds (minimum rest stays 30s).
+    private static let restTimerAdjustStepSeconds = 30
+
     private var template: DayTemplate? {
         templates.first(where: { $0.id == session.templateId })
     }
@@ -606,12 +609,12 @@ struct ActiveWorkoutView: View {
 
     private var adjustRestTimerAction: (() -> Void)? {
         guard currentSection != nil, !isWorkoutComplete else { return nil }
-        return { adjustRestTimer(by: -15) }
+        return { adjustRestTimer(by: -Self.restTimerAdjustStepSeconds) }
     }
 
     private var increaseRestTimerAction: (() -> Void)? {
         guard currentSection != nil, !isWorkoutComplete else { return nil }
-        return { adjustRestTimer(by: 15) }
+        return { adjustRestTimer(by: Self.restTimerAdjustStepSeconds) }
     }
 
     private var toggleRestTimerAction: (() -> Void)? {

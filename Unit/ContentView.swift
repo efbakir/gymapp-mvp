@@ -10,20 +10,38 @@ import SwiftUI
 import UIKit
 
 struct ContentView: View {
-    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
-    @AppStorage("hasSeenPaywall") private var hasSeenPaywall = false
+    @AppStorage(wrappedValue: false, "hasSeenPaywall") private var hasSeenPaywall
+    @AppStorage(wrappedValue: false, "showOnboardingRestart") private var showOnboardingRestart
+
+    @Query(sort: \Split.name) private var splits: [Split]
     @Query(sort: \WorkoutSession.date, order: .reverse) private var sessions: [WorkoutSession]
 
     @State private var selectedTab: RootTab = .today
-    @State private var store = StoreManager()
+    @State private var store: StoreManager
+
+    /// Uses `UserDefaults.standard` in the app; pass an isolated suite in `#Preview` so canvas state does not touch real onboarding flags.
+    init(userDefaults: UserDefaults = .standard) {
+        _hasSeenPaywall = AppStorage(wrappedValue: false, "hasSeenPaywall", store: userDefaults)
+        _showOnboardingRestart = AppStorage(wrappedValue: false, "showOnboardingRestart", store: userDefaults)
+        _splits = Query(sort: \Split.name)
+        _sessions = Query(sort: \WorkoutSession.date, order: .reverse)
+        _store = State(initialValue: StoreManager())
+    }
 
     private var hasActiveSession: Bool {
         sessions.contains { !$0.isCompleted }
     }
 
+    /// True new user: no program and no workout sessions at all.
+    private var needsOnboarding: Bool {
+        splits.isEmpty && sessions.isEmpty
+    }
+
     var body: some View {
         Group {
-            if !hasCompletedOnboarding {
+            if showOnboardingRestart {
+                OnboardingView(isRestart: true)
+            } else if needsOnboarding {
                 OnboardingView()
             } else if !hasSeenPaywall && !store.isPurchased {
                 PaywallView {
@@ -151,8 +169,16 @@ enum RootTab: String, CaseIterable, Hashable {
     }
 }
 
-#Preview {
-    ContentView()
-        .modelContainer(PreviewSampleData.makePreviewContainer())
+private enum ContentViewPreviewDefaults {
+    static var userDefaults: UserDefaults {
+        let suite = UserDefaults(suiteName: "unit.preview.ContentView")!
+        suite.set(true, forKey: "hasSeenPaywall")
+        suite.set(false, forKey: "showOnboardingRestart")
+        return suite
+    }
+}
 
+#Preview {
+    ContentView(userDefaults: ContentViewPreviewDefaults.userDefaults)
+        .modelContainer(PreviewSampleData.makePreviewContainer())
 }

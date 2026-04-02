@@ -356,8 +356,7 @@ struct EditProgramView: View {
                 Button {
                     moveTemplate(at: index, direction: .up)
                 } label: {
-                    Image(systemName: "chevron.up")
-                        .font(AppFont.compactLabel)
+                    AppIcon.moveUp.image(size: 12, weight: .semibold)
                         .foregroundStyle(index > 0 ? AppColor.textSecondary : AppColor.disabledSurface)
                         .frame(width: 44, height: 36)
                         .contentShape(Rectangle())
@@ -367,8 +366,7 @@ struct EditProgramView: View {
                 Button {
                     moveTemplate(at: index, direction: .down)
                 } label: {
-                    Image(systemName: "chevron.down")
-                        .font(AppFont.compactLabel)
+                    AppIcon.moveDown.image(size: 12, weight: .semibold)
                         .foregroundStyle(index < orderedTemplates.count - 1 ? AppColor.textSecondary : AppColor.disabledSurface)
                         .frame(width: 44, height: 36)
                         .contentShape(Rectangle())
