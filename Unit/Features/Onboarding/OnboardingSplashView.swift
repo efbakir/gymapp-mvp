@@ -9,6 +9,8 @@
 import SwiftUI
 
 struct OnboardingSplashView: View {
+    var showsDismiss: Bool = false
+    var onDismiss: (() -> Void)?
     var onGetStarted: () -> Void
 
     var body: some View {
@@ -52,6 +54,21 @@ struct OnboardingSplashView: View {
         .buttonStyle(.plain)
         .contentShape(Rectangle())
         .toolbar(.hidden, for: .navigationBar)
+        .overlay(alignment: .topTrailing) {
+            if showsDismiss {
+                Button {
+                    onDismiss?()
+                } label: {
+                    AppIcon.close.image(size: 16, weight: .semibold)
+                        .foregroundStyle(AppColor.textSecondary)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .padding(.top, AppSpacing.md)
+                .padding(.trailing, AppSpacing.md)
+            }
+        }
     }
 }
 
