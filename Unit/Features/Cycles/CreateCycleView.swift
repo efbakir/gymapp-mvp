@@ -223,7 +223,7 @@ struct CreateCycleView: View {
                     Button("Create Cycle") {
                         createCycle()
                     }
-                    .font(AppFont.body.font.weight(.semibold))
+                    .font(AppFont.productAction)
                     .foregroundStyle(canCreate ? AppColor.accent : AppColor.textSecondary)
                     .disabled(!canCreate)
                 }

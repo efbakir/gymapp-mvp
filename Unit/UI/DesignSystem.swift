@@ -1285,7 +1285,7 @@ struct PreviewListRow: View {
         case .standard:
             return AppFont.caption.font
         case .programRoutine:
-            return .custom("Inter-Medium", size: 12)
+            return AppFont.caption.font
         }
     }
 
@@ -1384,7 +1384,7 @@ struct SheetHeader: View {
             if let onDone {
                 Button(action: onDone) {
                     Text("Done")
-                        .fontWeight(.semibold)
+                        .font(AppFont.label.font)
                         .foregroundStyle(AppColor.accent)
                         .frame(width: 60, height: 48)
                 }
@@ -2060,7 +2060,6 @@ struct UnitTabBar: View {
         .padding(.top, AppSpacing.sm)
         .padding(.bottom, AppSpacing.smd)
         .background(AppColor.background)
-        .shadow(color: Color.black.opacity(0.02), radius: 8, x: 0, y: -1)
     }
 }
 

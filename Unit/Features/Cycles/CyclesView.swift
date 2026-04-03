@@ -193,7 +193,7 @@ struct CyclesView: View {
                 } label: {
                     AppIcon.edit.image(size: 14)
                         .foregroundStyle(AppColor.accent)
-                        .frame(width: 36, height: 36)
+                        .frame(width: 44, height: 44)
                         .background(AppColor.accentSoft)
                         .clipShape(Circle())
                 }
@@ -230,7 +230,7 @@ struct CyclesView: View {
             } label: {
                 AppIcon.edit.image(size: 14)
                     .foregroundStyle(AppColor.accent)
-                    .frame(width: 36, height: 36)
+                    .frame(width: 44, height: 44)
                     .background(AppColor.accentSoft)
                     .clipShape(Circle())
             }
@@ -342,7 +342,7 @@ private struct WeekRowView: View {
     private func rowContent(status: WeekStatus) -> some View {
         HStack(spacing: AppSpacing.md) {
             Text("Week \(weekNumber)")
-                .font(AppFont.body.font.weight(.medium))
+                .font(AppFont.body.font)
                 .frame(width: 60, alignment: .leading)
 
             Text(dateRangeText)
