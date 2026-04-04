@@ -201,7 +201,7 @@ struct TemplateDetailView: View {
         VStack(alignment: .leading, spacing: AppSpacing.xs) {
             if let planned {
                 Text(WorkoutTargetFormatter.volumeText(setCount: effectiveSetCount, reps: planned.reps) ?? "\(planned.reps) reps")
-                    .font(AppFont.body.font.weight(.semibold))
+                    .font(AppFont.label.font)
                     .foregroundStyle(AppColor.textPrimary)
                     .monospacedDigit()
 
