@@ -578,10 +578,18 @@ struct ActiveWorkoutView: View {
     private func progressSteps(for section: WorkoutExerciseSectionModel) -> [SetProgressIndicator.Step] {
         (0..<section.plannedSetCount).map { index in
             let state: SetProgressIndicator.Step.State
+            var reps: Int?
+            var weightText: String?
 
             if index < section.entries.count {
                 let entry = section.entries[index]
                 state = entry.targetReps > 0 && !entry.metTarget ? .failed : .completed
+                reps = entry.reps
+                if section.exercise.isBodyweight {
+                    weightText = "BW"
+                } else if entry.weight > 0 {
+                    weightText = WorkoutTargetFormatter.weightDisplay(entry.weight)
+                }
             } else if !section.hasReachedPlannedSetGoal && index == section.entries.count {
                 state = .current
             } else {
@@ -591,7 +599,9 @@ struct ActiveWorkoutView: View {
             return SetProgressIndicator.Step(
                 id: index,
                 label: "\(index + 1)",
-                state: state
+                state: state,
+                reps: reps,
+                weightText: weightText
             )
         }
     }

@@ -921,6 +921,13 @@ struct SetProgressIndicator: View {
         let id: Int
         let label: String
         let state: State
+        var reps: Int? = nil
+        var weightText: String? = nil
+
+        var chipText: String? {
+            guard let reps, let weightText else { return nil }
+            return "\(reps)×\(weightText)"
+        }
     }
 
     let steps: [Step]
@@ -936,6 +943,22 @@ struct SetProgressIndicator: View {
                             .padding(.horizontal, AppSpacing.smd)
                             .frame(height: 24)
                             .background(Capsule().fill(AppColor.accent))
+                    } else if (step.state == .completed || step.state == .failed),
+                              let chipText = step.chipText {
+                        HStack(spacing: AppSpacing.xxs) {
+                            if step.state == .completed {
+                                AppIcon.checkmark.image(size: 10, weight: .bold)
+                            } else {
+                                AppIcon.remove.image(size: 10, weight: .bold)
+                            }
+                            Text(chipText)
+                                .font(AppFont.compactLabel)
+                                .lineLimit(1)
+                        }
+                        .foregroundStyle(AppColor.textPrimary)
+                        .padding(.horizontal, AppSpacing.sm)
+                        .frame(height: 24)
+                        .background(Capsule().fill(AppColor.controlBackground))
                     } else {
                         ZStack {
                             Circle()
@@ -986,11 +1009,12 @@ struct SetProgressIndicator: View {
     }
 
     private func accessibilityLabel(for step: Step) -> String {
+        let detail = step.chipText.map { ", \($0)" } ?? ""
         switch step.state {
         case .completed:
-            return "Set \(step.label), completed"
+            return "Set \(step.label), completed\(detail)"
         case .failed:
-            return "Set \(step.label), below target"
+            return "Set \(step.label), below target\(detail)"
         case .current:
             return "Set \(step.label), current"
         case .upcoming:
@@ -1642,14 +1666,16 @@ struct WorkoutCommandCard: View {
 
                     if onSecondaryAction != nil {
                         Button(action: { onSecondaryAction?() }) {
-                            HStack(spacing: AppSpacing.xs) {
-                                Text(metricValue)
-                                    .font(AppFont.productAction)
-
-                                AppIcon.edit.image(size: 15, weight: .semibold)
-                            }
-                            .foregroundStyle(AppColor.textSecondary)
-                            .frame(minHeight: 44)
+                            Text(metricValue)
+                                .font(AppFont.productAction)
+                                .foregroundStyle(AppColor.textSecondary)
+                                .padding(.horizontal, AppSpacing.md)
+                                .padding(.vertical, AppSpacing.sm)
+                                .background(
+                                    RoundedRectangle(cornerRadius: AppRadius.sm, style: .continuous)
+                                        .fill(AppColor.controlBackground)
+                                )
+                                .frame(minHeight: 44)
                         }
                         .buttonStyle(ScaleButtonStyle())
                         .accessibilityLabel("Adjust set")
