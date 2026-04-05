@@ -32,8 +32,6 @@ struct ReadyTodayContext {
     /// Position of the suggested routine in the program order (1-based).
     let trainingDayOrdinal: Int
     let trainingDayTotal: Int
-    /// Current cycle week number (1-based), or 1 if no cycle.
-    let cycleWeekNumber: Int
     let weekStripItems: [TodayWeekStripItem]
     let weekOverviewTabs: [TodayWeekOverviewSheet.WeekOverviewTab]
     let initialWeekOverviewTabID: String
@@ -55,6 +53,7 @@ struct TodayView: View {
     @Query(sort: \Split.name) private var splits: [Split]
     @Query(sort: \Exercise.displayName) private var exercises: [Exercise]
     @Query(sort: \WorkoutSession.date, order: .reverse) private var sessions: [WorkoutSession]
+    // Cycles deferred to post-v1 (compass 2026-03-26); query retained for data compat.
     @Query(sort: \Cycle.startDate, order: .reverse) private var cycles: [Cycle]
 
     @State private var viewModel = TodayDashboardViewModel()
@@ -404,15 +403,12 @@ final class TodayDashboardViewModel {
             .sorted { ($0.lastPerformedDate ?? .distantPast) < ($1.lastPerformedDate ?? .distantPast) }
             .first!
 
-        let activeCycle = cycles.first(where: { $0.splitId == split.id && $0.isActive })
-
         return stateForTemplate(
             nextTemplate,
             split: split,
             templates: templates,
             sessions: sessions,
-            exercises: exercises,
-            cycleWeekNumber: activeCycle?.currentWeekNumber ?? 1
+            exercises: exercises
         )
     }
 
@@ -421,8 +417,7 @@ final class TodayDashboardViewModel {
         split: Split,
         templates: [DayTemplate],
         sessions: [WorkoutSession],
-        exercises: [Exercise],
-        cycleWeekNumber: Int
+        exercises: [Exercise]
     ) -> TodayDashboardState {
         if template.orderedExerciseIds.isEmpty {
             return .setupIncomplete(
@@ -502,7 +497,6 @@ final class TodayDashboardViewModel {
                 lastSessionDate: lastDate,
                 trainingDayOrdinal: dayOrdinal,
                 trainingDayTotal: dayTotal,
-                cycleWeekNumber: cycleWeekNumber,
                 weekStripItems: weekStrip,
                 weekOverviewTabs: weekTabs,
                 initialWeekOverviewTabID: initialWeekTabID
