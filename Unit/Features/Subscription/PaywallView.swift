@@ -180,12 +180,16 @@ struct PaywallView: View {
             Text("·")
                 .foregroundStyle(AppColor.textSecondary)
 
-            Link("Terms", destination: URL(string: "https://unit.app/terms")!)
+            if let termsURL = URL(string: "https://unit.app/terms") {
+                Link("Terms", destination: termsURL)
+            }
 
             Text("·")
                 .foregroundStyle(AppColor.textSecondary)
 
-            Link("Privacy", destination: URL(string: "https://unit.app/privacy")!)
+            if let privacyURL = URL(string: "https://unit.app/privacy") {
+                Link("Privacy", destination: privacyURL)
+            }
         }
         .font(AppFont.caption.font)
         .foregroundStyle(AppColor.textSecondary)

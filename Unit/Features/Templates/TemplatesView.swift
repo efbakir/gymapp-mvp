@@ -358,7 +358,7 @@ struct EditProgramView: View {
                 } label: {
                     AppIcon.moveUp.image(size: 12, weight: .semibold)
                         .foregroundStyle(index > 0 ? AppColor.textSecondary : AppColor.disabledSurface)
-                        .frame(width: 44, height: 36)
+                        .frame(width: 44, height: 44)
                         .contentShape(Rectangle())
                 }
                 .disabled(index == 0)
@@ -368,7 +368,7 @@ struct EditProgramView: View {
                 } label: {
                     AppIcon.moveDown.image(size: 12, weight: .semibold)
                         .foregroundStyle(index < orderedTemplates.count - 1 ? AppColor.textSecondary : AppColor.disabledSurface)
-                        .frame(width: 44, height: 36)
+                        .frame(width: 44, height: 44)
                         .contentShape(Rectangle())
                 }
                 .disabled(index >= orderedTemplates.count - 1)

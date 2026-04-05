@@ -167,6 +167,8 @@ private struct BaselineRow: View {
                         .frame(width: 28, height: 28)
                         .background(AppColor.cardBackground)
                         .clipShape(Circle())
+                        .frame(width: 44, height: 44)
+                        .contentShape(Circle())
                 }
                 .buttonStyle(.plain)
             }

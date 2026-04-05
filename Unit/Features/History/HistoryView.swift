@@ -421,6 +421,7 @@ private struct SessionStatusBadge: View {
             icon
                 .foregroundStyle(state.markerColor)
         }
+        .accessibilityLabel(state.title)
     }
 
     @ViewBuilder
@@ -431,7 +432,7 @@ private struct SessionStatusBadge: View {
         case .partial:
             AppIcon.remove.image(size: 12, weight: .bold)
         case .skipped:
-            AppIcon.remove.image(size: 12, weight: .bold)
+            AppIcon.close.image(size: 10, weight: .bold)
         }
     }
 }
