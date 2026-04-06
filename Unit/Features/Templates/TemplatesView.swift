@@ -183,7 +183,7 @@ struct TemplatesView: View {
     }
 
     private func programRoutineSubtitle(dayIndex: Int, template: DayTemplate) -> String {
-        "Day \(dayIndex + 1) · \(routineSummary(for: template))"
+        routineSummary(for: template)
     }
 
     private func orderedTemplates(for split: Split) -> [DayTemplate] {

@@ -252,7 +252,7 @@ private struct ReadyTodayCard: View {
         AppCard {
             VStack(alignment: .center, spacing: AppSpacing.lg) {
                 AppTag(
-                    text: "Day \(context.trainingDayOrdinal) of \(context.trainingDayTotal)",
+                    text: "Up next",
                     style: .custom(fg: AppColor.textSecondary, bg: AppColor.controlBackground),
                     layout: .compactCapsule
                 )

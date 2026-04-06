@@ -82,8 +82,7 @@ struct ProgramDetailView: View {
 
     private func routineSubtitle(dayIndex: Int, template: DayTemplate) -> String {
         let count = template.orderedExerciseIds.count
-        let label = count == 0 ? "Add exercises" : "\(count) exercise\(count == 1 ? "" : "s")"
-        return "Day \(dayIndex + 1) · \(label)"
+        return count == 0 ? "Add exercises" : "\(count) exercise\(count == 1 ? "" : "s")"
     }
 }
 
