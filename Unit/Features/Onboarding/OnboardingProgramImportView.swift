@@ -292,7 +292,7 @@ enum ProgramImportParser {
         guard !lines.isEmpty else { return [] }
 
         var days: [ImportedProgramDay] = []
-        var currentDayName = "Day 1"
+        var currentDayName = "Workout 1"
         var currentExercises: [ImportedProgramExercise] = []
 
         func flushCurrentDay() {
@@ -318,7 +318,7 @@ enum ProgramImportParser {
         if days.isEmpty {
             let exercises = lines.compactMap(parsedExercise(from:))
             if !exercises.isEmpty {
-                days = [ImportedProgramDay(name: "Day 1", exercises: exercises)]
+                days = [ImportedProgramDay(name: "Workout 1", exercises: exercises)]
             }
         }
 

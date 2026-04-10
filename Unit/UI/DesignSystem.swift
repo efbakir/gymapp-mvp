@@ -31,6 +31,7 @@ enum AppColor {
     static let error = Color(uiColor: uicolorAdaptive(light: 0xFF3B30, dark: 0xFF453A))
 
     static let scrim = Color(uiColor: uicolorScrim())
+    static let shadow = Color(uiColor: uicolorAdaptive(light: 0x000000, dark: 0x000000))
 
     private nonisolated static func uicolorAdaptive(light: UInt32, dark: UInt32) -> UIColor {
         UIColor { trait in
@@ -177,8 +178,8 @@ struct AppDivider: View {
 enum AppShadow {
     static func sheetLift(_ colorScheme: ColorScheme) -> (color: Color, radius: CGFloat, y: CGFloat) {
         colorScheme == .dark
-            ? (Color.black.opacity(0.58), 28, -12)
-            : (Color.black.opacity(0.18), 26, -12)
+            ? (AppColor.shadow.opacity(0.58), 28, -12)
+            : (AppColor.shadow.opacity(0.18), 26, -12)
     }
 }
 

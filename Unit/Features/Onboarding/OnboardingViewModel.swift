@@ -62,7 +62,7 @@ final class OnboardingViewModel {
     // MARK: Split
 
     var dayCount: Int = 3
-    var dayNames: [String] = ["Day 1", "Day 2", "Day 3"]
+    var dayNames: [String] = ["", "", ""]
     var dayExercises: [[OnboardingExercise]] = [[], [], []]
 
     // MARK: Baselines
@@ -157,7 +157,7 @@ final class OnboardingViewModel {
     func updateDayCount(_ newCount: Int) {
         let count = max(2, min(6, newCount))
         dayCount = count
-        while dayNames.count < count { dayNames.append("Day \(dayNames.count + 1)") }
+        while dayNames.count < count { dayNames.append("") }
         if dayNames.count > count { dayNames = Array(dayNames.prefix(count)) }
         while dayExercises.count < count { dayExercises.append([]) }
         if dayExercises.count > count { dayExercises = Array(dayExercises.prefix(count)) }
@@ -357,7 +357,7 @@ extension OnboardingViewModel {
         dayCount = min(6, max(1, sanitizedDays.count))
         dayNames = Array(sanitizedDays.prefix(dayCount).enumerated().map { index, day in
             let trimmed = day.name.trimmingCharacters(in: .whitespacesAndNewlines)
-            return trimmed.isEmpty ? "Day \(index + 1)" : trimmed
+            return trimmed.isEmpty ? "Workout \(index + 1)" : trimmed
         })
 
         dayExercises = Array(sanitizedDays.prefix(dayCount).map { day in

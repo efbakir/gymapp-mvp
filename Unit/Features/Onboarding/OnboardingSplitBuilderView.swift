@@ -84,7 +84,7 @@ struct OnboardingSplitBuilderView: View {
                 VStack(spacing: AppSpacing.sm) {
                     ForEach(0..<vm.dayCount, id: \.self) { i in
                         HStack(spacing: AppSpacing.sm) {
-                            Text("Day \(i + 1)")
+                            Text("\(i + 1)")
                                 .font(AppFont.caption.font)
                                 .foregroundStyle(AppColor.textSecondary)
                                 .frame(width: 44, alignment: .leading)

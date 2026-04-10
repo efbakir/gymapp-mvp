@@ -23,7 +23,7 @@ enum WorkoutTargetFormatter {
         weightKg: Double,
         reps: Int,
         isBodyweight: Bool,
-        bodyweightLabel: String = "Bodyweight"
+        bodyweightLabel: String = "BW"
     ) -> String? {
         guard reps > 0 else { return nil }
 
@@ -65,7 +65,7 @@ enum WorkoutTargetFormatter {
             setCount: setCount,
             reps: reps,
             isBodyweight: isBodyweight,
-            bodyweightLabel: "Bodyweight"
+            bodyweightLabel: "BW"
         )
     }
 

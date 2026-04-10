@@ -138,7 +138,7 @@ struct ActiveWorkoutView: View {
 
         if let target = currentSection.weekTarget {
             if currentSection.exercise.isBodyweight {
-                return "\(target.reps) x Bodyweight"
+                return "\(target.reps) x BW"
             }
 
             if target.weightKg > 0 {
@@ -149,7 +149,7 @@ struct ActiveWorkoutView: View {
         // Show values from previous set in this session
         if let lastValues = lastLoggedValues(for: currentSection.exercise.id) {
             if currentSection.exercise.isBodyweight {
-                return "\(lastValues.reps) x Bodyweight"
+                return "\(lastValues.reps) x BW"
             }
             return "\(lastValues.reps) x \(WorkoutTargetFormatter.weightDisplay(lastValues.weight))"
         }
