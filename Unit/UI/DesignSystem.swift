@@ -230,6 +230,7 @@ enum AppIcon: String {
     case circle = "circle"
     case moveUp = "arrow.up"
     case moveDown = "arrow.down"
+    case reset = "arrow.counterclockwise.circle"
 
     var systemName: String { rawValue }
 

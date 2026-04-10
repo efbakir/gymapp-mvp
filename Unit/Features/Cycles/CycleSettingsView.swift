@@ -72,7 +72,7 @@ struct CycleSettingsView: View {
                     Button(role: .destructive) {
                         showingResetConfirm = true
                     } label: {
-                        Label("Reset Cycle", systemImage: "arrow.counterclockwise.circle")
+                        Label("Reset Cycle", systemImage: AppIcon.reset.systemName)
                             .frame(minHeight: 44)
                     }
                     .confirmationDialog(
