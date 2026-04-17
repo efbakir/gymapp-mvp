@@ -15,6 +15,16 @@ enum SessionHistoryMode: String, CaseIterable, Identifiable {
     var id: Self { self }
 }
 
+enum SessionHistoryFilter: String, CaseIterable, Identifiable {
+    case all = "All"
+    case completed = "Completed"
+    case partial = "Partial"
+    case skipped = "Skipped"
+    case missed = "Missed"
+
+    var id: Self { self }
+}
+
 enum SessionReviewState: Equatable {
     case completed
     case partial
@@ -39,7 +49,7 @@ enum SessionReviewState: Equatable {
     var tagStyle: AppTag.Style {
         switch self {
         case .completed:
-            return .default
+            return .success
         case .partial:
             return .warning
         case .skipped:
@@ -48,21 +58,25 @@ enum SessionReviewState: Equatable {
     }
 }
 
+/// History-calendar day classification — review-only, no planning states.
+/// Priority: future > today-with-outcome > completed > missed > default.
 private enum CalendarDayStatus: Equatable {
-    case empty
+    case `default`
     case completed
-    case partial
-    case skipped
+    case missed
+    case today
+    case future
+
+    var isTappable: Bool {
+        self == .completed || self == .missed
+    }
 }
 
 struct SessionSetSnapshot: Identifiable {
     let id: UUID
     let setIndex: Int
-    let targetWeight: Double
-    let targetReps: Int
     let actualWeight: Double
     let actualReps: Int
-    let metTarget: Bool
     let note: String
 }
 
@@ -88,10 +102,8 @@ struct SessionSnapshot: Identifiable {
     let id: UUID
     let date: Date
     let templateName: String
-    let weekNumber: Int
     let state: SessionReviewState
     let exercises: [SessionExerciseSnapshot]
-    let overallFeeling: Int
     let contextNote: String?
 
     var completedExerciseCount: Int {
@@ -102,18 +114,10 @@ struct SessionSnapshot: Identifiable {
         exercises.reduce(0) { $0 + $1.sets.count }
     }
 
-    /// One line: first exercise · load × reps · +N more exercises.
+    /// Short caption showing total exercise count, e.g. “6 exercises”.
     var compactExerciseHeadline: String? {
-        guard let primaryExercise = exercises.first else { return nil }
-        let headline = [primaryExercise.name, primaryExercise.previewPerformanceText]
-            .compactMap { $0 }
-            .joined(separator: " · ")
-        let additionalExerciseCount = max(completedExerciseCount - 1, 0)
-        if additionalExerciseCount > 0 {
-            let suffix = "+\(additionalExerciseCount) more exercise\(additionalExerciseCount == 1 ? "" : "s")"
-            return headline.isEmpty ? suffix : "\(headline) · \(suffix)"
-        }
-        return headline.isEmpty ? nil : headline
+        guard completedExerciseCount > 0 else { return nil }
+        return "\(completedExerciseCount) exercise\(completedExerciseCount == 1 ? "" : "s")"
     }
 }
 
@@ -142,11 +146,14 @@ struct RecentSessionsView: View {
 
     @Query(sort: \WorkoutSession.date, order: .reverse) private var sessions: [WorkoutSession]
     @Query(sort: \DayTemplate.name) private var templates: [DayTemplate]
+    @Query(sort: \Split.name) private var splits: [Split]
     @Query(sort: \Exercise.displayName) private var exercises: [Exercise]
 
+    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
     @State private var mode: SessionHistoryMode
+    @State private var filter: SessionHistoryFilter = .all
     @State private var displayMonth: Date = Calendar.current.startOfMonth(for: Date())
     @State private var selectedDate: Date?
     @State private var selectedPayload: SelectedSessionsPayload?
@@ -167,6 +174,10 @@ struct RecentSessionsView: View {
         Dictionary(uniqueKeysWithValues: exercises.map { ($0.id, $0) })
     }
 
+    private var routineTemplateIDs: [UUID] {
+        splits.first?.orderedTemplateIds ?? []
+    }
+
     private var sessionSnapshots: [SessionSnapshot] {
         historySessions.compactMap(makeSnapshot(for:))
     }
@@ -180,22 +191,35 @@ struct RecentSessionsView: View {
         return sessionsByDay[selectedDate] ?? []
     }
 
+    /// Routines scheduled earlier this week that are still available — neutral copy, not a home-screen “missed” nudge.
+    private var earlierWeekItems: [EarlierWeekRoutineInfo] {
+        guard let split = splits.first else { return [] }
+        let ordered = EarlierWeekCatchup.orderedTemplates(for: split, templates: templates)
+        guard ordered.contains(where: { $0.scheduledWeekday > 0 }) else { return [] }
+        return EarlierWeekCatchup.incompleteItems(orderedTemplates: ordered, sessions: sessions)
+    }
+
     var body: some View {
         AppScreen(
             showsNativeNavigationBar: true
         ) {
-            if sessionSnapshots.isEmpty {
+            if sessionSnapshots.isEmpty, earlierWeekItems.isEmpty {
                 emptyState
             } else {
                 VStack(alignment: .leading, spacing: AppSpacing.md) {
                     modeToggle
 
-                    if mode == .list {
-                        listContent
-                    } else {
-                        calendarContent
+                    Group {
+                        if mode == .list {
+                            listContent
+                        } else {
+                            calendarContent
+                        }
                     }
+                    .transition(.opacity)
                 }
+                .animation(.easeInOut(duration: 0.22), value: mode)
+                .animation(.easeInOut(duration: 0.2), value: filter)
             }
         }
         .navigationTitle("History")
@@ -216,12 +240,11 @@ struct RecentSessionsView: View {
     }
 
     private var modeToggle: some View {
-        Picker("History view", selection: $mode) {
-            ForEach(SessionHistoryMode.allCases) { item in
-                Text(item.rawValue).tag(item)
-            }
-        }
-        .pickerStyle(.segmented)
+        AppSegmentedControl(
+            selection: $mode,
+            items: SessionHistoryMode.allCases,
+            title: { $0.rawValue }
+        )
     }
 
     private var emptyState: some View {
@@ -238,24 +261,108 @@ struct RecentSessionsView: View {
         }
     }
 
+    private func startWorkout(for templateId: UUID) {
+        guard let template = templates.first(where: { $0.id == templateId }) else { return }
+
+        let session = WorkoutSession(
+            date: Date(),
+            templateId: template.id,
+            isCompleted: false
+        )
+
+        modelContext.insert(session)
+        template.lastPerformedDate = session.date
+        try? modelContext.save()
+
+        if showsCloseButton {
+            dismiss()
+        }
+    }
+
     private var sortedDays: [(date: Date, sessions: [SessionSnapshot])] {
         sessionsByDay
             .map { (date: $0.key, sessions: $0.value.sorted { $0.date > $1.date }) }
             .sorted { $0.date > $1.date }
     }
 
+    private var filteredSortedDays: [(date: Date, sessions: [SessionSnapshot])] {
+        guard filter != .missed else { return [] }
+        return sortedDays.compactMap { day in
+            let matches = day.sessions.filter { sessionMatchesFilter($0) }
+            guard !matches.isEmpty else { return nil }
+            return (date: day.date, sessions: matches)
+        }
+    }
+
+    private func sessionMatchesFilter(_ snapshot: SessionSnapshot) -> Bool {
+        switch filter {
+        case .all: return true
+        case .completed: return snapshot.state == .completed
+        case .partial: return snapshot.state == .partial
+        case .skipped: return snapshot.state == .skipped
+        case .missed: return false
+        }
+    }
+
+    private var showsMissedInList: Bool {
+        (filter == .all || filter == .missed) && !earlierWeekItems.isEmpty
+    }
+
     private var listContent: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.sm) {
-            ForEach(sortedDays, id: \.date) { day in
-                Button {
-                    selectedDate = day.date
-                    selectedPayload = SelectedSessionsPayload(date: day.date, sessions: day.sessions)
-                } label: {
-                    DaySessionCard(date: day.date, sessions: day.sessions)
+        VStack(alignment: .leading, spacing: AppSpacing.md) {
+            historyFilterChips
+
+            if filteredSortedDays.isEmpty && !showsMissedInList {
+                filteredEmptyState
+            } else {
+                // Single flat stack so gaps between missed rows and completed rows are identical.
+                VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                    if showsMissedInList {
+                        ForEach(earlierWeekItems) { info in
+                            EarlierWeekRoutineRow(info: info) {
+                                startWorkout(for: info.templateId)
+                            }
+                        }
+                    }
+
+                    ForEach(filteredSortedDays, id: \.date) { day in
+                        ForEach(day.sessions) { snapshot in
+                            Button {
+                                selectedDate = day.date
+                                selectedPayload = SelectedSessionsPayload(date: day.date, sessions: [snapshot])
+                            } label: {
+                                SessionPreviewCard(snapshot: snapshot)
+                            }
+                            .buttonStyle(ScaleButtonStyle())
+                        }
+                    }
                 }
-                .buttonStyle(.plain)
             }
         }
+    }
+
+    private var historyFilterChips: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: AppSpacing.xs) {
+                ForEach(SessionHistoryFilter.allCases.filter { $0 != .all }) { option in
+                    AppFilterChip(
+                        label: option.rawValue,
+                        isSelected: filter == option,
+                        showsClearGlyphWhenSelected: true
+                    ) {
+                        filter = (filter == option) ? .all : option
+                    }
+                }
+            }
+        }
+    }
+
+    private var filteredEmptyState: some View {
+        Text("Nothing to show")
+            .font(AppFont.body.font)
+            .foregroundStyle(AppColor.textSecondary.opacity(0.6))
+            .frame(maxWidth: .infinity)
+            .padding(.top, AppSpacing.xxl)
     }
 
     private var calendarContent: some View {
@@ -268,49 +375,74 @@ struct RecentSessionsView: View {
                         displayMonth: displayMonth,
                         sessionsByDay: sessionsByDay,
                         selectedDate: selectedDate,
+                        routineTemplateIDs: routineTemplateIDs,
+                        sessions: sessions,
                         onSelect: { day in
-                            guard day.hasSessions else { return }
+                            guard day.status.isTappable else { return }
                             selectedDate = day.date
                         }
                     )
                 }
             }
 
-            if let selectedDate, !selectedDaySessions.isEmpty {
+            calendarDetailSection
+        }
+    }
+
+    @ViewBuilder
+    private var calendarDetailSection: some View {
+        if let selectedDate {
+            let sessionsForDay = selectedDaySessions
+            if !sessionsForDay.isEmpty {
                 VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                    ForEach(selectedDaySessions) { snapshot in
+                    ForEach(sessionsForDay) { snapshot in
                         Button {
                             selectedPayload = SelectedSessionsPayload(date: selectedDate, sessions: [snapshot])
                         } label: {
-                            CalendarSessionCard(
-                                snapshot: snapshot,
-                                isToday: Calendar.current.isDateInToday(selectedDate)
-                            )
+                            SessionPreviewCard(snapshot: snapshot)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(ScaleButtonStyle())
                     }
                 }
+            } else if isMissedDay(selectedDate) {
+                HistoryMissedDayCard(
+                    date: selectedDate,
+                    workoutName: assignedWorkoutName(on: selectedDate)
+                )
             }
         }
     }
 
-    private func syncCalendarSelectionIfNeeded() {
+    private func isMissedDay(_ date: Date) -> Bool {
         let calendar = Calendar.current
+        let day = calendar.startOfDay(for: date)
+        guard (sessionsByDay[day] ?? []).isEmpty else { return false }
+        return TrainingWeekProgressBuilder.isMissedTrainingDay(
+            date: day,
+            routineTemplateIDs: routineTemplateIDs,
+            sessions: sessions
+        )
+    }
 
-        if let selectedDate,
-           calendar.isDate(selectedDate, equalTo: displayMonth, toGranularity: .month),
-           sessionsByDay[selectedDate] != nil {
-            return
-        }
+    /// Resolves the template name scheduled for a given weekday, or a neutral fallback.
+    private func assignedWorkoutName(on date: Date) -> String {
+        let calendar = Calendar.current
+        let weekday = calendar.component(.weekday, from: date)
+        guard let split = splits.first else { return "Assigned workout" }
 
-        let monthSessions = sessionsByDay.keys
-            .filter { calendar.isDate($0, equalTo: displayMonth, toGranularity: .month) }
-            .sorted()
+        let templateByID = Dictionary(uniqueKeysWithValues: templates.map { ($0.id, $0) })
+        let routineTemplates = split.orderedTemplateIds.compactMap { templateByID[$0] }
 
-        if let todayMatch = monthSessions.first(where: { calendar.isDateInToday($0) }) {
-            selectedDate = todayMatch
-        } else {
-            selectedDate = monthSessions.last
+        return routineTemplates.first(where: { $0.scheduledWeekday == weekday })?.displayName ?? "Assigned workout"
+    }
+
+    /// Drops the current selection when the visible month changes away from it.
+    /// Default state (no selection) keeps the detail section empty per the review-only spec.
+    private func syncCalendarSelectionIfNeeded() {
+        guard let selectedDate else { return }
+        let calendar = Calendar.current
+        if !calendar.isDate(selectedDate, equalTo: displayMonth, toGranularity: .month) {
+            self.selectedDate = nil
         }
     }
 
@@ -344,11 +476,8 @@ func makeHistorySessionSnapshot(
             SessionSetSnapshot(
                 id: entry.id,
                 setIndex: entry.setIndex,
-                targetWeight: entry.targetWeight,
-                targetReps: entry.targetReps,
                 actualWeight: entry.weight,
                 actualReps: entry.reps,
-                metTarget: entry.targetWeight > 0 || entry.targetReps > 0 ? entry.metTarget : true,
                 note: entry.note.trimmingCharacters(in: .whitespacesAndNewlines)
             )
         }
@@ -372,10 +501,8 @@ func makeHistorySessionSnapshot(
         id: session.id,
         date: session.date,
         templateName: templateNamesByID[session.templateId] ?? "Workout",
-        weekNumber: session.weekNumber,
         state: session.isCompleted ? .completed : (isSkippedSession ? .skipped : .partial),
         exercises: exerciseSnapshots,
-        overallFeeling: session.overallFeeling,
         contextNote: contextNote
     )
 }
@@ -388,99 +515,22 @@ extension RecentSessionsView {
     }
 }
 
-struct HistoryView: View {
-    let showsCloseButton: Bool
-    let initialMode: SessionHistoryMode
+private struct EarlierWeekRoutineRow: View {
+    let info: EarlierWeekRoutineInfo
+    let onStart: () -> Void
 
     var body: some View {
-        RecentSessionsView(showsCloseButton: showsCloseButton, initialMode: initialMode)
-    }
-}
-
-struct RecentSessionListRow: View {
-    let snapshot: SessionSnapshot
-
-    var body: some View {
-        sessionPreviewCardContent(snapshot: snapshot, showDisclosure: true)
-            .padding(AppSpacing.md)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(AppColor.cardBackground)
-            .clipShape(RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous))
-    }
-}
-
-private struct SessionStatusBadge: View {
-    let state: SessionReviewState
-
-    var body: some View {
-        ZStack {
-            Circle()
-                .fill(state.markerColor.opacity(0.1))
-                .frame(width: 24, height: 24)
-
-            icon
-                .foregroundStyle(state.markerColor)
-        }
-        .accessibilityLabel(state.title)
-    }
-
-    @ViewBuilder
-    private var icon: some View {
-        switch state {
-        case .completed:
-            AppIcon.checkmark.image(size: 12, weight: .bold)
-        case .partial:
-            AppIcon.remove.image(size: 12, weight: .bold)
-        case .skipped:
-            AppIcon.close.image(size: 10, weight: .bold)
-        }
-    }
-}
-
-private struct DaySessionCard: View {
-    let date: Date
-    let sessions: [SessionSnapshot]
-
-    private var totalExercises: Int {
-        sessions.reduce(0) { $0 + $1.completedExerciseCount }
-    }
-
-    private var overallState: SessionReviewState {
-        if sessions.allSatisfy({ $0.state == .completed }) { return .completed }
-        if sessions.contains(where: { $0.state == .skipped }) { return .skipped }
-        return .partial
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.sm) {
-            HStack(alignment: .center, spacing: AppSpacing.md) {
-                Text(date.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day()))
-                    .font(AppFont.label.font)
-                    .foregroundStyle(AppColor.textSecondary)
-
-                Spacer(minLength: 0)
-
-                SessionStatusBadge(state: overallState)
-            }
-
-            // Show template names (deduplicated)
-            let templateNames = sessions.map(\.templateName)
-            let uniqueNames = NSOrderedSet(array: templateNames).array as? [String] ?? templateNames
-            Text(uniqueNames.joined(separator: " + "))
-                .font(AppFont.title.font)
-                .foregroundStyle(AppColor.textPrimary)
-                .fixedSize(horizontal: false, vertical: true)
-
-            if totalExercises > 0 {
-                Text("\(totalExercises) exercise\(totalExercises == 1 ? "" : "s")")
-                    .font(AppFont.caption.font)
-                    .foregroundStyle(AppColor.textSecondary)
+        Button(action: onStart) {
+            AppSessionHighlightCard(
+                eyebrow: info.scheduledDate.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day()),
+                title: info.templateName,
+                caption: "Planned for \(info.scheduledDayName)"
+            ) {
+                AppTag(text: "Missed", style: .warning, layout: .compactCapsule)
             }
         }
-        .padding(AppSpacing.md)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(AppColor.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous))
+        .buttonStyle(ScaleButtonStyle())
+        .accessibilityLabel("Start \(info.templateName), missed on \(info.scheduledDayName)")
     }
 }
 
@@ -498,28 +548,28 @@ extension SessionSnapshot {
 
 @ViewBuilder
 fileprivate func sessionPreviewCardContent(snapshot: SessionSnapshot, showDisclosure: Bool) -> some View {
-    VStack(alignment: .leading, spacing: AppSpacing.sm) {
-        HStack(alignment: .center, spacing: AppSpacing.md) {
+    HStack(alignment: .center, spacing: AppSpacing.md) {
+        VStack(alignment: .leading, spacing: AppSpacing.xxs) {
             Text(snapshot.date.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day()))
                 .font(AppFont.label.font)
                 .foregroundStyle(AppColor.textSecondary)
 
-            Spacer(minLength: 0)
-
-            SessionStatusBadge(state: snapshot.state)
-        }
-
-        Text(snapshot.templateName)
-            .font(AppFont.title.font)
-            .foregroundStyle(AppColor.textPrimary)
-            .fixedSize(horizontal: false, vertical: true)
-
-        if let compactExerciseHeadline = snapshot.compactExerciseHeadline {
-            Text(compactExerciseHeadline)
-                .font(AppFont.caption.font)
-                .foregroundStyle(AppColor.textSecondary)
+            Text(snapshot.templateName)
+                .font(AppFont.title.font)
+                .foregroundStyle(AppColor.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
+
+            if let compactExerciseHeadline = snapshot.compactExerciseHeadline {
+                Text(compactExerciseHeadline)
+                    .font(AppFont.caption.font)
+                    .foregroundStyle(AppColor.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
+
+        Spacer(minLength: 0)
+
+        AppTag(text: snapshot.state.title, style: snapshot.state.tagStyle)
     }
 }
 
@@ -561,13 +611,13 @@ private struct CalendarMonthHeader: View {
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            icon
-                .image(size: 17, weight: .semibold)
-                .foregroundStyle(isEnabled ? AppColor.textPrimary : AppColor.textSecondary.opacity(0.45))
-                .frame(width: 44, height: 44)
-                .contentShape(Rectangle())
+            AppIconCircle {
+                icon
+                    .image(size: AppIconCircleSize.icon, weight: AppIconCircleSize.weight)
+                    .foregroundStyle(isEnabled ? AppColor.textPrimary : AppColor.textSecondary.opacity(0.45))
+            }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(ScaleButtonStyle())
         .disabled(!isEnabled)
         .accessibilityLabel(accessibilityLabel)
     }
@@ -582,6 +632,8 @@ private struct CalendarGrid: View {
     let displayMonth: Date
     let sessionsByDay: [Date: [SessionSnapshot]]
     let selectedDate: Date?
+    let routineTemplateIDs: [UUID]
+    let sessions: [WorkoutSession]
     let onSelect: (CalendarDayCellModel) -> Void
 
     private let columns = Array(repeating: GridItem(.flexible(), spacing: AppSpacing.smd), count: 7)
@@ -602,22 +654,31 @@ private struct CalendarGrid: View {
             guard let date = calendar.date(byAdding: .day, value: offset, to: monthStart) else { continue }
             let dayNumber = offset + 1
             let daySessions = sessionsByDay[date] ?? []
+            let isToday = calendar.isDate(date, inSameDayAs: today)
+            let hasLogged = !daySessions.isEmpty
             let status: CalendarDayStatus
-            if daySessions.isEmpty {
-                status = .empty
-            } else if daySessions.contains(where: { $0.state == .skipped }) {
-                status = .skipped
-            } else if daySessions.contains(where: { $0.state == .partial }) {
-                status = .partial
-            } else {
+
+            if date > today {
+                status = .future
+            } else if isToday {
+                status = hasLogged ? .completed : .today
+            } else if hasLogged {
                 status = .completed
+            } else if TrainingWeekProgressBuilder.isMissedTrainingDay(
+                date: date,
+                routineTemplateIDs: routineTemplateIDs,
+                sessions: sessions
+            ) {
+                status = .missed
+            } else {
+                status = .default
             }
 
             result.append(
                 CalendarDayCellModel(
                     date: date,
                     dayNumber: dayNumber,
-                    isToday: date == today,
+                    isToday: isToday,
                     isSelected: selectedDate.map { calendar.isDate($0, inSameDayAs: date) } ?? false,
                     sessionCount: daySessions.count,
                     status: status,
@@ -648,7 +709,7 @@ private struct CalendarGrid: View {
                         }
                     } else {
                         Color.clear
-                            .frame(height: 32)
+                            .frame(height: 40)
                     }
                 }
             }
@@ -660,75 +721,81 @@ private struct CalendarDayCell: View {
     let model: CalendarDayCellModel
     let action: () -> Void
 
+    private let shape = RoundedRectangle(cornerRadius: AppRadius.sm, style: .continuous)
+
     var body: some View {
-        Button(action: action) {
-            Text("\(model.dayNumber)")
-                .font(AppFont.body.font)
-                .foregroundStyle(numberColor)
-                .frame(width: 32, height: 32)
-                .background(backgroundColor)
-                .overlay {
-                    RoundedRectangle(cornerRadius: AppRadius.sm, style: .continuous)
-                        .stroke(outlineColor, lineWidth: outlineLineWidth)
-                }
-                .clipShape(RoundedRectangle(cornerRadius: AppRadius.sm, style: .continuous))
+        Group {
+            if model.status.isTappable {
+                Button(action: action) { cellBody }
+                    .buttonStyle(ScaleButtonStyle())
+            } else {
+                cellBody
+            }
         }
         .frame(minWidth: 44, minHeight: 44)
         .contentShape(Rectangle())
-        .buttonStyle(.plain)
-        .disabled(!model.hasSessions)
         .accessibilityLabel(accessibilityLabel)
+        .accessibilityAddTraits(model.status.isTappable ? [.isButton] : [])
     }
 
-    private var backgroundColor: Color {
+    private var cellBody: some View {
+        Text("\(model.dayNumber)")
+            .font(AppFont.body.font)
+            .foregroundStyle(numberColor)
+            .frame(minWidth: 36, minHeight: 38)
+            .background(
+                shape.fill(backgroundFill)
+            )
+            .overlay(
+                shape.strokeBorder(strokeColor, lineWidth: strokeWidth)
+            )
+    }
+
+    /// Base fill honors the underlying state; selection swaps to solid black regardless.
+    private var backgroundFill: Color {
         if model.isSelected {
-            return AppColor.accent
-        }
-        if model.isToday {
-            return AppColor.controlBackground
-        }
-        switch model.status {
-        case .completed:
-            return AppColor.success.opacity(0.18)
-        case .partial:
-            return AppColor.warning.opacity(0.22)
-        case .skipped:
-            return AppColor.error.opacity(0.18)
-        case .empty:
-            return .clear
-        }
-    }
-
-    private var outlineColor: Color {
-        if model.isSelected {
-            return AppColor.accent
-        }
-        if model.isToday {
-            return AppColor.textPrimary.opacity(0.34)
-        }
-        return model.hasSessions ? AppColor.border : .clear
-    }
-
-    private var outlineLineWidth: CGFloat {
-        (model.isSelected || model.isToday || model.hasSessions) ? 1 : 0
-    }
-
-    private var numberColor: Color {
-        if model.isSelected {
-            return AppColor.accentForeground
-        }
-        if model.isToday {
             return AppColor.textPrimary
         }
         switch model.status {
         case .completed:
-            return AppColor.success
-        case .partial:
-            return AppColor.warning
-        case .skipped:
-            return AppColor.error
-        case .empty:
+            return AppColor.controlBackground
+        case .today, .missed, .default, .future:
+            return .clear
+        }
+    }
+
+    private var numberColor: Color {
+        if model.isSelected {
+            return AppColor.background
+        }
+        switch model.status {
+        case .completed, .missed, .today:
+            return AppColor.textPrimary
+        case .default, .future:
             return AppColor.textSecondary
+        }
+    }
+
+    /// Selection ring always wins; otherwise missed/today get a light outline, the rest are clear.
+    private var strokeColor: Color {
+        if model.isSelected {
+            return AppColor.textPrimary
+        }
+        switch model.status {
+        case .missed:
+            return AppColor.border
+        case .today:
+            return AppColor.border
+        case .completed, .default, .future:
+            return .clear
+        }
+    }
+
+    private var strokeWidth: CGFloat {
+        if model.isSelected { return 2 }
+        switch model.status {
+        case .missed, .today: return 1
+        default: return 0
         }
     }
 
@@ -736,29 +803,32 @@ private struct CalendarDayCell: View {
         let dateLabel = model.date.formatted(date: .abbreviated, time: .omitted)
         let stateLabel: String
         switch model.status {
-        case .empty:
+        case .default:
             stateLabel = "no session"
+        case .missed:
+            stateLabel = "missed assigned workout"
         case .completed:
-            stateLabel = "completed session"
-        case .partial:
-            stateLabel = "partial session"
-        case .skipped:
-            stateLabel = "skipped session"
+            stateLabel = "logged session"
+        case .today:
+            stateLabel = "today"
+        case .future:
+            stateLabel = "upcoming"
         }
-        return "\(dateLabel), \(stateLabel)"
+        let selected = model.isSelected ? ", selected" : ""
+        return "\(dateLabel), \(stateLabel)\(selected)"
     }
 }
 
-private struct CalendarSessionCard: View {
+/// Shared session card used by the History list, calendar selected-day list,
+/// and anywhere else a single session preview appears. One component, one set
+/// of specs (AppCard container + sessionPreviewCardContent).
+struct SessionPreviewCard: View {
     let snapshot: SessionSnapshot
-    let isToday: Bool
 
     var body: some View {
-        sessionPreviewCardContent(snapshot: snapshot, showDisclosure: false)
-            .padding(isToday ? AppSpacing.lg : AppSpacing.md)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(AppColor.cardBackground)
-            .clipShape(RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous))
+        AppCard(contentInset: AppSpacing.lg) {
+            sessionPreviewCardContent(snapshot: snapshot, showDisclosure: false)
+        }
     }
 }
 
@@ -773,11 +843,7 @@ struct SessionSummarySheet: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            SheetHeader(title: headerTitle) {
-                dismiss()
-            }
-
+        NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: AppSpacing.md) {
                     ForEach(payload.sessions) { snapshot in
@@ -787,6 +853,18 @@ struct SessionSummarySheet: View {
                 .padding(.horizontal, AppSpacing.md)
                 .padding(.bottom, AppSpacing.lg)
             }
+            .appScrollEdgeSoft()
+            .navigationTitle(headerTitle)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                    .appToolbarTextStyle()
+                }
+            }
+            .appNavigationBarChrome()
         }
         .background(AppColor.background.ignoresSafeArea())
     }
@@ -796,118 +874,80 @@ private struct SessionSummaryCard: View {
     let snapshot: SessionSnapshot
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.md) {
-            sessionPreviewCardContent(snapshot: snapshot, showDisclosure: false)
+        AppCard {
+            VStack(alignment: .leading, spacing: AppSpacing.md) {
+                sessionPreviewCardContent(snapshot: snapshot, showDisclosure: false)
 
-            if snapshot.overallFeeling > 0 || snapshot.contextNote != nil {
-                HStack(spacing: AppSpacing.xs) {
-                    if snapshot.overallFeeling > 0 {
-                        AppTag(text: "Felt \(snapshot.overallFeeling)/5", style: .muted)
-                    }
-                    if let contextNote = snapshot.contextNote {
-                        AppTag(text: contextNote, style: .muted)
-                    }
+                if let contextNote = snapshot.contextNote {
+                    AppTag(text: contextNote, style: .muted)
+                }
+
+                AppDividedList(snapshot.exercises) { exercise in
+                    SessionExerciseSummary(exercise: exercise)
+                        .padding(.vertical, AppSpacing.sm)
                 }
             }
-
-            AppDividedList(snapshot.exercises) { exercise in
-                SessionExerciseSummary(exercise: exercise)
-                    .padding(.vertical, AppSpacing.smd)
-            }
         }
-        .padding(AppSpacing.md)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(AppColor.cardBackground)
-        .overlay {
-            RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                .stroke(AppColor.border, lineWidth: 1)
-        }
-        .clipShape(RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous))
     }
 }
 
 struct SessionExerciseSummary: View {
     let exercise: SessionExerciseSnapshot
 
-    /// Uniform size for every “Set N” label (same face/size so numbering looks identical).
-    private static let setIndexFont = AppFont.caption.font
-    /// Smaller than previous `AppFont.label` (17) while staying legible.
-    private static let performanceFont = AppFont.compactLabel
-    private static let secondaryMetaFont = AppFont.smallLabel
+    private static let setLabelFont = AppFont.caption.font
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.xs) {
-            Text(exercise.name)
-                .font(AppFont.sectionHeader.font)
-                .foregroundStyle(AppColor.textPrimary)
-
-            ForEach(exercise.sets) { set in
-                let hasTarget = set.targetWeight > 0 || set.targetReps > 0
-                let isGood = !hasTarget || set.metTarget
-
-                VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                    HStack(alignment: .top, spacing: AppSpacing.md) {
-                        VStack(alignment: .leading, spacing: AppSpacing.xxs) {
-                            Text(setOrdinalLabel(for: set))
-                                .font(Self.setIndexFont)
-                                .foregroundStyle(AppColor.textSecondary)
-
-                            if !isGood, hasTarget {
-                                Text("Target \(targetText(for: set))")
-                                    .font(Self.setIndexFont)
-                                    .foregroundStyle(AppColor.textSecondary)
-
-                                Text("Met \(actualText(for: set))")
-                                    .font(Self.setIndexFont)
-                                    .foregroundStyle(AppColor.textSecondary)
-                            }
-                        }
-                        .frame(minWidth: 76, alignment: .leading)
-
-                        Spacer(minLength: AppSpacing.sm)
-
-                        if hasTarget, !isGood {
-                            Text("Fail")
-                                .font(Self.performanceFont)
-                                .foregroundStyle(AppColor.warning)
-                                .frame(maxWidth: .infinity, alignment: .trailing)
-                        } else {
-                            VStack(alignment: .trailing, spacing: AppSpacing.xxs) {
-                                Text(actualText(for: set))
-                                    .font(Self.performanceFont)
-                                    .foregroundStyle(AppColor.textPrimary)
-                                    .multilineTextAlignment(.trailing)
-                                    .monospacedDigit()
-
-                                if hasTarget {
-                                    Text("Good")
-                                        .font(Self.secondaryMetaFont)
-                                        .foregroundStyle(AppColor.textSecondary)
-                                }
-                            }
-                            .frame(minWidth: 120, alignment: .trailing)
-                        }
-                    }
-
-                    if !set.note.isEmpty {
-                        Text(set.note)
-                            .font(AppFont.caption.font)
-                            .foregroundStyle(AppColor.textSecondary)
-                    }
-                }
+        VStack(alignment: .leading, spacing: AppSpacing.sm) {
+            ForEach(Array(exercise.sets.enumerated()), id: \.element.id) { index, set in
+                setBlock(for: set, isFirst: index == 0)
             }
         }
     }
 
-    private func setOrdinalLabel(for set: SessionSetSnapshot) -> String {
-        let n = set.setIndex + 1
-        return "Set \(n)"
+    @ViewBuilder
+    private func setBlock(for set: SessionSetSnapshot, isFirst: Bool) -> some View {
+        VStack(alignment: .leading, spacing: AppSpacing.xs) {
+            HStack(alignment: .firstTextBaseline, spacing: AppSpacing.md) {
+                leadingLabel(for: set, isFirst: isFirst)
+
+                Spacer(minLength: AppSpacing.sm)
+
+                Text(actualText(for: set))
+                    .font(AppFont.performance)
+                    .foregroundStyle(AppColor.textPrimary)
+                    .multilineTextAlignment(.trailing)
+                    .monospacedDigit()
+            }
+
+            if !set.note.isEmpty {
+                Text(set.note)
+                    .font(AppFont.caption.font)
+                    .foregroundStyle(AppColor.textSecondary)
+            }
+        }
     }
 
-    private func targetText(for set: SessionSetSnapshot) -> String {
-        let hasTarget = set.targetWeight > 0 || set.targetReps > 0
-        guard hasTarget else { return "No target" }
-        return formatLoad(weight: set.targetWeight, reps: set.targetReps)
+    @ViewBuilder
+    private func leadingLabel(for set: SessionSetSnapshot, isFirst: Bool) -> some View {
+        if isFirst {
+            Text(exercise.name)
+                .font(AppFont.sectionHeader.font)
+                .foregroundStyle(AppColor.textPrimary)
+                .multilineTextAlignment(.leading)
+        } else if let label = perSetPositionLabel(for: set) {
+            Text(label)
+                .font(Self.setLabelFont)
+                .foregroundStyle(AppColor.textSecondary)
+                .multilineTextAlignment(.leading)
+        }
+    }
+
+    /// Explains which set in the workout this row is (e.g. “Set 2 of 4”). Hidden when there is only one set.
+    private func perSetPositionLabel(for set: SessionSetSnapshot) -> String? {
+        let total = exercise.sets.count
+        guard total > 1 else { return nil }
+        let n = set.setIndex + 1
+        return "Set \(n) of \(total)"
     }
 
     private func actualText(for set: SessionSetSnapshot) -> String {
@@ -921,6 +961,22 @@ struct SessionExerciseSummary: View {
             reps: reps,
             isBodyweight: exercise.isBodyweight
         )
+    }
+}
+
+/// Calendar detail shown when a past, missed assigned-workout day is selected.
+private struct HistoryMissedDayCard: View {
+    let date: Date
+    let workoutName: String
+
+    var body: some View {
+        AppSessionHighlightCard(
+            eyebrow: date.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day()),
+            title: workoutName,
+            caption: nil
+        ) {
+            AppTag(text: "Missed", style: .warning, layout: .compactCapsule)
+        }
     }
 }
 

@@ -22,25 +22,36 @@ struct OnboardingSplashView: View {
                     Spacer()
                         .frame(maxHeight: .infinity)
 
+                    // Brand mark — anchors the screen
+                    Text("Unit")
+                        .font(AppFont.display)
+                        .tracking(AppFont.displayTracking)
+                        .foregroundStyle(AppColor.textPrimary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, AppSpacing.xl)
+                        .padding(.bottom, AppSpacing.lg)
+
                     VStack(alignment: .leading, spacing: 0) {
-                        Text("Welcome to Unit —")
+                        Text("Your gym notebook,")
                             .appFont(.largeTitle)
-                            .foregroundStyle(AppColor.textPrimary)
+                            .foregroundStyle(AppColor.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
 
-                        Text("your gym notebook,\nupgraded.")
+                        Text("upgraded.")
                             .appFont(.largeTitle)
                             .foregroundStyle(AppColor.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, AppSpacing.xl)
-                    .padding(.bottom, AppSpacing.xxl + AppSpacing.xl)
 
-                    VStack(spacing: AppSpacing.md) {
+                    Spacer()
+                        .frame(maxHeight: .infinity)
+
+                    VStack(spacing: AppSpacing.sm) {
                         Text("Tap anywhere to get started")
-                            .font(AppFont.sectionHeader.font)
-                            .foregroundStyle(AppColor.textSecondary)
+                            .font(AppFont.body.font.weight(.semibold))
+                            .foregroundStyle(AppColor.textPrimary)
 
                         Text("Set up your routine in a few quick steps.")
                             .font(AppFont.caption.font)
@@ -51,7 +62,7 @@ struct OnboardingSplashView: View {
                 }
             }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(ScaleButtonStyle())
         .contentShape(Rectangle())
         .toolbar(.hidden, for: .navigationBar)
         .overlay(alignment: .topTrailing) {
@@ -64,7 +75,7 @@ struct OnboardingSplashView: View {
                         .frame(width: 44, height: 44)
                         .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(ScaleButtonStyle())
                 .padding(.top, AppSpacing.md)
                 .padding(.trailing, AppSpacing.md)
             }

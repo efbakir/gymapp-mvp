@@ -14,21 +14,33 @@ struct ExercisesListView: View {
     @Query(sort: \Exercise.displayName) private var exercises: [Exercise]
     @State private var showingAddExercise = false
     @State private var query = ""
+    @State private var selectedMuscle: MuscleGroup? = nil
+    @State private var selectedEquipment: Equipment? = nil
 
     private var filteredExercises: [Exercise] {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return exercises }
         let needle = trimmed.lowercased()
         return exercises.filter { exercise in
-            if exercise.displayName.lowercased().contains(needle) {
-                return true
-            }
+            if let muscle = selectedMuscle, exercise.muscleGroup != muscle { return false }
+            if let equipment = selectedEquipment, exercise.equipment != equipment { return false }
+            guard !trimmed.isEmpty else { return true }
+            if exercise.displayName.lowercased().contains(needle) { return true }
             return exercise.aliases.contains { $0.lowercased().contains(needle) }
         }
     }
 
     var body: some View {
         List {
+            Section {
+                ExerciseFilterChips(
+                    selectedMuscle: $selectedMuscle,
+                    selectedEquipment: $selectedEquipment
+                )
+                .listRowInsets(EdgeInsets())
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+            }
+
             ForEach(filteredExercises, id: \.id) { exercise in
                 NavigationLink(value: exercise) {
                     VStack(alignment: .leading, spacing: AppSpacing.xs) {
@@ -41,11 +53,9 @@ struct ExercisesListView: View {
                                     .foregroundStyle(AppColor.textSecondary)
                             }
                         }
-                        if !exercise.aliases.isEmpty {
-                            Text(exercise.aliases.joined(separator: " • "))
-                                .font(AppFont.caption.font)
-                                .foregroundStyle(AppColor.textSecondary)
-                        }
+                        Text(exerciseCaption(for: exercise))
+                            .font(AppFont.caption.font)
+                            .foregroundStyle(AppColor.textSecondary)
                     }
                     .frame(minHeight: 44, alignment: .leading)
                 }
@@ -55,7 +65,7 @@ struct ExercisesListView: View {
         }
         .scrollContentBackground(.hidden)
         .background(AppColor.background.ignoresSafeArea())
-        .appScrollEdgeSoftTop(enabled: true)
+        .appScrollEdgeSoft()
         .navigationTitle("Exercises")
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(for: Exercise.self) { exercise in
@@ -67,7 +77,8 @@ struct ExercisesListView: View {
                 Button {
                     showingAddExercise = true
                 } label: {
-                    AppIcon.addCircle.image()
+                    Label("Add exercise", systemImage: AppIcon.addCircle.systemName)
+                        .labelStyle(.iconOnly)
                 }
                 .accessibilityLabel("Add exercise")
             }
@@ -79,11 +90,68 @@ struct ExercisesListView: View {
         }
     }
 
+    private func exerciseCaption(for exercise: Exercise) -> String {
+        var parts: [String] = [exercise.muscleGroup.displayName, exercise.equipment.displayName]
+        if !exercise.aliases.isEmpty {
+            parts.append(exercise.aliases.joined(separator: " • "))
+        }
+        return parts.joined(separator: " · ")
+    }
+
     private func deleteExercises(at offsets: IndexSet) {
         for index in offsets {
             modelContext.delete(filteredExercises[index])
         }
         try? modelContext.save()
+    }
+}
+
+private struct ExerciseFilterChips: View {
+    @Binding var selectedMuscle: MuscleGroup?
+    @Binding var selectedEquipment: Equipment?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.xs) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: AppSpacing.xs) {
+                    AppFilterChip(
+                        label: "All muscles",
+                        isSelected: selectedMuscle == nil,
+                        action: { selectedMuscle = nil }
+                    )
+                    ForEach(MuscleGroup.allCases) { group in
+                        AppFilterChip(
+                            label: group.displayName,
+                            isSelected: selectedMuscle == group,
+                            action: {
+                                selectedMuscle = selectedMuscle == group ? nil : group
+                            }
+                        )
+                    }
+                }
+                .padding(.horizontal, AppSpacing.md)
+            }
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: AppSpacing.xs) {
+                    AppFilterChip(
+                        label: "All equipment",
+                        isSelected: selectedEquipment == nil,
+                        action: { selectedEquipment = nil }
+                    )
+                    ForEach(Equipment.allCases) { equipment in
+                        AppFilterChip(
+                            label: equipment.displayName,
+                            isSelected: selectedEquipment == equipment,
+                            action: {
+                                selectedEquipment = selectedEquipment == equipment ? nil : equipment
+                            }
+                        )
+                    }
+                }
+                .padding(.horizontal, AppSpacing.md)
+            }
+        }
+        .padding(.vertical, AppSpacing.sm)
     }
 }
 
@@ -94,6 +162,8 @@ struct AddExerciseView: View {
     @State private var displayName = ""
     @State private var aliasesText = ""
     @State private var isBodyweight = false
+    @State private var muscleGroup: MuscleGroup = .fullBody
+    @State private var equipment: Equipment = .other
 
     private var canSave: Bool {
         !displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -111,6 +181,21 @@ struct AddExerciseView: View {
                         .frame(minHeight: 44)
                 }
                 .listRowBackground(AppColor.cardBackground)
+                Section("Classification") {
+                    Picker("Muscle group", selection: $muscleGroup) {
+                        ForEach(MuscleGroup.allCases) { group in
+                            Text(group.displayName).tag(group)
+                        }
+                    }
+                    .frame(minHeight: 44)
+                    Picker("Equipment", selection: $equipment) {
+                        ForEach(Equipment.allCases) { equipment in
+                            Text(equipment.displayName).tag(equipment)
+                        }
+                    }
+                    .frame(minHeight: 44)
+                }
+                .listRowBackground(AppColor.cardBackground)
                 Section("Options") {
                     Toggle("Bodyweight", isOn: $isBodyweight)
                         .frame(minHeight: 44)
@@ -119,12 +204,12 @@ struct AddExerciseView: View {
             }
             .scrollContentBackground(.hidden)
             .background(AppColor.background.ignoresSafeArea())
-            .appScrollEdgeSoftTop(enabled: true)
+            .appScrollEdgeSoft()
             .navigationTitle("New Exercise")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("Cancel", role: .cancel) { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") { save() }
@@ -144,7 +229,9 @@ struct AddExerciseView: View {
         let exercise = Exercise(
             displayName: displayName.trimmingCharacters(in: .whitespacesAndNewlines),
             aliases: aliases,
-            isBodyweight: isBodyweight
+            isBodyweight: isBodyweight,
+            muscleGroup: muscleGroup,
+            equipment: equipment
         )
         modelContext.insert(exercise)
         try? modelContext.save()

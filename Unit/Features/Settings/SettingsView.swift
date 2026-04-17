@@ -7,6 +7,13 @@
 
 import SwiftUI
 
+private enum SettingsWeightUnit: String, CaseIterable, Identifiable, Hashable {
+    case kg
+    case lb
+
+    var id: String { rawValue }
+}
+
 struct SettingsView: View {
     private let shouldShowCloseButton: Bool
 
@@ -24,12 +31,14 @@ struct SettingsView: View {
         AppScreen(showsNativeNavigationBar: true) {
             SettingsSection(title: "Preferences") {
                 AppListRow(title: "Weight unit") {
-                    Picker("Weight unit", selection: $unitSystem) {
-                        Text("kg").tag("kg")
-                        Text("lb").tag("lb")
-                    }
-                    .pickerStyle(.segmented)
-                    .fixedSize(horizontal: true, vertical: false)
+                    AppSegmentedControl(
+                        selection: Binding(
+                            get: { SettingsWeightUnit(rawValue: unitSystem) ?? .kg },
+                            set: { unitSystem = $0.rawValue }
+                        ),
+                        items: SettingsWeightUnit.allCases,
+                        title: { $0.rawValue }
+                    )
                 }
             }
 
@@ -43,7 +52,7 @@ struct SettingsView: View {
                             .foregroundStyle(AppColor.error)
                             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(ScaleButtonStyle())
                 }
 
                 Text("This reopens onboarding. You can choose to keep or replace your current program.")
@@ -58,12 +67,14 @@ struct SettingsView: View {
             if shouldShowCloseButton {
                 ToolbarItem(placement: .topBarLeading) {
                     Button { dismiss() } label: {
-                        Image(systemName: AppIcon.close.systemName)
+                        Label(AppCopy.Nav.close, systemImage: AppIcon.close.systemName)
+                            .labelStyle(.iconOnly)
                     }
+                    .accessibilityLabel(AppCopy.Nav.close)
                 }
             }
         }
-        .tint(AppColor.accent)
+        .tint(AppColor.systemTint)
         .confirmationDialog(
             "Start onboarding again?",
             isPresented: $showingRestartConfirmation,

@@ -149,6 +149,30 @@ enum TrainingWeekProgressBuilder {
         return days
     }
 
+    /// Past calendar day before today: user has at least one routine template, and no **completed**
+    /// session from that routine on that day. Matches `overviewDays` / Today week strip semantics.
+    static func isMissedTrainingDay(
+        date: Date,
+        calendar: Calendar = .current,
+        now: Date = Date(),
+        routineTemplateIDs: [UUID],
+        sessions: [WorkoutSession]
+    ) -> Bool {
+        guard !routineTemplateIDs.isEmpty else { return false }
+        let templateIDs = Set(routineTemplateIDs)
+        let dayStart = calendar.startOfDay(for: date)
+        let startOfToday = calendar.startOfDay(for: now)
+        guard dayStart < startOfToday else { return false }
+        if calendar.isDateInToday(date) { return false }
+
+        let completedSessions = sessions.filter(\.isCompleted)
+        let hadSession = completedSessions.contains { session in
+            templateIDs.contains(session.templateId)
+                && calendar.isDate(session.date, inSameDayAs: dayStart)
+        }
+        return !hadSession
+    }
+
     // MARK: - Strip items
 
     private static func buildPreviousWeek(
@@ -240,7 +264,7 @@ struct TrainingWeekStripView: View {
             }
             .frame(maxWidth: .infinity)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(ScaleButtonStyle())
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Week overview")
         .accessibilityHint("Shows which days you trained this week")
@@ -371,9 +395,10 @@ struct TodayWeekOverviewSheet: View {
                     Button("Done") {
                         dismiss()
                     }
-                    .font(AppFont.productAction)
+                    .appToolbarTextStyle()
                 }
             }
+            .appNavigationBarChrome()
         }
         .presentationDetents([.medium, .large])
         .appBottomSheetChrome()

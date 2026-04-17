@@ -37,10 +37,8 @@ struct ProgramDetailView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button { showingEdit = true } label: {
-                    AppIcon.program.image(size: 17, weight: .semibold)
-                        .foregroundStyle(AppColor.textPrimary)
-                        .frame(width: 44, height: 44)
-                        .contentShape(Rectangle())
+                    Label("Edit program", systemImage: AppIcon.program.systemName)
+                        .labelStyle(.iconOnly)
                 }
                 .accessibilityLabel("Edit program")
             }
@@ -50,30 +48,23 @@ struct ProgramDetailView: View {
         .navigationDestination(isPresented: $showingEdit) {
             EditProgramView(split: split)
         }
-        .tint(AppColor.accent)
+        .tint(AppColor.systemTint)
     }
 
     // MARK: - Routine Days
 
     private var routineDaysCard: some View {
-        AppCard {
+        AppCard(contentInset: 0) {
             AppDividedList(orderedTemplates) { template in
                 let index = orderedTemplates.firstIndex(where: { $0.id == template.id }) ?? 0
                 NavigationLink(value: template) {
-                    VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                        Text(template.displayName)
-                            .font(AppFont.sectionHeader.font)
-                            .foregroundStyle(AppColor.textPrimary)
-
-                        Text(routineSubtitle(dayIndex: index, template: template))
-                            .font(AppFont.caption.font)
-                            .foregroundStyle(AppColor.textSecondary)
-                    }
-                    .padding(.vertical, AppSpacing.smd)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .contentShape(Rectangle())
+                    PreviewListRow(
+                        title: template.displayName,
+                        subtitle: routineSubtitle(dayIndex: index, template: template)
+                    )
+                    .padding(.horizontal, AppSpacing.md)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(ScaleButtonStyle())
             }
         }
     }

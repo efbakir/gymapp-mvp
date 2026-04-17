@@ -10,25 +10,55 @@ import UIKit
 
 // MARK: - Atoms
 
+// MARK: Pre-refinement values (revert by replacing the block below)
+// background: 0xEBEBEB | barBackground: 0xEBEBEB | cardBackground: 0xF6F6F6
+// sheetBackground: 0xF6F6F6 | controlBackground: 0xEBEBEB | mutedFill: 0xDCDCDC
+// disabledSurface: 0xC7C7C7 | border: 0xDCDCDC
+// AppRadius — sm: 8, md: 12, lg: 20, card: 20
+// AppCard shadow — ring black 6%, lift r1 y1 black 6%, ambient r2 y0 black 4%
+
+/// Role-based color tokens. Every color used in the app resolves to a case here —
+/// no `Color.black/.gray`, no raw hex literals in page files. Adaptive (light/dark)
+/// via `uicolorAdaptive`, but the design is light-first per visual-language.md.
 enum AppColor {
-    static let background = Color(uiColor: uicolorAdaptive(light: 0xEBEBEB, dark: 0x0E0F12))
-    static let barBackground = Color(uiColor: uicolorAdaptive(light: 0xEBEBEB, dark: 0x13151A))
-    static let cardBackground = Color(uiColor: uicolorAdaptive(light: 0xF6F6F6, dark: 0x1D2026))
-    static let sheetBackground = Color(uiColor: uicolorAdaptive(light: 0xF6F6F6, dark: 0x21252D))
-    static let controlBackground = Color(uiColor: uicolorAdaptive(light: 0xEBEBEB, dark: 0x2C313A))
-    static let mutedFill = Color(uiColor: uicolorAdaptive(light: 0xDCDCDC, dark: 0x313640))
-    static let disabledSurface = Color(uiColor: uicolorAdaptive(light: 0xC7C7C7, dark: 0x252932))
+    static let background = Color(uiColor: uicolorAdaptive(light: 0xF5F5F5, dark: 0x0E0F12))
+    static let barBackground = Color(uiColor: uicolorAdaptive(light: 0xF5F5F5, dark: 0x13151A))
+    static let cardBackground = Color(uiColor: uicolorAdaptive(light: 0xFFFFFF, dark: 0x1D2026))
+    static let sheetBackground = Color(uiColor: uicolorAdaptive(light: 0xFFFFFF, dark: 0x21252D))
+    static let controlBackground = Color(uiColor: uicolorAdaptive(light: 0xE8E8E8, dark: 0x2C313A))
+    static let mutedFill = Color(uiColor: uicolorAdaptive(light: 0xE8E8E8, dark: 0x313640))
+    static let disabledSurface = Color(uiColor: uicolorAdaptive(light: 0xCBCBCB, dark: 0x252932))
 
     static let textPrimary = Color(uiColor: uicolorAdaptive(light: 0x0A0A0A, dark: 0xF5F7FA))
-    static let textSecondary = Color(uiColor: uicolorAdaptive(light: 0x919191, dark: 0xB3B8C2))
-    static let border = Color(uiColor: uicolorAdaptive(light: 0xDCDCDC, dark: 0x373C47))
+    static let textSecondary = Color(uiColor: uicolorAdaptive(light: 0x595959, dark: 0xB3B8C2))
+    /// Disabled primary/secondary buttons — softer than `textSecondary` so inactive reads clearly.
+    static let textDisabled = Color(uiColor: uicolorAdaptive(light: 0x949494, dark: 0x7A808C))
+    /// Matches `UIColor.secondaryLabel` — lighter than `textSecondary`; empty-state hints in dense lists.
+    static let secondaryLabel = Color(UIColor.secondaryLabel)
+    static let border = Color(uiColor: uicolorAdaptive(light: 0xE5E5E5, dark: 0x373C47))
 
     static let accent = Color(uiColor: uicolorAdaptive(light: 0x0A0A0A, dark: 0xF3F4F6))
     static let accentForeground = Color(uiColor: uicolorAdaptive(light: 0xF6F6F6, dark: 0x111317))
+
+    /// Toolbar/tab tint — matches `accent` (neutral) so nav and tab chrome stay on-brand, not system blue.
+    static let systemTint = accent
     static let accentSoft = Color(uiColor: uicolorAccentSoft())
     static let success = Color(uiColor: uicolorAdaptive(light: 0x34C759, dark: 0x30D158))
     static let warning = Color(uiColor: uicolorAdaptive(light: 0xFF9500, dark: 0xFF9F0A))
     static let error = Color(uiColor: uicolorAdaptive(light: 0xFF3B30, dark: 0xFF453A))
+
+    /// Soft tint fills for status surfaces (calendar day cells, status badges).
+    /// Replaces scattered `AppColor.success.opacity(0.18)` and peers.
+    static let successSoft = success.opacity(0.18)
+    static let warningSoft = warning.opacity(0.22)
+    static let errorSoft = error.opacity(0.18)
+
+    /// Accessible text colors paired with the matching `*Soft` backgrounds.
+    /// Vivid `success` / `warning` fail WCAG AA contrast when set as text on their own
+    /// soft tint; these darker shades are the chip foreground.
+    static let successOnSoft = Color(uiColor: uicolorAdaptive(light: 0x1D7A38, dark: 0x6FE08A))
+    static let warningOnSoft = Color(uiColor: uicolorAdaptive(light: 0x8A4A00, dark: 0xFFC777))
+    static let errorOnSoft = Color(uiColor: uicolorAdaptive(light: 0xB3261E, dark: 0xFF8A82))
 
     static let scrim = Color(uiColor: uicolorScrim())
     static let shadow = Color(uiColor: uicolorAdaptive(light: 0x000000, dark: 0x000000))
@@ -68,6 +98,10 @@ enum AppColor {
 
 }
 
+/// Typography tokens. Prefer a case here over inline `.font(.system(size:))` so
+/// hierarchy stays consistent. Minimum weight across the app is **medium** (500) —
+/// never `.regular`. Static members (`numericDisplay`, `productHeading`, etc.) cover
+/// one-off display contexts that don't map to the body hierarchy.
 enum AppFont {
     case largeTitle
     case title
@@ -75,22 +109,28 @@ enum AppFont {
     case body
     case label
     case caption
+    /// Second line under a list title (e.g. “12 exercises”) — use with `sectionHeader` on the line above.
+    case listSecondary
     case muted
 
     var font: Font {
         switch self {
         case .largeTitle:
-            return .custom("Inter-Bold", size: 22)
+            return .system(size: 22, weight: .bold, design: .rounded)
         case .title:
-            return .custom("Inter-SemiBold", size: 20)
+            return .system(size: 20, weight: .semibold, design: .rounded)
         case .sectionHeader:
-            return .custom("Inter-SemiBold", size: 17)
+            return .system(size: 17, weight: .semibold, design: .rounded)
         case .body:
-            return .custom("Inter-Medium", size: 17)
+            return .system(size: 17, weight: .medium, design: .rounded)
         case .label:
-            return .custom("Inter-SemiBold", size: 17)
-        case .caption, .muted:
-            return .custom("Inter-Medium", size: 12)
+            return .system(size: 17, weight: .semibold, design: .rounded)
+        case .caption:
+            return .system(size: 15, weight: .medium, design: .rounded)
+        case .listSecondary:
+            return .system(size: 16, weight: .medium, design: .rounded)
+        case .muted:
+            return .system(size: 13, weight: .medium, design: .rounded)
         }
     }
 
@@ -113,15 +153,17 @@ enum AppFont {
         }
     }
 
-    static let overline: Font = .custom("Inter-SemiBold", size: 10)
-    static let smallLabel: Font = .custom("Inter-Medium", size: 11)
-    static let display: Font = .custom("Inter-Bold", size: 36)
-    static let numericDisplay: Font = .custom("Inter-Bold", fixedSize: 36)
-    static let numericLarge: Font = .custom("Inter-Bold", fixedSize: 28)
-    static let compactLabel: Font = .custom("Inter-SemiBold", size: 12)
-    static let stepIndicator: Font = .custom("Inter-SemiBold", size: 14)
-    static let productHeading: Font = .custom("Inter-SemiBold", size: 24)
-    static let productAction: Font = .custom("Inter-SemiBold", size: 17)
+    static let overline: Font = .system(size: 10, weight: .semibold, design: .rounded)
+    static let smallLabel: Font = .system(size: 11, weight: .medium, design: .rounded)
+    static let display: Font = .system(size: 36, weight: .bold, design: .rounded)
+    static let numericDisplay: Font = .system(size: 36, weight: .bold, design: .rounded).monospacedDigit()
+    static let numericLarge: Font = .system(size: 28, weight: .bold, design: .rounded).monospacedDigit()
+    static let compactLabel: Font = .system(size: 12, weight: .semibold, design: .rounded).monospacedDigit()
+    static let stepIndicator: Font = .system(size: 14, weight: .semibold, design: .rounded).monospacedDigit()
+    static let productHeading: Font = .system(size: 24, weight: .semibold, design: .rounded)
+    static let productAction: Font = .system(size: 17, weight: .semibold, design: .rounded).monospacedDigit()
+    /// Set-result / PR rows. Matches inline `.system(size: 15, weight: .semibold, design: .rounded).monospacedDigit()`.
+    static let performance: Font = .system(size: 15, weight: .semibold, design: .rounded).monospacedDigit()
 
     /// Tracking for static font properties (display-level gets tighter spacing).
     static let displayTracking: CGFloat = -0.6
@@ -138,6 +180,9 @@ extension Text {
     }
 }
 
+/// 4pt-grid spacing tokens. Use instead of `.padding(16)` / literal gaps so section
+/// rhythm stays consistent. `smd` (12) fills the gap between `sm` and `md` for
+/// compact controls; `xxl` (48) for rare top-of-screen gutters.
 enum AppSpacing {
     static let xxs: CGFloat = 2
     static let xs: CGFloat = 4
@@ -150,11 +195,13 @@ enum AppSpacing {
     static let xxl: CGFloat = 48
 }
 
+/// Corner radius tokens, all used with `RoundedRectangle(style: .continuous)`.
+/// `sm` compact chips/cells, `md` buttons + inputs, `lg` cards, `sheet` sheet
+/// presentation corners. No other radii should appear in page code.
 enum AppRadius {
-    static let sm: CGFloat = 8
-    static let md: CGFloat = 12
-    static let lg: CGFloat = 20
-    static let card: CGFloat = 20
+    static let sm: CGFloat = 10
+    static let md: CGFloat = 14
+    static let lg: CGFloat = 30
     static let sheet: CGFloat = 40
 }
 
@@ -164,28 +211,77 @@ enum AppProgressChipMetrics {
     static var compactHorizontalPadding: CGFloat { AppSpacing.sm }
 }
 
+/// Canonical row/section separator. Renders as vertical whitespace — items are
+/// separated by breathing room, not hairlines, per the light/quiet visual language.
+/// Use `spacing: .sm` between list rows inside a shared card (tighter contexts
+/// still default to `xs`). Pre-refinement: this was a 1px line in `AppColor.border`.
 struct AppDivider: View {
-    @Environment(\.pixelLength) private var pixelLength
+    var spacing: CGFloat = AppSpacing.xs
 
     var body: some View {
-        Rectangle()
-            .fill(AppColor.border)
-            .frame(height: pixelLength)
+        Color.clear
+            .frame(height: spacing)
             .frame(maxWidth: .infinity)
     }
 }
 
-enum AppShadow {
-    static func sheetLift(_ colorScheme: ColorScheme) -> (color: Color, radius: CGFloat, y: CGFloat) {
-        colorScheme == .dark
-            ? (AppColor.shadow.opacity(0.58), 28, -12)
-            : (AppColor.shadow.opacity(0.18), 26, -12)
+/// Shared card elevation — used by AppCard and .appCardStyle() for consistent depth.
+private struct AppCardElevation: ViewModifier {
+    @Environment(\.colorScheme) private var colorScheme
+
+    func body(content: Content) -> some View {
+        content
+            .overlay {
+                RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
+                    .stroke(
+                        colorScheme == .dark
+                            ? Color.white.opacity(0.08)
+                            : Color.black.opacity(0.03),
+                        lineWidth: 1
+                    )
+            }
+            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0 : 0.06), radius: 6, x: 0, y: 3)
+            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0 : 0.04), radius: 16, x: 0, y: 8)
     }
 }
 
+/// Subtle lift for sheet-hosted input fields so they read as controls (not flat blocks)
+/// while staying softer than full `AppCardElevation`. Borders remain the primary affordance.
+private struct AppInputElevation: ViewModifier {
+    let enabled: Bool
+    @Environment(\.colorScheme) private var colorScheme
+
+    func body(content: Content) -> some View {
+        if enabled {
+            content
+                .shadow(color: Color.black.opacity(colorScheme == .dark ? 0 : 0.04), radius: 4, x: 0, y: 2)
+                .shadow(color: Color.black.opacity(colorScheme == .dark ? 0 : 0.03), radius: 10, x: 0, y: 6)
+        } else {
+            content
+        }
+    }
+}
+
+/// Workout logging surface: card fill + same lift shadows as `AppCardElevation` (no stroke — shadow only).
+private struct AppWorkoutPanelChrome: ViewModifier {
+    @Environment(\.colorScheme) private var colorScheme
+
+    func body(content: Content) -> some View {
+        content
+            .background(AppColor.cardBackground)
+            .clipShape(RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous))
+            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0 : 0.06), radius: 6, x: 0, y: 3)
+            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0 : 0.04), radius: 16, x: 0, y: 8)
+    }
+}
+
+/// SF Symbol catalog as role-named cases. Always invoke via `.image(size:weight:)`
+/// so icons across the app share the same stroke weight. `chevron.right` lives on
+/// `.forward` for platform-symmetric back/forward pairs — but **do not** apply it
+/// as a disclosure glyph on `AppListRow` content per the HIG + design-system rules.
 enum AppIcon: String {
     case back = "chevron.left"
-    case forward = "arrow.right"
+    case forward = "chevron.right"
     case close = "xmark"
     case add = "plus"
     case remove = "minus"
@@ -212,10 +308,7 @@ enum AppIcon: String {
     case calendarPlain = "calendar"
     case cloud = "icloud.fill"
     case bolt = "bolt.fill"
-    case progression = "arrow.up.right.circle.fill"
-    case target = "target"
     case chart = "chart.line.uptrend.xyaxis"
-    case deload = "arrow.down.circle.fill"
     case addCircle = "plus.circle.fill"
     case sliders = "slider.horizontal.3"
     case photo = "photo"
@@ -236,7 +329,7 @@ enum AppIcon: String {
 
     func image(size: CGFloat = 17, weight: Font.Weight = .semibold) -> some View {
         Image(systemName: systemName)
-            .font(.system(size: size, weight: weight))  // SF Symbols require system font
+            .font(.system(size: size, weight: weight, design: .rounded))
     }
 }
 
@@ -248,16 +341,21 @@ extension Double {
 
 // MARK: - Molecules
 
+/// Icon-based nav bar action descriptor. Used by `AppNavBar` + `AppScreen`.
 struct NavAction {
     let icon: AppIcon
     let action: () -> Void
 }
 
+/// Text-label nav bar action descriptor. Used by `AppNavBar` + `AppScreen`.
 struct NavTextAction {
     let label: String
     let action: () -> Void
 }
 
+/// 44pt-tall fixed navigation bar with centered title and optional leading/trailing
+/// icon or text actions. Used for detail-flow screens driven by `AppScreen`'s
+/// legacy nav path. Root/product screens should prefer `ProductTopBar` instead.
 struct AppNavBar: View {
     let title: String?
     let leadingAction: NavAction?
@@ -284,23 +382,30 @@ struct AppNavBar: View {
 
                 Spacer()
 
-                if let trailingText {
-                    Button(action: trailingText.action) {
-                        Text(trailingText.label)
-                            .font(AppFont.label.font)
-                            .foregroundStyle(AppColor.textPrimary)
-                            .frame(minWidth: 44, minHeight: 44)
-                    }
-                    .buttonStyle(.plain)
-                } else if let trailingAction {
-                    iconButton(trailingAction)
-                } else {
-                    Spacer().frame(width: 44)
-                }
+                trailingSlot
             }
         }
         .frame(height: 44)
         .padding(.horizontal, AppSpacing.sm)
+    }
+
+    /// Trailing slot: icon + text if both, else text, else icon, else a 44pt spacer
+    /// so the title stays centered in the `ZStack`.
+    @ViewBuilder
+    private var trailingSlot: some View {
+        switch (trailingAction, trailingText) {
+        case (let icon?, let text?):
+            HStack(spacing: AppSpacing.xs) {
+                iconButton(icon)
+                textButton(text)
+            }
+        case (nil, let text?):
+            textButton(text)
+        case (let icon?, nil):
+            iconButton(icon)
+        case (nil, nil):
+            Spacer().frame(width: 44)
+        }
     }
 
     private func iconButton(_ navAction: NavAction) -> some View {
@@ -312,64 +417,21 @@ struct AppNavBar: View {
         }
         .buttonStyle(.plain)
     }
-}
 
-struct AppNavBarWithTextTrailing: View {
-    let title: String?
-    let leadingAction: NavAction?
-    let trailingAction: NavAction?
-    let trailingText: NavTextAction
-
-    var body: some View {
-        ZStack {
-            if let title, !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                Text(title)
-                    .font(AppFont.sectionHeader.font)
-                    .foregroundStyle(AppFont.sectionHeader.color)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                    .minimumScaleFactor(0.85)
-            }
-
-            HStack {
-                if let leadingAction {
-                    iconButton(leadingAction)
-                } else {
-                    Spacer().frame(width: 44)
-                }
-
-                Spacer()
-
-                HStack(spacing: AppSpacing.xs) {
-                    if let trailingAction {
-                        iconButton(trailingAction)
-                    }
-
-                    Button(action: trailingText.action) {
-                        Text(trailingText.label)
-                            .font(AppFont.label.font)
-                            .foregroundStyle(AppColor.textPrimary)
-                            .frame(minWidth: 44, minHeight: 44)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-        }
-        .frame(height: 44)
-        .padding(.horizontal, AppSpacing.sm)
-    }
-
-    private func iconButton(_ navAction: NavAction) -> some View {
-        Button(action: navAction.action) {
-            navAction.icon.image(size: 17, weight: .semibold)
+    private func textButton(_ navText: NavTextAction) -> some View {
+        Button(action: navText.action) {
+            Text(navText.label)
+                .font(AppFont.label.font)
                 .foregroundStyle(AppColor.textPrimary)
-                .frame(width: 44, height: 44)
-                .contentShape(Rectangle())
+                .frame(minWidth: 44, minHeight: 44)
         }
         .buttonStyle(.plain)
     }
 }
 
+/// Standard list row — optional leading icon, title, secondary subtitle, and a
+/// trailing slot. **Chevron-free by design**: never add `.forward` as a disclosure
+/// glyph; let context + tap target convey navigation (HIG).
 struct AppListRow<Trailing: View>: View {
     let title: String
     let subtitle: String?
@@ -414,6 +476,8 @@ struct AppListRow<Trailing: View>: View {
         }
         .padding(.horizontal, AppSpacing.md)
         .padding(.vertical, AppSpacing.sm)
+        .frame(minHeight: 44)
+        .contentShape(Rectangle())
     }
 }
 
@@ -425,6 +489,9 @@ extension AppListRow where Trailing == EmptyView {
     }
 }
 
+/// − / value / + stepper — compact rounded control with 44pt hit targets.
+/// Used for set counts, rest-duration seconds, reps, etc. Value is a pre-formatted
+/// string (monospaced digits) so callers own unit rendering ("12 reps" vs "12").
 struct AppStepper: View {
     let value: String
     var minimumValueWidth: CGFloat = 28
@@ -463,6 +530,9 @@ struct AppStepper: View {
     }
 }
 
+/// Full-width filled CTA — the **single** dominant action on any Gym-Test screen.
+/// Use inside `AppScreen(primaryButton:)` for sticky bottom CTAs, or inline for
+/// in-card primaries. Never more than one on screen in core logging flows.
 struct AppPrimaryButton: View {
     let label: String
     var isEnabled: Bool = true
@@ -478,7 +548,7 @@ struct AppPrimaryButton: View {
         Button(action: action) {
             Text(label)
                 .font(AppFont.productAction)
-                .foregroundStyle(isEnabled ? AppColor.accentForeground : AppColor.textSecondary)
+                .foregroundStyle(isEnabled ? AppColor.accentForeground : AppColor.textDisabled)
                 .frame(maxWidth: .infinity)
                 .frame(height: 48)
                 .background(isEnabled ? AppColor.accent : AppColor.disabledSurface)
@@ -489,29 +559,218 @@ struct AppPrimaryButton: View {
     }
 }
 
+/// Filled secondary action — e.g. `Add Day`, `Next exercise`, `Delete Program`.
+/// Supports an optional leading icon and an optional detail line (stacked or
+/// inline). Use `tone: .accentSoft` for neutral in-card actions, `.destructive`
+/// for delete. Never use as the primary action where `AppPrimaryButton` applies.
 struct AppSecondaryButton: View {
+    enum Tone {
+        /// Neutral control surface, primary text (default — `Add Day`, `Add Exercise`, `Not now`).
+        case `default`
+        /// Accent-tinted background with accent foreground.
+        case accentSoft
+        /// No fill, error foreground (`Delete Program`).
+        case destructive
+    }
+
+    /// How the optional two-line `detail` label is laid out (single-line buttons ignore this).
+    enum DetailAlignment {
+        case leading
+        case center
+    }
+
+    /// When `detail` is set: stack title + subtitle vertically, or show **one line** (title + detail side by side).
+    enum DetailLayout {
+        case stacked
+        case inline
+    }
+
     let label: String
     var isEnabled: Bool = true
+    var icon: AppIcon? = nil
+    /// Trailing segment (e.g. next exercise name). Omit for single-line buttons.
+    var detail: String? = nil
+    var detailAlignment: DetailAlignment = .leading
+    var detailLayout: DetailLayout = .stacked
+    var tone: Tone = .default
+    /// When `false`, sizes to content with standard horizontal/vertical padding (e.g. compact “Log” on `WorkoutCommandCard`). When `true` (default), stretches to the container width.
+    var fillsAvailableWidth: Bool = true
     let action: () -> Void
 
-    init(_ label: String, isEnabled: Bool = true, action: @escaping () -> Void) {
+    init(
+        _ label: String,
+        isEnabled: Bool = true,
+        icon: AppIcon? = nil,
+        detail: String? = nil,
+        detailAlignment: DetailAlignment = .leading,
+        detailLayout: DetailLayout = .stacked,
+        tone: Tone = .default,
+        fillsAvailableWidth: Bool = true,
+        action: @escaping () -> Void
+    ) {
         self.label = label
         self.isEnabled = isEnabled
+        self.icon = icon
+        self.detail = detail
+        self.detailAlignment = detailAlignment
+        self.detailLayout = detailLayout
+        self.tone = tone
+        self.fillsAvailableWidth = fillsAvailableWidth
         self.action = action
+    }
+
+    private var trimmedDetail: String? {
+        guard let detail else { return nil }
+        let t = detail.trimmingCharacters(in: .whitespacesAndNewlines)
+        return t.isEmpty ? nil : t
     }
 
     var body: some View {
         Button(action: action) {
-            Text(label)
-                .font(AppFont.productAction)
-                .foregroundStyle(isEnabled ? AppColor.textPrimary : AppColor.textSecondary)
-                .frame(maxWidth: .infinity)
-                .frame(height: 48)
-                .background(isEnabled ? AppColor.controlBackground : AppColor.disabledSurface)
-                .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
+            Group {
+                if let trimmedDetail {
+                    if detailLayout == .inline {
+                        inlineDetailRow(trimmedDetail: trimmedDetail)
+                    } else if detailAlignment == .center {
+                        HStack(alignment: .center, spacing: AppSpacing.sm) {
+                            Spacer(minLength: 0)
+                            if let icon {
+                                icon.image(size: 16, weight: .semibold)
+                                    .foregroundStyle(foregroundColor)
+                            }
+                            VStack(alignment: .center, spacing: AppSpacing.xxs) {
+                                Text(label)
+                                    .font(AppFont.productAction)
+                                    .foregroundStyle(foregroundColor)
+                                Text(trimmedDetail)
+                                    .font(AppFont.caption.font)
+                                    .foregroundStyle(isEnabled ? AppColor.textSecondary : AppColor.textDisabled)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.85)
+                                    .multilineTextAlignment(.center)
+                            }
+                            Spacer(minLength: 0)
+                        }
+                    } else {
+                        HStack(alignment: .center, spacing: AppSpacing.sm) {
+                            if let icon {
+                                icon.image(size: 16, weight: .semibold)
+                                    .foregroundStyle(foregroundColor)
+                            }
+                            VStack(alignment: .leading, spacing: AppSpacing.xxs) {
+                                Text(label)
+                                    .font(AppFont.productAction)
+                                    .foregroundStyle(foregroundColor)
+                                Text(trimmedDetail)
+                                    .font(AppFont.caption.font)
+                                    .foregroundStyle(isEnabled ? AppColor.textSecondary : AppColor.textDisabled)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.85)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                    }
+                } else {
+                    HStack(alignment: .center, spacing: AppSpacing.sm) {
+                        if let icon {
+                            icon.image(size: 16, weight: .semibold)
+                                .foregroundStyle(foregroundColor)
+                        }
+                        Text(label)
+                            .font(AppFont.productAction)
+                            .foregroundStyle(foregroundColor)
+                    }
+                }
+            }
+            .padding(.horizontal, secondaryHorizontalPadding)
+            .padding(.vertical, secondaryVerticalPadding)
+            .frame(maxWidth: fillsAvailableWidth ? .infinity : nil)
+            .frame(minHeight: detailMinHeight)
+            .background(backgroundColor)
+            .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
+            .contentShape(Rectangle())
         }
         .buttonStyle(ScaleButtonStyle())
         .disabled(!isEnabled)
+    }
+
+    private var secondaryHorizontalPadding: CGFloat {
+        if !fillsAvailableWidth {
+            return AppSpacing.md
+        }
+        return trimmedDetail == nil ? 0 : AppSpacing.md
+    }
+
+    private var secondaryVerticalPadding: CGFloat {
+        if !fillsAvailableWidth {
+            if trimmedDetail == nil {
+                return AppSpacing.sm
+            }
+            return detailVerticalPadding
+        }
+        return detailVerticalPadding
+    }
+
+    private var detailMinHeight: CGFloat {
+        trimmedDetail == nil ? 48 : 56
+    }
+
+    private var detailVerticalPadding: CGFloat {
+        guard trimmedDetail != nil else { return 0 }
+        // Inline single-line detail: extra vertical inset so the control reads as substantial (matches bar CTAs).
+        if detailLayout == .inline {
+            return AppSpacing.md
+        }
+        return AppSpacing.sm
+    }
+
+    /// One line: title + detail (e.g. next exercise), centered when `detailAlignment == .center`.
+    @ViewBuilder
+    private func inlineDetailRow(trimmedDetail: String) -> some View {
+        let detailColor = isEnabled ? AppColor.textSecondary : AppColor.textDisabled
+        let row = HStack(alignment: .center, spacing: AppSpacing.smd) {
+            if let icon {
+                icon.image(size: 16, weight: .semibold)
+                    .foregroundStyle(foregroundColor)
+            }
+            Text(label)
+                .font(AppFont.productAction)
+                .foregroundStyle(foregroundColor)
+                .lineLimit(1)
+            Text(trimmedDetail)
+                .font(AppFont.productAction)
+                .foregroundStyle(detailColor)
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
+        }
+        if detailAlignment == .center {
+            HStack {
+                Spacer(minLength: 0)
+                row
+                Spacer(minLength: 0)
+            }
+        } else {
+            row
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private var foregroundColor: Color {
+        guard isEnabled else { return AppColor.textDisabled }
+        switch tone {
+        case .default: return AppColor.textPrimary
+        case .accentSoft: return AppColor.accent
+        case .destructive: return AppColor.error
+        }
+    }
+
+    private var backgroundColor: Color {
+        guard isEnabled else { return AppColor.disabledSurface }
+        switch tone {
+        case .default: return AppColor.controlBackground
+        case .accentSoft: return AppColor.controlBackground
+        case .destructive: return Color.clear
+        }
     }
 }
 
@@ -524,7 +783,7 @@ struct AppGhostButtonLabel: View {
     var body: some View {
         Text(title)
             .font(AppFont.productAction)
-            .foregroundStyle(isEnabled ? AppColor.textPrimary : AppColor.textSecondary)
+            .foregroundStyle(isEnabled ? AppColor.textPrimary : AppColor.textDisabled)
             .multilineTextAlignment(.center)
             .frame(maxWidth: .infinity)
             .frame(minHeight: 44)
@@ -532,6 +791,9 @@ struct AppGhostButtonLabel: View {
     }
 }
 
+/// Text-only quiet action (no fill, no stroke) — use for "Freestyle session",
+/// "Skip", or any optional path that shouldn't compete with the primary CTA.
+/// 44pt hit area. For disclosure link labels, use `AppGhostButtonLabel` directly.
 struct AppGhostButton: View {
     let label: String
     var isEnabled: Bool = true
@@ -552,11 +814,17 @@ struct AppGhostButton: View {
     }
 }
 
+/// Static status/label pill — "Completed", "Up next", "Missed", "Day 3 of 5".
+/// Use `.success` / `.warning` / `.error` for status; `.muted` / `.default` for
+/// neutral labels; `.accent` to emphasize. For toggle-able filter pills, use
+/// `AppFilterChip` — not this component.
 struct AppTag: View {
     let text: String
     var style: Style = .default
     /// `.compactCapsule` matches Paper today “Day n of m” (node 2P1-0) and `WeeklyProgressStepper` chip height.
     var layout: Layout = .regular
+    /// Optional leading glyph rendered inline with the text (same foreground color).
+    var icon: AppIcon? = nil
 
     enum Layout {
         case regular
@@ -577,17 +845,13 @@ struct AppTag: View {
         Group {
             switch layout {
             case .regular:
-                Text(text)
-                    .font(AppFont.stepIndicator)
-                    .foregroundStyle(foregroundColor)
+                content
                     .padding(.horizontal, AppSpacing.smd)
                     .padding(.vertical, AppSpacing.sm)
                     .background(backgroundColor)
                     .clipShape(Capsule())
             case .compactCapsule:
-                Text(text)
-                    .font(AppFont.stepIndicator)
-                    .foregroundStyle(foregroundColor)
+                content
                     .padding(.horizontal, AppProgressChipMetrics.compactHorizontalPadding)
                     .frame(height: AppProgressChipMetrics.rowHeight)
                     .background(backgroundColor)
@@ -596,13 +860,24 @@ struct AppTag: View {
         }
     }
 
+    private var content: some View {
+        HStack(spacing: AppSpacing.xs) {
+            if let icon {
+                icon.image(size: 12, weight: .semibold)
+            }
+            Text(text)
+                .font(AppFont.stepIndicator)
+        }
+        .foregroundStyle(foregroundColor)
+    }
+
     private var foregroundColor: Color {
         switch style {
         case .default: return AppColor.textPrimary
         case .accent: return AppColor.accentForeground
-        case .success: return AppColor.success
-        case .warning: return AppColor.warning
-        case .error: return AppColor.error
+        case .success: return AppColor.successOnSoft
+        case .warning: return AppColor.warningOnSoft
+        case .error: return AppColor.errorOnSoft
         case .muted: return AppColor.textSecondary
         case .custom(let fg, _): return fg
         }
@@ -612,50 +887,59 @@ struct AppTag: View {
         switch style {
         case .default: return AppColor.controlBackground
         case .accent: return AppColor.accent
-        case .success: return AppColor.success.opacity(0.16)
-        case .warning: return AppColor.warning.opacity(0.18)
-        case .error: return AppColor.error.opacity(0.16)
+        case .success: return AppColor.successSoft
+        case .warning: return AppColor.warningSoft
+        case .error: return AppColor.errorSoft
         case .muted: return AppColor.mutedFill
         case .custom(_, let bg): return bg
         }
     }
 }
 
-struct IconChip: View {
-    let icon: AppIcon
-    var style: Style = .default
-
-    enum Style {
-        case `default`
-        case accent
-    }
+/// Toggleable capsule chip for filter bars (Exercises list, Program library, History).
+///
+/// Use when a page needs a horizontal row of mutually-toggleable filter pills.
+/// Not for status labels — use `AppTag` there. Selected state inverts to
+/// `textPrimary` fill; a trailing `×` glyph (when `showsClearGlyphWhenSelected`
+/// is true) signals "tap again to clear" without requiring an explicit reset row.
+struct AppFilterChip: View {
+    let label: String
+    let isSelected: Bool
+    /// Show an `×` to the right of the label when selected — used on History where
+    /// tapping a selected chip clears the filter. Filter bars that reset via a
+    /// dedicated "All" pill should leave this false.
+    var showsClearGlyphWhenSelected: Bool = false
+    let action: () -> Void
 
     var body: some View {
-        ZStack {
-            Circle()
-                .fill(backgroundColor)
-                .frame(width: 32, height: 32)
-
-            icon.image(size: 14, weight: .semibold)
-                .foregroundStyle(iconColor)
+        Button(action: action) {
+            HStack(spacing: AppSpacing.xs) {
+                Text(label)
+                    .font(AppFont.caption.font)
+                if isSelected && showsClearGlyphWhenSelected {
+                    AppIcon.close.image(size: 10, weight: .bold)
+                }
+            }
+            .foregroundStyle(isSelected ? AppColor.background : AppColor.textPrimary)
+            .padding(.leading, AppSpacing.smd)
+            .padding(.trailing, isSelected && showsClearGlyphWhenSelected ? AppSpacing.sm : AppSpacing.smd)
+            .padding(.vertical, AppSpacing.xs)
+            .background(
+                Capsule()
+                    .fill(isSelected ? AppColor.textPrimary : AppColor.accentSoft)
+            )
         }
-    }
-
-    private var backgroundColor: Color {
-        switch style {
-        case .default: return AppColor.controlBackground
-        case .accent: return AppColor.accent
-        }
-    }
-
-    private var iconColor: Color {
-        switch style {
-        case .default: return AppColor.textPrimary
-        case .accent: return AppColor.accentForeground
-        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .accessibilityHint(
+            showsClearGlyphWhenSelected && isSelected ? "Tap to clear filter" : "Tap to filter"
+        )
     }
 }
 
+/// Pill-shaped header action (48pt icon square or 60pt-min text label) used
+/// inside `ProductTopBar`. The visible tap area replaces floating text headers
+/// so every header action has a clear hit target.
 struct ProductTopBarAction: View {
     enum Content {
         case text(String)
@@ -688,6 +972,9 @@ struct ProductTopBarAction: View {
     }
 }
 
+/// Root/product-screen top bar — title + optional leading/trailing actions on a
+/// 64pt surface. Compose via `AppScreen(customHeader:)`. Detail flows should stay
+/// on `AppNavBar` / native nav bar; this replaces large-title chrome on root tabs.
 struct ProductTopBar: View {
     enum Size {
         case md
@@ -758,66 +1045,9 @@ struct ProductTopBar: View {
     }
 }
 
-struct IconSquareButton: View {
-    enum Style: Equatable {
-        case `default`
-        case selected
-        case muted
-        case disabled
-    }
-
-    let icon: AppIcon
-    var style: Style = .default
-    var action: (() -> Void)? = nil
-
-    var body: some View {
-        Button(action: { action?() }) {
-            icon.image(size: 16, weight: .semibold)
-                .foregroundStyle(iconColor)
-                .frame(width: 48, height: 48)
-                .background(backgroundColor)
-                .overlay {
-                    RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous)
-                        .stroke(borderColor, lineWidth: 1)
-                }
-                .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
-        }
-        .buttonStyle(ScaleButtonStyle())
-        .disabled(action == nil || style == .disabled)
-    }
-
-    private var iconColor: Color {
-        switch style {
-        case .default, .muted:
-            return AppColor.textPrimary
-        case .selected:
-            return AppColor.accentForeground
-        case .disabled:
-            return AppColor.textSecondary
-        }
-    }
-
-    private var backgroundColor: Color {
-        switch style {
-        case .default, .muted:
-            return AppColor.controlBackground
-        case .selected:
-            return AppColor.accent
-        case .disabled:
-            return AppColor.disabledSurface
-        }
-    }
-
-    private var borderColor: Color {
-        switch style {
-        case .selected:
-            return AppColor.accent
-        default:
-            return AppColor.border
-        }
-    }
-}
-
+/// Compact multi-step progress chip strip — used for "Week N of M" / "Day N of M"
+/// lockups on Today and program cards. Current step renders as a filled black
+/// capsule; completed/missed steps become small circles with check/minus glyphs.
 struct WeeklyProgressStepper: View {
     struct Step: Identifiable {
         enum State {
@@ -910,6 +1140,9 @@ struct WeeklyProgressStepper: View {
     }
 }
 
+/// Set-step tracker inside `WorkoutCommandCard`. Renders the current set as a
+/// filled capsule ("Set 2"), completed/failed sets as `reps×weight` chips, and
+/// upcoming sets as numbered circles. Used only in active workout flows.
 struct SetProgressIndicator: View {
     struct Step: Identifiable {
         enum State {
@@ -957,7 +1190,7 @@ struct SetProgressIndicator: View {
                                 .font(AppFont.compactLabel)
                                 .lineLimit(1)
                         }
-                        .foregroundStyle(AppColor.textPrimary)
+                        .foregroundStyle(AppColor.textSecondary)
                         .padding(.horizontal, AppSpacing.sm)
                         .frame(height: 24)
                         .background(Capsule().fill(AppColor.controlBackground))
@@ -1027,68 +1260,10 @@ struct SetProgressIndicator: View {
     }
 }
 
-struct MetricDisplay: View {
-    enum Style {
-        case metric
-        case subdued
-        case placeholder
-    }
-
-    let value: String
-    var supportingText: String? = nil
-    var style: Style = .metric
-
-    var body: some View {
-        VStack(spacing: AppSpacing.xs) {
-            Text(value)
-                .font(valueFont)
-                .tracking(valueTracking)
-                .foregroundStyle(valueColor)
-                .multilineTextAlignment(.center)
-                .fixedSize(horizontal: false, vertical: true)
-
-            if let supportingText, !supportingText.isEmpty {
-                Text(supportingText)
-                    .font(AppFont.caption.font)
-                    .foregroundStyle(AppColor.textSecondary)
-                    .multilineTextAlignment(.center)
-            }
-        }
-        .frame(maxWidth: .infinity)
-    }
-
-    private var valueFont: Font {
-        switch style {
-        case .metric:
-            return AppFont.numericDisplay
-        case .subdued:
-            return AppFont.numericLarge
-        case .placeholder:
-            return AppFont.title.font
-        }
-    }
-
-    private var valueTracking: CGFloat {
-        switch style {
-        case .metric:
-            return AppFont.numericDisplayTracking
-        case .subdued:
-            return AppFont.numericLargeTracking
-        case .placeholder:
-            return 0
-        }
-    }
-
-    private var valueColor: Color {
-        switch style {
-        case .metric:
-            return AppColor.textPrimary
-        case .subdued, .placeholder:
-            return AppColor.textSecondary
-        }
-    }
-}
-
+/// Rest countdown control — `-15` / central timer pill / `+15`. Sits inside
+/// `SessionStateBar` (detached bottom sheet) or `WorkoutCommandCard` (inline).
+/// `.ready` state drops the capsule so the transition to "done resting" reads
+/// as a deliberate visual beat, not just a color change.
 struct RestTimerControl: View {
     enum State: Equatable {
         case idle
@@ -1105,34 +1280,87 @@ struct RestTimerControl: View {
     var onIncrease: (() -> Void)? = nil
 
     var body: some View {
-        HStack(spacing: AppSpacing.sm) {
-            adjustButton(icon: .remove, action: onDecrease)
+        VStack(spacing: AppSpacing.xs) {
+            HStack(spacing: AppSpacing.sm) {
+                adjustButton(icon: .remove, action: onDecrease)
 
-            Button(action: { onToggle?() }) {
-                HStack(spacing: AppSpacing.sm) {
-                    Text(timeText)
-                        .font(AppFont.numericLarge)
-                        .tracking(AppFont.numericLargeTracking)
-                        .foregroundStyle(AppColor.textPrimary)
-                        .monospacedDigit()
-
-                    if let indicatorIcon {
-                        indicatorIcon.image(size: 16, weight: .semibold)
-                            .foregroundStyle(AppColor.textSecondary)
+                Button(action: { onToggle?() }) {
+                    Group {
+                        if showsTimerCapsule {
+                            timerCenterTapLabel
+                                .clipShape(Capsule())
+                                .contentShape(Capsule())
+                        } else {
+                            timerCenterTapLabel
+                                .contentShape(Rectangle())
+                        }
                     }
                 }
-                .frame(height: 56)
-                .padding(.horizontal, AppSpacing.md)
-                .background(showsTimerBackground ? AppColor.controlBackground : .clear)
-                .clipShape(Capsule())
-                .contentShape(Capsule())
-            }
-            .buttonStyle(ScaleButtonStyle())
-            .disabled(onToggle == nil || state == .disabled)
+                .buttonStyle(ScaleButtonStyle())
+                .disabled(onToggle == nil || state == .disabled)
+                .accessibilityLabel(timerAccessibilityLabel)
 
-            adjustButton(icon: .add, action: onIncrease)
+                adjustButton(icon: .add, action: onIncrease)
+            }
         }
         .opacity(state == .disabled ? 0.5 : 1)
+    }
+
+    private var timerCenterTapLabel: some View {
+        HStack(spacing: AppSpacing.sm) {
+            Text(timeText)
+                .font(AppFont.numericDisplay)
+                .tracking(AppFont.numericDisplayTracking)
+                .foregroundStyle(timerCenterForeground)
+                .monospacedDigit()
+
+            if let indicatorIcon {
+                indicatorIcon.image(size: 18, weight: .semibold)
+                    .foregroundStyle(AppColor.textSecondary)
+            }
+        }
+        .frame(minHeight: 60)
+        .padding(.horizontal, AppSpacing.smd)
+        .background {
+            if showsTimerCapsule {
+                Capsule().fill(AppColor.controlBackground)
+            }
+        }
+        .overlay {
+            if showsTimerCapsule {
+                Capsule()
+                    .stroke(AppColor.border.opacity(0.55), lineWidth: 1)
+            }
+        }
+    }
+
+    /// Capsule fill + stroke for running / paused / idle; plain text for **ready** (rest complete).
+    private var showsTimerCapsule: Bool {
+        state != .ready
+    }
+
+    private var timerCenterForeground: Color {
+        switch state {
+        case .ready:
+            return AppColor.textSecondary
+        default:
+            return AppColor.textPrimary
+        }
+    }
+
+    private var timerAccessibilityLabel: String {
+        switch state {
+        case .idle:
+            return timeText
+        case .paused:
+            return "\(timeText), paused"
+        case .running:
+            return "\(timeText), running"
+        case .ready:
+            return "\(timeText), ready"
+        case .disabled:
+            return "Timer unavailable"
+        }
     }
 
     private var indicatorIcon: AppIcon? {
@@ -1146,143 +1374,35 @@ struct RestTimerControl: View {
         }
     }
 
-    private var showsTimerBackground: Bool {
-        state == .running
-    }
-
     private func adjustButton(icon: AppIcon, action: (() -> Void)?) -> some View {
         Button(action: { action?() }) {
             icon.image(size: 26, weight: .semibold)
                 .foregroundStyle(AppColor.textSecondary)
-                .frame(width: 56, height: 56)
+                .frame(width: 60, height: 60)
                 .background(AppColor.controlBackground)
+                .overlay {
+                    Circle()
+                        .stroke(AppColor.border.opacity(0.4), lineWidth: 1)
+                }
                 .clipShape(Circle())
+                .contentShape(Circle())
         }
         .buttonStyle(ScaleButtonStyle())
         .disabled(action == nil || state == .disabled)
     }
 }
 
-struct ExercisePreviewItem: View {
-    let title: String
-    let detail: String
-    var action: (() -> Void)? = nil
-
-    var body: some View {
-        Button(action: { action?() }) {
-            VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                Text(title)
-                    .font(AppFont.productAction)
-                    .foregroundStyle(AppColor.textSecondary)
-                    .lineLimit(1)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                Text(detail)
-                    .font(AppFont.productAction)
-                    .foregroundStyle(AppColor.textSecondary)
-                    .lineLimit(1)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .fixedSize(horizontal: true, vertical: false)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .disabled(action == nil)
-    }
-}
-
-struct ExercisePreviewStrip: View {
-    struct Item: Identifiable {
-        let id: String
-        let title: String
-        let detail: String
-
-        init(id: String? = nil, title: String, detail: String) {
-            self.id = id ?? "\(title)-\(detail)"
-            self.title = title
-            self.detail = detail
-        }
-    }
-
-    let items: [Item]
-    var onSelect: ((Item) -> Void)? = nil
-
-    @State private var contentWidth: CGFloat = 0
-    @State private var viewportWidth: CGFloat = 0
-
-    private var showsOverflowFade: Bool {
-        contentWidth > viewportWidth + 1
-    }
-
-    var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: AppSpacing.lg) {
-                ForEach(items) { item in
-                    ExercisePreviewItem(title: item.title, detail: item.detail) {
-                        onSelect?(item)
-                    }
-                }
-            }
-            .padding(AppSpacing.md)
-            .background(
-                GeometryReader { proxy in
-                    Color.clear.preference(key: ExercisePreviewContentWidthKey.self, value: proxy.size.width)
-                }
-            )
-        }
-        .background(
-            GeometryReader { proxy in
-                Color.clear.preference(key: ExercisePreviewViewportWidthKey.self, value: proxy.size.width)
-            }
-        )
-        .onPreferenceChange(ExercisePreviewContentWidthKey.self) { contentWidth = $0 }
-        .onPreferenceChange(ExercisePreviewViewportWidthKey.self) { viewportWidth = $0 }
-        .background(AppColor.controlBackground)
-        .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
-        .overlay(alignment: .trailing) {
-            if showsOverflowFade {
-                LinearGradient(
-                    colors: [AppColor.controlBackground.opacity(0), AppColor.controlBackground],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-                .frame(width: 20)
-                .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
-                .allowsHitTesting(false)
-            }
-        }
-    }
-}
-
-private struct ExercisePreviewContentWidthKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = max(value, nextValue())
-    }
-}
-
-private struct ExercisePreviewViewportWidthKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = max(value, nextValue())
-    }
-}
-
 // MARK: - PreviewListRow + PreviewListContainer
 
+/// Two-line row for preview lists inside cards (Today's exercise preview,
+/// Programs day list). Uses `AppFont.sectionHeader` for title + `listSecondary`
+/// for subtitle. `isEmptyHint = true` demotes the subtitle to a softer hint
+/// color for cold-start rows like "No prior sets".
 struct PreviewListRow: View {
-    enum Style {
-        /// Default: dark title for exercise names (Today card, etc.).
-        case standard
-        /// Muted exercise list (Paper): title `#919191`, subtitle `#C7C7C7` light — Programs active card & Today hero preview.
-        case programRoutine
-    }
-
     let title: String
     let subtitle: String
-    var style: Style = .standard
+    /// When `true`, subtitle uses lighter system secondary label (empty-state hints).
+    var isEmptyHint: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.xs) {
@@ -1294,41 +1414,32 @@ struct PreviewListRow: View {
                 .font(subtitleFont)
                 .foregroundStyle(subtitleColor)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, AppSpacing.sm)
+        .frame(minHeight: 52)
+        .contentShape(Rectangle())
     }
 
-    private var titleColor: Color {
-        switch style {
-        case .standard:
-            return AppColor.textPrimary
-        case .programRoutine:
-            return AppColor.textSecondary
-        }
-    }
+    private var titleColor: Color { AppColor.textPrimary }
 
     private var subtitleFont: Font {
-        switch style {
-        case .standard:
-            return AppFont.caption.font
-        case .programRoutine:
-            return AppFont.caption.font
-        }
+        isEmptyHint ? AppFont.caption.font : AppFont.listSecondary.font
     }
 
     private var subtitleColor: Color {
-        switch style {
-        case .standard:
-            return AppColor.textSecondary
-        case .programRoutine:
-            return AppColor.disabledSurface
-        }
+        isEmptyHint ? AppColor.secondaryLabel : AppColor.textSecondary
     }
 }
 
+/// Scrollable, capped-height container for `PreviewListRow`s — used on Today hero
+/// and in program active-card previews. Auto-fades the bottom edge when content
+/// exceeds `maxHeight` so truncation reads intentionally.
 struct PreviewListContainer<Content: View>: View {
     var maxHeight: CGFloat = 228
-    /// Vertical gap between rows (Paper program card uses `AppSpacing.lg`).
-    var rowSpacing: CGFloat = AppSpacing.sm
+    /// Vertical gap between rows. Tight by default so the container padding can breathe around the group.
+    var rowSpacing: CGFloat = AppSpacing.xs
+    /// Inner padding between the container edge and its rows.
+    var contentPadding: CGFloat = AppSpacing.md
     @ViewBuilder let content: () -> Content
 
     @State private var contentHeight: CGFloat = 0
@@ -1343,7 +1454,7 @@ struct PreviewListContainer<Content: View>: View {
                 content()
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(AppSpacing.md)
+            .padding(contentPadding)
             .background(
                 GeometryReader { proxy in
                     Color.clear.preference(
@@ -1388,42 +1499,10 @@ private struct PreviewListContentHeightKey: PreferenceKey {
     }
 }
 
-struct SheetHeader: View {
-    let title: String
-    var onDone: (() -> Void)? = nil
-
-    var body: some View {
-        HStack(spacing: 0) {
-            // Invisible spacer matching Done button width for centering
-            Color.clear
-                .frame(width: 60, height: 48)
-
-            Spacer()
-
-            Text(title)
-                .font(AppFont.productHeading)
-                .tracking(AppFont.productHeadingTracking)
-                .foregroundStyle(AppColor.textPrimary)
-
-            Spacer()
-
-            if let onDone {
-                Button(action: onDone) {
-                    Text("Done")
-                        .font(AppFont.label.font)
-                        .foregroundStyle(AppColor.accent)
-                        .frame(width: 60, height: 48)
-                }
-                .buttonStyle(.plain)
-            } else {
-                Color.clear
-                    .frame(width: 60, height: 48)
-            }
-        }
-        .padding(.top, AppSpacing.sm)
-    }
-}
-
+/// Tall (72pt-min) row optimized for bottom-sheet pickers — "Set 1", "Set 2",
+/// with per-row trailing slot for a status badge / current tag. Uses
+/// `AppFont.productAction` throughout so sheet copy reads heavier than flat list
+/// rows. `showsBorder` injects spacing between rows; set false on the last.
 struct SheetListRow<Trailing: View>: View {
     let title: String
     var subtitle: String? = nil
@@ -1460,7 +1539,7 @@ struct SheetListRow<Trailing: View>: View {
             .frame(minHeight: 72)
 
             if showsBorder {
-                CardSectionDivider()
+                AppDivider(spacing: AppSpacing.sm)
             }
         }
     }
@@ -1490,29 +1569,107 @@ extension SheetListRow where Trailing == EmptyView {
 
 // MARK: - Organisms
 
+/// Canonical card surface — white fill, continuous 30pt corners, thin stroke,
+/// dual lift shadows. The default chrome for any grouped surface. Use `.appCardStyle()`
+/// instead when a wrapper type is awkward (e.g. applied to an existing VStack
+/// without re-nesting). Never invent inline `.background(...).clipShape(...)` chrome.
 struct AppCard<Content: View>: View {
+    /// Outer inset for card chrome. System default is `AppSpacing.lg` (24pt) so every
+    /// card has consistent breathing room. Compact contexts (list rows, PR rows) can
+    /// pass a smaller inset explicitly.
+    var contentInset: CGFloat = AppSpacing.lg
     @ViewBuilder let content: () -> Content
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             content()
         }
-        .padding(AppSpacing.md)
+        .padding(contentInset)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(AppColor.cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous))
+        .modifier(AppCardElevation())
     }
 }
 
-struct CardSectionDivider: View {
+/// Session list row: eyebrow (date), title (template name), optional caption, trailing status (e.g. history badge).
+struct AppSessionHighlightCard<Trailing: View>: View {
+    let eyebrow: String
+    let title: String
+    let caption: String?
+    @ViewBuilder let trailing: () -> Trailing
+
     var body: some View {
-        Rectangle()
-            .fill(AppColor.background)
-            .frame(height: 2)
-            .frame(maxWidth: .infinity)
+        AppCard(contentInset: AppSpacing.lg) {
+            HStack(alignment: .center, spacing: AppSpacing.md) {
+                VStack(alignment: .leading, spacing: AppSpacing.xxs) {
+                    Text(eyebrow)
+                        .font(AppFont.label.font)
+                        .foregroundStyle(AppColor.textSecondary)
+
+                    Text(title)
+                        .font(AppFont.title.font)
+                        .foregroundStyle(AppColor.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    if let caption, !caption.isEmpty {
+                        Text(caption)
+                            .font(AppFont.caption.font)
+                            .foregroundStyle(AppColor.textSecondary)
+                    }
+                }
+
+                Spacer(minLength: 0)
+
+                trailing()
+            }
+        }
     }
 }
 
+/// Transient pill-shaped notification anchored to the bottom safe area.
+/// Bind `message` to a `String?` `@State`; setting non-nil shows the toast,
+/// which auto-dismisses after `duration` seconds.
+struct AppToast: ViewModifier {
+    @Binding var message: String?
+    var duration: TimeInterval = 3.0
+
+    func body(content: Content) -> some View {
+        content
+            .overlay(alignment: .bottom) {
+                if let text = message {
+                    Text(text)
+                        .font(AppFont.body.font)
+                        .foregroundStyle(AppColor.textPrimary)
+                        .padding(.horizontal, AppSpacing.lg)
+                        .padding(.vertical, AppSpacing.sm)
+                        .background(AppColor.cardBackground)
+                        .clipShape(Capsule())
+                        .appCardElevation()
+                        .padding(.bottom, AppSpacing.xl)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                        .task(id: text) {
+                            try? await Task.sleep(for: .seconds(duration))
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                message = nil
+                            }
+                        }
+                }
+            }
+            .animation(.easeInOut(duration: 0.2), value: message)
+    }
+}
+
+extension View {
+    /// Show a transient bottom toast bound to a `String?` state.
+    func appToast(message: Binding<String?>, duration: TimeInterval = 3.0) -> some View {
+        modifier(AppToast(message: message, duration: duration))
+    }
+}
+
+/// Empty-state card with eyebrow, title, message, and primary action. Used when
+/// a feature has no data yet (no program, no sessions). Compose inside `AppScreen`;
+/// don't rebuild an eyebrow+title+CTA layout in-place when this fits the shape.
 struct EmptyStateCard: View {
     let eyebrow: String
     let title: String
@@ -1547,6 +1704,9 @@ struct EmptyStateCard: View {
     }
 }
 
+/// Flat list with an `AppDivider` between rows — use inside a single `AppCard`
+/// when rows share a subject (e.g. exercise sets in a session summary). For
+/// independently-tappable rows with their own card each, use `AppStackedCardList`.
 struct AppDividedList<Data, ID, RowContent>: View
     where Data: RandomAccessCollection, ID: Hashable, RowContent: View
 {
@@ -1586,51 +1746,48 @@ extension AppDividedList where Data.Element: Identifiable, ID == Data.Element.ID
     }
 }
 
-struct HeroWorkoutCard: View {
-    let progressSteps: [WeeklyProgressStepper.Step]
-    let title: String
-    let subtitle: String
-    let previewItems: [ExercisePreviewStrip.Item]
-    var primaryLabel: String = "Start"
-    var onPreviewTap: (() -> Void)? = nil
-    let onPrimaryAction: () -> Void
+/// Stacks rows into individual `AppCard`s with spacing between them — used when
+/// each row carries multiple pieces of information (title + subtitle) and is
+/// independently tappable. Inherits `AppCard`'s default inset so stacked-card
+/// rows match every other card surface in the app. For flat single-line rows
+/// inside a shared card, use `AppDividedList` instead.
+struct AppStackedCardList<Data, ID, RowContent>: View
+    where Data: RandomAccessCollection, ID: Hashable, RowContent: View
+{
+    let data: Data
+    let id: KeyPath<Data.Element, ID>
+    var spacing: CGFloat = AppSpacing.sm
+    @ViewBuilder let content: (Data.Element) -> RowContent
 
     var body: some View {
-        AppCard {
-            VStack(alignment: .center, spacing: AppSpacing.md) {
-                WeeklyProgressStepper(steps: progressSteps)
-
-                VStack(spacing: AppSpacing.lg) {
-                    VStack(spacing: AppSpacing.xs) {
-                        Text(title)
-                            .font(AppFont.productHeading)
-                            .tracking(AppFont.productHeadingTracking)
-                            .foregroundStyle(AppColor.textPrimary)
-                            .multilineTextAlignment(.center)
-                            .fixedSize(horizontal: false, vertical: true)
-
-                        Text(subtitle)
-                            .font(AppFont.productAction)
-                            .foregroundStyle(AppColor.textSecondary)
-                            .multilineTextAlignment(.center)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.horizontal, AppSpacing.lg)
-
-                    if !previewItems.isEmpty {
-                        ExercisePreviewStrip(items: previewItems) { _ in
-                            onPreviewTap?()
-                        }
-                    }
+        let items = Array(data)
+        VStack(alignment: .leading, spacing: spacing) {
+            ForEach(items.indices, id: \.self) { index in
+                AppCard {
+                    content(items[index])
                 }
-
-                AppPrimaryButton(primaryLabel, action: onPrimaryAction)
             }
-            .frame(maxWidth: .infinity)
         }
     }
 }
 
+extension AppStackedCardList where Data.Element: Identifiable, ID == Data.Element.ID {
+    init(
+        _ data: Data,
+        spacing: CGFloat = AppSpacing.sm,
+        @ViewBuilder content: @escaping (Data.Element) -> RowContent
+    ) {
+        self.data = data
+        self.id = \.id
+        self.spacing = spacing
+        self.content = content
+    }
+}
+
+/// Active-workout hero — set progress strip + exercise name + metric hero +
+/// primary "Log set" CTA, with an optional rest-timer strip at the bottom.
+/// This is the central surface of `ActiveWorkoutView`; never build a page-local
+/// command panel to replace it. Timer strip is hidden when `timerValue == nil`.
 struct WorkoutCommandCard: View {
     enum State: Equatable {
         case active
@@ -1642,8 +1799,10 @@ struct WorkoutCommandCard: View {
     let exerciseName: String
     let metricValue: String
     var metricSupportingText: String? = nil
+    /// When true, the metric line uses body-sized copy instead of the large numeric display (placeholders).
+    var metricIsHint: Bool = false
     var state: State = .active
-    var primaryLabel: String = "Done"
+    var primaryLabel: String = AppCopy.Workout.completeSet
     var onPrimaryAction: (() -> Void)? = nil
     var onSecondaryAction: (() -> Void)? = nil
     var timerValue: String? = nil
@@ -1654,41 +1813,30 @@ struct WorkoutCommandCard: View {
 
     var body: some View {
         VStack(alignment: .center, spacing: 0) {
-            // Top section: stepper + exercise info + action button
-            VStack(alignment: .center, spacing: AppSpacing.md) {
-                SetProgressIndicator(steps: progressSteps)
+            VStack(alignment: .center, spacing: AppSpacing.lg) {
+                HStack {
+                    Spacer(minLength: 0)
+                    SetProgressIndicator(steps: progressSteps)
+                    Spacer(minLength: 0)
+                }
+                .frame(maxWidth: .infinity)
 
-                VStack(spacing: AppSpacing.sm) {
-                    Text(exerciseName)
-                        .font(AppFont.productHeading)
-                        .tracking(AppFont.productHeadingTracking)
-                        .foregroundStyle(AppColor.textPrimary)
+                Text(exerciseName)
+                    .font(AppFont.productHeading)
+                    .tracking(AppFont.productHeadingTracking)
+                    .foregroundStyle(AppColor.textPrimary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                metricHero
+
+                if let metricSupportingText, !metricSupportingText.isEmpty {
+                    Text(metricSupportingText)
+                        .font(AppFont.caption.font)
+                        .foregroundStyle(AppColor.textSecondary)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
-
-                    if onSecondaryAction != nil {
-                        Button(action: { onSecondaryAction?() }) {
-                            Text(metricValue)
-                                .font(AppFont.productAction)
-                                .foregroundStyle(AppColor.textSecondary)
-                                .padding(.horizontal, AppSpacing.md)
-                                .padding(.vertical, AppSpacing.sm)
-                                .background(
-                                    RoundedRectangle(cornerRadius: AppRadius.sm, style: .continuous)
-                                        .fill(AppColor.controlBackground)
-                                )
-                                .frame(minHeight: 44)
-                        }
-                        .buttonStyle(ScaleButtonStyle())
-                        .accessibilityLabel("Adjust set")
-                    } else {
-                        Text(metricValue)
-                            .font(AppFont.productAction)
-                            .foregroundStyle(AppColor.textSecondary)
-                            .multilineTextAlignment(.center)
-                    }
                 }
-                .padding(.vertical, AppSpacing.md)
 
                 if state != .completed {
                     AppPrimaryButton(
@@ -1699,12 +1847,13 @@ struct WorkoutCommandCard: View {
                 }
             }
             .padding(.horizontal, AppSpacing.md)
-            .padding(.top, AppSpacing.md)
-            .padding(.bottom, AppSpacing.md)
+            .padding(.vertical, AppSpacing.lg)
 
-            // Bottom section: timer
             if let timerValue {
-                CardSectionDivider()
+                Rectangle()
+                    .fill(AppColor.border.opacity(0.32))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 1)
 
                 RestTimerControl(
                     timeText: timerValue,
@@ -1718,54 +1867,57 @@ struct WorkoutCommandCard: View {
             }
         }
         .frame(maxWidth: .infinity)
-        .background(AppColor.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous))
-    }
-}
-
-struct ExerciseCommandCard: View {
-    enum State: Equatable {
-        case active
-        case completed
-        case disabled
+        .appWorkoutPanelChrome()
     }
 
-    let progressSteps: [SetProgressIndicator.Step]
-    let exerciseName: String
-    let setLabel: String
-    let metricValue: String
-    var metricSupportingText: String? = nil
-    var metricStyle: MetricDisplay.Style = .metric
-    var state: State = .active
-    var primaryLabel: String = "Done"
-    var onPrimaryAction: (() -> Void)? = nil
-    var onSecondaryAction: (() -> Void)? = nil
+    @ViewBuilder
+    private var metricHero: some View {
+        if onSecondaryAction != nil {
+            if metricIsHint {
+                AppSecondaryButton(
+                    AppCopy.Workout.logMetricHint,
+                    isEnabled: state == .active,
+                    fillsAvailableWidth: false,
+                    action: { onSecondaryAction?() }
+                )
+                .accessibilityLabel("Log weight and reps")
+            } else {
+                Button(action: { onSecondaryAction?() }) {
+                    VStack(spacing: AppSpacing.xs) {
+                        metricValueText
 
-    var body: some View {
-        WorkoutCommandCard(
-            progressSteps: progressSteps,
-            exerciseName: exerciseName,
-            metricValue: metricValue,
-            metricSupportingText: metricSupportingText ?? setLabel,
-            state: mappedState,
-            primaryLabel: primaryLabel,
-            onPrimaryAction: onPrimaryAction,
-            onSecondaryAction: onSecondaryAction
-        )
-    }
-
-    private var mappedState: WorkoutCommandCard.State {
-        switch state {
-        case .active:
-            return .active
-        case .completed:
-            return .completed
-        case .disabled:
-            return .disabled
+                        Text("Adjust")
+                            .font(AppFont.smallLabel)
+                            .foregroundStyle(AppColor.textSecondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(ScaleButtonStyle())
+                .accessibilityLabel("Adjust weight and reps")
+            }
+        } else {
+            metricValueText
         }
     }
+
+    @ViewBuilder
+    private var metricValueText: some View {
+        Text(metricValue)
+            .font(AppFont.numericDisplay)
+            .tracking(AppFont.numericDisplayTracking)
+            .foregroundStyle(AppColor.textPrimary)
+            .monospacedDigit()
+            .multilineTextAlignment(.center)
+            .minimumScaleFactor(0.55)
+            .lineLimit(3)
+    }
 }
 
+/// Bottom-anchored state bar for active sessions. Renders rest timer (running /
+/// paused / complete) or "Next exercise" subtitle + advance action. Compose via
+/// `.safeAreaInset(edge: .bottom)` on `ActiveWorkoutView` so it floats above the
+/// tab bar, never scrolls with content.
 struct SessionStateBar: View {
     enum State {
         case restRunning(countdown: String, helperText: String?)
@@ -1786,13 +1938,12 @@ struct SessionStateBar: View {
             nextExerciseButton
         default:
             VStack(spacing: 0) {
-                AppCard {
-                    content
-                }
-                .padding(.horizontal, AppSpacing.md)
-                .padding(.top, AppSpacing.sm)
-                .padding(.bottom, AppSpacing.lg)
+                content
+                    .padding(.horizontal, AppSpacing.md)
+                    .padding(.top, AppSpacing.md)
+                    .padding(.bottom, AppSpacing.lg)
             }
+            .frame(maxWidth: .infinity)
             .background(AppColor.barBackground)
         }
     }
@@ -1839,28 +1990,20 @@ struct SessionStateBar: View {
     private var nextExerciseButton: some View {
         Group {
             if case .nextExercise(let subtitle) = state {
-                Button(action: { onAdvance?() }) {
-                    HStack(spacing: AppSpacing.sm) {
-                        Text("Next")
-                            .font(AppFont.productAction)
-                            .foregroundStyle(AppColor.textPrimary)
-
-                        Text(subtitle)
-                            .font(AppFont.productAction)
-                            .foregroundStyle(AppColor.textSecondary)
-                            .lineLimit(1)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 60)
-                    .background(AppColor.mutedFill)
-                    .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
-                }
-                .buttonStyle(ScaleButtonStyle())
-                .disabled(onAdvance == nil)
+                AppSecondaryButton(
+                    AppCopy.Workout.nextExercise,
+                    isEnabled: onAdvance != nil,
+                    icon: nil,
+                    detail: subtitle,
+                    detailAlignment: .center,
+                    detailLayout: .inline,
+                    action: { onAdvance?() }
+                )
                 .padding(.horizontal, AppSpacing.md)
                 .padding(.top, AppSpacing.sm)
                 .padding(.bottom, AppSpacing.lg)
-                .background(AppColor.background)
+                .frame(maxWidth: .infinity)
+                .background(AppColor.barBackground)
             }
         }
     }
@@ -1895,52 +2038,9 @@ struct SessionStateBar: View {
     }
 }
 
-struct ExerciseRow: View {
-    let name: String
-    let weightText: String
-    let repsText: String
-    var isBodyweight: Bool = false
-
-    var body: some View {
-        AppListRow(title: name) {
-            Text(displayValue)
-                .font(AppFont.label.font)
-                .foregroundStyle(AppColor.textPrimary)
-                .monospacedDigit()
-        }
-    }
-
-    private var displayValue: String {
-        let load = isBodyweight && (weightText == "0kg" || weightText == "0lb") ? "BW" : weightText
-        return "\(load) × 1 × \(repsText)"
-    }
-}
-
-struct DayCard<Content: View>: View {
-    let title: String
-    let subtitle: String?
-    let isExpanded: Bool
-    let action: () -> Void
-    @ViewBuilder let content: () -> Content
-
-    var body: some View {
-        AppCard {
-            VStack(alignment: .leading, spacing: isExpanded ? AppSpacing.md : 0) {
-                Button(action: action) {
-                    AppListRow(title: title, subtitle: subtitle) {
-                        EmptyView()
-                    }
-                }
-                .buttonStyle(.plain)
-
-                if isExpanded {
-                    content()
-                }
-            }
-        }
-    }
-}
-
+/// Titled group inside an `AppCard` — used in `SettingsView` for "Preferences",
+/// "App", etc. For generic grouped content outside settings, compose `AppCard`
+/// directly; this wrapper exists only to keep settings copy consistent.
 struct SettingsSection<Content: View>: View {
     let title: String
     @ViewBuilder let content: () -> Content
@@ -1952,75 +2052,11 @@ struct SettingsSection<Content: View>: View {
                 .foregroundStyle(AppFont.sectionHeader.color)
 
             AppCard {
-                VStack(alignment: .leading, spacing: AppSpacing.md) {
+                VStack(alignment: .leading, spacing: AppSpacing.sm) {
                     content()
                 }
             }
         }
-    }
-}
-
-private let appScreenScrollCoordinateSpace = "AppScreenScroll"
-
-struct AppTabHeader<Trailing: View>: View {
-    let title: String
-    @ViewBuilder let trailing: () -> Trailing
-
-    init(title: String, @ViewBuilder trailing: @escaping () -> Trailing) {
-        self.title = title
-        self.trailing = trailing
-    }
-
-    var body: some View {
-        GeometryReader { proxy in
-            let minY = proxy.frame(in: .named(appScreenScrollCoordinateSpace)).minY
-            let collapseProgress = min(max((AppSpacing.md - minY) / 52, 0), 1)
-
-            HStack(alignment: .center, spacing: AppSpacing.md) {
-                Text(title)
-                    .font(AppFont.display)
-                    .tracking(AppFont.displayTracking)
-                    .foregroundStyle(AppColor.textPrimary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                HStack(spacing: AppSpacing.sm) {
-                    trailing()
-                }
-            }
-            .offset(y: -collapseProgress * 8)
-            .scaleEffect(1 - (collapseProgress * 0.06), anchor: .topLeading)
-            .opacity(1.0 - (collapseProgress * 0.08))
-            .animation(.spring(response: 0.28, dampingFraction: 0.9), value: collapseProgress)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
-        }
-        .frame(height: 56)
-    }
-}
-
-extension AppTabHeader where Trailing == EmptyView {
-    init(title: String) {
-        self.init(title: title) { EmptyView() }
-    }
-}
-
-struct AppHeaderIconButton: View {
-    let icon: AppIcon
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            ZStack {
-                Circle()
-                    .fill(AppColor.controlBackground)
-                    .frame(width: 32, height: 32)
-
-                icon.image(size: 15, weight: .semibold)
-                    .foregroundStyle(AppColor.textPrimary)
-            }
-            .frame(width: 44, height: 44)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(ScaleButtonStyle())
     }
 }
 
@@ -2061,6 +2097,9 @@ struct UnitTabItem: View {
     }
 }
 
+/// Root-shell custom tab bar — replaces native UITabBar visuals so the active
+/// tab reads with a muted filled pill. `TabView` still owns state and navigation;
+/// this view only provides appearance via `.safeAreaInset(edge: .bottom)`.
 struct UnitTabBar: View {
     struct Item: Identifiable {
         let id: String
@@ -2093,12 +2132,20 @@ struct UnitTabBar: View {
 
 // MARK: - Template
 
+/// Configures the sticky primary CTA baked into `AppScreen(primaryButton:)`.
+/// Pass via `AppScreen(primaryButton: .init(label:action:))` — the screen renders
+/// it inside a `.safeAreaInset(edge: .bottom)` so it floats above scroll content.
 struct PrimaryButtonConfig {
     let label: String
     var isEnabled: Bool = true
     let action: () -> Void
 }
 
+/// Page-level template: horizontal padding, optional custom header (`ProductTopBar`)
+/// or legacy `AppNavBar`, scrollable body, optional sticky primary CTA. **Every
+/// full screen in the app composes through `AppScreen`** — don't rebuild a
+/// ScrollView/VStack/nav-bar shell in a feature view. Set `usesOuterScroll: false`
+/// for fixed dashboards where inner controls own scrolling.
 struct AppScreen<Content: View>: View {
     let title: String?
     let leadingAction: NavAction?
@@ -2110,6 +2157,8 @@ struct AppScreen<Content: View>: View {
     var navigationBarTitleDisplayMode: NavigationBarItem.TitleDisplayMode? = nil
     var hidesNavigationBar: Bool = false
     var showsNativeNavigationBar: Bool = false
+    /// When `false`, the screen does not wrap content in `ScrollView` — use for fixed dashboards where an inner control (e.g. `PreviewListContainer`) owns vertical scrolling.
+    var usesOuterScroll: Bool = true
     @ViewBuilder let content: () -> Content
 
     init(
@@ -2123,6 +2172,7 @@ struct AppScreen<Content: View>: View {
         navigationBarTitleDisplayMode: NavigationBarItem.TitleDisplayMode? = nil,
         hidesNavigationBar: Bool = false,
         showsNativeNavigationBar: Bool = false,
+        usesOuterScroll: Bool = true,
         @ViewBuilder content: @escaping () -> Content
     ) {
         self.title = title
@@ -2135,6 +2185,7 @@ struct AppScreen<Content: View>: View {
         self.navigationBarTitleDisplayMode = navigationBarTitleDisplayMode
         self.hidesNavigationBar = hidesNavigationBar
         self.showsNativeNavigationBar = showsNativeNavigationBar
+        self.usesOuterScroll = usesOuterScroll
         self.content = content
     }
 
@@ -2145,64 +2196,56 @@ struct AppScreen<Content: View>: View {
     /// Max content width — keeps the mobile layout on iPad / Mac.
     private var maxContentWidth: CGFloat { 430 }
 
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: AppSpacing.md) {
-                content()
-            }
-            .padding(.horizontal, AppSpacing.md)
-            .padding(.top, showsNativeNavigationBar ? AppSpacing.sm : (customHeader == nil ? AppSpacing.md : AppSpacing.sm))
-            .padding(.bottom, primaryButton != nil ? 100 : AppSpacing.md)
-            .frame(maxWidth: maxContentWidth)
-            .frame(maxWidth: .infinity)
+    private var paddedMainContent: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.md) {
+            content()
         }
-        .coordinateSpace(name: appScreenScrollCoordinateSpace)
-        .appScrollEdgeSoftTop(enabled: !hidesNavigationBar || showsNativeNavigationBar)
+        .padding(.horizontal, AppSpacing.md)
+        .padding(.top, showsNativeNavigationBar ? AppSpacing.md : (customHeader == nil ? AppSpacing.md : AppSpacing.sm))
+        .padding(.bottom, primaryButton != nil ? 100 : AppSpacing.md)
+        .frame(maxWidth: maxContentWidth)
+        .frame(maxWidth: .infinity)
+    }
+
+    var body: some View {
+        Group {
+            if usesOuterScroll {
+                ScrollView {
+                    paddedMainContent
+                }
+                .appScrollEdgeSoft(
+                    top: !hidesNavigationBar || showsNativeNavigationBar,
+                    bottom: primaryButton != nil
+                )
+            } else {
+                paddedMainContent
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            }
+        }
         .safeAreaInset(edge: .top, spacing: 0) {
             if !showsNativeNavigationBar {
                 if let customHeader {
-                    VStack(spacing: 0) {
-                        customHeader
-                            .padding(.horizontal, AppSpacing.md)
-                            .padding(.top, AppSpacing.md)
-                            .padding(.bottom, AppSpacing.xs)
-                            .background(AppColor.background)
-
-                        ScrollEdgeFadeView(edge: .bottomOfHeader, surfaceColor: AppColor.background)
-                    }
-                } else if shouldShowNavBar {
-                    VStack(spacing: 0) {
-                        Group {
-                            if let trailingText, trailingAction != nil {
-                                AppNavBarWithTextTrailing(
-                                    title: title,
-                                    leadingAction: leadingAction,
-                                    trailingAction: trailingAction,
-                                    trailingText: trailingText
-                                )
-                            } else {
-                                AppNavBar(
-                                    title: title,
-                                    leadingAction: leadingAction,
-                                    trailingAction: trailingAction,
-                                    trailingText: trailingText
-                                )
-                            }
-                        }
-                        .background(AppColor.barBackground)
-                        .padding(.top, AppSpacing.xs)
+                    customHeader
+                        .padding(.horizontal, AppSpacing.md)
+                        .padding(.top, AppSpacing.md)
                         .padding(.bottom, AppSpacing.xs)
-
-                        ScrollEdgeFadeView(edge: .bottomOfHeader)
-                    }
+                        .background(AppColor.background)
+                } else if shouldShowNavBar {
+                    AppNavBar(
+                        title: title,
+                        leadingAction: leadingAction,
+                        trailingAction: trailingAction,
+                        trailingText: trailingText
+                    )
+                    .background(AppColor.barBackground)
+                    .padding(.top, AppSpacing.xs)
+                    .padding(.bottom, AppSpacing.xs)
                 }
             }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if let primaryButton {
                 VStack(spacing: 0) {
-                    ScrollEdgeFadeView(edge: .topOfFooter)
-
                     AppPrimaryButton(
                         primaryButton.label,
                         isEnabled: primaryButton.isEnabled,
@@ -2221,77 +2264,16 @@ struct AppScreen<Content: View>: View {
     }
 }
 
-// MARK: - Scroll Edge Fade
-
-/// Soft gradient overlay that sits at the edge of a fixed surface (header, tab bar, bottom sheet)
-/// to smooth the transition where scrollable content disappears underneath.
-///
-/// Usage: place as an overlay or adjacent view on the fixed surface side that faces the scroll content.
-///
-///     .overlay(alignment: .bottom) {
-///         ScrollEdgeFade(.bottomOfHeader)
-///     }
-///
-enum ScrollEdgeFade {
-    /// Fade below a fixed top surface (header / nav bar) — transparent at bottom.
-    case bottomOfHeader
-    /// Fade above a fixed bottom surface (tab bar / CTA bar) — transparent at top.
-    case topOfFooter
-
-    /// Default fade height. Tuned to feel subtle, not decorative.
-    static let defaultHeight: CGFloat = AppSpacing.lg          // 24pt
-
-    /// Slightly taller variant for surfaces that sit over busier content.
-    static let extendedHeight: CGFloat = AppSpacing.xl         // 32pt
-}
-
-struct ScrollEdgeFadeView: View {
-    let edge: ScrollEdgeFade
-    var height: CGFloat = ScrollEdgeFade.defaultHeight
-    var surfaceColor: Color = AppColor.barBackground
-
-    var body: some View {
-        LinearGradient(
-            colors: colors,
-            startPoint: startPoint,
-            endPoint: endPoint
-        )
-        .frame(height: height)
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
-    }
-
-    private var colors: [Color] {
-        switch edge {
-        case .bottomOfHeader:
-            return [surfaceColor.opacity(0.98), surfaceColor.opacity(0)]
-        case .topOfFooter:
-            return [surfaceColor.opacity(0), surfaceColor.opacity(0.98)]
-        }
-    }
-
-    private var startPoint: UnitPoint {
-        switch edge {
-        case .bottomOfHeader: return .top
-        case .topOfFooter:    return .top
-        }
-    }
-
-    private var endPoint: UnitPoint {
-        switch edge {
-        case .bottomOfHeader: return .bottom
-        case .topOfFooter:    return .bottom
-        }
-    }
-}
-
 // MARK: - Shared modifiers
 
 extension View {
+    /// `elevated` adds the canonical card shadow so sheet inputs read as lifted controls
+    /// (matches Apple native form sheets). Default stays flat for in-flow row inputs.
     func appInputFieldStyle(
         height: CGFloat = 48,
         horizontalPadding: CGFloat = AppSpacing.md,
-        lineWidth: CGFloat = 0.5
+        lineWidth: CGFloat = 0.5,
+        elevated: Bool = false
     ) -> some View {
         self
             .padding(.horizontal, horizontalPadding)
@@ -2303,6 +2285,29 @@ extension View {
                     .stroke(AppColor.border, lineWidth: lineWidth)
             }
             .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
+            .modifier(AppInputElevation(enabled: elevated))
+    }
+
+    /// Multi-line variant: vertical-axis TextFields expand with content, so the container
+    /// uses `minHeight` + vertical padding instead of a fixed `height`.
+    func appInputFieldStyleMultiline(
+        minHeight: CGFloat,
+        horizontalPadding: CGFloat = AppSpacing.md,
+        verticalPadding: CGFloat = AppSpacing.sm,
+        lineWidth: CGFloat = 0.5,
+        elevated: Bool = false
+    ) -> some View {
+        self
+            .padding(.horizontal, horizontalPadding)
+            .padding(.vertical, verticalPadding)
+            .frame(minHeight: minHeight, alignment: .topLeading)
+            .background(AppColor.cardBackground)
+            .overlay {
+                RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous)
+                    .stroke(AppColor.border, lineWidth: lineWidth)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
+            .modifier(AppInputElevation(enabled: elevated))
     }
 
     func appCardStyle() -> some View {
@@ -2311,6 +2316,18 @@ extension View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(AppColor.cardBackground)
             .clipShape(RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous))
+            .modifier(AppCardElevation())
+    }
+
+    /// Apply the canonical card shadow/stroke to a view that already provides its own
+    /// background and clip shape (e.g. ad-hoc cards that can't use `AppCard` or `appCardStyle`).
+    func appCardElevation() -> some View {
+        modifier(AppCardElevation())
+    }
+
+    /// Card fill + canonical shadows — active workout command/timer panel (no border stroke).
+    func appWorkoutPanelChrome() -> some View {
+        modifier(AppWorkoutPanelChrome())
     }
 
     func appBottomSheetChrome() -> some View {
@@ -2323,16 +2340,32 @@ extension View {
 
     func appNavigationBarChrome() -> some View {
         self
-            .toolbarBackground(.hidden, for: .navigationBar)
+            // Opaque bar surface so the system back button + title stay visible (`.hidden` can suppress them with UIAppearance).
+            .toolbarBackground(AppColor.barBackground, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
     }
 
+    /// Canonical style for text-label toolbar buttons (e.g. "History", "Browse").
+    /// Matches iOS-native bold top-bar actions so every screen reads the same weight.
+    func appToolbarTextStyle() -> some View {
+        self.font(AppFont.body.font.weight(.semibold))
+    }
+
+    /// iOS-native soft gradient fade at the ScrollView edges where fixed bars
+    /// (nav bar, CTA button, tab bar) sit above content. Prevents the sharp-cut
+    /// appearance of scrolled content meeting an opaque bar. Both edges default
+    /// on — opt out per edge only when no bar exists on that side.
+    ///
+    /// This is the single canonical modifier for scroll-edge fade. Never add a
+    /// parallel LinearGradient/mask-based fade; extend this instead.
     @ViewBuilder
-    func appScrollEdgeSoftTop(enabled: Bool) -> some View {
-        if enabled {
-            if #available(iOS 18.0, *) {
-                self.scrollEdgeEffectStyle(.soft, for: .top)
-            } else {
-                self
+    func appScrollEdgeSoft(top: Bool = true, bottom: Bool = true) -> some View {
+        if #available(iOS 18.0, *) {
+            switch (top, bottom) {
+            case (true, true):   self.scrollEdgeEffectStyle(.soft, for: .all)
+            case (true, false):  self.scrollEdgeEffectStyle(.soft, for: .top)
+            case (false, true):  self.scrollEdgeEffectStyle(.soft, for: .bottom)
+            case (false, false): self
             }
         } else {
             self
@@ -2344,6 +2377,129 @@ extension View {
     }
 }
 
+// MARK: - Icon circle (shared styling for chevron buttons + status badges)
+
+/// Canonical 36×36 circular surface for an icon. Used by both interactive
+/// nav chevrons and read-only status badges so the icon weight/size stays
+/// consistent across the product.
+struct AppIconCircle<Icon: View>: View {
+    enum Surface {
+        case control                   // grey neutral
+        case accentSoft                // `AppColor.accentSoft` (adaptive warm neutral / dim white)
+        case background                // `AppColor.background` (on-card badge)
+        case cardBackground            // `AppColor.cardBackground` (on-control-bg badge)
+        case tinted(Color, opacity: Double)
+
+        var backgroundColor: Color {
+            switch self {
+            case .control: return AppColor.controlBackground
+            case .accentSoft: return AppColor.accentSoft
+            case .background: return AppColor.background
+            case .cardBackground: return AppColor.cardBackground
+            case .tinted(let color, let opacity): return color.opacity(opacity)
+            }
+        }
+    }
+
+    var diameter: CGFloat = 36
+    var surface: Surface = .control
+    @ViewBuilder let icon: () -> Icon
+
+    var body: some View {
+        icon()
+            .frame(width: diameter, height: diameter)
+            .background(surface.backgroundColor)
+            .clipShape(Circle())
+    }
+}
+
+/// Standard icon size + weight so all `AppIconCircle` icons match.
+enum AppIconCircleSize {
+    static let icon: CGFloat = 16
+    static let weight: Font.Weight = .semibold
+}
+
+// MARK: - Custom segmented control
+
+/// SwiftUI segmented control with a soft (non-pill) radius, larger label text,
+/// and a **single sliding** shadowed selected pill (spring-animated) on a track
+/// that reads clearly against `AppColor.background`.
+struct AppSegmentedControl<Item: Hashable & Identifiable>: View {
+    @Binding var selection: Item
+    let items: [Item]
+    let title: (Item) -> String
+
+    private let height: CGFloat = 40
+    private let trackRadius: CGFloat = 14
+    private let pillRadius: CGFloat = 11
+    /// Uniform inset between the track edge and the pill (applied on all four sides).
+    /// Using a single value keeps the pill visually centered inside the track.
+    private let trackPadding: CGFloat = 4
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var pillFill: Color {
+        colorScheme == .dark ? AppColor.cardBackground : Color.white
+    }
+
+    /// Track fill — `mutedFill` is a step darker than `AppColor.background`
+    /// so the track reads as a separated surface without needing a drop shadow.
+    private var trackFill: Color { AppColor.mutedFill }
+
+    var body: some View {
+        // Track shape — shared between the background fill and the pill clip so
+        // the pill's shadow is trimmed to the exact inner curve of the track.
+        let trackShape = RoundedRectangle(cornerRadius: trackRadius, style: .continuous)
+
+        ZStack(alignment: .leading) {
+            // 1. Track background.
+            trackShape.fill(trackFill)
+
+            // 2. Pill (with shadow), clipped to the track shape so the shadow
+            //    cannot bleed past any edge — even in a separate render pass.
+            GeometryReader { geo in
+                let count = max(items.count, 1)
+                let segmentWidth = geo.size.width / CGFloat(count)
+                let pillHeight = geo.size.height
+                let index = items.firstIndex(where: { $0.id == selection.id }) ?? 0
+                let pillX = CGFloat(index) * segmentWidth
+
+                RoundedRectangle(cornerRadius: pillRadius, style: .continuous)
+                    .fill(pillFill)
+                    .frame(width: segmentWidth, height: pillHeight)
+                    .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.35 : 0.12), radius: 4, x: 0, y: 2)
+                    .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.2 : 0.06), radius: 1, x: 0, y: 1)
+                    .offset(x: pillX)
+                    .animation(.spring(response: 0.34, dampingFraction: 0.84), value: selection.id)
+            }
+            .padding(trackPadding)
+            .compositingGroup()
+            .clipShape(trackShape)
+
+            // 3. Labels — drawn above the pill, never clipped so text stays crisp.
+            HStack(spacing: 0) {
+                ForEach(items) { item in
+                    let isSelected = item == selection
+                    Button {
+                        if !isSelected {
+                            selection = item
+                        }
+                    } label: {
+                        Text(title(item))
+                            .font(.system(size: 16, weight: .semibold, design: .rounded))
+                            .foregroundStyle(isSelected ? AppColor.textPrimary : AppColor.textSecondary)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: height - trackPadding * 2)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(trackPadding)
+        }
+        .frame(height: height)
+    }
+}
+
 private struct AppBottomSheetChromeModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
@@ -2351,15 +2507,23 @@ private struct AppBottomSheetChromeModifier: ViewModifier {
                 Color.clear.frame(height: AppSpacing.md)
             }
             .presentationDragIndicator(.visible)
-            .presentationCornerRadius(AppRadius.sheet)
+            // Passing `nil` lets iOS use the system sheet corner radius, which matches
+            // the device's display corner radius on modern iPhones. A custom value would
+            // leave the bottom corners mis-aligned with the screen on iPhone 17.
+            .presentationCornerRadius(nil)
             .presentationBackground(AppColor.background)
+            .presentationContentInteraction(.scrolls)
+            // Soft iOS-native gradient fade at both edges — consistent with full-screen pages.
+            .appScrollEdgeSoft()
     }
 }
 
+/// Canonical press-feedback button style — 0.96x scale + 150ms easing.
+/// Apply to every tappable card or row so "press" reads consistently.
 struct ScaleButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .scaleEffect(configuration.isPressed ? 0.96 : 1)
             .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
     }
 }

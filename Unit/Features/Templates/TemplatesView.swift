@@ -9,11 +9,13 @@ import SwiftUI
 import SwiftData
 
 struct TemplatesView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.appTabSelection) private var appTabSelection
+
     @Query(sort: \Split.name) private var splits: [Split]
     @Query(sort: \DayTemplate.name) private var templates: [DayTemplate]
     @Query(sort: \Exercise.displayName) private var exercises: [Exercise]
     @Query(sort: \WorkoutSession.date, order: .reverse) private var sessions: [WorkoutSession]
-    // Cycle query removed — cycles are deferred to post-v1 (compass 2026-03-26).
 
     @State private var showingOnboarding = false
     @State private var showingSettings = false
@@ -29,7 +31,8 @@ struct TemplatesView: View {
     var body: some View {
         NavigationStack {
             AppScreen(
-                showsNativeNavigationBar: true
+                showsNativeNavigationBar: true,
+                usesOuterScroll: false
             ) {
                 VStack(alignment: .leading, spacing: AppSpacing.lg) {
                     if let split = activeSplit {
@@ -42,11 +45,19 @@ struct TemplatesView: View {
             .navigationTitle("Programs")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    NavigationLink(value: ProgramLibraryDestination()) {
+                        Text("Browse")
+                            .appToolbarTextStyle()
+                    }
+                    .accessibilityLabel("Browse Program Library")
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         showingSettings = true
                     } label: {
-                        Image(systemName: AppIcon.settingsOutline.systemName)
+                        Label("Settings", systemImage: AppIcon.settingsOutline.systemName)
+                            .labelStyle(.iconOnly)
                     }
                     .accessibilityLabel("Settings")
                 }
@@ -58,6 +69,9 @@ struct TemplatesView: View {
             .navigationDestination(for: DayTemplate.self) { template in
                 TemplateDetailView(template: template)
             }
+            .navigationDestination(for: ProgramLibraryDestination.self) { _ in
+                ProgramLibraryView()
+            }
             .navigationDestination(isPresented: $showingOnboarding) {
                 OnboardingView()
             }
@@ -67,7 +81,14 @@ struct TemplatesView: View {
                 }
                 .appBottomSheetChrome()
             }
-            .tint(AppColor.accent)
+            .tint(AppColor.systemTint)
+            .onAppear {
+                QuickStartSupport.cleanupOrphanedTemplates(
+                    modelContext: modelContext,
+                    templates: templates,
+                    sessions: sessions
+                )
+            }
         }
     }
 
@@ -78,13 +99,15 @@ struct TemplatesView: View {
         VStack(alignment: .leading, spacing: AppSpacing.md) {
             activeProgramCard(split: split, days: days)
 
-            // MARK: Recent Sessions
-            NavigationLink {
-                RecentSessionsView(showsCloseButton: false)
+            Button {
+                QuickStartSupport.startEmptyWorkout(modelContext: modelContext, activeSplit: split)
+                appTabSelection(.today)
             } label: {
-                AppGhostButtonLabel(title: "Recent Sessions")
+                AppGhostButtonLabel(title: AppCopy.Workout.freestyleSession)
             }
             .buttonStyle(ScaleButtonStyle())
+            .padding(.top, AppSpacing.xxs)
+            .accessibilityLabel("Freestyle session, log without a program day")
 
             // MARK: All Programs (inactive splits)
             if !inactiveSplits.isEmpty {
@@ -94,16 +117,14 @@ struct TemplatesView: View {
                     .padding(.top, AppSpacing.md)
                     .padding(.leading, AppSpacing.md)
 
-                AppCard {
-                    AppDividedList(inactiveSplits) { split in
-                        let splitDays = orderedTemplates(for: split)
-                        let dayCount = splitDays.count
-                        let exerciseCount = splitDays.reduce(0) { $0 + $1.orderedExerciseIds.count }
-                        PreviewListRow(
-                            title: split.name.isEmpty ? "Untitled Program" : split.name,
-                            subtitle: "\(dayCount) day\(dayCount == 1 ? "" : "s") · \(exerciseCount) exercise\(exerciseCount == 1 ? "" : "s")"
-                        )
-                    }
+                AppStackedCardList(inactiveSplits) { split in
+                    let splitDays = orderedTemplates(for: split)
+                    let dayCount = splitDays.count
+                    let exerciseCount = splitDays.reduce(0) { $0 + $1.orderedExerciseIds.count }
+                    PreviewListRow(
+                        title: split.name.isEmpty ? "Untitled Program" : split.name,
+                        subtitle: "\(dayCount) day\(dayCount == 1 ? "" : "s") · \(exerciseCount) exercise\(exerciseCount == 1 ? "" : "s")"
+                    )
                 }
             }
         }
@@ -123,6 +144,11 @@ struct TemplatesView: View {
             AppPrimaryButton("Create Program") {
                 showingOnboarding = true
             }
+
+            NavigationLink(value: ProgramLibraryDestination()) {
+                AppGhostButtonLabel(title: "Pick a starter program")
+            }
+            .buttonStyle(ScaleButtonStyle())
         }
         .appCardStyle()
     }
@@ -133,37 +159,35 @@ struct TemplatesView: View {
             : split.name
 
         return AppCard {
-            VStack(alignment: .center, spacing: AppSpacing.lg) {
-                HStack(alignment: .center, spacing: AppSpacing.sm) {
-                    Text(displayName)
-                        .font(AppFont.largeTitle.font)
-                        .tracking(AppFont.largeTitle.tracking)
-                        .foregroundStyle(AppColor.textPrimary)
-                        .multilineTextAlignment(.leading)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+            VStack(alignment: .center, spacing: AppSpacing.md) {
+                HStack {
+                    Spacer(minLength: 0)
+                    HStack(alignment: .center, spacing: AppSpacing.sm) {
+                        Text(displayName)
+                            .font(AppFont.largeTitle.font)
+                            .tracking(AppFont.largeTitle.tracking)
+                            .foregroundStyle(AppColor.textPrimary)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
 
-                    Text("Active")
-                        .font(AppFont.caption.font)
-                        .foregroundStyle(AppColor.textSecondary)
-                        .padding(.horizontal, AppSpacing.sm)
-                        .frame(height: 20)
-                        .background(AppColor.controlBackground)
-                        .clipShape(Capsule())
+                        AppTag(text: "Active", style: .muted, layout: .compactCapsule)
+                    }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("\(displayName), active program")
+                    Spacer(minLength: 0)
                 }
                 .frame(maxWidth: .infinity)
 
                 if !days.isEmpty {
-                    PreviewListContainer(rowSpacing: AppSpacing.lg) {
+                    PreviewListContainer {
                         ForEach(Array(days.enumerated()), id: \.element.id) { index, template in
                             NavigationLink(value: template) {
                                 PreviewListRow(
                                     title: template.displayName,
-                                    subtitle: programRoutineSubtitle(dayIndex: index, template: template),
-                                    style: .programRoutine
+                                    subtitle: programRoutineSubtitle(dayIndex: index, template: template)
                                 )
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(ScaleButtonStyle())
                         }
                     }
                 }
@@ -177,7 +201,7 @@ struct TemplatesView: View {
                         .background(AppColor.controlBackground)
                         .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(ScaleButtonStyle())
             }
         }
     }
@@ -214,6 +238,7 @@ struct EditProgramView: View {
 
     @State private var showDeleteConfirmation = false
     @State private var showAddDay = false
+    @State private var isReordering = false
 
     private var orderedTemplates: [DayTemplate] {
         let byID = Dictionary(uniqueKeysWithValues: templates.map { ($0.id, $0) })
@@ -227,77 +252,10 @@ struct EditProgramView: View {
     var body: some View {
         AppScreen(showsNativeNavigationBar: true) {
             VStack(alignment: .leading, spacing: AppSpacing.lg) {
-                // MARK: Program Name
-                VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                    Text("Program Name")
-                        .font(AppFont.caption.font)
-                        .foregroundStyle(AppColor.textSecondary)
-                        .padding(.leading, AppSpacing.xs)
-
-                    TextField("Program name", text: $split.name)
-                        .font(AppFont.body.font)
-                        .foregroundStyle(AppColor.textPrimary)
-                        .textInputAutocapitalization(.words)
-                        .appInputFieldStyle()
-                }
-
-                // MARK: Routines
-                VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                    Text("Routines")
-                        .font(AppFont.caption.font)
-                        .foregroundStyle(AppColor.textSecondary)
-                        .padding(.leading, AppSpacing.xs)
-
-                    if orderedTemplates.isEmpty {
-                        Text("No routines in this program yet.")
-                            .font(AppFont.body.font)
-                            .foregroundStyle(AppColor.textSecondary)
-                            .padding(AppSpacing.md)
-                    } else {
-                        VStack(spacing: 0) {
-                            ForEach(Array(orderedTemplates.enumerated()), id: \.element.id) { index, template in
-                                if index > 0 {
-                                    AppDivider()
-                                        .padding(.horizontal, AppSpacing.md)
-                                }
-
-                                editableRoutineRow(template, index: index)
-                            }
-                        }
-                        .background(AppColor.cardBackground)
-                        .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
-                    }
-
-                    Button {
-                        showAddDay = true
-                    } label: {
-                        HStack(spacing: AppSpacing.sm) {
-                            AppIcon.addCircle.image()
-                            Text("Add Day")
-                                .font(AppFont.body.font)
-                        }
-                        .foregroundStyle(AppColor.accent)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 48)
-                        .background(AppColor.controlBackground)
-                        .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
-                    }
-                    .buttonStyle(.plain)
-                }
-
-                // MARK: Delete
-                Button {
-                    showDeleteConfirmation = true
-                } label: {
-                    Text("Delete Program")
-                        .font(AppFont.body.font)
-                        .foregroundStyle(AppColor.error)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 48)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .padding(.top, AppSpacing.md)
+                programNameSection
+                routinesSection
+                addDayButton
+                deleteFooter
             }
         }
         .onChange(of: split.name) { _, _ in
@@ -309,8 +267,14 @@ struct EditProgramView: View {
         .navigationTitle("Edit Program")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Done") { dismiss() }
+            ToolbarItem(placement: .confirmationAction) {
+                if isReordering {
+                    Button("Done") { isReordering = false }
+                        .appToolbarTextStyle()
+                } else {
+                    Button("Done") { dismiss() }
+                        .appToolbarTextStyle()
+                }
             }
         }
         .appNavigationBarChrome()
@@ -335,23 +299,113 @@ struct EditProgramView: View {
         }
     }
 
-    @ViewBuilder
-    private func editableRoutineRow(_ template: DayTemplate, index: Int) -> some View {
-        HStack(spacing: AppSpacing.sm) {
-            VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                TextField("Routine name", text: binding(for: template))
-                    .font(AppFont.body.font)
-                    .foregroundStyle(AppColor.textPrimary)
-                    .textInputAutocapitalization(.words)
+    // MARK: - Sections
 
-                Text("\(template.orderedExerciseIds.count) exercise\(template.orderedExerciseIds.count == 1 ? "" : "s")")
+    private var programNameSection: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.sm) {
+            Text("Program Name")
+                .font(AppFont.caption.font)
+                .foregroundStyle(AppColor.textSecondary)
+                .padding(.leading, AppSpacing.xs)
+
+            TextField("Program name", text: $split.name)
+                .font(AppFont.body.font)
+                .foregroundStyle(AppColor.textPrimary)
+                .textInputAutocapitalization(.words)
+                .appInputFieldStyle()
+        }
+    }
+
+    private var routinesSection: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.sm) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Routines")
                     .font(AppFont.caption.font)
                     .foregroundStyle(AppColor.textSecondary)
+                    .padding(.leading, AppSpacing.xs)
+
+                Spacer()
+
+                if orderedTemplates.count > 1 {
+                    Button(isReordering ? "Done" : "Reorder") {
+                        isReordering.toggle()
+                    }
+                    .font(AppFont.caption.font)
+                    .foregroundStyle(AppColor.systemTint)
+                    .padding(.trailing, AppSpacing.xs)
+                    .accessibilityLabel(isReordering ? "Finish reordering" : "Reorder routines")
+                }
             }
 
-            Spacer(minLength: 0)
+            if orderedTemplates.isEmpty {
+                AppCard {
+                    Text("No routines in this program yet.")
+                        .font(AppFont.body.font)
+                        .foregroundStyle(AppColor.textSecondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            } else {
+                AppStackedCardList(orderedTemplates) { template in
+                    let index = orderedTemplates.firstIndex(where: { $0.id == template.id }) ?? 0
+                    routineRow(template, index: index)
+                }
+            }
+        }
+    }
 
-            // Reorder buttons
+    private var addDayButton: some View {
+        AppSecondaryButton("Add Day", tone: .accentSoft) {
+            showAddDay = true
+        }
+    }
+
+    private var deleteFooter: some View {
+        Button {
+            showDeleteConfirmation = true
+        } label: {
+            Text("Delete Program")
+                .font(AppFont.label.font)
+                .foregroundStyle(AppColor.textSecondary)
+                .frame(maxWidth: .infinity)
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(ScaleButtonStyle())
+        .padding(.top, AppSpacing.xxl)
+    }
+
+    // MARK: - Rows
+
+    @ViewBuilder
+    private func routineRow(_ template: DayTemplate, index: Int) -> some View {
+        if isReordering {
+            reorderRow(template, index: index)
+        } else {
+            NavigationLink(value: template) {
+                rowContent(template)
+            }
+            .buttonStyle(ScaleButtonStyle())
+        }
+    }
+
+    private func rowContent(_ template: DayTemplate) -> some View {
+        VStack(alignment: .leading, spacing: AppSpacing.xs) {
+            Text(template.displayName)
+                .font(AppFont.sectionHeader.font)
+                .foregroundStyle(AppColor.textPrimary)
+
+            Text(subtitle(for: template))
+                .font(AppFont.listSecondary.font)
+                .foregroundStyle(AppColor.textSecondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+    }
+
+    private func reorderRow(_ template: DayTemplate, index: Int) -> some View {
+        HStack(spacing: AppSpacing.sm) {
+            rowContent(template)
+
             VStack(spacing: 0) {
                 Button {
                     moveTemplate(at: index, direction: .up)
@@ -362,6 +416,7 @@ struct EditProgramView: View {
                         .contentShape(Rectangle())
                 }
                 .disabled(index == 0)
+                .accessibilityLabel("Move up")
 
                 Button {
                     moveTemplate(at: index, direction: .down)
@@ -372,21 +427,18 @@ struct EditProgramView: View {
                         .contentShape(Rectangle())
                 }
                 .disabled(index >= orderedTemplates.count - 1)
+                .accessibilityLabel("Move down")
             }
-            .buttonStyle(.plain)
-
-            // Navigate to day exercises
-            NavigationLink(value: template) {
-                AppIcon.forward.image(size: 14, weight: .semibold)
-                    .foregroundStyle(AppColor.textSecondary)
-                    .frame(width: 44, height: 44)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
+            .buttonStyle(ScaleButtonStyle())
         }
-        .padding(.horizontal, AppSpacing.md)
-        .padding(.vertical, AppSpacing.smd)
-        .frame(minHeight: 44)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    // MARK: - Helpers
+
+    private func subtitle(for template: DayTemplate) -> String {
+        let count = template.orderedExerciseIds.count
+        return count == 0 ? "Add exercises" : "\(count) exercise\(count == 1 ? "" : "s")"
     }
 
     private enum MoveDirection { case up, down }
@@ -398,16 +450,6 @@ struct EditProgramView: View {
         ids.swapAt(index, targetIndex)
         split.orderedTemplateIds = ids
         try? modelContext.save()
-    }
-
-    private func binding(for template: DayTemplate) -> Binding<String> {
-        Binding(
-            get: { template.name },
-            set: { newValue in
-                template.name = newValue
-                try? modelContext.save()
-            }
-        )
     }
 
     private func syncTemplateOrderIfNeeded() {
