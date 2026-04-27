@@ -18,6 +18,7 @@ struct OnboardingShell<Content: View>: View {
     var progressStep: Int? = nil
     var progressTotal: Int? = nil
     var onContinue: (() -> Void)? = nil
+    var onBack: (() -> Void)? = nil
     @ViewBuilder var content: () -> Content
 
     var body: some View {
@@ -29,15 +30,21 @@ struct OnboardingShell<Content: View>: View {
                     action: action
                 )
             },
+            secondaryButton: SecondaryButtonConfig(
+                label: "Back",
+                action: { (onBack ?? { dismiss() })() }
+            ),
+            customHeader: (progressStep != nil && progressTotal != nil)
+                ? AnyView(
+                    OnboardingProgressBar(
+                        step: progressStep ?? 0,
+                        total: progressTotal ?? 0
+                    )
+                )
+                : nil,
             hidesNavigationBar: true
         ) {
             VStack(alignment: .leading, spacing: AppSpacing.lg) {
-                OnboardingHeader(
-                    progressStep: progressStep,
-                    progressTotal: progressTotal,
-                    onBack: { dismiss() }
-                )
-
                 Text(title)
                     .appFont(.largeTitle)
                     .foregroundStyle(AppColor.textPrimary)
@@ -45,60 +52,33 @@ struct OnboardingShell<Content: View>: View {
                 content()
             }
         }
-        .navigationBarBackButtonHidden(true)
     }
 }
 
-private struct OnboardingHeader: View {
-    let progressStep: Int?
-    let progressTotal: Int?
-    let onBack: () -> Void
-
-    var body: some View {
-        HStack(alignment: .top, spacing: AppSpacing.sm) {
-            Button(action: onBack) {
-                AppIcon.back.image(size: 18, weight: .semibold)
-                    .foregroundStyle(AppColor.textPrimary)
-                    .frame(width: 44, height: 44)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-
-            if let progressStep, let progressTotal {
-                OnboardingProgress(step: progressStep, total: progressTotal)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.top, AppSpacing.xs)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-}
-
-struct OnboardingProgress: View {
+/// Segmented progress indicator — one capsule per step, filled up to `step`.
+/// Centered at the top of the screen. Inactive segments use border color,
+/// active segments use primary text color.
+struct OnboardingProgressBar: View {
     let step: Int
     let total: Int
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.sm) {
-            Text("\(step) of \(total)")
-                .font(AppFont.caption.font)
-                .foregroundStyle(AppColor.textSecondary)
-
-            HStack(spacing: AppSpacing.xs) {
-                ForEach(0..<total, id: \.self) { index in
-                    Capsule()
-                        .fill(index < step ? AppColor.accent : AppColor.border)
-                        .frame(width: index == step - 1 ? 20 : 10, height: 6)
-                }
+        HStack(spacing: AppSpacing.sm) {
+            ForEach(0..<max(total, 1), id: \.self) { index in
+                Capsule()
+                    .fill(index < step ? AppColor.textPrimary : AppColor.border)
+                    .frame(width: 40, height: 6)
+                    .animation(.easeInOut(duration: 0.25), value: step)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .center)
+        .padding(.top, AppSpacing.md)
     }
 }
 
 struct OnboardingOptionCard: View {
     let icon: AppIcon
     let title: String
-    let subtitle: String
     let action: () -> Void
 
     var body: some View {
@@ -110,30 +90,15 @@ struct OnboardingOptionCard: View {
                     .background(AppColor.accentSoft)
                     .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
 
-                VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                    Text(title)
-                        .font(AppFont.sectionHeader.font)
-                        .foregroundStyle(AppColor.textPrimary)
-
-                    Text(subtitle)
-                        .font(AppFont.body.font)
-                        .foregroundStyle(AppColor.textSecondary)
-                        .lineLimit(1)
-                }
+                Text(title)
+                    .font(AppFont.sectionHeader.font)
+                    .foregroundStyle(AppColor.textPrimary)
 
                 Spacer(minLength: 0)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .frame(minHeight: 92, alignment: .leading)
-            .padding(AppSpacing.md)
-            .background(AppColor.cardBackground)
-            .overlay {
-                RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                    .stroke(AppColor.border.opacity(0.8), lineWidth: 1)
-            }
-            .clipShape(RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous))
+            .appCardStyle()
         }
-        .buttonStyle(.plain)
+        .buttonStyle(ScaleButtonStyle())
     }
 }
 
@@ -159,13 +124,13 @@ struct OnboardingDayChip: View {
             }
             .padding(.horizontal, AppSpacing.md)
             .frame(minHeight: 40)
-            .background(isSelected ? AppColor.cardBackground : AppColor.cardBackground)
+            .background(AppColor.cardBackground)
             .overlay {
                 Capsule()
                     .stroke(isSelected ? AppColor.border.opacity(0.6) : Color.clear, lineWidth: 1)
             }
             .clipShape(Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(ScaleButtonStyle())
     }
 }

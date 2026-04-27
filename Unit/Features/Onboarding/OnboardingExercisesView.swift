@@ -45,7 +45,7 @@ struct OnboardingExercisesView: View {
 
         OnboardingShell(
             title: "Add exercises",
-            ctaLabel: "Continue",
+            ctaLabel: "Create My Program",
             ctaEnabled: vm.exercisesAreValid,
             progressStep: progressStep,
             progressTotal: progressTotal,
@@ -145,7 +145,7 @@ struct OnboardingExercisesView: View {
                     .background(AppColor.accentSoft)
                     .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(ScaleButtonStyle())
             }
         }
         .sheet(isPresented: $showingAddSheet, onDismiss: {
@@ -276,7 +276,7 @@ struct ExerciseSearchSheet: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .contentShape(Rectangle())
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(ScaleButtonStyle())
 
                             AppDivider()
                                 .padding(.horizontal, AppSpacing.md)
@@ -295,7 +295,7 @@ struct ExerciseSearchSheet: View {
                                     .frame(height: 48)
                                     .contentShape(Rectangle())
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(ScaleButtonStyle())
 
                             AppDivider()
                                 .padding(.horizontal, AppSpacing.md)
@@ -324,5 +324,5 @@ struct ExerciseSearchSheet: View {
                 return vm
             }())
     }
-    .tint(AppColor.accent)
+    .tint(AppColor.systemTint)
 }

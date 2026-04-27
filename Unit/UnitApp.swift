@@ -2,7 +2,7 @@
 //  UnitApp.swift
 //  Unit
 //
-//  Adaptive Periodization Engine — iOS 18+, Swift 6, SwiftUI, SwiftData.
+//  Logging-first SwiftData app — iOS 18+, Swift 6, SwiftUI, SwiftData.
 //
 
 import SwiftUI
@@ -21,9 +21,7 @@ struct UnitApp: App {
             Exercise.self,
             DayTemplate.self,
             WorkoutSession.self,
-            SetEntry.self,
-            Cycle.self,
-            ProgressionRule.self
+            SetEntry.self
         ])
     var sharedModelContainer: ModelContainer
 
@@ -102,6 +100,7 @@ struct UnitApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .fontDesign(.rounded)
                 .preferredColorScheme(.light)
         }
         .modelContainer(sharedModelContainer)
@@ -109,8 +108,7 @@ struct UnitApp: App {
 }
 
 enum PreviewSampleData {
-    private static let fightCampSplitName = "Fight Camp Performance"
-    private static let fightCampCycleName = "Fight Camp Performance — Demo"
+    private static let splitName = "4-Day Strength"
 
     private struct ExerciseSeed {
         let name: String
@@ -118,100 +116,72 @@ enum PreviewSampleData {
         let isBodyweight: Bool
         let baseWeightKg: Double
         let reps: Int
-        let incrementKg: Double
-    }
-
-    private struct SeededSessionExercise {
-        let name: String
-        let weightKg: Double
-        let reps: Int
-        let sets: Int
     }
 
     private static let exerciseSeeds: [ExerciseSeed] = [
-        .init(name: "Trap Bar Deadlift", aliases: ["Trap Bar"], isBodyweight: false, baseWeightKg: 140, reps: 4, incrementKg: 5),
-        .init(name: "Weighted Pull-Up", aliases: ["Pull-Up"], isBodyweight: false, baseWeightKg: 15, reps: 5, incrementKg: 2.5),
-        .init(name: "Landmine Punch Press", aliases: ["Landmine Punch"], isBodyweight: false, baseWeightKg: 30, reps: 5, incrementKg: 2.5),
-        .init(name: "Face Pull", aliases: [], isBodyweight: false, baseWeightKg: 27.5, reps: 15, incrementKg: 2.5),
-        .init(name: "Hamstring Curl", aliases: [], isBodyweight: false, baseWeightKg: 40, reps: 12, incrementKg: 2.5),
-        .init(name: "Push-Up Plus", aliases: [], isBodyweight: true, baseWeightKg: 0, reps: 15, incrementKg: 0),
-        .init(name: "Pallof Press", aliases: [], isBodyweight: false, baseWeightKg: 20, reps: 10, incrementKg: 1.25),
-        .init(name: "Copenhagen Plank", aliases: [], isBodyweight: true, baseWeightKg: 0, reps: 20, incrementKg: 0),
-        .init(name: "Broad Jump", aliases: [], isBodyweight: true, baseWeightKg: 0, reps: 3, incrementKg: 0),
-        .init(name: "Med Ball Overhead Slam", aliases: [], isBodyweight: false, baseWeightKg: 10, reps: 5, incrementKg: 1.25),
-        .init(name: "Agility Ladder", aliases: ["Quick Footwork"], isBodyweight: true, baseWeightKg: 0, reps: 5, incrementKg: 0),
-        .init(name: "Ab Wheel", aliases: ["AB Roller"], isBodyweight: true, baseWeightKg: 0, reps: 10, incrementKg: 0),
-        .init(name: "Neck Work", aliases: ["Neck"], isBodyweight: true, baseWeightKg: 0, reps: 10, incrementKg: 0),
-        .init(name: "Hang Power Clean", aliases: [], isBodyweight: false, baseWeightKg: 60, reps: 3, incrementKg: 2.5),
-        .init(name: "Bench Press", aliases: [], isBodyweight: false, baseWeightKg: 80, reps: 6, incrementKg: 2.5),
-        .init(name: "Pendlay Row", aliases: [], isBodyweight: false, baseWeightKg: 70, reps: 6, incrementKg: 2.5),
-        .init(name: "Suitcase Carry", aliases: [], isBodyweight: false, baseWeightKg: 30, reps: 20, incrementKg: 2.5),
-        .init(name: "Skater Bounds", aliases: [], isBodyweight: true, baseWeightKg: 0, reps: 4, incrementKg: 0),
-        .init(name: "Back Extension", aliases: [], isBodyweight: true, baseWeightKg: 0, reps: 12, incrementKg: 0),
-        .init(name: "Neck Flexion", aliases: [], isBodyweight: true, baseWeightKg: 0, reps: 15, incrementKg: 0),
-        .init(name: "Biceps Curl", aliases: ["Biceps"], isBodyweight: false, baseWeightKg: 16, reps: 12, incrementKg: 1.25),
-        .init(name: "Triceps Extension", aliases: ["Triceps"], isBodyweight: false, baseWeightKg: 15, reps: 12, incrementKg: 1.25),
-        .init(name: "Zone 2 Cardio", aliases: ["Zone 2"], isBodyweight: true, baseWeightKg: 0, reps: 45, incrementKg: 0),
-        .init(name: "Footwork Drill", aliases: ["Advance-Retreat"], isBodyweight: true, baseWeightKg: 0, reps: 15, incrementKg: 0),
-        .init(name: "Zercher Deadlift", aliases: [], isBodyweight: false, baseWeightKg: 90, reps: 3, incrementKg: 5),
-        .init(name: "Overhead Press", aliases: ["OHP"], isBodyweight: false, baseWeightKg: 50, reps: 4, incrementKg: 2.5),
-        .init(name: "Hamstring / Calf Iso", aliases: [], isBodyweight: true, baseWeightKg: 0, reps: 60, incrementKg: 0),
-        .init(name: "Bulgarian Split Squat", aliases: [], isBodyweight: false, baseWeightKg: 30, reps: 8, incrementKg: 2.5),
-        .init(name: "Single-Arm DB Row", aliases: [], isBodyweight: false, baseWeightKg: 40, reps: 10, incrementKg: 2.5),
-        .init(name: "Single-Arm Cable Press", aliases: [], isBodyweight: false, baseWeightKg: 25, reps: 8, incrementKg: 2.5),
-        .init(name: "Heavy Curl", aliases: [], isBodyweight: false, baseWeightKg: 20, reps: 10, incrementKg: 2.5),
-        .init(name: "Heavy DB Shrug", aliases: [], isBodyweight: false, baseWeightKg: 42.5, reps: 12, incrementKg: 2.5),
-        .init(name: "KB Combination", aliases: [], isBodyweight: false, baseWeightKg: 24, reps: 4, incrementKg: 2.5),
-        .init(name: "Rotational Med Ball Throw", aliases: [], isBodyweight: false, baseWeightKg: 10, reps: 5, incrementKg: 2.5),
-        .init(name: "Plyo Push-Up", aliases: [], isBodyweight: true, baseWeightKg: 0, reps: 5, incrementKg: 0),
-        .init(name: "Bird Dog", aliases: [], isBodyweight: true, baseWeightKg: 0, reps: 10, incrementKg: 0),
-        .init(name: "Dynamic Hugs", aliases: [], isBodyweight: false, baseWeightKg: 17.5, reps: 15, incrementKg: 2.5),
-        .init(name: "4-Way Neck Isometric", aliases: [], isBodyweight: true, baseWeightKg: 0, reps: 10, incrementKg: 0),
-        .init(name: "HIIT Intervals", aliases: [], isBodyweight: true, baseWeightKg: 0, reps: 4, incrementKg: 0),
-        .init(name: "Easy Warm-Up + Drills", aliases: [], isBodyweight: true, baseWeightKg: 0, reps: 10, incrementKg: 0)
+        // Day 1 — OHP + Upper
+        .init(name: "Copenhagen Plank", aliases: [], isBodyweight: true, baseWeightKg: 0, reps: 20),
+        .init(name: "Pallof Press", aliases: [], isBodyweight: false, baseWeightKg: 20, reps: 10),
+        .init(name: "Broad Jump", aliases: [], isBodyweight: true, baseWeightKg: 0, reps: 3),
+        .init(name: "Med Ball Overhead Slam", aliases: ["Med Ball Slam"], isBodyweight: false, baseWeightKg: 10, reps: 5),
+        .init(name: "OHP (BB)", aliases: ["Overhead Press", "OHP"], isBodyweight: false, baseWeightKg: 50, reps: 4),
+        .init(name: "Weighted Pull-Up", aliases: ["Pull-Up"], isBodyweight: false, baseWeightKg: 15, reps: 5),
+        .init(name: "Incline DB Press", aliases: [], isBodyweight: false, baseWeightKg: 30, reps: 8),
+        .init(name: "Pendlay Row", aliases: [], isBodyweight: false, baseWeightKg: 70, reps: 6),
+        .init(name: "Lateral Raise (DB)", aliases: ["Lateral Raise"], isBodyweight: false, baseWeightKg: 10, reps: 12),
+        .init(name: "Shrug (DB)", aliases: ["DB Shrug"], isBodyweight: false, baseWeightKg: 35, reps: 15),
+        .init(name: "Ball Plank", aliases: [], isBodyweight: true, baseWeightKg: 0, reps: 1),
+        .init(name: "Neck", aliases: ["Neck Work"], isBodyweight: true, baseWeightKg: 0, reps: 10),
+        // Day 2 — Full Body Power
+        .init(name: "DB Side to Side", aliases: [], isBodyweight: false, baseWeightKg: 16, reps: 10),
+        .init(name: "Suitcase Hold", aliases: [], isBodyweight: false, baseWeightKg: 30, reps: 20),
+        .init(name: "DB Snatch", aliases: [], isBodyweight: false, baseWeightKg: 20, reps: 8),
+        .init(name: "BB Side to Side", aliases: [], isBodyweight: false, baseWeightKg: 20, reps: 4),
+        .init(name: "Deadlift (Conv)", aliases: ["Conventional Deadlift", "Deadlift"], isBodyweight: false, baseWeightKg: 120, reps: 4),
+        .init(name: "Bench Press", aliases: ["Bench Press (BB)"], isBodyweight: false, baseWeightKg: 80, reps: 8),
+        .init(name: "Front Squat", aliases: [], isBodyweight: false, baseWeightKg: 60, reps: 6),
+        .init(name: "Bent Over Row (BB)", aliases: ["Barbell Row"], isBodyweight: false, baseWeightKg: 60, reps: 8),
+        .init(name: "Weighted Dips", aliases: ["Dips"], isBodyweight: false, baseWeightKg: 10, reps: 6),
+        .init(name: "Hamstring", aliases: [], isBodyweight: true, baseWeightKg: 0, reps: 12),
+        .init(name: "Core", aliases: [], isBodyweight: true, baseWeightKg: 0, reps: 15),
+        .init(name: "Curl", aliases: ["Biceps Curl"], isBodyweight: false, baseWeightKg: 16, reps: 8),
+        // Day 4 — Bench + Upper (new exercises only)
+        .init(name: "Suitcase Carry", aliases: [], isBodyweight: false, baseWeightKg: 30, reps: 10),
+        .init(name: "Hamstring/Calf Iso", aliases: ["Hamstring / Calf Iso"], isBodyweight: true, baseWeightKg: 0, reps: 45),
+        .init(name: "Close-Grip Bench", aliases: ["Close Grip Bench Press"], isBodyweight: false, baseWeightKg: 60, reps: 8),
+        .init(name: "Single-Arm DB Row", aliases: ["One-Arm DB Row"], isBodyweight: false, baseWeightKg: 40, reps: 10),
+        .init(name: "Pec Dec", aliases: ["Pectec", "Pec Deck"], isBodyweight: false, baseWeightKg: 40, reps: 12),
+        .init(name: "Triceps Extension", aliases: ["Triceps"], isBodyweight: false, baseWeightKg: 15, reps: 8),
+        // Day 5 — Lower + Unilateral (new exercises only)
+        .init(name: "Rotational Med Ball Throw", aliases: [], isBodyweight: false, baseWeightKg: 10, reps: 5),
+        .init(name: "Bird Dog", aliases: [], isBodyweight: true, baseWeightKg: 0, reps: 8),
+        .init(name: "Hamstring Curl", aliases: ["Hamstring Curl (DB Prone)", "Nordic Curl"], isBodyweight: false, baseWeightKg: 40, reps: 10),
+        .init(name: "Back Squat (BB)", aliases: ["Back Squat", "Squat"], isBodyweight: false, baseWeightKg: 100, reps: 4),
+        .init(name: "Romanian DL", aliases: ["Romanian Deadlift", "RDL"], isBodyweight: false, baseWeightKg: 80, reps: 7),
+        .init(name: "Bulgarian Split Squat", aliases: [], isBodyweight: false, baseWeightKg: 30, reps: 8),
+        .init(name: "Single-Arm DB Press", aliases: ["One-Arm DB Press"], isBodyweight: false, baseWeightKg: 20, reps: 8)
     ]
 
-    private static let programDays: [(name: String, exercises: [String])] = [
-        ("Strength + Upper Body", [
-            "Trap Bar Deadlift", "Weighted Pull-Up", "Landmine Punch Press", "Face Pull",
-            "Hamstring Curl", "Push-Up Plus", "Pallof Press", "Copenhagen Plank",
-            "Broad Jump", "Med Ball Overhead Slam", "Agility Ladder", "Ab Wheel", "Neck Work"
+    private static let programDays: [(name: String, weekday: Int, exercises: [String])] = [
+        ("OHP + Upper", 2, [                    // Monday
+            "Copenhagen Plank", "Pallof Press", "Broad Jump", "Med Ball Overhead Slam",
+            "OHP (BB)", "Weighted Pull-Up", "Incline DB Press", "Pendlay Row",
+            "Lateral Raise (DB)", "Shrug (DB)", "Ball Plank", "Neck"
         ]),
-        ("Full Body Power", [
-            "Hang Power Clean", "Bench Press", "Pendlay Row", "Suitcase Carry",
-            "Ab Wheel", "Skater Bounds", "Back Extension", "Neck Flexion",
-            "Biceps Curl", "Triceps Extension"
+        ("Full Body Power", 3, [                // Tuesday
+            "DB Side to Side", "Suitcase Hold", "DB Snatch", "BB Side to Side",
+            "Deadlift (Conv)", "Bench Press", "Front Squat", "Bent Over Row (BB)",
+            "Weighted Dips", "Hamstring", "Core", "Curl"
         ]),
-        ("Zone 2 + Footwork", [
-            "Zone 2 Cardio", "Footwork Drill"
+        ("Bench + Upper", 5, [                  // Thursday
+            "Pallof Press", "Suitcase Carry", "Hamstring/Calf Iso",
+            "Bench Press", "OHP (BB)", "Weighted Pull-Up", "Close-Grip Bench",
+            "Single-Arm DB Row", "Pec Dec", "Curl", "Triceps Extension"
         ]),
-        ("SIT Day", [
-            "Zercher Deadlift", "Overhead Press", "Weighted Pull-Up", "Landmine Punch Press",
-            "Suitcase Carry", "Hamstring Curl", "Pallof Press", "Hamstring / Calf Iso",
-            "Ab Wheel", "Neck Work", "Push-Up Plus", "Face Pull"
-        ]),
-        ("Unilateral + Rotational Force", [
-            "Rotational Med Ball Throw", "Bird Dog", "KB Combination", "Plyo Push-Up",
-            "Bulgarian Split Squat", "Single-Arm Cable Press", "Single-Arm DB Row",
-            "4-Way Neck Isometric", "Heavy Curl", "Dynamic Hugs", "Heavy DB Shrug"
-        ]),
-        ("HIIT Day", [
-            "HIIT Intervals", "Easy Warm-Up + Drills"
+        ("Lower + Unilateral", 6, [             // Friday
+            "Rotational Med Ball Throw", "Bird Dog", "Hamstring Curl", "Neck",
+            "Back Squat (BB)", "Romanian DL", "Bulgarian Split Squat", "Single-Arm DB Press"
         ])
-    ]
-
-    private static let seededDayFiveSession: [SeededSessionExercise] = [
-        .init(name: "Rotational Med Ball Throw", weightKg: 10, reps: 5, sets: 3),
-        .init(name: "Bird Dog", weightKg: 0, reps: 10, sets: 3),
-        .init(name: "KB Combination", weightKg: 24, reps: 4, sets: 3),
-        .init(name: "Plyo Push-Up", weightKg: 0, reps: 5, sets: 3),
-        .init(name: "Bulgarian Split Squat", weightKg: 30, reps: 8, sets: 3),
-        .init(name: "Single-Arm Cable Press", weightKg: 25, reps: 8, sets: 3),
-        .init(name: "Single-Arm DB Row", weightKg: 40, reps: 10, sets: 3),
-        .init(name: "4-Way Neck Isometric", weightKg: 0, reps: 10, sets: 2),
-        .init(name: "Heavy Curl", weightKg: 20, reps: 10, sets: 3),
-        .init(name: "Dynamic Hugs", weightKg: 17.5, reps: 15, sets: 3),
-        .init(name: "Heavy DB Shrug", weightKg: 42.5, reps: 12, sets: 3)
     ]
 
     @MainActor
@@ -232,8 +202,6 @@ enum PreviewSampleData {
             DayTemplate.self,
             WorkoutSession.self,
             SetEntry.self,
-            Cycle.self,
-            ProgressionRule.self,
             configurations: config
         )
     }
@@ -244,17 +212,15 @@ enum PreviewSampleData {
         if let existing = try? modelContext.fetch(FetchDescriptor<Split>()), !existing.isEmpty {
             return false
         }
-        return ensureFightCampProgramForCurrentUser(in: modelContext)
+        return ensureProgramForCurrentUser(in: modelContext)
     }
 
     @MainActor
     @discardableResult
-    static func ensureFightCampProgramForCurrentUser(in modelContext: ModelContext) -> Bool {
-        let allExercises = (try? modelContext.fetch(FetchDescriptor<Exercise>())) ?? []
+    static func ensureProgramForCurrentUser(in modelContext: ModelContext) -> Bool {
+        var allExercises = (try? modelContext.fetch(FetchDescriptor<Exercise>())) ?? []
         let allSplits = (try? modelContext.fetch(FetchDescriptor<Split>())) ?? []
         let allTemplates = (try? modelContext.fetch(FetchDescriptor<DayTemplate>())) ?? []
-        let allCycles = (try? modelContext.fetch(FetchDescriptor<Cycle>())) ?? []
-        let allRules = (try? modelContext.fetch(FetchDescriptor<ProgressionRule>())) ?? []
         let allSessions = (try? modelContext.fetch(FetchDescriptor<WorkoutSession>())) ?? []
 
         var didChange = false
@@ -272,6 +238,38 @@ enum PreviewSampleData {
             return desiredNames.map(normalized).contains(where: normalizedNames.contains)
         }
 
+        // Seed catalog entries that aren't already in the store. Back-fill taxonomy
+        // on existing rows that match by name or alias.
+        for entry in ExerciseCatalog.all {
+            let signatures = Set(([entry.displayName] + entry.aliases).map(normalized))
+            if let existing = allExercises.first(where: { exercise in
+                let names = ([exercise.displayName] + exercise.aliases).map(normalized)
+                return names.contains(where: signatures.contains)
+            }) {
+                if existing.muscleGroupRaw == MuscleGroup.fullBody.rawValue,
+                   entry.muscleGroup != .fullBody {
+                    existing.muscleGroupRaw = entry.muscleGroup.rawValue
+                    didChange = true
+                }
+                if existing.equipmentRaw == Equipment.other.rawValue,
+                   entry.equipment != .other {
+                    existing.equipmentRaw = entry.equipment.rawValue
+                    didChange = true
+                }
+                continue
+            }
+            let exercise = Exercise(
+                displayName: entry.displayName,
+                aliases: entry.aliases,
+                isBodyweight: entry.isBodyweight,
+                muscleGroup: entry.muscleGroup,
+                equipment: entry.equipment
+            )
+            modelContext.insert(exercise)
+            allExercises.append(exercise)
+            didChange = true
+        }
+
         var exerciseByName: [String: Exercise] = [:]
         for seed in exerciseSeeds {
             if let existingExercise = allExercises.first(where: { exerciseMatches($0, seed: seed) }) {
@@ -285,12 +283,13 @@ enum PreviewSampleData {
                 isBodyweight: seed.isBodyweight
             )
             modelContext.insert(exercise)
+            allExercises.append(exercise)
             exerciseByName[seed.name] = exercise
             didChange = true
         }
 
-        let split = allSplits.first(where: { normalized($0.name) == normalized(fightCampSplitName) }) ?? {
-            let split = Split(name: fightCampSplitName)
+        let split = allSplits.first(where: { normalized($0.name) == normalized(splitName) }) ?? {
+            let split = Split(name: splitName)
             modelContext.insert(split)
             didChange = true
             return split
@@ -302,7 +301,7 @@ enum PreviewSampleData {
         for day in programDays {
             let exerciseIDs = day.exercises.compactMap { exerciseByName[$0]?.id }
             let template = templatesForSplit.first(where: { normalized($0.name) == normalized(day.name) }) ?? {
-                let template = DayTemplate(name: day.name, splitId: split.id, orderedExerciseIds: exerciseIDs)
+                let template = DayTemplate(name: day.name, splitId: split.id, orderedExerciseIds: exerciseIDs, scheduledWeekday: day.weekday)
                 modelContext.insert(template)
                 didChange = true
                 return template
@@ -315,6 +314,11 @@ enum PreviewSampleData {
 
             if template.orderedExerciseIds != exerciseIDs {
                 template.orderedExerciseIds = exerciseIDs
+                didChange = true
+            }
+
+            if template.scheduledWeekday != day.weekday {
+                template.scheduledWeekday = day.weekday
                 didChange = true
             }
 
@@ -336,122 +340,24 @@ enum PreviewSampleData {
         let currentWeekStart = mondayBasedCalendar.date(
             from: mondayBasedCalendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: today)
         ) ?? today
-        let cycleStart = mondayBasedCalendar.date(byAdding: .day, value: -7, to: currentWeekStart) ?? today
-
-        let cycle = allCycles.first(where: { $0.splitId == split.id }) ?? {
-            let cycle = Cycle(
-                name: fightCampCycleName,
-                splitId: split.id,
-                startDate: cycleStart,
-                weekCount: 8,
-                globalIncrementKg: 2.5,
-                isActive: true,
-                isCompleted: false
-            )
-            modelContext.insert(cycle)
-            didChange = true
-            return cycle
-        }()
-
-        if cycle.name != fightCampCycleName {
-            cycle.name = fightCampCycleName
-            didChange = true
-        }
-
-        if cycle.splitId != split.id {
-            cycle.splitId = split.id
-            didChange = true
-        }
-
-        if cycle.startDate != cycleStart {
-            cycle.startDate = cycleStart
-            didChange = true
-        }
-
-        if cycle.weekCount != 8 {
-            cycle.weekCount = 8
-            didChange = true
-        }
-
-        if cycle.globalIncrementKg != 2.5 {
-            cycle.globalIncrementKg = 2.5
-            didChange = true
-        }
-
-        if cycle.isCompleted {
-            cycle.isCompleted = false
-            didChange = true
-        }
-
-        for existingCycle in allCycles where existingCycle.id != cycle.id && existingCycle.isActive {
-            existingCycle.isActive = false
-            didChange = true
-        }
-
-        if !cycle.isActive {
-            cycle.isActive = true
-            didChange = true
-        }
-
-        let seedByName = Dictionary(uniqueKeysWithValues: exerciseSeeds.map { ($0.name, $0) })
-        var seenExerciseIDs = Set<UUID>()
-
-        for day in programDays {
-            for exerciseName in day.exercises {
-                guard let exercise = exerciseByName[exerciseName],
-                      let seed = seedByName[exerciseName],
-                      !seenExerciseIDs.contains(exercise.id) else { continue }
-
-                seenExerciseIDs.insert(exercise.id)
-
-                if let existingRule = allRules.first(where: { $0.cycleId == cycle.id && $0.exerciseId == exercise.id }) {
-                    if existingRule.incrementKg != seed.incrementKg {
-                        existingRule.incrementKg = seed.incrementKg
-                        didChange = true
-                    }
-                    if existingRule.baseWeightKg != seed.baseWeightKg {
-                        existingRule.baseWeightKg = seed.baseWeightKg
-                        didChange = true
-                    }
-                    if existingRule.baseReps != seed.reps {
-                        existingRule.baseReps = seed.reps
-                        didChange = true
-                    }
-                    continue
-                }
-
-                modelContext.insert(
-                    ProgressionRule(
-                        cycleId: cycle.id,
-                        exerciseId: exercise.id,
-                        incrementKg: seed.incrementKg,
-                        baseWeightKg: seed.baseWeightKg,
-                        baseReps: seed.reps
-                    )
-                )
-                didChange = true
-            }
-        }
+        let seedDate = mondayBasedCalendar.date(byAdding: .day, value: -7, to: currentWeekStart) ?? today
 
         if let firstTemplate = orderedTemplates.first,
-           !allSessions.contains(where: { $0.cycleId == cycle.id && $0.templateId == firstTemplate.id }) {
+           !allSessions.contains(where: { $0.templateId == firstTemplate.id }) {
             let session = WorkoutSession(
-                date: cycleStart,
+                date: seedDate,
                 templateId: firstTemplate.id,
-                isCompleted: true,
-                overallFeeling: 4,
-                cycleId: cycle.id,
-                weekNumber: 1
+                isCompleted: true
             )
             modelContext.insert(session)
 
             let demoEntries: [(String, Double, Int)] = [
-                ("Trap Bar Deadlift", 140, 4),
+                ("OHP (BB)", 50, 4),
                 ("Weighted Pull-Up", 15, 5),
-                ("Landmine Punch Press", 30, 5),
-                ("Face Pull", 27.5, 15),
-                ("Hamstring Curl", 40, 12),
-                ("Pallof Press", 20, 10)
+                ("Incline DB Press", 30, 8),
+                ("Pendlay Row", 70, 6),
+                ("Lateral Raise (DB)", 10, 12),
+                ("Shrug (DB)", 35, 15)
             ]
 
             for (index, entry) in demoEntries.enumerated() {
@@ -461,9 +367,6 @@ enum PreviewSampleData {
                     exerciseId: exercise.id,
                     weight: entry.1,
                     reps: entry.2,
-                    targetWeight: entry.1,
-                    targetReps: entry.2,
-                    metTarget: true,
                     isWarmup: false,
                     isCompleted: true,
                     setIndex: index
@@ -472,51 +375,8 @@ enum PreviewSampleData {
                 modelContext.insert(setEntry)
             }
 
-            firstTemplate.lastPerformedDate = cycleStart
+            firstTemplate.lastPerformedDate = seedDate
             didChange = true
-        }
-
-        if orderedTemplates.count >= 5 {
-            let dayFiveTemplate = orderedTemplates[4]
-            let dayFiveDate = mondayBasedCalendar.date(byAdding: .day, value: 4, to: cycleStart) ?? cycleStart
-
-            if !allSessions.contains(where: { $0.cycleId == cycle.id && $0.templateId == dayFiveTemplate.id }) {
-                let session = WorkoutSession(
-                    date: dayFiveDate,
-                    templateId: dayFiveTemplate.id,
-                    isCompleted: true,
-                    overallFeeling: 4,
-                    cycleId: cycle.id,
-                    weekNumber: 1
-                )
-                modelContext.insert(session)
-
-                var setIndex = 0
-                for seededExercise in seededDayFiveSession {
-                    guard let exercise = exerciseByName[seededExercise.name] else { continue }
-
-                    for _ in 0..<seededExercise.sets {
-                        let setEntry = SetEntry(
-                            sessionId: session.id,
-                            exerciseId: exercise.id,
-                            weight: seededExercise.weightKg,
-                            reps: seededExercise.reps,
-                            targetWeight: seededExercise.weightKg,
-                            targetReps: seededExercise.reps,
-                            metTarget: true,
-                            isWarmup: false,
-                            isCompleted: true,
-                            setIndex: setIndex
-                        )
-                        setEntry.session = session
-                        modelContext.insert(setEntry)
-                        setIndex += 1
-                    }
-                }
-
-                dayFiveTemplate.lastPerformedDate = dayFiveDate
-                didChange = true
-            }
         }
 
         if didChange {

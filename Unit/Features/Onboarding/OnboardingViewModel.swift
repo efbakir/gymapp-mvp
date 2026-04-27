@@ -3,7 +3,7 @@
 //  Unit
 //
 //  Transient onboarding state. No SwiftData @Model — all writes happen
-//  atomically in commit() when the user taps "Create My Cycle".
+//  atomically in commit() when the user taps "Create My Program".
 //
 
 import Foundation
@@ -69,11 +69,6 @@ final class OnboardingViewModel {
 
     var baselines: [UUID: OnboardingBaseline] = [:]
 
-    // MARK: Progression
-
-    var compoundIncrementKg: Double = 2.5
-    var isolationIncrementKg: Double = 1.25
-
     // MARK: Start Date
 
     enum StartOption { case today, nextMonday, custom }
@@ -106,50 +101,6 @@ final class OnboardingViewModel {
     /// Convert a user-entered display value back to kg for storage.
     func storeWeightKg(_ displayValue: Double) -> Double {
         unitSystem == "lb" ? displayValue / 2.20462 : displayValue
-    }
-
-    var globalIncrementKg: Double {
-        get { compoundIncrementKg }
-        set { compoundIncrementKg = newValue }
-    }
-
-    var incrementStep: Double { unitSystem == "lb" ? 2.5 : 1.25 }
-    var incrementMin: Double { 0 }
-    var incrementMax: Double { unitSystem == "lb" ? 22.0 : 10.0 }
-
-    func incrementDisplay(for type: IncrementType) -> Double {
-        let valueKg = switch type {
-        case .compound: compoundIncrementKg
-        case .isolation: isolationIncrementKg
-        }
-        return unitSystem == "lb" ? valueKg * 2.20462 : valueKg
-    }
-
-    func incrementDisplayLabel(for type: IncrementType) -> String {
-        let val = incrementDisplay(for: type)
-        let unit = unitSystem
-        return "\(val.weightString) \(unit)"
-    }
-
-    func stepUp(_ type: IncrementType) {
-        let step = unitSystem == "lb" ? 2.5 / 2.20462 : 1.25
-        let max = unitSystem == "lb" ? 22.0 / 2.20462 : 10.0
-        switch type {
-        case .compound:
-            compoundIncrementKg = min(max, compoundIncrementKg + step)
-        case .isolation:
-            isolationIncrementKg = min(max, isolationIncrementKg + step)
-        }
-    }
-
-    func stepDown(_ type: IncrementType) {
-        let step = unitSystem == "lb" ? 2.5 / 2.20462 : 1.25
-        switch type {
-        case .compound:
-            compoundIncrementKg = max(step, compoundIncrementKg - step)
-        case .isolation:
-            isolationIncrementKg = max(0, isolationIncrementKg - step)
-        }
     }
 
     // MARK: - Day Management
@@ -238,11 +189,6 @@ final class OnboardingViewModel {
     // MARK: - Commit
 
     func commit(modelContext: ModelContext) throws {
-        let existingCycles = (try? modelContext.fetch(FetchDescriptor<Cycle>())) ?? []
-        for cycle in existingCycles where !cycle.isCompleted {
-            cycle.isActive = false
-        }
-
         // 1. Resolve exercises (name lookup or create)
         var nameToExercise: [String: Exercise] = [:]
         let existing = (try? modelContext.fetch(FetchDescriptor<Exercise>())) ?? []
@@ -285,56 +231,11 @@ final class OnboardingViewModel {
         }
         split.orderedTemplateIds = templateIds
 
-        // 4. Create Cycle
-        let fmt = DateFormatter()
-        fmt.dateFormat = "MMMM yyyy"
-        let cycleName = "\(splitName) Cycle 1 — \(fmt.string(from: startDate))"
-        let cycle = Cycle(
-            name: cycleName,
-            splitId: split.id,
-            startDate: startDate,
-            weekCount: 8,
-            globalIncrementKg: compoundIncrementKg,
-            isActive: true,
-            isCompleted: false
-        )
-        modelContext.insert(cycle)
-
-        // 5. ProgressionRules — one per exercise, deduplicated
-        var seenExerciseIds = Set<UUID>()
-        for day in dayExercises {
-            for onbEx in day {
-                guard let exercise = exerciseMap[onbEx.id] else { continue }
-                guard !seenExerciseIds.contains(exercise.id) else { continue }
-                seenExerciseIds.insert(exercise.id)
-                let baseline = baselines[onbEx.id] ?? OnboardingBaseline()
-                let baseWeightKg = exercise.isBodyweight ? 0 : baseline.weightKg
-                let incrementKg = exercise.isBodyweight ? 0 : incrementKg(for: exercise.displayName)
-                let rule = ProgressionRule(
-                    cycleId: cycle.id,
-                    exerciseId: exercise.id,
-                    incrementKg: incrementKg,
-                    baseWeightKg: baseWeightKg,
-                    baseReps: max(1, baseline.reps)
-                )
-                modelContext.insert(rule)
-            }
-        }
-
         try modelContext.save()
     }
 }
 
 extension OnboardingViewModel {
-    enum IncrementType {
-        case compound
-        case isolation
-    }
-
-    func incrementKg(for exerciseName: String) -> Double {
-        isIsolationExercise(named: exerciseName) ? isolationIncrementKg : compoundIncrementKg
-    }
-
     func isBodyweightExercise(named exerciseName: String) -> Bool {
         let name = normalizedExerciseName(exerciseName)
         let bodyweightKeywords = [
@@ -380,17 +281,6 @@ extension OnboardingViewModel {
         }
     }
 
-    private func isIsolationExercise(named exerciseName: String) -> Bool {
-        let name = exerciseName.lowercased()
-        let isolationKeywords = [
-            "curl", "pushdown", "pushdown", "extension", "raise", "fly", "flye",
-            "lateral", "rear delt", "tricep", "bicep", "calf", "leg curl",
-            "leg extension", "adductor", "abductor", "crunch", "plank",
-            "pullover", "face pull", "shrug", "kickback"
-        ]
-        return isolationKeywords.contains { name.contains($0) }
-    }
-
     private func normalizedExerciseName(_ name: String) -> String {
         name
             .lowercased()
@@ -404,22 +294,70 @@ extension OnboardingViewModel {
 enum ExerciseLibrary {
     static let suggestions: [String] = [
         // Chest
-        "Bench Press", "Incline Bench Press", "Dumbbell Flye", "Cable Fly",
+        "Bench Press", "Incline Bench Press", "Decline Bench Press",
+        "Close-Grip Bench Press", "Pin Press", "Floor Press",
+        "Dumbbell Bench Press", "Incline Dumbbell Press", "Decline Dumbbell Press",
+        "Dumbbell Floor Press", "Dumbbell Flye", "Incline Dumbbell Flye",
+        "Cable Fly", "Cable Crossover", "Machine Chest Press", "Pec Deck",
+        "Push-up", "Incline Push-up", "Decline Push-up", "Diamond Push-up",
+        "Dip", "Bench Dip", "Dumbbell Pullover",
         // Shoulders
-        "Overhead Press", "Arnold Press", "Lateral Raise", "Front Raise",
+        "Overhead Press", "Push Press", "Behind-the-Neck Press",
+        "Dumbbell Shoulder Press", "Arnold Press", "Machine Shoulder Press",
+        "Landmine Press",
+        "Lateral Raise", "Cable Lateral Raise", "Machine Lateral Raise",
+        "Front Raise", "Cable Front Raise",
+        "Rear Delt Fly", "Reverse Pec Deck", "Face Pull", "Upright Row",
         // Triceps
-        "Tricep Pushdown", "Skull Crusher", "Close Grip Bench Press", "Overhead Tricep Extension",
+        "Tricep Pushdown", "Rope Pushdown", "Overhead Tricep Extension",
+        "Skull Crusher", "Dumbbell Skull Crusher", "JM Press",
+        "Tricep Kickback", "Cable Kickback",
         // Back
-        "Pull-up", "Chin-up", "Barbell Row", "Dumbbell Row", "Lat Pulldown", "Cable Row", "T-Bar Row",
+        "Pull-up", "Chin-up", "Neutral-Grip Pull-up", "Weighted Pull-up",
+        "Barbell Row", "Pendlay Row", "Yates Row",
+        "Dumbbell Row", "Chest-Supported Row", "Single-Arm Dumbbell Row",
+        "T-Bar Row", "Meadows Row", "Seal Row",
+        "Lat Pulldown", "Straight-Arm Pulldown", "Cable Row", "Seated Cable Row",
+        "Inverted Row", "Rack Pull", "Shrug", "Dumbbell Shrug",
         // Biceps
-        "Barbell Curl", "Dumbbell Curl", "Hammer Curl", "Preacher Curl", "Cable Curl",
-        // Legs
-        "Back Squat", "Front Squat", "Leg Press", "Hack Squat", "Lunge",
-        "Romanian Deadlift", "Leg Curl", "Leg Extension", "Calf Raise",
-        // Posterior chain
-        "Deadlift", "Sumo Deadlift", "Hip Thrust", "Good Morning",
+        "Barbell Curl", "EZ-Bar Curl",
+        "Dumbbell Curl", "Incline Dumbbell Curl", "Hammer Curl", "Concentration Curl",
+        "Preacher Curl", "Spider Curl",
+        "Cable Curl", "Cable Hammer Curl", "Reverse Curl",
+        // Quads
+        "Back Squat", "Front Squat", "High-Bar Squat", "Low-Bar Squat",
+        "Box Squat", "Pause Squat",
+        "Leg Press", "Hack Squat", "Pendulum Squat", "Belt Squat",
+        "Goblet Squat", "Dumbbell Squat", "Smith Machine Squat",
+        "Leg Extension", "Sissy Squat",
+        "Bulgarian Split Squat", "Split Squat",
+        "Lunge", "Reverse Lunge", "Walking Lunge", "Step-Up", "Pistol Squat",
+        // Hamstrings & Glutes
+        "Deadlift", "Sumo Deadlift", "Trap Bar Deadlift",
+        "Deficit Deadlift", "Snatch-Grip Deadlift",
+        "Romanian Deadlift", "Stiff-Leg Deadlift", "Dumbbell Romanian Deadlift",
+        "Leg Curl", "Seated Leg Curl", "Lying Leg Curl", "Nordic Curl",
+        "Good Morning",
+        "Hip Thrust", "Barbell Hip Thrust", "Single-Leg Hip Thrust", "Glute Bridge",
+        "Glute Kickback", "Glute-Ham Raise",
+        "Back Extension", "45° Back Extension",
+        // Calves
+        "Standing Calf Raise", "Seated Calf Raise",
+        "Donkey Calf Raise", "Leg Press Calf Raise",
         // Core
-        "Plank", "Ab Wheel Rollout", "Hanging Leg Raise", "Cable Crunch"
+        "Plank", "Side Plank", "Ab Wheel Rollout",
+        "Hanging Leg Raise", "Hanging Knee Raise", "Toes-to-Bar",
+        "Cable Crunch", "Crunch", "Sit-up", "Decline Sit-up",
+        "Russian Twist", "Pallof Press", "Cable Woodchop",
+        "L-Sit", "Dead Bug", "Bird Dog", "V-Up",
+        // Olympic & Power
+        "Power Clean", "Hang Clean", "Clean and Jerk",
+        "Snatch", "Hang Snatch", "Clean Pull", "Snatch Pull",
+        "Kettlebell Swing", "Kettlebell Snatch", "Turkish Get-Up",
+        // Carries & Functional
+        "Farmer's Walk", "Suitcase Carry", "Overhead Carry",
+        "Sled Push", "Sled Drag",
+        "Landmine Row", "Landmine Squat"
     ]
 
     static func filtered(by query: String) -> [String] {

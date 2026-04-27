@@ -3,7 +3,8 @@
 //  Unit
 //
 //  Handles StoreKit 2 product loading, purchasing, and restore
-//  for the one-time lifetime unlock.
+//  for the three Unit Pro tiers: Monthly, Annual, Lifetime.
+//  Pricing authority: docs/pricing.md.
 //
 
 import StoreKit
@@ -12,16 +13,35 @@ import OSLog
 @MainActor
 @Observable
 final class StoreManager {
-    // MARK: - Product ID
+    // MARK: - Product IDs
 
-    nonisolated static let lifetimeProductID = "com.unit.lifetime"
+    enum Tier: String, CaseIterable, Identifiable {
+        case monthly = "com.unit.monthly"
+        case annual = "com.unit.annual"
+        case lifetime = "com.unit.lifetime"
+
+        var id: String { rawValue }
+    }
+
+    nonisolated static let lifetimeProductID = Tier.lifetime.rawValue
+    nonisolated static let annualProductID = Tier.annual.rawValue
+    nonisolated static let monthlyProductID = Tier.monthly.rawValue
+
+    nonisolated private static let allProductIDs: [String] = [
+        Tier.monthly.rawValue,
+        Tier.annual.rawValue,
+        Tier.lifetime.rawValue
+    ]
 
     // MARK: - State
 
-    var product: Product?
+    var products: [String: Product] = [:]
     var isLoading = false
     var isPurchased = false
     var purchaseError: String?
+
+    /// Currently selected tier in the paywall. Default = Annual (recommended).
+    var selectedTier: Tier = .annual
 
     private let logger = Logger(subsystem: "com.unit.app", category: "StoreManager")
     @ObservationIgnored nonisolated(unsafe) private var transactionListener: Task<Void, Never>?
@@ -29,7 +49,6 @@ final class StoreManager {
     // MARK: - Init
 
     init() {
-        // StoreKit transaction streams often prevent the preview host from launching (Xcode: "Failed to launch …").
         guard !ProcessInfo.processInfo.isSwiftUIPreview else { return }
         transactionListener = listenForTransactions()
         Task { await checkEntitlement() }
@@ -39,17 +58,25 @@ final class StoreManager {
         transactionListener?.cancel()
     }
 
-    // MARK: - Load Product
+    // MARK: - Accessors
+
+    func product(for tier: Tier) -> Product? {
+        products[tier.rawValue]
+    }
+
+    var selectedProduct: Product? { product(for: selectedTier) }
+
+    // MARK: - Load Products
 
     @MainActor
-    func loadProduct() async {
-        guard product == nil else { return }
+    func loadProducts() async {
+        guard products.isEmpty else { return }
         isLoading = true
         defer { isLoading = false }
 
         do {
-            let products = try await Product.products(for: [Self.lifetimeProductID])
-            product = products.first
+            let loaded = try await Product.products(for: Self.allProductIDs)
+            products = Dictionary(uniqueKeysWithValues: loaded.map { ($0.id, $0) })
         } catch {
             logger.error("Failed to load products: \(error.localizedDescription)")
         }
@@ -59,7 +86,12 @@ final class StoreManager {
 
     @MainActor
     func purchase() async {
-        guard let product else { return }
+        await purchase(tier: selectedTier)
+    }
+
+    @MainActor
+    func purchase(tier: Tier) async {
+        guard let product = product(for: tier) else { return }
         purchaseError = nil
 
         do {
@@ -101,7 +133,7 @@ final class StoreManager {
     func checkEntitlement() async {
         for await result in Transaction.currentEntitlements {
             if case .verified(let transaction) = result,
-               transaction.productID == Self.lifetimeProductID {
+               Self.allProductIDs.contains(transaction.productID) {
                 isPurchased = true
                 return
             }
@@ -118,7 +150,7 @@ final class StoreManager {
         Task.detached { [weak self] in
             for await result in Transaction.updates {
                 if case .verified(let transaction) = result,
-                   transaction.productID == Self.lifetimeProductID {
+                   Self.allProductIDs.contains(transaction.productID) {
                     await transaction.finish()
                     await self?.notePurchaseVerified()
                 }

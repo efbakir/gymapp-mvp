@@ -624,11 +624,7 @@ struct ActiveWorkoutView: View {
                                 }
                             }
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, AppSpacing.md)
-                        .background(AppColor.cardBackground)
-                        .clipShape(RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous))
-                        .appCardElevation()
+                        .appCardStyle()
                     }
                     .appScrollEdgeSoft()
                 }

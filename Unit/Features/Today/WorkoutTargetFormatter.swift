@@ -14,9 +14,9 @@ enum WorkoutTargetFormatter {
         let unit = UserDefaults.standard.string(forKey: "unitSystem") ?? "kg"
         if unit == "lb" {
             let lb = kg * 2.20462
-            return "\(lb.weightString)lb"
+            return "\(lb.weightString) lb"
         }
-        return "\(kg.weightString)kg"
+        return "\(kg.weightString) kg"
     }
 
     static func setMetricText(

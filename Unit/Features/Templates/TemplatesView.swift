@@ -17,15 +17,18 @@ struct TemplatesView: View {
     @Query(sort: \Exercise.displayName) private var exercises: [Exercise]
     @Query(sort: \WorkoutSession.date, order: .reverse) private var sessions: [WorkoutSession]
 
+    @AppStorage(ActiveSplitStore.defaultsKey) private var activeSplitIdString: String = ""
+
     @State private var showingOnboarding = false
     @State private var showingSettings = false
 
     private var activeSplit: Split? {
-        splits.first
+        ActiveSplitStore.resolve(from: splits)
     }
 
     private var inactiveSplits: [Split] {
-        Array(splits.dropFirst())
+        guard let active = activeSplit else { return [] }
+        return splits.filter { $0.id != active.id }
     }
 
     var body: some View {
@@ -121,10 +124,13 @@ struct TemplatesView: View {
                     let splitDays = orderedTemplates(for: split)
                     let dayCount = splitDays.count
                     let exerciseCount = splitDays.reduce(0) { $0 + $1.orderedExerciseIds.count }
-                    PreviewListRow(
-                        title: split.name.isEmpty ? "Untitled Program" : split.name,
-                        subtitle: "\(dayCount) day\(dayCount == 1 ? "" : "s") · \(exerciseCount) exercise\(exerciseCount == 1 ? "" : "s")"
-                    )
+                    NavigationLink(value: split) {
+                        PreviewListRow(
+                            title: split.name.isEmpty ? "Untitled Program" : split.name,
+                            subtitle: "\(dayCount) day\(dayCount == 1 ? "" : "s") · \(exerciseCount) exercise\(exerciseCount == 1 ? "" : "s")"
+                        )
+                    }
+                    .buttonStyle(ScaleButtonStyle())
                 }
             }
         }

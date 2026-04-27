@@ -27,24 +27,7 @@ struct RestTimerLiveActivityWidget: Widget {
         ActivityConfiguration(for: RestTimerAttributes.self) { context in
             RestTimerLiveActivityView(context: context)
         } dynamicIsland: { context in
-            DynamicIsland {
-                DynamicIslandExpandedRegion(.center) {
-                    Text(timerInterval: Date.now...context.state.endDate, countsDown: true)
-                        .font(.title2.monospacedDigit())
-                }
-                DynamicIslandExpandedRegion(.leading) {
-                    Text("Rest")
-                        .font(.caption)
-                }
-            } compactLeading: {
-                Text("Rest")
-                    .font(.caption2)
-            } compactTrailing: {
-                Text(timerInterval: Date.now...context.state.endDate, countsDown: true)
-                    .font(.caption2.monospacedDigit())
-            } minimal: {
-                Image(systemName: "timer")
-            }
+            RestTimerLiveActivityIsland.dynamicIsland(context: context)
         }
     }
 }

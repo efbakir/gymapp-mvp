@@ -3,7 +3,6 @@
 //  Unit
 //
 //  Screen 1 — Value prop splash. No data collected.
-//  Copy: "your gym notebook, upgraded."
 //
 
 import SwiftUI
@@ -14,56 +13,52 @@ struct OnboardingSplashView: View {
     var onGetStarted: () -> Void
 
     var body: some View {
-        Button(action: onGetStarted) {
-            ZStack {
-                AppColor.background.ignoresSafeArea()
+        ZStack {
+            AppColor.background.ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                Spacer()
 
                 VStack(spacing: 0) {
-                    Spacer()
-                        .frame(maxHeight: .infinity)
+                    Image("BrandLogo")
+                        .resizable()
+                        .interpolation(.high)
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 96, height: 96)
 
-                    // Brand mark — anchors the screen
+                    Text("Welcome to")
+                        .font(AppFont.splashWelcome)
+                        .foregroundStyle(AppColor.secondaryLabel)
+                        .padding(.top, AppSpacing.xl)
+
                     Text("Unit")
-                        .font(AppFont.display)
-                        .tracking(AppFont.displayTracking)
+                        .font(AppFont.splashTitle)
+                        .tracking(AppFont.splashTitleTracking)
                         .foregroundStyle(AppColor.textPrimary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, AppSpacing.xl)
-                        .padding(.bottom, AppSpacing.lg)
+                        .padding(.top, AppSpacing.xxs)
 
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text("Your gym notebook,")
-                            .appFont(.largeTitle)
+                    VStack(spacing: AppSpacing.xxs) {
+                        Text("Your gym notebook -")
+                            .font(AppFont.splashWelcome)
+                            .fontWeight(.bold)
                             .foregroundStyle(AppColor.textSecondary)
-                            .fixedSize(horizontal: false, vertical: true)
 
                         Text("upgraded.")
-                            .appFont(.largeTitle)
-                            .foregroundStyle(AppColor.textSecondary)
-                            .fixedSize(horizontal: false, vertical: true)
+                            .font(AppFont.splashWelcome)
+                            .fontWeight(.bold)
+                            .foregroundStyle(AppColor.splashAccent)
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, AppSpacing.xl)
+                    .padding(.top, AppSpacing.xl)
+                }
+                .padding(.horizontal, AppSpacing.xl)
 
-                    Spacer()
-                        .frame(maxHeight: .infinity)
+                Spacer()
 
-                    VStack(spacing: AppSpacing.sm) {
-                        Text("Tap anywhere to get started")
-                            .font(AppFont.body.font.weight(.semibold))
-                            .foregroundStyle(AppColor.textPrimary)
-
-                        Text("Set up your routine in a few quick steps.")
-                            .font(AppFont.caption.font)
-                            .foregroundStyle(AppColor.textSecondary)
-                    }
+                AppPrimaryButton("Let's get started!", action: onGetStarted)
                     .padding(.horizontal, AppSpacing.xl)
                     .padding(.bottom, AppSpacing.xxl)
-                }
             }
         }
-        .buttonStyle(ScaleButtonStyle())
-        .contentShape(Rectangle())
         .toolbar(.hidden, for: .navigationBar)
         .overlay(alignment: .topTrailing) {
             if showsDismiss {

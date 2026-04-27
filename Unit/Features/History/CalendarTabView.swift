@@ -9,15 +9,15 @@ import SwiftData
 import SwiftUI
 
 struct CalendarTabView: View {
-    @Environment(\.appTabSelection) private var appTabSelection
-
     @Query(sort: \WorkoutSession.date, order: .reverse) private var sessions: [WorkoutSession]
     @Query(sort: \DayTemplate.name) private var templates: [DayTemplate]
+    @Query(sort: \Split.name) private var splits: [Split]
     @Query(sort: \Exercise.displayName) private var exercises: [Exercise]
 
+    @AppStorage(ActiveSplitStore.defaultsKey) private var activeSplitIdString: String = ""
+
     @State private var displayMonth = Calendar.current.startOfMonth(for: Date())
-    @State private var selectedDate: Date?
-    @State private var selectedPayload: SelectedSessionsPayload?
+    @State private var selectedDate: Date? = Calendar.current.startOfDay(for: Date())
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var templateNamesByID: [UUID: String] {
@@ -26,6 +26,11 @@ struct CalendarTabView: View {
 
     private var exercisesByID: [UUID: Exercise] {
         Dictionary(uniqueKeysWithValues: exercises.map { ($0.id, $0) })
+    }
+
+    /// Routine template IDs from the primary split (same scope as Today week overview).
+    private var routineTemplateIDs: [UUID] {
+        ActiveSplitStore.resolve(from: splits)?.orderedTemplateIds ?? []
     }
 
     private var sessionSnapshots: [SessionSnapshot] {
@@ -63,34 +68,94 @@ struct CalendarTabView: View {
             .sorted { $0.date < $1.date }
     }
 
-    private var visibleSummaries: [CalendarDaySummary] {
-        guard let selectedDate else { return monthSummaries }
-        return monthSummaries.filter { Calendar.current.isDate($0.date, inSameDayAs: selectedDate) }
-    }
-
     private var monthSessionCount: Int {
         sessionSnapshots.filter {
             Calendar.current.isDate($0.date, equalTo: displayMonth, toGranularity: .month)
         }.count
     }
 
+    private var summariesByDate: [Date: CalendarDaySummary] {
+        Dictionary(uniqueKeysWithValues: monthSummaries.map { ($0.date, $0) })
+    }
+
+    /// Resolves the base state of a given day from session + routine data.
+    private func dayState(for date: Date) -> CalendarDayState {
+        let calendar = Calendar.current
+        let day = calendar.startOfDay(for: date)
+        let today = calendar.startOfDay(for: Date())
+
+        if day > today {
+            return .future
+        }
+
+        let hasLogged = summariesByDate[day]?.sessions.isEmpty == false
+
+        if calendar.isDate(day, inSameDayAs: today) {
+            return hasLogged ? .completed : .today
+        }
+
+        if hasLogged {
+            return .completed
+        }
+
+        let isMissed = TrainingWeekProgressBuilder.isMissedTrainingDay(
+            date: day,
+            routineTemplateIDs: routineTemplateIDs,
+            sessions: sessions
+        )
+        return isMissed ? .missed : .default
+    }
+
+    /// Returns the assigned workout name for a past missed date, if resolvable.
+    private func assignedWorkoutName(on date: Date) -> String {
+        let calendar = Calendar.current
+        let weekday = calendar.component(.weekday, from: date)
+        guard let split = ActiveSplitStore.resolve(from: splits) else { return "Assigned workout" }
+
+        let templatesByID = Dictionary(uniqueKeysWithValues: templates.map { ($0.id, $0) })
+        let routineTemplates = split.orderedTemplateIds.compactMap { templatesByID[$0] }
+
+        if let match = routineTemplates.first(where: { $0.scheduledWeekday == weekday }) {
+            return match.displayName
+        }
+        return "Assigned workout"
+    }
+
     private func handleCalendarDayTap(_ date: Date) {
         let day = Calendar.current.startOfDay(for: date)
-        if Calendar.current.isDateInToday(day) {
-            appTabSelection(.today)
-            return
-        }
-        if let summary = monthSummaries.first(where: { Calendar.current.isDate($0.date, inSameDayAs: day) }),
-           !summary.sessions.isEmpty {
-            selectedDate = day
-            selectedPayload = SelectedSessionsPayload(date: day, sessions: summary.sessions)
-            return
-        }
+        let state = dayState(for: day)
+        guard state == .completed || state == .missed || state == .today else { return }
+
         withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) {
             if let selectedDate, Calendar.current.isDate(selectedDate, inSameDayAs: day) {
                 self.selectedDate = nil
             } else {
                 self.selectedDate = day
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var detailSection: some View {
+        if let selectedDate {
+            let state = dayState(for: selectedDate)
+            switch state {
+            case .completed:
+                if let summary = summariesByDate[Calendar.current.startOfDay(for: selectedDate)] {
+                    CalendarDaySummaryCard(summary: summary)
+                }
+            case .missed:
+                MissedDayCard(
+                    date: selectedDate,
+                    workoutName: assignedWorkoutName(on: selectedDate)
+                )
+            case .today:
+                TodayDayCard(
+                    date: selectedDate,
+                    workoutName: assignedWorkoutName(on: selectedDate)
+                )
+            default:
+                EmptyView()
             }
         }
     }
@@ -103,46 +168,17 @@ struct CalendarTabView: View {
                         displayMonth: $displayMonth,
                         selectedDate: $selectedDate,
                         sessionCount: monthSessionCount,
-                        summaries: monthSummaries,
+                        summariesByDate: summariesByDate,
+                        dayStateProvider: { dayState(for: $0) },
                         onSelectDay: { date in
                             handleCalendarDayTap(date)
                         }
                     )
 
-                    if visibleSummaries.isEmpty {
-                        CalendarEmptyDetailsCard(date: selectedDate)
-                    } else {
-                        VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                            ForEach(visibleSummaries) { summary in
-                                Button {
-                                    if Calendar.current.isDateInToday(summary.date) {
-                                        appTabSelection(.today)
-                                    } else {
-                                        selectedPayload = SelectedSessionsPayload(
-                                            date: summary.date,
-                                            sessions: summary.sessions
-                                        )
-                                    }
-                                } label: {
-                                    CalendarDaySummaryCard(
-                                        summary: summary,
-                                        isHighlighted: selectedDate.map {
-                                            Calendar.current.isDate($0, inSameDayAs: summary.date)
-                                        } ?? false
-                                    )
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                    }
+                    detailSection
                 }
             }
-            .sheet(item: $selectedPayload) { payload in
-                SessionSummarySheet(payload: payload)
-                    .presentationDetents([.medium, .large])
-                    .appBottomSheetChrome()
-            }
-            .tint(AppColor.accent)
+            .tint(AppColor.systemTint)
         }
     }
 }
@@ -151,7 +187,8 @@ private struct CalendarMonthCard: View {
     @Binding var displayMonth: Date
     @Binding var selectedDate: Date?
     let sessionCount: Int
-    let summaries: [CalendarDaySummary]
+    let summariesByDate: [Date: CalendarDaySummary]
+    let dayStateProvider: (Date) -> CalendarDayState
     let onSelectDay: (Date) -> Void
 
     private var canGoForward: Bool {
@@ -197,7 +234,7 @@ private struct CalendarMonthCard: View {
                 CalendarMonthGrid(
                     displayMonth: displayMonth,
                     selectedDate: selectedDate,
-                    summariesByDate: Dictionary(uniqueKeysWithValues: summaries.map { ($0.date, $0) }),
+                    dayStateProvider: dayStateProvider,
                     onSelectDay: onSelectDay
                 )
             }
@@ -211,28 +248,36 @@ private struct CalendarMonthCard: View {
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            icon
-                .image(size: 17, weight: .semibold)
-                .foregroundStyle(isEnabled ? AppColor.textPrimary : AppColor.textSecondary.opacity(0.45))
-                .frame(width: 44, height: 44)
-                .contentShape(Rectangle())
+            AppIconCircle(surface: .control) {
+                icon
+                    .image(size: AppIconCircleSize.icon, weight: AppIconCircleSize.weight)
+                    .foregroundStyle(isEnabled ? AppColor.textPrimary : AppColor.textSecondary.opacity(0.45))
+            }
+            .frame(width: 44, height: 44)
+            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(ScaleButtonStyle())
         .disabled(!isEnabled)
         .accessibilityLabel(accessibilityLabel)
     }
 
     private func shiftMonth(by value: Int) {
-        guard let next = Calendar.current.date(byAdding: .month, value: value, to: displayMonth) else { return }
+        let calendar = Calendar.current
+        guard let next = calendar.date(byAdding: .month, value: value, to: displayMonth) else { return }
         displayMonth = next
-        selectedDate = nil
+        let today = calendar.startOfDay(for: Date())
+        if calendar.isDate(next, equalTo: today, toGranularity: .month) {
+            selectedDate = today
+        } else {
+            selectedDate = nil
+        }
     }
 }
 
 private struct CalendarMonthGrid: View {
     let displayMonth: Date
     let selectedDate: Date?
-    let summariesByDate: [Date: CalendarDaySummary]
+    let dayStateProvider: (Date) -> CalendarDayState
     let onSelectDay: (Date) -> Void
 
     private let columns = Array(repeating: GridItem(.flexible(), spacing: AppSpacing.sm), count: 7)
@@ -251,14 +296,14 @@ private struct CalendarMonthGrid: View {
         for offset in 0..<dayRange.count {
             guard let date = calendar.date(byAdding: .day, value: offset, to: monthStart) else { continue }
             let dayNumber = offset + 1
-            let summary = summariesByDate[date]
 
             result.append(
                 CalendarGridCellModel(
                     date: date,
                     dayNumber: dayNumber,
                     isSelected: selectedDate.map { calendar.isDate($0, inSameDayAs: date) } ?? false,
-                    status: CalendarGridCellStatus(date: date, summary: summary)
+                    isToday: calendar.isDateInToday(date),
+                    state: dayStateProvider(date)
                 )
             )
         }
@@ -285,7 +330,7 @@ private struct CalendarMonthGrid: View {
                         }
                     } else {
                         Color.clear
-                            .frame(height: 32)
+                            .frame(height: 40)
                     }
                 }
             }
@@ -297,132 +342,137 @@ private struct CalendarGridDayCell: View {
     let model: CalendarGridCellModel
     let action: () -> Void
 
+    private var isInteractive: Bool {
+        model.state == .completed || model.state == .missed || model.state == .today
+    }
+
     var body: some View {
-        Button(action: action) {
-            Text("\(model.dayNumber)")
-                .font(AppFont.caption.font)
-                .foregroundStyle(numberColor)
-                .frame(width: 32, height: 32)
-                .background(backgroundColor)
-                .overlay {
-                    RoundedRectangle(cornerRadius: AppRadius.sm, style: .continuous)
-                        .stroke(borderColor, lineWidth: borderLineWidth)
+        Group {
+            if isInteractive {
+                Button(action: action) {
+                    cellContent
                 }
-                .clipShape(RoundedRectangle(cornerRadius: AppRadius.sm, style: .continuous))
+                .buttonStyle(ScaleButtonStyle())
+            } else {
+                cellContent
+            }
         }
-        .buttonStyle(.plain)
+        .accessibilityLabel(accessibilityLabel)
+        .accessibilityAddTraits(isInteractive ? [.isButton] : [])
+    }
+
+    private var cellContent: some View {
+        Text("\(model.dayNumber)")
+            .font(AppFont.caption.font)
+            .fontWeight(model.isToday ? .semibold : .medium)
+            .foregroundStyle(numberColor)
+            .frame(minWidth: 36, minHeight: 38)
+            .background(
+                RoundedRectangle(cornerRadius: AppRadius.sm, style: .continuous)
+                    .fill(backgroundColor)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: AppRadius.sm, style: .continuous)
+                    .strokeBorder(ringColor, style: ringStyle)
+            )
     }
 
     private var backgroundColor: Color {
-        switch model.status {
-        case .today:
-            return model.isSelected ? AppColor.accent : AppColor.controlBackground
+        switch model.state {
         case .completed:
-            return AppColor.success.opacity(0.18)
-        case .failed:
-            return AppColor.error.opacity(0.18)
-        case .empty:
+            return AppColor.successSoft
+        case .missed:
+            return AppColor.warningSoft
+        case .today:
+            return AppColor.controlBackground
+        case .default, .future:
             return .clear
         }
     }
 
     private var numberColor: Color {
-        switch model.status {
-        case .today:
-            return model.isSelected ? AppColor.accentForeground : AppColor.textPrimary
+        switch model.state {
         case .completed:
-            return AppColor.success
-        case .failed:
-            return AppColor.error
-        case .empty:
+            return AppColor.successOnSoft
+        case .missed:
+            return AppColor.warningOnSoft
+        case .today:
+            return AppColor.textPrimary
+        case .default:
             return AppColor.textSecondary
+        case .future:
+            return AppColor.textSecondary.opacity(0.55)
         }
     }
 
-    private var borderColor: Color {
-        if model.status == .today, !model.isSelected {
-            return AppColor.textPrimary.opacity(0.34)
-        }
-        if model.isSelected, model.status == .empty {
-            return AppColor.textPrimary.opacity(0.35)
-        }
-        return .clear
+    private var ringColor: Color {
+        model.isSelected ? AppColor.accent : .clear
     }
 
-    private var borderLineWidth: CGFloat {
-        if model.status == .today, !model.isSelected {
-            return 1
+    private var ringStyle: StrokeStyle {
+        model.isSelected ? StrokeStyle(lineWidth: 2) : StrokeStyle(lineWidth: 0)
+    }
+
+    private var accessibilityLabel: String {
+        let dateLabel = model.date.formatted(date: .abbreviated, time: .omitted)
+        let stateLabel: String
+        switch model.state {
+        case .default:
+            stateLabel = "no session"
+        case .completed:
+            stateLabel = "logged session"
+        case .missed:
+            stateLabel = "missed"
+        case .today:
+            stateLabel = "today"
+        case .future:
+            stateLabel = "upcoming"
         }
-        return model.isSelected && model.status == .empty ? 1 : 0
+        let selected = model.isSelected ? ", selected" : ""
+        return "\(dateLabel), \(stateLabel)\(selected)"
     }
 }
 
 private struct CalendarDaySummaryCard: View {
     let summary: CalendarDaySummary
-    let isHighlighted: Bool
 
     var body: some View {
-        AppCard {
-            VStack(alignment: .leading, spacing: AppSpacing.smd) {
-                HStack(alignment: .center, spacing: AppSpacing.md) {
-                    Text(summary.date.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day()))
-                        .font(AppFont.label.font)
-                        .foregroundStyle(AppColor.textSecondary)
-
-                    Spacer(minLength: 0)
-
-                    AppTag(text: summary.status.label, style: summary.status.tagStyle)
-                }
-
-                VStack(alignment: .leading, spacing: AppSpacing.xxs) {
-                    Text(summary.primaryTitle)
-                        .font(AppFont.title.font)
-                        .foregroundStyle(AppColor.textPrimary)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    Text(summary.subtitle)
-                        .font(AppFont.caption.font)
-                        .foregroundStyle(AppColor.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
+        AppSessionHighlightCard(
+            eyebrow: summary.date.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day()),
+            title: summary.primaryTitle,
+            caption: summary.subtitle
+        ) {
+            AppTag(text: "Completed", style: .success, layout: .compactCapsule)
         }
-        .overlay {
-            RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                .stroke(borderColor, lineWidth: borderLineWidth)
-        }
-        .clipShape(RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous))
-    }
-
-    private var borderColor: Color {
-        AppColor.border.opacity(0.6)
-    }
-
-    private var borderLineWidth: CGFloat {
-        1
     }
 }
 
-private struct CalendarEmptyDetailsCard: View {
-    let date: Date?
+private struct MissedDayCard: View {
+    let date: Date
+    let workoutName: String
 
     var body: some View {
-        AppCard {
-            VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                if let date {
-                    Text(date.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day()))
-                        .font(AppFont.caption.font)
-                        .foregroundStyle(AppColor.textSecondary)
+        AppSessionHighlightCard(
+            eyebrow: date.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day()),
+            title: workoutName,
+            caption: nil
+        ) {
+            AppTag(text: "Missed", style: .warning, layout: .compactCapsule)
+        }
+    }
+}
 
-                    Text("No logged session for this day.")
-                        .font(AppFont.label.font)
-                        .foregroundStyle(AppColor.textPrimary)
-                } else {
-                    Text("Select a day to view its details.")
-                        .font(AppFont.body.font)
-                        .foregroundStyle(AppColor.textSecondary)
-                }
-            }
+private struct TodayDayCard: View {
+    let date: Date
+    let workoutName: String
+
+    var body: some View {
+        AppSessionHighlightCard(
+            eyebrow: date.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day()),
+            title: workoutName,
+            caption: nil
+        ) {
+            AppTag(text: "Today", style: .default, layout: .compactCapsule)
         }
     }
 }
@@ -433,20 +483,6 @@ private struct CalendarDaySummary: Identifiable {
 
     var id: Date { date }
 
-    var status: CalendarSummaryStatus {
-        if Calendar.current.isDateInToday(date) {
-            if sessions.isEmpty { return .today }
-            if sessions.contains(where: { $0.state == .partial || $0.hasFailure }) {
-                return .failed
-            }
-            return .completed
-        }
-        if sessions.contains(where: { $0.state == .partial || $0.hasFailure }) {
-            return .failed
-        }
-        return .completed
-    }
-
     var primaryTitle: String {
         sessions.first?.templateName ?? "Workout"
     }
@@ -456,74 +492,22 @@ private struct CalendarDaySummary: Identifiable {
     }
 }
 
-private enum CalendarSummaryStatus: Equatable {
+enum CalendarDayState: Equatable {
+    case `default`
     case completed
-    case failed
+    case missed
     case today
-
-    var label: String {
-        switch self {
-        case .completed:
-            return "Completed"
-        case .failed:
-            return "Failed"
-        case .today:
-            return "Today"
-        }
-    }
-
-    var tagStyle: AppTag.Style {
-        switch self {
-        case .completed:
-            return .success
-        case .failed:
-            return .error
-        case .today:
-            return .accent
-        }
-    }
-}
-
-private enum CalendarGridCellStatus: Equatable {
-    case empty
-    case completed
-    case failed
-    case today
-
-    init(date: Date, summary: CalendarDaySummary?) {
-        if Calendar.current.isDateInToday(date) {
-            self = .today
-        } else if let summary {
-            switch summary.status {
-            case .completed:
-                self = .completed
-            case .failed, .today:
-                self = .failed
-            }
-        } else {
-            self = .empty
-        }
-    }
+    case future
 }
 
 private struct CalendarGridCellModel: Identifiable {
     let date: Date
     let dayNumber: Int
     let isSelected: Bool
-    let status: CalendarGridCellStatus
+    let isToday: Bool
+    let state: CalendarDayState
 
     var id: Date { date }
-}
-
-private extension SessionSnapshot {
-    var hasFailure: Bool {
-        exercises
-            .flatMap(\.sets)
-            .contains { set in
-                let hasTarget = set.targetWeight > 0 || set.targetReps > 0
-                return hasTarget && !set.metTarget
-            }
-    }
 }
 
 private extension Calendar {

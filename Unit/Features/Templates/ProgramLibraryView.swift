@@ -2,8 +2,8 @@
 //  ProgramLibraryView.swift
 //  Unit
 //
-//  Browsable catalog of 8 starter programs filterable by level, goal, and
-//  days-per-week. Tap a program to see its details and import.
+//  Browsable catalog of starter programs filtered via inline dropdown chips
+//  above the list (iOS-native Menu with Picker for checkmarked selection).
 //
 
 import SwiftUI
@@ -34,7 +34,7 @@ struct ProgramLibraryView: View {
             showsNativeNavigationBar: true
         ) {
             VStack(alignment: .leading, spacing: AppSpacing.md) {
-                filterChips
+                filterBar
 
                 if filteredPrograms.isEmpty {
                     Text("No programs match these filters.")
@@ -60,39 +60,46 @@ struct ProgramLibraryView: View {
         .appScrollEdgeSoft()
     }
 
-    private var filterChips: some View {
+    private var filterBar: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: AppSpacing.xs) {
-                ForEach(ProgramTemplate.Level.allCases, id: \.self) { level in
-                    AppFilterChip(
-                        label: level.displayName,
-                        isSelected: selectedLevel == level,
-                        showsClearGlyphWhenSelected: true
-                    ) {
-                        toggleLevel(level)
+                AppDropdownChip(
+                    label: selectedLevel?.displayName ?? "Level",
+                    isActive: selectedLevel != nil
+                ) {
+                    Picker("Level", selection: $selectedLevel) {
+                        Text("All").tag(ProgramTemplate.Level?.none)
+                        ForEach(ProgramTemplate.Level.allCases) { level in
+                            Text(level.displayName).tag(Optional(level))
+                        }
                     }
                 }
 
-                ForEach(ProgramTemplate.Goal.allCases, id: \.self) { goal in
-                    AppFilterChip(
-                        label: goal.displayName,
-                        isSelected: selectedGoal == goal,
-                        showsClearGlyphWhenSelected: true
-                    ) {
-                        toggleGoal(goal)
+                AppDropdownChip(
+                    label: selectedGoal?.displayName ?? "Goal",
+                    isActive: selectedGoal != nil
+                ) {
+                    Picker("Goal", selection: $selectedGoal) {
+                        Text("All").tag(ProgramTemplate.Goal?.none)
+                        ForEach(ProgramTemplate.Goal.allCases) { goal in
+                            Text(goal.displayName).tag(Optional(goal))
+                        }
                     }
                 }
 
-                ForEach(daysOptions, id: \.self) { days in
-                    AppFilterChip(
-                        label: "\(days) days",
-                        isSelected: selectedDays == days,
-                        showsClearGlyphWhenSelected: true
-                    ) {
-                        toggleDays(days)
+                AppDropdownChip(
+                    label: selectedDays.map { "\($0) days" } ?? "Days/week",
+                    isActive: selectedDays != nil
+                ) {
+                    Picker("Days/week", selection: $selectedDays) {
+                        Text("All").tag(Int?.none)
+                        ForEach(daysOptions, id: \.self) { days in
+                            Text("\(days) days").tag(Optional(days))
+                        }
                     }
                 }
             }
+            .padding(.vertical, AppSpacing.xxs)
         }
     }
 
@@ -102,17 +109,4 @@ struct ProgramLibraryView: View {
             subtitle: "\(program.level.displayName) · \(program.goal.displayName) · \(program.daysPerWeek) days/week"
         )
     }
-
-    private func toggleLevel(_ level: ProgramTemplate.Level) {
-        selectedLevel = selectedLevel == level ? nil : level
-    }
-
-    private func toggleGoal(_ goal: ProgramTemplate.Goal) {
-        selectedGoal = selectedGoal == goal ? nil : goal
-    }
-
-    private func toggleDays(_ days: Int) {
-        selectedDays = selectedDays == days ? nil : days
-    }
 }
-

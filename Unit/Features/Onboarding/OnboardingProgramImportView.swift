@@ -22,6 +22,7 @@ struct OnboardingProgramImportView: View {
     @State private var parsedDays: [ImportedProgramDay] = []
     @State private var isParsing = false
     @State private var errorMessage: String?
+    @State private var isPhotoPickerPresented = false
 
     private var isPhotoMode: Bool {
         vm.importMethod == .photo
@@ -89,10 +90,17 @@ struct OnboardingProgramImportView: View {
 
             if isPhotoMode {
                 let hasPhoto = selectedPhotoData != nil
-                PhotosPicker(selection: $selectedPhoto, matching: .images) {
-                    OnboardingPhotoPickerLabel(hasPhoto: hasPhoto)
+                AppSecondaryButton(
+                    hasPhoto ? "Replace photo" : "Choose photo",
+                    icon: .photo
+                ) {
+                    isPhotoPickerPresented = true
                 }
-                .buttonStyle(.plain)
+                .photosPicker(
+                    isPresented: $isPhotoPickerPresented,
+                    selection: $selectedPhoto,
+                    matching: .images
+                )
 
                 if hasPhoto {
                     Text("Photo ready.")
@@ -169,7 +177,7 @@ struct OnboardingProgramImportView: View {
                 .foregroundStyle(AppColor.textSecondary)
                 .frame(minHeight: 44)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(ScaleButtonStyle())
     }
 
     private var helperCopy: String {
@@ -229,25 +237,6 @@ struct OnboardingProgramImportView: View {
             parts.append(WorkoutTargetFormatter.weightDisplay(weightKg))
         }
         return parts.isEmpty ? "Exercise only" : parts.joined(separator: " · ")
-    }
-}
-
-// MARK: - Photo picker label
-
-private struct OnboardingPhotoPickerLabel: View {
-    let hasPhoto: Bool
-
-    var body: some View {
-        HStack(spacing: AppSpacing.sm) {
-            AppIcon.photo.image(size: 16, weight: .semibold)
-            Text(hasPhoto ? "Replace photo" : "Choose photo")
-                .font(AppFont.sectionHeader.font)
-        }
-        .foregroundStyle(AppColor.textPrimary)
-        .frame(maxWidth: .infinity)
-        .frame(height: 52)
-        .background(AppColor.accentSoft)
-        .clipShape(RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous))
     }
 }
 

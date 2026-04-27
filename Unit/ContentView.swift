@@ -2,12 +2,18 @@
 //  ContentView.swift
 //  Unit
 //
-//  Root: Tab navigation (Today, Program, Calendar).
+//  Root: Tab navigation (Today, Program).
 //
-
 import SwiftData
 import SwiftUI
 import UIKit
+
+private extension UIFont {
+    func rounded() -> UIFont {
+        guard let descriptor = fontDescriptor.withDesign(.rounded) else { return self }
+        return UIFont(descriptor: descriptor, size: pointSize)
+    }
+}
 
 struct ContentView: View {
     @AppStorage(wrappedValue: false, "hasSeenPaywall") private var hasSeenPaywall
@@ -39,16 +45,13 @@ struct ContentView: View {
 
     var body: some View {
         Group {
-            if showOnboardingRestart {
-                OnboardingView(isRestart: true)
-            } else if needsOnboarding {
+            if needsOnboarding {
                 OnboardingView()
-            } else if !hasSeenPaywall && !store.isPurchased {
-                PaywallView {
-                    hasSeenPaywall = true
-                }
-                .environment(store)
+            } else if showOnboardingRestart {
+                OnboardingView(isRestart: true)
             } else {
+                // Paywall deferred — ship v1 free to validate retention
+                // without price as a confound. Monetize after proving habit.
                 mainTabView
             }
         }
@@ -56,6 +59,7 @@ struct ContentView: View {
         .onAppear {
             configureNavigationBarAppearance()
             configureSegmentedControlAppearance()
+            configureTabBarAppearance()
         }
     }
 
@@ -73,7 +77,7 @@ struct ContentView: View {
                 }
                 .tag(RootTab.program)
         }
-        .tint(AppColor.accent)
+        .tint(AppColor.systemTint)
         .toolbar(hasActiveSession ? .hidden : .visible, for: .tabBar)
         .environment(\.appTabSelection, AppTabSelection { tab in
             selectedTab = tab
@@ -83,18 +87,20 @@ struct ContentView: View {
     private func configureNavigationBarAppearance() {
         let titleColor = UIColor(AppColor.textPrimary)
         let backgroundColor = UIColor(AppColor.barBackground)
+        let titleFont = UIFont.systemFont(ofSize: 17, weight: .semibold).rounded()
+        let largeTitleFont = UIFont.systemFont(ofSize: 34, weight: .bold).rounded()
 
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
         appearance.backgroundColor = backgroundColor
         appearance.shadowColor = .clear
-        appearance.titleTextAttributes = [.foregroundColor: titleColor]
-        appearance.largeTitleTextAttributes = [.foregroundColor: titleColor]
+        appearance.titleTextAttributes = [.foregroundColor: titleColor, .font: titleFont]
+        appearance.largeTitleTextAttributes = [.foregroundColor: titleColor, .font: largeTitleFont]
 
         let scrollEdgeAppearance = UINavigationBarAppearance()
         scrollEdgeAppearance.configureWithTransparentBackground()
-        scrollEdgeAppearance.titleTextAttributes = [.foregroundColor: titleColor]
-        scrollEdgeAppearance.largeTitleTextAttributes = [.foregroundColor: titleColor]
+        scrollEdgeAppearance.titleTextAttributes = [.foregroundColor: titleColor, .font: titleFont]
+        scrollEdgeAppearance.largeTitleTextAttributes = [.foregroundColor: titleColor, .font: largeTitleFont]
 
         let navBar = UINavigationBar.appearance()
         navBar.tintColor = titleColor
@@ -106,15 +112,24 @@ struct ContentView: View {
     private func configureSegmentedControlAppearance() {
         let segmentedControl = UISegmentedControl.appearance()
         segmentedControl.backgroundColor = UIColor(AppColor.controlBackground)
-        segmentedControl.selectedSegmentTintColor = UIColor(AppColor.accent)
+        segmentedControl.selectedSegmentTintColor = UIColor.white
+        let normalFont = UIFont.systemFont(ofSize: 14, weight: .medium).rounded()
+        let selectedFont = UIFont.systemFont(ofSize: 14, weight: .semibold).rounded()
         segmentedControl.setTitleTextAttributes(
-            [.foregroundColor: UIColor(AppColor.textSecondary)],
+            [.foregroundColor: UIColor(AppColor.textSecondary), .font: normalFont],
             for: .normal
         )
         segmentedControl.setTitleTextAttributes(
-            [.foregroundColor: UIColor(AppColor.accentForeground)],
+            [.foregroundColor: UIColor(AppColor.textPrimary), .font: selectedFont],
             for: .selected
         )
+    }
+
+    private func configureTabBarAppearance() {
+        let tabFont = UIFont.systemFont(ofSize: 10, weight: .medium).rounded()
+        let attributes: [NSAttributedString.Key: Any] = [.font: tabFont]
+        UITabBarItem.appearance().setTitleTextAttributes(attributes, for: .normal)
+        UITabBarItem.appearance().setTitleTextAttributes(attributes, for: .selected)
     }
 }
 

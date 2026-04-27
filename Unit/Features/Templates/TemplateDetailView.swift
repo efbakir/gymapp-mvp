@@ -2,7 +2,7 @@
 //  TemplateDetailView.swift
 //  Unit
 //
-//  Day detail: exercise list with ghost values, edit control in nav bar.
+//  Day detail: exercise list with ghost values, swipe to remove, press-and-hold to reorder.
 //
 
 import SwiftUI
@@ -15,8 +15,6 @@ struct TemplateDetailView: View {
     @Query(sort: \Exercise.displayName) private var exercises: [Exercise]
     @Query(sort: \WorkoutSession.date, order: .reverse) private var sessions: [WorkoutSession]
     @State private var showingAddExercise = false
-    @State private var isEditing = false
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var orderedExercises: [Exercise] {
         template.orderedExerciseIds.compactMap { id in
@@ -35,19 +33,19 @@ struct TemplateDetailView: View {
 
     var body: some View {
         List {
-            if isEditing {
-                Text("Hold and drag to order")
+            if !orderedExercises.isEmpty {
+                Text("Press and hold to reorder. Swipe left on a card to remove.")
                     .font(AppFont.caption.font)
                     .foregroundStyle(AppColor.textSecondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                .listRowInsets(cardListInsets)
-                .listRowSeparator(.hidden)
-                .listRowBackground(Color.clear)
+                    .listRowInsets(cardListInsets)
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
             }
 
             if orderedExercises.isEmpty {
                 AppCard {
-                    Text(isEditing ? "Tap below to add your first exercise." : "No exercises yet.")
+                    Text("No exercises yet.")
                         .font(AppFont.body.font)
                         .foregroundStyle(AppColor.textSecondary)
                         .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
@@ -59,33 +57,33 @@ struct TemplateDetailView: View {
                 ForEach(orderedExercises, id: \.id) { exercise in
                     exerciseRowCard(exercise)
                 }
+                .onMove(perform: reorderExercises)
             }
 
-            if isEditing {
-                Button {
-                    showingAddExercise = true
-                } label: {
-                    AppCard {
-                        HStack(spacing: AppSpacing.sm) {
-                            AppIcon.addCircle.image()
-                            Text("Add Exercise")
-                                .font(AppFont.body.font)
-                            Spacer(minLength: 0)
-                        }
-                        .foregroundStyle(AppColor.accent)
-                        .frame(minHeight: 44, alignment: .leading)
+            Button {
+                showingAddExercise = true
+            } label: {
+                AppCard {
+                    HStack(spacing: AppSpacing.sm) {
+                        AppIcon.addCircle.image()
+                        Text("Add Exercise")
+                            .font(AppFont.body.font)
+                        Spacer(minLength: 0)
                     }
+                    .foregroundStyle(AppColor.accent)
+                    .frame(minHeight: 44, alignment: .leading)
                 }
-                .buttonStyle(.plain)
-                .listRowInsets(cardListInsets)
-                .listRowSeparator(.hidden)
-                .listRowBackground(Color.clear)
             }
+            .buttonStyle(ScaleButtonStyle())
+            .listRowInsets(cardListInsets)
+            .listRowSeparator(.hidden)
+            .listRowBackground(Color.clear)
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
         .contentMargins(.top, AppSpacing.sm, for: .scrollContent)
-        .appScrollEdgeSoftTop(enabled: true)
+        .appScrollEdgeSoft()
+        // `onMove` uses press-and-hold then drag (system behavior); no `EditMode` so we avoid extra list chrome.
         .background(AppColor.background.ignoresSafeArea())
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
@@ -100,134 +98,65 @@ struct TemplateDetailView: View {
                     .minimumScaleFactor(0.82)
                     .frame(maxWidth: 240)
             }
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.18)) {
-                        isEditing.toggle()
-                    }
-                } label: {
-                    (isEditing ? AppIcon.checkmark : AppIcon.edit).image(size: 18, weight: .semibold)
-                        .foregroundStyle(AppColor.textPrimary)
-                        .frame(width: 44, height: 44)
-                        .background {
-                            Circle()
-                                .fill(AppColor.cardBackground)
-                        }
-                        .overlay {
-                            Circle()
-                                .stroke(AppColor.border.opacity(0.5), lineWidth: 0.5)
-                        }
-                        .contentShape(Circle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(isEditing ? "Done" : "Edit")
-            }
         }
         .toolbarBackground(.hidden, for: .navigationBar)
         .sheet(isPresented: $showingAddExercise) {
             AddExerciseToTemplateView(template: template)
                 .appBottomSheetChrome()
         }
-        .tint(AppColor.accent)
+        .tint(AppColor.systemTint)
     }
 
     private func exerciseRowCard(_ exercise: Exercise) -> some View {
-        let row = HStack(alignment: .center, spacing: AppSpacing.sm) {
-            AppCard {
-                HStack(alignment: .top, spacing: AppSpacing.md) {
-                    VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                        Text(exercise.displayName)
-                            .font(AppFont.body.font)
-                            .foregroundStyle(AppColor.textPrimary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .multilineTextAlignment(.leading)
+        AppCard {
+            HStack(alignment: .center, spacing: AppSpacing.md) {
+                Text(exercise.displayName)
+                    .font(AppFont.body.font)
+                    .foregroundStyle(AppColor.textPrimary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .multilineTextAlignment(.leading)
 
-                        exerciseTargetSubtitle(for: exercise)
-                    }
-                }
-            }
-            .frame(minHeight: 44)
-
-            if isEditing {
-                Button {
-                    removeExercise(exercise.id)
-                } label: {
-                    AppIcon.trash.image(size: 13, weight: .semibold)
-                        .foregroundStyle(AppColor.textSecondary)
-                        .frame(width: 32, height: 32)
-                        .background(AppColor.background)
-                        .clipShape(Circle())
-                        .frame(width: 44, height: 44)
-                        .contentShape(Circle())
-                }
-                .buttonStyle(.plain)
+                exerciseTargetSubtitle(for: exercise)
             }
         }
-        
-        return reorderableExerciseRow(row, exerciseID: exercise.id)
-            .listRowInsets(cardListInsets)
-            .listRowSeparator(.hidden)
-            .listRowBackground(Color.clear)
-    }
-
-    @ViewBuilder
-    private func reorderableExerciseRow<Content: View>(_ content: Content, exerciseID: UUID) -> some View {
-        if isEditing {
-            content
-                .draggable(exerciseID.uuidString) {
-                    Text(exercises.first(where: { $0.id == exerciseID })?.displayName ?? "Exercise")
-                        .font(AppFont.body.font)
-                        .padding(.horizontal, AppSpacing.md)
-                        .padding(.vertical, AppSpacing.sm)
-                        .background(AppColor.cardBackground)
-                        .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
-                }
-                .dropDestination(for: String.self) { items, _ in
-                    guard let first = items.first, let draggedID = UUID(uuidString: first) else { return false }
-                    moveExercise(draggedID, before: exerciseID)
-                    return true
-                } isTargeted: { _ in }
-        } else {
-            content
+        .frame(minHeight: 44)
+        .listRowInsets(cardListInsets)
+        .listRowSeparator(.hidden)
+        .listRowBackground(Color.clear)
+        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+            Button(role: .destructive) {
+                removeExercise(exercise.id)
+            } label: {
+                Label("Remove", systemImage: AppIcon.trash.systemName)
+            }
         }
     }
 
     @ViewBuilder
     private func exerciseTargetSubtitle(for exercise: Exercise) -> some View {
-        let setCount = lastWorkingSetCount(exerciseId: exercise.id)
-        let planned = plannedTargetDisplay(for: exercise)
-        let effectiveSetCount = max(setCount, 1)
-
-        VStack(alignment: .leading, spacing: AppSpacing.xs) {
-            if let planned {
-                Text(WorkoutTargetFormatter.volumeText(setCount: effectiveSetCount, reps: planned.reps) ?? "\(planned.reps) reps")
-                    .font(AppFont.label.font)
-                    .foregroundStyle(AppColor.textPrimary)
-                    .monospacedDigit()
-
-                Text("Last")
-                    .font(AppFont.caption.font)
-                    .foregroundStyle(AppColor.textSecondary)
-
-                Text(planned.weightLine)
-                    .font(AppFont.caption.font)
-                    .foregroundStyle(AppColor.textSecondary)
-                    .monospacedDigit()
-            }
-
-            if setCount > 0, planned == nil {
-                Text("\(setCount) set\(setCount == 1 ? "" : "s")")
-                    .font(AppFont.caption.font)
-                    .foregroundStyle(AppColor.textSecondary)
-                    .monospacedDigit()
-            }
+        if let planned = plannedTargetDisplay(for: exercise) {
+            Text("\(planned.setCount) × \(planned.reps)")
+                .font(AppFont.performance)
+                .foregroundStyle(AppColor.textPrimary)
+                .monospacedDigit()
+        } else {
+            Text(ghostEmptySubtitle(for: exercise))
+                .font(AppFont.caption.font)
+                .foregroundStyle(AppColor.textSecondary)
         }
+    }
+
+    private func ghostEmptySubtitle(for exercise: Exercise) -> String {
+        let hasAnyCompleted = sessions.contains(where: \.isCompleted)
+        if !hasAnyCompleted {
+            return AppCopy.EmptyState.noHistoryYet
+        }
+        return AppCopy.EmptyState.noPriorSets
     }
 
     private struct PlannedTargetDisplay {
         let setCount: Int
         let reps: Int
-        let weightLine: String
     }
 
     private func plannedTargetDisplay(for exercise: Exercise) -> PlannedTargetDisplay? {
@@ -247,21 +176,18 @@ struct TemplateDetailView: View {
 
         let setCount = max(sets.count, 1)
 
-        if exercise.isBodyweight {
-            if lastSet.weight == 0 {
-                return PlannedTargetDisplay(setCount: setCount, reps: lastSet.reps, weightLine: "Bodyweight")
-            }
-            return PlannedTargetDisplay(setCount: setCount, reps: lastSet.reps, weightLine: "\(WorkoutTargetFormatter.weightDisplay(lastSet.weight)) added")
+        if !exercise.isBodyweight, lastSet.weight <= 0 {
+            return nil
         }
 
-        guard lastSet.weight > 0 else { return nil }
-        return PlannedTargetDisplay(setCount: setCount, reps: lastSet.reps, weightLine: WorkoutTargetFormatter.weightDisplay(lastSet.weight))
+        return PlannedTargetDisplay(setCount: setCount, reps: lastSet.reps)
     }
 
-    private func lastWorkingSetCount(exerciseId: UUID) -> Int {
-        let forDay = sessions.filter { $0.templateId == template.id && $0.isCompleted }
-        guard let latest = forDay.max(by: { $0.date < $1.date }) else { return 0 }
-        return latest.setEntries.filter { $0.exerciseId == exerciseId && $0.isCompleted && !$0.isWarmup }.count
+    private func reorderExercises(from source: IndexSet, to destination: Int) {
+        var ids = template.orderedExerciseIds
+        ids.move(fromOffsets: source, toOffset: destination)
+        template.orderedExerciseIds = ids
+        try? modelContext.save()
     }
 
     private func removeExercise(_ exerciseID: UUID) {
@@ -271,19 +197,6 @@ struct TemplateDetailView: View {
         try? modelContext.save()
     }
 
-    private func moveExercise(_ draggedID: UUID, before targetID: UUID) {
-        var ids = template.orderedExerciseIds
-        guard draggedID != targetID,
-              let sourceIndex = ids.firstIndex(of: draggedID),
-              let targetIndex = ids.firstIndex(of: targetID)
-        else { return }
-
-        ids.remove(at: sourceIndex)
-        let destinationIndex = sourceIndex < targetIndex ? targetIndex - 1 : targetIndex
-        ids.insert(draggedID, at: destinationIndex)
-        template.orderedExerciseIds = ids
-        try? modelContext.save()
-    }
 }
 
 struct AddExerciseToTemplateView: View {
@@ -343,7 +256,7 @@ struct AddExerciseToTemplateView: View {
                         }
                         .frame(minHeight: 44)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(ScaleButtonStyle())
                     .listRowSeparator(.hidden)
                     .listRowBackground(AppColor.cardBackground)
                 }
@@ -369,7 +282,7 @@ struct AddExerciseToTemplateView: View {
                         .foregroundStyle(AppColor.accent)
                         .frame(minHeight: 44, alignment: .leading)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(ScaleButtonStyle())
                     .listRowSeparator(.hidden)
                     .listRowBackground(AppColor.cardBackground)
                 }
@@ -377,17 +290,17 @@ struct AddExerciseToTemplateView: View {
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
             .background(AppColor.background.ignoresSafeArea())
-            .appScrollEdgeSoftTop(enabled: true)
+            .appScrollEdgeSoft()
             .navigationTitle("Add Exercise")
             .navigationBarTitleDisplayMode(.inline)
             .searchable(text: $query, prompt: "Search exercises")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Close") { dismiss() }
+                    Button("Close", role: .cancel) { dismiss() }
                 }
             }
             .appNavigationBarChrome()
-            .tint(AppColor.accent)
+            .tint(AppColor.systemTint)
         }
     }
 

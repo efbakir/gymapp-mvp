@@ -18,9 +18,6 @@ import SwiftData
 enum OnboardingPreferencesKeys {
     static let dayCount = "onboarding.dayCount"
     static let dayNames = "onboarding.dayNames"
-    static let compoundIncrementKg = "onboarding.compoundIncrementKg"
-    static let isolationIncrementKg = "onboarding.isolationIncrementKg"
-    static let globalIncrementKg = compoundIncrementKg
     static let startOption = "onboarding.startOption"
     static let customStartDate = "onboarding.customStartDate"
 }
@@ -29,8 +26,6 @@ enum OnboardingPreferences {
     static func save(from viewModel: OnboardingViewModel, defaults: UserDefaults = .standard) {
         defaults.set(viewModel.dayCount, forKey: OnboardingPreferencesKeys.dayCount)
         defaults.set(viewModel.dayNames, forKey: OnboardingPreferencesKeys.dayNames)
-        defaults.set(viewModel.compoundIncrementKg, forKey: OnboardingPreferencesKeys.compoundIncrementKg)
-        defaults.set(viewModel.isolationIncrementKg, forKey: OnboardingPreferencesKeys.isolationIncrementKg)
         defaults.set(rawStartOption(from: viewModel.startOption), forKey: OnboardingPreferencesKeys.startOption)
         defaults.set(viewModel.customDate.timeIntervalSince1970, forKey: OnboardingPreferencesKeys.customStartDate)
     }
@@ -48,16 +43,6 @@ enum OnboardingPreferences {
                     viewModel.dayNames[index] = names[index]
                 }
             }
-        }
-
-        if defaults.object(forKey: OnboardingPreferencesKeys.compoundIncrementKg) != nil {
-            viewModel.compoundIncrementKg = defaults.double(forKey: OnboardingPreferencesKeys.compoundIncrementKg)
-        } else if defaults.object(forKey: OnboardingPreferencesKeys.globalIncrementKg) != nil {
-            viewModel.compoundIncrementKg = defaults.double(forKey: OnboardingPreferencesKeys.globalIncrementKg)
-        }
-
-        if defaults.object(forKey: OnboardingPreferencesKeys.isolationIncrementKg) != nil {
-            viewModel.isolationIncrementKg = defaults.double(forKey: OnboardingPreferencesKeys.isolationIncrementKg)
         }
 
         if let rawOption = defaults.string(forKey: OnboardingPreferencesKeys.startOption) {
@@ -100,8 +85,6 @@ enum OnboardingRoute: Hashable {
     case programImport
     case splitBuilder
     case exercises
-    case baselines
-    case progression
 }
 
 // MARK: - Root View
@@ -139,7 +122,7 @@ struct OnboardingView: View {
                 destinationView(route)
             }
         }
-        .tint(AppColor.accent)
+        .tint(AppColor.systemTint)
         .environment(vm)
         .alert("Something went wrong", isPresented: $commitError) {
             Button("Try Again", role: .cancel) { }
@@ -194,30 +177,16 @@ struct OnboardingView: View {
 
         case .exercises:
             OnboardingExercisesView(progressStep: 3, progressTotal: totalRequiredSteps) {
-                path.append(OnboardingRoute.baselines)
-            }
-
-        case .baselines:
-            OnboardingBaselinesView(progressStep: 4, progressTotal: totalRequiredSteps) {
-                path.append(OnboardingRoute.progression)
-            }
-
-        case .progression:
-            OnboardingProgressionView(
-                progressStep: 5,
-                progressTotal: totalRequiredSteps,
-                ctaLabel: "Create My Program"
-            ) {
-                commitCycle()
+                commitProgram()
             }
         }
     }
 
-    private var totalRequiredSteps: Int { 5 }
+    private var totalRequiredSteps: Int { 3 }
 
     // MARK: - Commit
 
-    private func commitCycle() {
+    private func commitProgram() {
         if isRestart {
             // Check for existing programs — require explicit confirmation to replace
             let descriptor = FetchDescriptor<Split>()
@@ -247,11 +216,7 @@ struct OnboardingView: View {
     private func deleteExistingProgramData() throws {
         let splits = try modelContext.fetch(FetchDescriptor<Split>())
         let templates = try modelContext.fetch(FetchDescriptor<DayTemplate>())
-        let cycles = try modelContext.fetch(FetchDescriptor<Cycle>())
-        let rules = try modelContext.fetch(FetchDescriptor<ProgressionRule>())
 
-        for item in rules { modelContext.delete(item) }
-        for item in cycles { modelContext.delete(item) }
         for item in templates { modelContext.delete(item) }
         for item in splits { modelContext.delete(item) }
     }

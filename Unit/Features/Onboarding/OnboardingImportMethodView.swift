@@ -19,27 +19,15 @@ struct OnboardingImportMethodView: View {
             progressTotal: progressTotal
         ) {
             VStack(spacing: AppSpacing.sm) {
-                OnboardingOptionCard(
-                    icon: .camera,
-                    title: "Take a photo",
-                    subtitle: "Snap your sheet and let Unit read it."
-                ) {
+                OnboardingOptionCard(icon: .camera, title: "Take a photo") {
                     onSelect(.photo)
                 }
 
-                OnboardingOptionCard(
-                    icon: .clipboard,
-                    title: "Paste text",
-                    subtitle: "Paste your plan and let Unit split it up."
-                ) {
+                OnboardingOptionCard(icon: .clipboard, title: "Paste text") {
                     onSelect(.paste)
                 }
 
-                OnboardingOptionCard(
-                    icon: .edit,
-                    title: "Add by hand",
-                    subtitle: "Type your days and exercises yourself."
-                ) {
+                OnboardingOptionCard(icon: .edit, title: "Add by hand") {
                     onSelect(.manual)
                 }
             }

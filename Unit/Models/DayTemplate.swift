@@ -38,6 +38,35 @@ final class Split {
     }
 }
 
+/// UserDefaults-backed pointer to the user's currently active `Split`.
+/// Fallback: first split by name (legacy behavior) when nothing is set.
+/// Views that need reactivity should bind `@AppStorage("activeSplitId")` so
+/// SwiftUI re-evaluates when the user switches programs.
+enum ActiveSplitStore {
+    static let defaultsKey = "activeSplitId"
+
+    static func currentId() -> UUID? {
+        guard let raw = UserDefaults.standard.string(forKey: defaultsKey),
+              let uuid = UUID(uuidString: raw) else { return nil }
+        return uuid
+    }
+
+    static func setCurrent(_ id: UUID?) {
+        if let id {
+            UserDefaults.standard.set(id.uuidString, forKey: defaultsKey)
+        } else {
+            UserDefaults.standard.removeObject(forKey: defaultsKey)
+        }
+    }
+
+    static func resolve(from splits: [Split]) -> Split? {
+        if let id = currentId(), let match = splits.first(where: { $0.id == id }) {
+            return match
+        }
+        return splits.first
+    }
+}
+
 @Model
 final class DayTemplate {
     var id: UUID
@@ -45,19 +74,23 @@ final class DayTemplate {
     var splitId: UUID?
     var orderedExerciseIdsData: Data?
     var lastPerformedDate: Date?
+    /// Calendar weekday: 1=Sun, 2=Mon … 7=Sat.  0 = unscheduled (rotation mode).
+    var scheduledWeekday: Int = 0
 
     init(
         id: UUID = UUID(),
         name: String,
         splitId: UUID? = nil,
         orderedExerciseIds: [UUID] = [],
-        lastPerformedDate: Date? = nil
+        lastPerformedDate: Date? = nil,
+        scheduledWeekday: Int = 0
     ) {
         self.id = id
         self.name = name
         self.splitId = splitId
         self.orderedExerciseIdsData = (try? JSONEncoder().encode(orderedExerciseIds.map { $0.uuidString })) ?? nil
         self.lastPerformedDate = lastPerformedDate
+        self.scheduledWeekday = scheduledWeekday
     }
 
     /// Strips "Day N · " prefix if present, returning just the routine name.

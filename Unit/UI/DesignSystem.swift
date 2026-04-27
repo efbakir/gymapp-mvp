@@ -27,7 +27,7 @@ enum AppColor {
     static let sheetBackground = Color(uiColor: uicolorAdaptive(light: 0xFFFFFF, dark: 0x21252D))
     static let controlBackground = Color(uiColor: uicolorAdaptive(light: 0xE8E8E8, dark: 0x2C313A))
     static let mutedFill = Color(uiColor: uicolorAdaptive(light: 0xE8E8E8, dark: 0x313640))
-    static let disabledSurface = Color(uiColor: uicolorAdaptive(light: 0xCBCBCB, dark: 0x252932))
+    static let disabledSurface = Color(uiColor: uicolorAdaptive(light: 0xE8E8E8, dark: 0x2C313A))
 
     static let textPrimary = Color(uiColor: uicolorAdaptive(light: 0x0A0A0A, dark: 0xF5F7FA))
     static let textSecondary = Color(uiColor: uicolorAdaptive(light: 0x595959, dark: 0xB3B8C2))
@@ -62,6 +62,9 @@ enum AppColor {
 
     static let scrim = Color(uiColor: uicolorScrim())
     static let shadow = Color(uiColor: uicolorAdaptive(light: 0x000000, dark: 0x000000))
+
+    /// Splash tagline emphasis — orange override. Splash-only; do not use elsewhere (orange is otherwise reserved for the home-screen icon per §5).
+    static let splashAccent = Color(uiColor: uicolorAdaptive(light: 0xFF4400, dark: 0xFF5A1F))
 
     private nonisolated static func uicolorAdaptive(light: UInt32, dark: UInt32) -> UIColor {
         UIColor { trait in
@@ -156,6 +159,10 @@ enum AppFont {
     static let overline: Font = .system(size: 10, weight: .semibold, design: .rounded)
     static let smallLabel: Font = .system(size: 11, weight: .medium, design: .rounded)
     static let display: Font = .system(size: 36, weight: .bold, design: .rounded)
+    /// Splash brand showcase — `display` reads small next to a 96pt icon. Splash-only; do not use elsewhere.
+    static let splashTitle: Font = .system(size: 72, weight: .bold, design: .rounded)
+    /// Splash support copy — eyebrow ("Welcome to") + tagline. Matched size so they read as a pair. Splash-only.
+    static let splashWelcome: Font = .system(size: 20, weight: .medium, design: .rounded)
     static let numericDisplay: Font = .system(size: 36, weight: .bold, design: .rounded).monospacedDigit()
     static let numericLarge: Font = .system(size: 28, weight: .bold, design: .rounded).monospacedDigit()
     static let compactLabel: Font = .system(size: 12, weight: .semibold, design: .rounded).monospacedDigit()
@@ -167,6 +174,7 @@ enum AppFont {
 
     /// Tracking for static font properties (display-level gets tighter spacing).
     static let displayTracking: CGFloat = -0.6
+    static let splashTitleTracking: CGFloat = -1.2
     static let productHeadingTracking: CGFloat = -0.3
     static let numericDisplayTracking: CGFloat = -0.6
     static let numericLargeTracking: CGFloat = -0.4
@@ -222,6 +230,30 @@ struct AppDivider: View {
         Color.clear
             .frame(height: spacing)
             .frame(maxWidth: .infinity)
+    }
+}
+
+/// Unit brand mark — three ascending rounded bars mirroring the app-icon glyph.
+/// Rendered in `AppColor.textPrimary` so it reads black in-app (the orange
+/// backdrop is reserved for the home-screen icon only, per §banned-in-view-code).
+struct AppBrandMark: View {
+    var size: CGFloat = 56
+
+    var body: some View {
+        let barWidth = size * 0.2
+        let gap = size * 0.08
+        let radius = barWidth * 0.4
+
+        HStack(alignment: .bottom, spacing: gap) {
+            RoundedRectangle(cornerRadius: radius, style: .continuous)
+                .frame(width: barWidth, height: size * 0.42)
+            RoundedRectangle(cornerRadius: radius, style: .continuous)
+                .frame(width: barWidth, height: size * 0.68)
+            RoundedRectangle(cornerRadius: radius, style: .continuous)
+                .frame(width: barWidth, height: size * 0.94)
+        }
+        .frame(width: size, height: size, alignment: .bottom)
+        .foregroundStyle(AppColor.textPrimary)
     }
 }
 
@@ -282,16 +314,14 @@ private struct AppWorkoutPanelChrome: ViewModifier {
 enum AppIcon: String {
     case back = "chevron.left"
     case forward = "chevron.right"
+    case chevronDown = "chevron.down"
     case close = "xmark"
     case add = "plus"
     case remove = "minus"
     case edit = "pencil"
-    case editLine = "pencil.line"
     case trash = "trash"
     case swap = "arrow.triangle.2.circlepath"
-    case clearField = "xmark.circle"
     case search = "magnifyingglass"
-    case home = "house.fill"
     case program = "square.and.pencil"
     case todayTab = "dumbbell.fill"
     case settings = "gearshape.fill"
@@ -299,14 +329,10 @@ enum AppIcon: String {
     case checkmarkFilled = "checkmark.circle.fill"
     case checkmark = "checkmark"
     case xmarkFilled = "xmark.circle.fill"
-    case failCircle = "xmark.square.fill"
-    case timer = "timer"
     case play = "play.fill"
     case pause = "pause.fill"
     case list = "list.bullet"
     case calendarClock = "calendar.badge.clock"
-    case calendarPlain = "calendar"
-    case cloud = "icloud.fill"
     case bolt = "bolt.fill"
     case chart = "chart.line.uptrend.xyaxis"
     case addCircle = "plus.circle.fill"
@@ -315,7 +341,6 @@ enum AppIcon: String {
     case dumbbell = "dumbbell"
     case trophy = "trophy"
     case reorder = "line.3.horizontal"
-    case applelogo = "applelogo"
     case camera = "camera"
     case clipboard = "doc.on.clipboard"
     case keyboard = "keyboard"
@@ -323,7 +348,6 @@ enum AppIcon: String {
     case circle = "circle"
     case moveUp = "arrow.up"
     case moveDown = "arrow.down"
-    case reset = "arrow.counterclockwise.circle"
 
     var systemName: String { rawValue }
 
@@ -432,21 +456,33 @@ struct AppNavBar: View {
 /// Standard list row — optional leading icon, title, secondary subtitle, and a
 /// trailing slot. **Chevron-free by design**: never add `.forward` as a disclosure
 /// glyph; let context + tap target convey navigation (HIG).
+/// Use `.tappable` (default) for interactive rows — gets 44pt minHeight and a
+/// hit-testable content shape. Use `.display` for read-only catalog rows inside
+/// a shared card — drops the 44pt floor and tightens vertical padding so dense
+/// lists don't feel airy.
+enum AppListRowStyle {
+    case tappable
+    case display
+}
+
 struct AppListRow<Trailing: View>: View {
     let title: String
     let subtitle: String?
     let leadingIcon: AppIcon?
+    var style: AppListRowStyle = .tappable
     @ViewBuilder let trailing: () -> Trailing
 
     init(
         title: String,
         subtitle: String? = nil,
         leadingIcon: AppIcon? = nil,
+        style: AppListRowStyle = .tappable,
         @ViewBuilder trailing: @escaping () -> Trailing
     ) {
         self.title = title
         self.subtitle = subtitle
         self.leadingIcon = leadingIcon
+        self.style = style
         self.trailing = trailing
     }
 
@@ -475,15 +511,20 @@ struct AppListRow<Trailing: View>: View {
             trailing()
         }
         .padding(.horizontal, AppSpacing.md)
-        .padding(.vertical, AppSpacing.sm)
-        .frame(minHeight: 44)
+        .padding(.vertical, style == .display ? AppSpacing.xs : AppSpacing.sm)
+        .frame(minHeight: style == .display ? nil : 44, alignment: .leading)
         .contentShape(Rectangle())
     }
 }
 
 extension AppListRow where Trailing == EmptyView {
-    init(title: String, subtitle: String? = nil, leadingIcon: AppIcon? = nil) {
-        self.init(title: title, subtitle: subtitle, leadingIcon: leadingIcon) {
+    init(
+        title: String,
+        subtitle: String? = nil,
+        leadingIcon: AppIcon? = nil,
+        style: AppListRowStyle = .tappable
+    ) {
+        self.init(title: title, subtitle: subtitle, leadingIcon: leadingIcon, style: style) {
             EmptyView()
         }
     }
@@ -550,8 +591,8 @@ struct AppPrimaryButton: View {
                 .font(AppFont.productAction)
                 .foregroundStyle(isEnabled ? AppColor.accentForeground : AppColor.textDisabled)
                 .frame(maxWidth: .infinity)
-                .frame(height: 48)
-                .background(isEnabled ? AppColor.accent : AppColor.disabledSurface)
+                .frame(height: 60)
+                .background(isEnabled ? AppColor.accent : AppColor.accent.opacity(0.18))
                 .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
         }
         .buttonStyle(ScaleButtonStyle())
@@ -683,9 +724,8 @@ struct AppSecondaryButton: View {
                 }
             }
             .padding(.horizontal, secondaryHorizontalPadding)
-            .padding(.vertical, secondaryVerticalPadding)
             .frame(maxWidth: fillsAvailableWidth ? .infinity : nil)
-            .frame(minHeight: detailMinHeight)
+            .frame(height: 60)
             .background(backgroundColor)
             .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
             .contentShape(Rectangle())
@@ -699,29 +739,6 @@ struct AppSecondaryButton: View {
             return AppSpacing.md
         }
         return trimmedDetail == nil ? 0 : AppSpacing.md
-    }
-
-    private var secondaryVerticalPadding: CGFloat {
-        if !fillsAvailableWidth {
-            if trimmedDetail == nil {
-                return AppSpacing.sm
-            }
-            return detailVerticalPadding
-        }
-        return detailVerticalPadding
-    }
-
-    private var detailMinHeight: CGFloat {
-        trimmedDetail == nil ? 48 : 56
-    }
-
-    private var detailVerticalPadding: CGFloat {
-        guard trimmedDetail != nil else { return 0 }
-        // Inline single-line detail: extra vertical inset so the control reads as substantial (matches bar CTAs).
-        if detailLayout == .inline {
-            return AppSpacing.md
-        }
-        return AppSpacing.sm
     }
 
     /// One line: title + detail (e.g. next exercise), centered when `detailAlignment == .center`.
@@ -765,7 +782,9 @@ struct AppSecondaryButton: View {
     }
 
     private var backgroundColor: Color {
-        guard isEnabled else { return AppColor.disabledSurface }
+        guard isEnabled else {
+            return tone == .destructive ? Color.clear : AppColor.controlBackground.opacity(0.5)
+        }
         switch tone {
         case .default: return AppColor.controlBackground
         case .accentSoft: return AppColor.controlBackground
@@ -808,6 +827,7 @@ struct AppGhostButton: View {
     var body: some View {
         Button(action: action) {
             AppGhostButtonLabel(title: label, isEnabled: isEnabled)
+                .frame(height: 60)
         }
         .buttonStyle(ScaleButtonStyle())
         .disabled(!isEnabled)
@@ -893,6 +913,43 @@ struct AppTag: View {
         case .muted: return AppColor.mutedFill
         case .custom(_, let bg): return bg
         }
+    }
+}
+
+/// Capsule dropdown chip — pairs a label with a trailing `chevron.down` and wraps
+/// the provided menu `content` in an iOS-native `Menu`. Use when a filter has
+/// more than ~3 mutually-exclusive values, where a row of `AppFilterChip` toggles
+/// would overflow; the native menu gives automatic checkmarks and dismissal.
+///
+/// Justification vs. extending `AppFilterChip`: filter chips are binary toggles
+/// (one action, one selected state). A dropdown chip renders N-option menus and
+/// owns no action itself — conflating the two would muddy both APIs. Selection
+/// styling (inverted fill when `isActive`) mirrors `AppFilterChip` so the two
+/// atoms compose in the same row without visual drift.
+struct AppDropdownChip<Content: View>: View {
+    let label: String
+    var isActive: Bool = false
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        Menu {
+            content()
+        } label: {
+            HStack(spacing: AppSpacing.xs) {
+                Text(label)
+                    .font(AppFont.caption.font)
+                AppIcon.chevronDown.image(size: 10, weight: .bold)
+            }
+            .foregroundStyle(isActive ? AppColor.background : AppColor.textPrimary)
+            .padding(.horizontal, AppSpacing.smd)
+            .padding(.vertical, AppSpacing.xs)
+            .background(
+                Capsule()
+                    .fill(isActive ? AppColor.textPrimary : AppColor.accentSoft)
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isActive ? .isSelected : [])
     }
 }
 
@@ -2141,6 +2198,18 @@ struct PrimaryButtonConfig {
     let action: () -> Void
 }
 
+/// Quiet ghost CTA (e.g. onboarding "Back") rendered directly under the primary.
+/// Renders as `AppGhostButton` — text-only, no fill — so it doesn't compete with
+/// the primary. When set together with `primaryButton`, the pair reads as one unit:
+/// they share one `.safeAreaInset(edge: .bottom)` with `AppSpacing.xs` (4pt)
+/// between them. Use `AppScreen(secondaryButton:)` — never stack two separate
+/// `.safeAreaInset`s.
+struct SecondaryButtonConfig {
+    let label: String
+    var isEnabled: Bool = true
+    let action: () -> Void
+}
+
 /// Page-level template: horizontal padding, optional custom header (`ProductTopBar`)
 /// or legacy `AppNavBar`, scrollable body, optional sticky primary CTA. **Every
 /// full screen in the app composes through `AppScreen`** — don't rebuild a
@@ -2152,6 +2221,7 @@ struct AppScreen<Content: View>: View {
     let trailingAction: NavAction?
     let trailingText: NavTextAction?
     let primaryButton: PrimaryButtonConfig?
+    let secondaryButton: SecondaryButtonConfig?
     let customHeader: AnyView?
     var usesCircularTrailingButton: Bool = false
     var navigationBarTitleDisplayMode: NavigationBarItem.TitleDisplayMode? = nil
@@ -2167,6 +2237,7 @@ struct AppScreen<Content: View>: View {
         trailingAction: NavAction? = nil,
         trailingText: NavTextAction? = nil,
         primaryButton: PrimaryButtonConfig? = nil,
+        secondaryButton: SecondaryButtonConfig? = nil,
         customHeader: AnyView? = nil,
         usesCircularTrailingButton: Bool = false,
         navigationBarTitleDisplayMode: NavigationBarItem.TitleDisplayMode? = nil,
@@ -2180,6 +2251,7 @@ struct AppScreen<Content: View>: View {
         self.trailingAction = trailingAction
         self.trailingText = trailingText
         self.primaryButton = primaryButton
+        self.secondaryButton = secondaryButton
         self.customHeader = customHeader
         self.usesCircularTrailingButton = usesCircularTrailingButton
         self.navigationBarTitleDisplayMode = navigationBarTitleDisplayMode
@@ -2188,6 +2260,8 @@ struct AppScreen<Content: View>: View {
         self.usesOuterScroll = usesOuterScroll
         self.content = content
     }
+
+    private var hasBottomBar: Bool { primaryButton != nil || secondaryButton != nil }
 
     private var shouldShowNavBar: Bool {
         !hidesNavigationBar && (title != nil || leadingAction != nil || trailingAction != nil || trailingText != nil)
@@ -2202,7 +2276,7 @@ struct AppScreen<Content: View>: View {
         }
         .padding(.horizontal, AppSpacing.md)
         .padding(.top, showsNativeNavigationBar ? AppSpacing.md : (customHeader == nil ? AppSpacing.md : AppSpacing.sm))
-        .padding(.bottom, primaryButton != nil ? 100 : AppSpacing.md)
+        .padding(.bottom, hasBottomBar ? 100 : AppSpacing.md)
         .frame(maxWidth: maxContentWidth)
         .frame(maxWidth: .infinity)
     }
@@ -2215,7 +2289,7 @@ struct AppScreen<Content: View>: View {
                 }
                 .appScrollEdgeSoft(
                     top: !hidesNavigationBar || showsNativeNavigationBar,
-                    bottom: primaryButton != nil
+                    bottom: hasBottomBar
                 )
             } else {
                 paddedMainContent
@@ -2227,8 +2301,8 @@ struct AppScreen<Content: View>: View {
                 if let customHeader {
                     customHeader
                         .padding(.horizontal, AppSpacing.md)
-                        .padding(.top, AppSpacing.md)
-                        .padding(.bottom, AppSpacing.xs)
+                        .padding(.top, AppSpacing.sm)
+                        .padding(.bottom, AppSpacing.md)
                         .background(AppColor.background)
                 } else if shouldShowNavBar {
                     AppNavBar(
@@ -2244,19 +2318,28 @@ struct AppScreen<Content: View>: View {
             }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            if let primaryButton {
-                VStack(spacing: 0) {
-                    AppPrimaryButton(
-                        primaryButton.label,
-                        isEnabled: primaryButton.isEnabled,
-                        action: primaryButton.action
-                    )
-                    .frame(maxWidth: maxContentWidth - AppSpacing.md * 2)
-                    .padding(.horizontal, AppSpacing.md)
-                    .padding(.bottom, AppSpacing.lg)
-                    .frame(maxWidth: .infinity)
-                    .background(AppColor.barBackground)
+            if hasBottomBar {
+                VStack(spacing: AppSpacing.xs) {
+                    if let primaryButton {
+                        AppPrimaryButton(
+                            primaryButton.label,
+                            isEnabled: primaryButton.isEnabled,
+                            action: primaryButton.action
+                        )
+                    }
+                    if let secondaryButton {
+                        AppGhostButton(
+                            secondaryButton.label,
+                            isEnabled: secondaryButton.isEnabled,
+                            action: secondaryButton.action
+                        )
+                    }
                 }
+                .frame(maxWidth: maxContentWidth - AppSpacing.md * 2)
+                .padding(.horizontal, AppSpacing.md)
+                .padding(.bottom, AppSpacing.lg)
+                .frame(maxWidth: .infinity)
+                .background(AppColor.barBackground)
             }
         }
         .background(AppColor.background.ignoresSafeArea())
@@ -2310,9 +2393,12 @@ extension View {
             .modifier(AppInputElevation(enabled: elevated))
     }
 
-    func appCardStyle() -> some View {
+    /// Canonical card chrome applied as a modifier — matches `AppCard`'s defaults
+    /// so both entry points are a single source of truth. Pass `contentInset` to
+    /// override the 24pt standard (e.g. `AppSpacing.md` for compact contexts).
+    func appCardStyle(contentInset: CGFloat = AppSpacing.lg) -> some View {
         self
-            .padding(AppSpacing.md)
+            .padding(contentInset)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(AppColor.cardBackground)
             .clipShape(RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous))

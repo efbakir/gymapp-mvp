@@ -149,6 +149,8 @@ struct RecentSessionsView: View {
     @Query(sort: \Split.name) private var splits: [Split]
     @Query(sort: \Exercise.displayName) private var exercises: [Exercise]
 
+    @AppStorage(ActiveSplitStore.defaultsKey) private var activeSplitIdString: String = ""
+
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
@@ -175,7 +177,7 @@ struct RecentSessionsView: View {
     }
 
     private var routineTemplateIDs: [UUID] {
-        splits.first?.orderedTemplateIds ?? []
+        ActiveSplitStore.resolve(from: splits)?.orderedTemplateIds ?? []
     }
 
     private var sessionSnapshots: [SessionSnapshot] {
@@ -193,7 +195,7 @@ struct RecentSessionsView: View {
 
     /// Routines scheduled earlier this week that are still available — neutral copy, not a home-screen “missed” nudge.
     private var earlierWeekItems: [EarlierWeekRoutineInfo] {
-        guard let split = splits.first else { return [] }
+        guard let split = ActiveSplitStore.resolve(from: splits) else { return [] }
         let ordered = EarlierWeekCatchup.orderedTemplates(for: split, templates: templates)
         guard ordered.contains(where: { $0.scheduledWeekday > 0 }) else { return [] }
         return EarlierWeekCatchup.incompleteItems(orderedTemplates: ordered, sessions: sessions)
@@ -380,6 +382,11 @@ struct RecentSessionsView: View {
                         onSelect: { day in
                             guard day.status.isTappable else { return }
                             selectedDate = day.date
+                            let dayKey = Calendar.current.startOfDay(for: day.date)
+                            let daySessions = sessionsByDay[dayKey] ?? []
+                            if !daySessions.isEmpty {
+                                selectedPayload = SelectedSessionsPayload(date: day.date, sessions: daySessions)
+                            }
                         }
                     )
                 }
@@ -391,25 +398,11 @@ struct RecentSessionsView: View {
 
     @ViewBuilder
     private var calendarDetailSection: some View {
-        if let selectedDate {
-            let sessionsForDay = selectedDaySessions
-            if !sessionsForDay.isEmpty {
-                VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                    ForEach(sessionsForDay) { snapshot in
-                        Button {
-                            selectedPayload = SelectedSessionsPayload(date: selectedDate, sessions: [snapshot])
-                        } label: {
-                            SessionPreviewCard(snapshot: snapshot)
-                        }
-                        .buttonStyle(ScaleButtonStyle())
-                    }
-                }
-            } else if isMissedDay(selectedDate) {
-                HistoryMissedDayCard(
-                    date: selectedDate,
-                    workoutName: assignedWorkoutName(on: selectedDate)
-                )
-            }
+        if let selectedDate, selectedDaySessions.isEmpty, isMissedDay(selectedDate) {
+            HistoryMissedDayCard(
+                date: selectedDate,
+                workoutName: assignedWorkoutName(on: selectedDate)
+            )
         }
     }
 
@@ -428,7 +421,7 @@ struct RecentSessionsView: View {
     private func assignedWorkoutName(on date: Date) -> String {
         let calendar = Calendar.current
         let weekday = calendar.component(.weekday, from: date)
-        guard let split = splits.first else { return "Assigned workout" }
+        guard let split = ActiveSplitStore.resolve(from: splits) else { return "Assigned workout" }
 
         let templateByID = Dictionary(uniqueKeysWithValues: templates.map { ($0.id, $0) })
         let routineTemplates = split.orderedTemplateIds.compactMap { templateByID[$0] }
@@ -839,7 +832,7 @@ struct SessionSummarySheet: View {
 
     private var headerTitle: String {
         let count = payload.sessions.count
-        return "\(count) session\(count == 1 ? "" : "s")"
+        return count <= 1 ? "" : "\(count) sessions"
     }
 
     var body: some View {

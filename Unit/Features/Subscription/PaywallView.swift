@@ -2,8 +2,8 @@
 //  PaywallView.swift
 //  Unit
 //
-//  Post-onboarding paywall. One-time lifetime purchase.
-//  Calm, minimal, premium. No hype or urgency.
+//  Post-onboarding paywall. Three tiers: Monthly, Annual, Lifetime.
+//  Pricing authority: docs/pricing.md. Calm, light, quiet — no hype.
 //
 
 import SwiftUI
@@ -57,7 +57,7 @@ struct PaywallView: View {
                         )
 
                         benefitRow(
-                            icon: .target,
+                            icon: .bolt,
                             title: "Clear targets every session",
                             body: "See exactly what to lift before each set."
                         )
@@ -70,15 +70,15 @@ struct PaywallView: View {
                     }
                     .padding(.top, AppSpacing.xl)
 
-                    // MARK: - Pricing
+                    // MARK: - Tiers
 
-                    pricingCard
+                    tierSelector
                         .padding(.top, AppSpacing.xl)
 
                     // MARK: - CTA
 
                     VStack(spacing: AppSpacing.smd) {
-                        AppPrimaryButton("Unlock Unit Lifetime") {
+                        AppPrimaryButton(ctaTitle) {
                             Task { await store.purchase() }
                         }
 
@@ -90,7 +90,7 @@ struct PaywallView: View {
                                 .frame(height: 44)
                                 .contentShape(Rectangle())
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(ScaleButtonStyle())
                     }
                     .padding(.top, AppSpacing.xl)
 
@@ -104,10 +104,21 @@ struct PaywallView: View {
             }
         }
         .task {
-            await store.loadProduct()
+            await store.loadProducts()
         }
         .onChange(of: store.isPurchased) { _, purchased in
             if purchased { onDismiss() }
+        }
+    }
+
+    // MARK: - CTA title
+
+    private var ctaTitle: String {
+        switch store.selectedTier {
+        case .monthly, .annual:
+            return "Start 7-day free trial"
+        case .lifetime:
+            return "Unlock Unit Lifetime"
         }
     }
 
@@ -137,59 +148,139 @@ struct PaywallView: View {
         .padding(.vertical, AppSpacing.smd)
     }
 
-    // MARK: - Pricing Card
+    // MARK: - Tier Selector
 
-    private var pricingCard: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.sm) {
-            Text("One-time purchase")
-                .font(AppFont.caption.font)
-                .foregroundStyle(AppColor.textSecondary)
-
-            HStack(alignment: .lastTextBaseline) {
-                Text("Unit Lifetime")
-                    .font(AppFont.title.font)
-                    .foregroundStyle(AppColor.textPrimary)
-
-                Spacer()
-
-                Text(store.product?.displayPrice ?? "€24.99")
-                    .font(AppFont.productHeading)
-                    .tracking(AppFont.productHeadingTracking)
-                    .foregroundStyle(AppColor.textPrimary)
+    private var tierSelector: some View {
+        HStack(alignment: .top, spacing: AppSpacing.sm) {
+            ForEach(StoreManager.Tier.allCases) { tier in
+                tierCard(tier: tier)
             }
-
-            Text("Pay once. Use it for years.")
-                .font(AppFont.caption.font)
-                .foregroundStyle(AppColor.textSecondary)
         }
-        .appCardStyle()
-        .overlay {
-            RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                .stroke(AppColor.border.opacity(0.6), lineWidth: 1)
+    }
+
+    private func tierCard(tier: StoreManager.Tier) -> some View {
+        let isSelected = store.selectedTier == tier
+        let badge = badgeText(for: tier)
+
+        return Button {
+            withAnimation(.easeInOut(duration: 0.15)) {
+                store.selectedTier = tier
+            }
+        } label: {
+            ZStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                    Text(label(for: tier))
+                        .font(AppFont.caption.font)
+                        .foregroundStyle(AppColor.textSecondary)
+                        .textCase(.uppercase)
+                        .tracking(AppFont.uppercaseLabelTracking)
+
+                    Text(priceText(for: tier))
+                        .font(AppFont.productHeading)
+                        .tracking(AppFont.productHeadingTracking)
+                        .foregroundStyle(AppColor.textPrimary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+
+                    Text(sublabel(for: tier))
+                        .font(AppFont.muted.font)
+                        .foregroundStyle(AppColor.textSecondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, AppSpacing.md)
+                .padding(.horizontal, AppSpacing.smd)
+                .padding(.top, badge == nil ? 0 : AppSpacing.sm)
+                .background(AppColor.cardBackground)
+                .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous)
+                        .stroke(
+                            isSelected ? AppColor.accent : AppColor.border.opacity(0.6),
+                            lineWidth: isSelected ? 1.5 : 1
+                        )
+                }
+
+                if let badge {
+                    Text(badge)
+                        .font(AppFont.smallLabel)
+                        .tracking(AppFont.uppercaseLabelTracking)
+                        .textCase(.uppercase)
+                        .foregroundStyle(AppColor.accentForeground)
+                        .padding(.horizontal, AppSpacing.sm)
+                        .padding(.vertical, 3)
+                        .background(AppColor.accent)
+                        .clipShape(Capsule())
+                        .offset(y: -10)
+                }
+            }
+        }
+        .buttonStyle(ScaleButtonStyle())
+    }
+
+    // MARK: - Tier copy
+
+    private func label(for tier: StoreManager.Tier) -> String {
+        switch tier {
+        case .lifetime: return "Lifetime"
+        case .annual: return "Annually"
+        case .monthly: return "Monthly"
+        }
+    }
+
+    private func priceText(for tier: StoreManager.Tier) -> String {
+        if let product = store.product(for: tier) {
+            return product.displayPrice
+        }
+        switch tier {
+        case .lifetime: return "$44.99"
+        case .annual: return "$29.99"
+        case .monthly: return "$4.99"
+        }
+    }
+
+    private func sublabel(for tier: StoreManager.Tier) -> String {
+        switch tier {
+        case .lifetime: return "Pay once"
+        case .annual: return "~$2.50/mo"
+        case .monthly: return "Per month"
+        }
+    }
+
+    private func badgeText(for tier: StoreManager.Tier) -> String? {
+        switch tier {
+        case .annual: return "Save 50%"
+        default: return nil
         }
     }
 
     // MARK: - Footer
 
     private var footer: some View {
-        HStack(spacing: AppSpacing.md) {
-            Button("Restore Purchases") {
-                Task { await store.restore() }
+        VStack(spacing: AppSpacing.sm) {
+            HStack(spacing: AppSpacing.md) {
+                Button("Restore Purchases") {
+                    Task { await store.restore() }
+                }
+
+                Text("·")
+                    .foregroundStyle(AppColor.textSecondary)
+
+                if let termsURL = URL(string: "https://unit.app/terms") {
+                    Link("Terms", destination: termsURL)
+                }
+
+                Text("·")
+                    .foregroundStyle(AppColor.textSecondary)
+
+                if let privacyURL = URL(string: "https://unit.app/privacy") {
+                    Link("Privacy", destination: privacyURL)
+                }
             }
 
-            Text("·")
+            Text("Cancelable at any time.")
                 .foregroundStyle(AppColor.textSecondary)
-
-            if let termsURL = URL(string: "https://unit.app/terms") {
-                Link("Terms", destination: termsURL)
-            }
-
-            Text("·")
-                .foregroundStyle(AppColor.textSecondary)
-
-            if let privacyURL = URL(string: "https://unit.app/privacy") {
-                Link("Privacy", destination: privacyURL)
-            }
         }
         .font(AppFont.caption.font)
         .foregroundStyle(AppColor.textSecondary)
