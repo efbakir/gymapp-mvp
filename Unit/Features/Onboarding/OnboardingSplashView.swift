@@ -33,16 +33,17 @@ struct OnboardingSplashView: View {
                 Spacer()
 
                 VStack(spacing: 0) {
-                    // Dark `BrandLogo` on chrome-matched tile (no shadow). `barBackground` is nearest surface to `background` in the token set.
+                    // `BrandLogo` on chrome-matched tile (no shadow). Opacity softens the mark vs pure black.
                     Image("BrandLogo")
                         .resizable()
                         .interpolation(.high)
                         .scaledToFit()
+                        .opacity(0.78)
                         .frame(width: Self.logoSide, height: Self.logoSide)
                         .background(AppColor.barBackground)
                         .clipShape(
                             RoundedRectangle(
-                                cornerRadius: AppRadius.appIconHomeScreenCornerRadius(sideLength: Self.logoSide),
+                                cornerRadius: AppRadius.splashLogoTileCornerRadius(sideLength: Self.logoSide),
                                 style: .continuous
                             )
                         )
@@ -61,23 +62,21 @@ struct OnboardingSplashView: View {
                     .padding(.top, AppSpacing.xl)
                     .modifier(staggered(1))
 
-                    HStack(spacing: 4) {
-                        Text("Your gym notebook –")
-                            .foregroundStyle(AppColor.secondaryLabel)
-                        Text("upgraded.")
-                            .foregroundStyle(AppColor.splashAccent)
-                    }
-                    .font(AppFont.splashWelcome)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-                    .padding(.top, AppSpacing.xl)
-                    .modifier(staggered(2))
+                    Text("Your upgraded gym notebook")
+                        .font(AppFont.splashWelcome)
+                        .foregroundStyle(AppColor.secondaryLabel)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, AppSpacing.xl)
+                        .modifier(staggered(2))
                 }
                 .padding(.horizontal, AppSpacing.xl)
 
                 Spacer()
 
-                AppPrimaryButton("Get started", action: onGetStarted)
+                AppPrimaryButton("Set up program", action: onGetStarted)
                     .padding(.horizontal, AppSpacing.xl)
                     .padding(.bottom, AppSpacing.xxl)
                     .modifier(staggered(3))

@@ -219,6 +219,11 @@ enum AppRadius {
     static func appIconHomeScreenCornerRadius(sideLength: CGFloat) -> CGFloat {
         sideLength * 10 / 57
     }
+
+    /// Splash welcome logo tile — smaller radius than the Home Screen icon mask for a slightly squarer tile.
+    static func splashLogoTileCornerRadius(sideLength: CGFloat) -> CGFloat {
+        appIconHomeScreenCornerRadius(sideLength: sideLength) * 0.68
+    }
 }
 
 /// Shared sizing for day/week steppers and compact day badges (Paper e.g. node 2P1-0).
@@ -267,12 +272,14 @@ struct AppBrandMark: View {
 
 /// Shared card elevation — used by AppCard and .appCardStyle() for consistent depth.
 private struct AppCardElevation: ViewModifier {
+    var cornerRadius: CGFloat = AppRadius.lg
+
     @Environment(\.colorScheme) private var colorScheme
 
     func body(content: Content) -> some View {
         content
             .overlay {
-                RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .stroke(
                         colorScheme == .dark
                             ? Color.white.opacity(0.08)
@@ -597,7 +604,7 @@ struct AppTextEditor: View {
                 .font(AppFont.body.font)
                 .foregroundStyle(AppColor.textPrimary)
                 .scrollContentBackground(.hidden)
-                .padding(AppSpacing.sm)
+                .padding(AppSpacing.md)
 
             if text.isEmpty {
                 Text(placeholder)
@@ -605,8 +612,8 @@ struct AppTextEditor: View {
                     .foregroundStyle(AppColor.textSecondary)
                     // TextEditor's internal NSTextContainer inset is ~5pt horizontal,
                     // ~8pt vertical — offset the placeholder so it sits on the cursor.
-                    .padding(.horizontal, AppSpacing.sm + 5)
-                    .padding(.top, AppSpacing.sm + 8)
+                    .padding(.horizontal, AppSpacing.md + 5)
+                    .padding(.top, AppSpacing.md + 8)
                     .allowsHitTesting(false)
             }
         }
@@ -1680,7 +1687,7 @@ extension SheetListRow where Trailing == EmptyView {
 
 // MARK: - Organisms
 
-/// Canonical card surface — white fill, continuous 30pt corners, thin stroke,
+/// Canonical card surface — white fill, continuous corners, thin stroke,
 /// dual lift shadows. The default chrome for any grouped surface. Use `.appCardStyle()`
 /// instead when a wrapper type is awkward (e.g. applied to an existing VStack
 /// without re-nesting). Never invent inline `.background(...).clipShape(...)` chrome.
@@ -1689,6 +1696,8 @@ struct AppCard<Content: View>: View {
     /// card has consistent breathing room. Compact contexts (list rows, PR rows) can
     /// pass a smaller inset explicitly.
     var contentInset: CGFloat = AppSpacing.lg
+    /// Corner radius for clip + stroke; default matches `AppRadius.lg` cards app-wide.
+    var cornerRadius: CGFloat = AppRadius.lg
     @ViewBuilder let content: () -> Content
 
     var body: some View {
@@ -1698,8 +1707,8 @@ struct AppCard<Content: View>: View {
         .padding(contentInset)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(AppColor.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous))
-        .modifier(AppCardElevation())
+        .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+        .modifier(AppCardElevation(cornerRadius: cornerRadius))
     }
 }
 

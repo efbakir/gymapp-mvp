@@ -92,6 +92,7 @@ struct OnboardingProgressBar: View {
 struct OnboardingOptionCard: View {
     let icon: AppIcon
     let title: String
+    var badge: String? = nil
     let action: () -> Void
 
     var body: some View {
@@ -108,6 +109,10 @@ struct OnboardingOptionCard: View {
                     .foregroundStyle(AppColor.textPrimary)
 
                 Spacer(minLength: 0)
+
+                if let badge {
+                    AppTag(text: badge, style: .accent, layout: .compactCapsule)
+                }
             }
             .appCardStyle()
         }

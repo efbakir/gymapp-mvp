@@ -2,35 +2,30 @@
 //  OnboardingProgramImportView.swift
 //  Unit
 //
-//  Screen 4 — Parse a pasted plan or OCR a photo into structured day data.
+//  Screen 4 — Parse a pasted plan into structured day data, then review.
 //
 
 import SwiftUI
-import PhotosUI
 import Vision
 
-/// Single source of truth for paste-mode copy (subtitle + editor placeholder examples).
+/// Single source of truth for paste-mode placeholder copy.
 private enum ProgramPasteFormatGuide {
-    /// Shown under the title in `OnboardingShell` for paste import only.
+    /// Short, in-screen subtitle. Long format rules live in `formatExamplesSheet`.
     static let subtitle =
-        "Day name on its own line (Push, Pull, Legs, Upper, Lower, Full body, Arms, Chest, Back, Shoulders, Day 1 to Day 6, or a weekday). "
-        + "Each exercise line: name, then setxrepxkg, or kgxrep if you omit sets. Use kg or lb, or BW for bodyweight. "
-        + "Lines starting with // are skipped."
+        "Paste your split from Notes, chat, or a document. Unit will turn it into days and exercises."
 
-    /// Placeholder is examples only so it does not repeat the subtitle.
+    /// Helper line under the editor that explains the disabled CTA.
+    static let helper = "Paste at least one day and one exercise. Use kg, lb, or BW."
+
+    /// Placeholder is examples only — short, by design (long rules live in the format examples sheet).
     static let placeholderExamples = [
         "Push",
-        "Bench press 4x8x60kg",
-        "Incline DB press 3x10x22kg",
+        "Bench press 4x8 60kg",
+        "Incline DB press 3x10 22kg",
         "",
         "Pull",
-        "Deadlift 3x5x100kg",
+        "Deadlift 3x5 100kg",
         "Pull-up 4x8 BW",
-        "Barbell row 4x8x60kg",
-        "",
-        "Legs",
-        "Squat 4x6x80kg",
-        "Leg press 3x10x120kg",
     ].joined(separator: "\n")
 }
 
@@ -42,29 +37,22 @@ struct OnboardingProgramImportView: View {
     var onContinue: () -> Void
 
     @State private var pastedText = ""
-    @State private var selectedPhoto: PhotosPickerItem?
-    @State private var selectedPhotoData: Data?
     @State private var parsedDays: [ImportedProgramDay] = []
     @State private var isParsing = false
     @State private var errorMessage: String?
-    @State private var isPhotoPickerPresented = false
-
-    private var isPhotoMode: Bool {
-        vm.importMethod == .photo
-    }
+    @State private var showingFormatExamples = false
 
     private var canParse: Bool {
-        if isPhotoMode {
-            return selectedPhotoData != nil
-        }
-        return !pastedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        !pastedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     var body: some View {
         OnboardingShell(
-            title: parsedDays.isEmpty ? inputTitle : "Check your program",
-            subtitle: parsedDays.isEmpty ? helperSubtitle : "Check this before you continue. You can still edit the exercises next.",
-            ctaLabel: parsedDays.isEmpty ? parseLabel : "Use program",
+            title: parsedDays.isEmpty ? "Paste your program" : "Review program",
+            subtitle: parsedDays.isEmpty
+                ? ProgramPasteFormatGuide.subtitle
+                : "Check this before you continue. You can edit it next.",
+            ctaLabel: parsedDays.isEmpty ? parseLabel : "Looks right",
             ctaEnabled: parsedDays.isEmpty ? canParse && !isParsing : !parsedDays.isEmpty,
             progressStep: progressStep,
             progressTotal: progressTotal,
@@ -78,9 +66,10 @@ struct OnboardingProgramImportView: View {
                 }
             }
         }
-        .task(id: selectedPhoto) {
-            guard let selectedPhoto else { return }
-            selectedPhotoData = try? await selectedPhoto.loadTransferable(type: Data.self)
+        .sheet(isPresented: $showingFormatExamples) {
+            FormatExamplesSheet()
+                .presentationDetents([.medium, .large])
+                .appBottomSheetChrome()
         }
         .alert("Couldn't read that program", isPresented: Binding(
             get: { errorMessage != nil },
@@ -92,51 +81,26 @@ struct OnboardingProgramImportView: View {
         }
     }
 
-    private var inputTitle: String {
-        switch vm.importMethod {
-        case .photo:
-            return "Add a photo"
-        case .paste:
-            return "Paste your program"
-        case .manual:
-            return "Add your program"
-        }
-    }
-
     private var parseLabel: String {
         isParsing ? "Reading…" : "Read program"
     }
 
     @ViewBuilder
     private var inputSection: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.sm) {
-            if isPhotoMode {
-                let hasPhoto = selectedPhotoData != nil
-                AppSecondaryButton(
-                    hasPhoto ? "Replace photo" : "Choose photo",
-                    icon: .photo
-                ) {
-                    isPhotoPickerPresented = true
-                }
-                .photosPicker(
-                    isPresented: $isPhotoPickerPresented,
-                    selection: $selectedPhoto,
-                    matching: .images
-                )
+        AppTextEditor(
+            text: $pastedText,
+            placeholder: ProgramPasteFormatGuide.placeholderExamples
+        )
+        .textInputAutocapitalization(.words)
+        .autocorrectionDisabled()
 
-                if hasPhoto {
-                    Text("Photo ready.")
-                        .font(AppFont.body.font)
-                        .foregroundStyle(AppColor.textSecondary)
-                }
-            } else {
-                AppTextEditor(
-                    text: $pastedText,
-                    placeholder: ProgramPasteFormatGuide.placeholderExamples
-                )
-                .textInputAutocapitalization(.words)
-                .autocorrectionDisabled()
-            }
+        Text(ProgramPasteFormatGuide.helper)
+            .font(AppFont.caption.font)
+            .foregroundStyle(AppColor.textSecondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+        AppGhostButton("Show format examples") {
+            showingFormatExamples = true
         }
 
         if isParsing {
@@ -196,17 +160,6 @@ struct OnboardingProgramImportView: View {
         }
     }
 
-    private var helperSubtitle: String? {
-        switch vm.importMethod {
-        case .photo:
-            return "Use a clear photo of the full page."
-        case .paste:
-            return ProgramPasteFormatGuide.subtitle
-        case .manual:
-            return nil
-        }
-    }
-
     private func handlePrimaryAction() {
         if parsedDays.isEmpty {
             Task { await parseProgram() }
@@ -222,25 +175,75 @@ struct OnboardingProgramImportView: View {
         isParsing = true
         defer { isParsing = false }
 
-        let sourceText: String?
-        if isPhotoMode {
-            guard let selectedPhotoData else {
-                errorMessage = "Choose a photo first."
-                return
-            }
-            sourceText = await ProgramImportParser.extractText(from: selectedPhotoData)
-        } else {
-            sourceText = pastedText
-        }
-
-        let parsed = ProgramImportParser.parse(sourceText ?? "")
+        let parsed = ProgramImportParser.parse(pastedText)
         guard !parsed.isEmpty else {
-            errorMessage = "Couldn't find exercises. Try a clearer photo or put each day on its own line."
+            errorMessage = "Couldn't find exercises. Put each day on its own line, then list each exercise below it."
             return
         }
         parsedDays = parsed
     }
 }
+
+// MARK: - Format Examples Sheet
+
+private struct FormatExamplesSheet: View {
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.lg) {
+            HStack {
+                Text("Format examples")
+                    .font(AppFont.largeTitle.font)
+                    .foregroundStyle(AppColor.textPrimary)
+                Spacer()
+                Button {
+                    dismiss()
+                } label: {
+                    AppIcon.close.image(size: 14, weight: .semibold)
+                        .foregroundStyle(AppColor.textSecondary)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
+                }
+            }
+
+            VStack(alignment: .leading, spacing: AppSpacing.md) {
+                ruleSection(
+                    title: "Day names",
+                    body: "One day name per line: Push, Pull, Legs, Upper, Lower, Full body, Arms, Chest, Back, Shoulders, Day 1–6, or a weekday."
+                )
+
+                ruleSection(
+                    title: "Exercises",
+                    body: "Below each day, one exercise per line: name, then setsxreps, then weight. Example: Bench press 4x8 60kg."
+                )
+
+                ruleSection(
+                    title: "Weight units",
+                    body: "Use kg, lb, or BW for bodyweight. Lines starting with // are skipped."
+                )
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, AppSpacing.md)
+        .padding(.top, AppSpacing.lg)
+        .padding(.bottom, AppSpacing.xl)
+    }
+
+    @ViewBuilder
+    private func ruleSection(title: String, body: String) -> some View {
+        VStack(alignment: .leading, spacing: AppSpacing.xs) {
+            Text(title)
+                .font(AppFont.sectionHeader.font)
+                .foregroundStyle(AppColor.textPrimary)
+            Text(body)
+                .font(AppFont.body.font)
+                .foregroundStyle(AppColor.textSecondary)
+        }
+    }
+}
+
+// MARK: - Parser
 
 enum ProgramImportParser {
     private static let knownDayNames = [

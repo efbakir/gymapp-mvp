@@ -15,19 +15,19 @@ struct OnboardingImportMethodView: View {
     var body: some View {
         OnboardingShell(
             title: "Add your program",
+            subtitle: "Choose how to create your template.",
             progressStep: progressStep,
             progressTotal: progressTotal
         ) {
             VStack(spacing: AppSpacing.sm) {
-                OnboardingOptionCard(icon: .camera, title: "Take a photo") {
-                    onSelect(.photo)
-                }
-
-                OnboardingOptionCard(icon: .clipboard, title: "Paste text") {
+                OnboardingOptionCard(
+                    icon: .clipboard,
+                    title: "Paste program"
+                ) {
                     onSelect(.paste)
                 }
 
-                OnboardingOptionCard(icon: .edit, title: "Add by hand") {
+                OnboardingOptionCard(icon: .edit, title: "Build manually") {
                     onSelect(.manual)
                 }
             }
