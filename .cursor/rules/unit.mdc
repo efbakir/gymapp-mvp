@@ -18,7 +18,7 @@ alwaysApply: true
 
 - **Exercise**: id (UUID), displayName, aliases ([String]), notes, isBodyweight (Bool).
 - **DayTemplate**: id, name, orderedExerciseIds ([UUID]), lastPerformedDate (optional).
-- **WorkoutSession**: id, date, templateId, overallFeeling (Int 1–5, optional).
+- **WorkoutSession**: id, date, templateId, isCompleted, cycleId (optional), weekNumber.
 - **SetEntry**: id, sessionId, exerciseId, weight (Double), reps (Int), rpe (Double 1–10), isWarmup (Bool), isCompleted (Bool), setIndex (Int).
 - Use @Relationship / inverse where useful (e.g. Session → SetEntries). Register all model types in ModelContainer schema.
 

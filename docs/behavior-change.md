@@ -7,7 +7,7 @@ Short summary of concepts from **Designing for Behavior Change** (Stephen Wendel
 ## 1. Behavior as outcome
 
 - **Idea**: Behavior = what the user does (e.g. “log a set,” “complete a session”). Design for the behavior, not just the product.
-- **Unit**: Target behaviors: (1) Start a workout from a template. (2) Log each set in under 3 seconds (Gym Test). (3) Optionally rate session feeling. (4) Use rest timer. We optimize the product so these behaviors are easy and rewarding.
+- **Unit**: Target behaviors: (1) Start a workout from a template. (2) Log each set in under 3 seconds (Gym Test). (3) Use rest timer. We optimize the product so these behaviors are easy and rewarding.
 
 ---
 
@@ -21,7 +21,7 @@ Short summary of concepts from **Designing for Behavior Change** (Stephen Wendel
 ## 3. Identity-based habits
 
 - **Idea**: Lasting change is easier when the user adopts an identity (“I’m a logger”) rather than only chasing outcomes (“I want to get stronger”). Design reinforces identity through small wins and consistency.
-- **Unit**: Completing a set and a session are small wins. “You logged 4 sets” and “Session complete” reinforce “I log my workouts.” Optional overall feeling (1–5) adds reflection without friction. No heavy gamification—just clear, consistent logging so identity (“I’m someone who tracks”) is reinforced. See [mental-models.md](mental-models.md) (Identity Change).
+- **Unit**: Completing a set and a session are small wins. “You logged 4 sets” and “Session complete” reinforce “I log my workouts.” No heavy gamification—just clear, consistent logging so identity (“I’m someone who tracks”) is reinforced. See [mental-models.md](mental-models.md) (Identity Change).
 
 ---
 
@@ -35,7 +35,7 @@ Short summary of concepts from **Designing for Behavior Change** (Stephen Wendel
 ## 5. Feedback and reinforcement
 
 - **Idea**: Immediate, clear feedback reinforces the behavior and confirms success.
-- **Unit**: After “Complete set,” show clear success (e.g. checkmark, row marked done). Session end: “Workout complete” and optional feeling. History shows past sessions so progress is visible. Feedback is immediate and unambiguous.
+- **Unit**: After “Complete set,” show clear success (e.g. checkmark, row marked done). Session end: “Workout complete.” History shows past sessions so progress is visible. Feedback is immediate and unambiguous.
 
 ---
 
@@ -43,7 +43,7 @@ Short summary of concepts from **Designing for Behavior Change** (Stephen Wendel
 
 - **Guilt or shame**: No “you missed a day” nagging. We might show “last logged: 2 days ago” without blame.
 - **Over-promising**: We don’t promise transformation; we promise a fast, reliable log for your program.
-- **Required reflection**: Overall feeling (1–5) is optional. We don’t force journaling or long forms.
+- **Required reflection**: We don’t force journaling or long forms.
 
 ---
 
@@ -51,7 +51,7 @@ Short summary of concepts from **Designing for Behavior Change** (Stephen Wendel
 
 | Concept | Unit takeaway |
 |--------|---------------------|
-| Behavior as outcome | Design for: start workout, log set (&lt;3 s), use rest, optional feeling. |
+| Behavior as outcome | Design for: start workout, log set (&lt;3 s), use rest. |
 | Motivation, ability, prompt | Maximize ability (defaults, one-tap); clear prompts (CTAs). |
 | Identity | Reinforce “I log” through set/session completion and history. |
 | Friction / cognitive load | Gym Test; minimize steps and decisions. |

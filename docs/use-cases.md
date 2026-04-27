@@ -1,32 +1,36 @@
 # Unit — Use Cases
 
-## Use Case 1: The Architect Runs a Structured Cycle
+> Updated 2026-04-13 to reflect the templates-not-plans direction (see `product-compass.md`).
+> These use cases describe v1 behaviour — template-based logging with ghost values.
+> The Progression Engine may return in a future version as an opt-in layer.
+
+## Use Case 1: The Architect Runs Their Program
 
 **Persona:** Architect — numeric, data-driven, plans everything.
 
-**Scenario:** Marcus has been lifting for 3 years. He programs in Excel: base weight, weekly increment per exercise, deload rules. He rebuilds the spreadsheet every 8 weeks. It works but the friction is high — updating formulas when he misses a lift takes 10 minutes.
+**Scenario:** Marcus has been lifting for 3 years. He programs his own PPL split and tracks everything in the Notes app. It works, but scrolling through weeks of messy text to find last Tuesday's bench numbers takes longer than the set itself.
 
-**How the Engine Serves Him:**
-Marcus opens Create Cycle, selects his PPL split, sets per-exercise base weights (seeded from last session), and confirms 2.5kg increments. The engine replaces the spreadsheet. Week 1 targets appear on the logging screen before his first set. When he hits failure on bench in Week 4, the engine detects it and holds the weight for Week 5. He doesn't touch a spreadsheet. He just lifts.
-
----
-
-## Use Case 2: The Grinder Breaks a Plateau
-
-**Persona:** Grinder — consistent, hardworking, frustrated by invisible stalls.
-
-**Scenario:** Priya has been doing 80kg squat for 6 weeks. She doesn't know why she isn't progressing — she shows up, she tries. Her app shows the history but offers no diagnosis.
-
-**How the Engine Serves Her:**
-Unit's failure count detects that she has missed the target 3 times in a row on squat. The deload badge appears in her logging card. Week 7 shows 72kg — 10% below her stall weight. She completes the deload. Week 8 targets 75kg. The plateau breaks.
+**How Unit Serves Him:**
+Marcus opens Unit, taps "Import from text," and pastes his program from Notes. The parser extracts exercises and creates a template for each day. On his next session, he taps Push Day A, and ghost values pre-fill his weight and reps from last time. He logs each set with one tap — no typing, no scrolling. His history is structured, searchable, and shows PRs automatically.
 
 ---
 
-## Use Case 3: The Recoverer Restarts Safely
+## Use Case 2: The Grinder Tracks Consistency
+
+**Persona:** Grinder — consistent, hardworking, trusts feel over spreadsheets.
+
+**Scenario:** Priya trains 5 days a week. She doesn't use periodisation — she adds weight when it feels right and holds when it doesn't. Her current tracker (Strong) buries her logging screen under a social feed and paywall prompts. She wants to log and get out.
+
+**How Unit Serves Her:**
+Priya builds her split in under 2 minutes during onboarding. Each session, ghost values show what she did last time. She adjusts weight up or down by tapping the number, or just taps Done to match last session. The rest timer auto-starts on her Lock Screen. After 6 weeks, her PR library shows she's hit new bests on squat and deadlift — progress she felt but never tracked before.
+
+---
+
+## Use Case 3: The Recoverer Restarts After a Break
 
 **Persona:** Recoverer — returning after a 3-month break, cautious, uncertain where to start.
 
-**Scenario:** Tomas had shoulder surgery. He's cleared to lift but doesn't know where to begin. His last session in the app was 3 months ago at weights he can't safely hit today.
+**Scenario:** Tomas had shoulder surgery. He's cleared to lift but doesn't know where his numbers are now. His old app still shows weights from 3 months ago that he can't safely touch.
 
-**How the Engine Serves Him:**
-CreateCycle seeds base weights from his last recorded session. He manually adjusts bench to 50% — the stepper makes this easy. The engine begins his 8-week return cycle from this conservative baseline, incrementing 2.5kg per week. By Week 8 he's back to 65% of his pre-surgery best. The app gave him a structured runway, not a blank page.
+**How Unit Serves Him:**
+Tomas creates a fresh split in onboarding. On his first session, ghost values are empty — "No history yet." He types conservative numbers for each exercise. From session two onward, ghost values show his new baseline. Each week he bumps the weight manually when he's ready. The app never pushes him — it shows what he did last time and lets him decide. His PR library resets naturally from the new starting point.

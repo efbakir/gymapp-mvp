@@ -17,9 +17,9 @@ Deeper analysis: feature matrix, UX patterns for “log under stress,” and tak
 | Social / feed | Yes | No | No | No | **No** |
 | Videos / demos | Yes | Some | Yes | No | **No** |
 | Sync | Cloud | Cloud | Cloud | Manual | Local-first (CloudKit-ready later) |
-| Overall feeling / mood | Some | Rare | Rare | No | **Session overallFeeling 1–5** |
+| Overall feeling / mood | Some | Rare | Rare | No | **No** |
 
-**Takeaway**: Unit competes on **structure** (templates, session, set schema), **speed** (Gym Test), **focus** (no social/videos), and **rest timer visibility** (Live Activity). RPE and session feeling are differentiators for serious lifters.
+**Takeaway**: Unit competes on **structure** (templates, session, set schema), **speed** (Gym Test), **focus** (no social/videos), and **rest timer visibility** (Live Activity). Optional RPE on sets is a differentiator for serious lifters.
 
 ---
 
@@ -54,7 +54,7 @@ How competitors handle logging during or right after a hard set:
 Competitors often use: Workout → Exercises → Sets, with optional Program/Routine. Unit aligns as:
 
 - **DayTemplate** = program day (e.g. “Push A”) with ordered exercises.
-- **WorkoutSession** = one instance of a template on a date, with optional overall feeling.
+- **WorkoutSession** = one instance of a template on a date.
 - **SetEntry** = one set (session, exercise, weight, reps, RPE, warmup, completed).
 
 This matches how program-focused users think (day → exercises → sets) and keeps schema CloudKit-ready (UUIDs, no non-persisted refs).

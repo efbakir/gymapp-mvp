@@ -7,7 +7,7 @@ Selected mental models from [mmpractices.com](https://mmpractices.com/) that fit
 ## Identity Change
 
 - **Model**: Lasting change is easier when you shift identity (“I’m not a smoker”) rather than only behavior (“I’m trying to quit”). Identity drives habits.
-- **Unit**: We reinforce “I’m someone who logs” through consistent, low-friction logging and clear completion (set done, session done). No guilt; just repeated small wins that support the identity. Optional overall feeling (1–5) supports reflection without making identity contingent on mood.
+- **Unit**: We reinforce “I’m someone who logs” through consistent, low-friction logging and clear completion (set done, session done). No guilt; just repeated small wins that support the identity.
 
 ---
 

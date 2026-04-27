@@ -43,7 +43,13 @@
       "Bash(python3 -m http.server 8080 --directory /Users/efbakir/gymapp/figma-screens)",
       "Bash(wc -l /Users/efbakir/gymapp/Unit/Features/**/*.swift)",
       "Bash(grep -n \"\\\\.sheet\\(isPresented: $showingAddSheet\\)\" /Users/efbakir/gymapp-mvp/Unit/Features/Onboarding/OnboardingExercisesView.swift -A 3)",
-      "Bash(grep -n \"\\\\.sheet\\(isPresented: $showingSettings\\)\" /Users/efbakir/gymapp-mvp/Unit/Features/Templates/TemplatesView.swift -A 3)"
+      "Bash(grep -n \"\\\\.sheet\\(isPresented: $showingSettings\\)\" /Users/efbakir/gymapp-mvp/Unit/Features/Templates/TemplatesView.swift -A 3)",
+      "Bash(grep -i atlas echo \"---\" ls -lt ~/Library/Logs/DiagnosticReports/)",
+      "Bash(cat UnitWidget/*.entitlements)",
+      "Bash(plutil -convert xml1 -o - /Users/efbakir/Library/Developer/Xcode/DerivedData/Unit-ejzqtwbvllorngaawllbutteperc/Build/Products/Debug-iphonesimulator/Unit.app/PlugIns/UnitWidgetExtension.appex/Info.plist)",
+      "Bash(plutil -extract CFBundleIdentifier raw \"/Users/efbakir/Library/Developer/Xcode/DerivedData/Unit-ejzqtwbvllorngaawllbutteperc/Build/Products/Debug-iphonesimulator/Unit.app/Info.plist\")",
+      "WebFetch(domain:randallb.com)",
+      "Bash(defaults read *)"
     ]
   }
 }

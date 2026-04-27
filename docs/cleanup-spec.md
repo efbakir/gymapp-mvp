@@ -182,7 +182,6 @@ Unit/
 | "End Workout" button | 52 | 52 (correct) |
 | "Done" button (set logging) | 44 | 44 (correct) |
 | "Create Split" button | 52 | 52 (correct) |
-| Feeling buttons | 44x44 | 44x44 (correct) |
 
 ### 4.2 Card Background Inconsistency
 

@@ -23,7 +23,7 @@ Principles from [abtest.design](https://abtest.design/) and [growth.design/psych
 ## 3. Commitment and consistency
 
 - **Principle**: Small commitments (e.g. logging one set) increase likelihood of continuing; consistency (streaks, identity) reinforces habit.
-- **Unit**: Completing one set is a micro-commitment. Session completion and “overall feeling” (1–5) reinforce “I finished.” Future: streaks or “sessions this week” without gamification overload. Identity: “I’m someone who logs” (see [mental-models.md](mental-models.md)).
+- **Unit**: Completing one set is a micro-commitment. Session completion reinforces “I finished.” Future: streaks or “sessions this week” without gamification overload. Identity: “I’m someone who logs” (see [mental-models.md](mental-models.md)).
 - **Source**: Duolingo’s decoupling streaks from daily goals (+40% on streak); consistency drives retention.
 
 ---
@@ -55,7 +55,7 @@ Principles from [abtest.design](https://abtest.design/) and [growth.design/psych
 ## 7. Ability and motivation (Behavior Change)
 
 - **Principle**: Behavior happens when user has both ability (easy to do) and motivation (want to do). Reduce barriers and reinforce identity.
-- **Unit**: Ability = Gym Test (easy), defaults, one-tap. Motivation = clear progress (history, session done), optional feeling (1–5), and identity (“I log my workouts”). See [behavior-change.md](behavior-change.md).
+- **Unit**: Ability = Gym Test (easy), defaults, one-tap. Motivation = clear progress (history, session done) and identity (“I log my workouts”). See [behavior-change.md](behavior-change.md).
 - **Source**: Designing for Behavior Change (Fogg, etc.); growth.design/psychology.
 
 ---

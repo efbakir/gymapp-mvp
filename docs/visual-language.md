@@ -55,6 +55,7 @@ Keep the token set **small**. New roles need a Gym Test or clarity justification
   - **Body / labels**: `AppFont.body`, `AppFont.label`, `AppFont.caption`, `AppFont.muted`.
   - **Workout numerics**: `AppFont.numericDisplay` / `AppFont.numericLarge` (monospaced digits) for fast fatigue-friendly reading.
 - Prefer `AppFont` cases over inline `.font(.system(...))` so typography stays consistent.
+- **Rule**: Never use regular (400) font weight anywhere in the app. The minimum weight is **medium** (500). Body, caption, and muted text all use Inter-Medium, not Inter-Regular.
 - **Rule**: If text doesn’t help log or understand state, remove or demote it.
 
 ---
@@ -63,7 +64,7 @@ Keep the token set **small**. New roles need a Gym Test or clarity justification
 
 - **Cards**: Rounded rectangle (`AppRadius.card` = 20) with iOS continuous corners, padding `AppSpacing.md`. Separation from background is **contrast**, not drop shadows.
 - **One primary CTA** on high-stress flows: full-width black (accent) button pattern via `AppPrimaryButton` unless a documented exception exists.
-- **Compact controls and buttons**: `AppRadius.md` = 12 with iOS continuous corners.
+- **Compact controls and buttons**: `AppRadius.md` = 14 with iOS continuous corners.
 - **Spacing**: 4pt grid via `AppSpacing` — consistent section gaps vs. tight in-card grouping.
 - **Navigation**: Root/product screens use `ProductTopBar`; detail flows can remain on `AppScreen` + shared nav molecules. Touch targets stay ≥ 44×44pt.
 

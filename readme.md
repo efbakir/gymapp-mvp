@@ -60,7 +60,7 @@ docs/                       — Strategy, design, positioning, HIG reference
 - **Split** — id, name, orderedTemplateIds
 - **Exercise** — id, displayName, aliases, notes, isBodyweight
 - **DayTemplate** — id, name, splitId, orderedExerciseIds, lastPerformedDate
-- **WorkoutSession** — id, date, templateId, isCompleted, overallFeeling, **cycleId**, **weekNumber**
+- **WorkoutSession** — id, date, templateId, isCompleted, **cycleId**, **weekNumber**
 - **SetEntry** — id, sessionId, exerciseId, weight, reps, rpe, **rir**, **targetWeight**, **targetReps**, **metTarget**, isWarmup, isCompleted, setIndex
 - **Cycle** — id, name, splitId, startDate, weekCount, globalIncrementKg, isActive, isCompleted
 - **ProgressionRule** — id, cycleId, exerciseId, incrementKg, baseWeightKg, baseReps, consecutiveFailures, isDeloaded, deloadPercent

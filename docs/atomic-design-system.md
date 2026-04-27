@@ -43,6 +43,7 @@ Cases map to `Font` (+ optional `color`) via `.font` / `.color` accessors. Use *
 
 **Rules**
 
+- **Never use regular (400) font weight.** The minimum weight across the entire app is **medium** (500). All `AppFont` cases use Inter-Medium or heavier — never Inter-Regular.
 - Avoid inline `.font(.system(size:weight:))` in page files for standard hierarchy; use `AppFont` cases.
 
 ### Spacing — `AppSpacing` · Radius — `AppRadius`
@@ -53,7 +54,7 @@ Use named steps (`xs` … `xl` / `sm` … `lg`) for padding, `VStack` spacing, a
 
 - Avoid magic numbers like `.padding(16)` in new screens — use `AppSpacing.md` (or documented composition).
 - Large surfaces and cards use **`AppRadius.card` = 20**.
-- Buttons and compact controls use **`AppRadius.md` = 12**.
+- Buttons and compact controls use **`AppRadius.md` = 14**.
 - Rounded shapes should use iOS-style continuous corners, not default sharp rounding.
 
 ### Icons — `AppIcon`
@@ -147,6 +148,7 @@ Allowed in `*View.swift`:
 | Native UITabBar visuals on root screens | `UnitTabBar` via app-shell `safeAreaInset` |
 | `AppTabHeader` large-title root chrome on Today / Program | `ProductTopBar` |
 | `chevron.right` on `AppListRow`-style content | Context + row tap; no decorative chevron |
+| `Inter-Regular` or `.regular` weight anywhere | `Inter-Medium` minimum; use `AppFont` cases |
 | New hex colours in Features | `AppColor` extension or asset + wrapper |
 | Page-specific workout timer cards / custom command panels | `ExerciseCommandCard` + `SessionStateBar` |
 | Floating text-only header actions without visible tap area | `ProductTopBarAction` |
