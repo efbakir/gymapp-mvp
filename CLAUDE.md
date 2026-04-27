@@ -16,7 +16,7 @@ Non-negotiables that flow from this:
 - **Templates** are the program unit — not cycles, not weeks, not engines.
 - **Local-first, light-first, quiet UI.** No social, no feeds, no recommendations.
 
-Source of truth docs: `docs/product-compass.md`, `docs/goals.md`, `AGENTS.md`, `DESIGN_SYSTEM.md`, `docs/atomic-design-system.md`, `docs/visual-language.md`.
+Source of truth docs: `docs/product-compass.md`, `docs/goals.md`, `AGENTS.md`, `DESIGN_SYSTEM.md`, `docs/atomic-design-system.md`, `docs/visual-language.md`, `docs/references/` (visual taste anchors).
 
 ---
 
@@ -74,7 +74,8 @@ If the user explicitly overrides ("yes, do it anyway / ignore the rule"), procee
 1. Read this file to the end.
 2. If the task involves UI, product direction, or scope: skim `docs/product-compass.md` §Pillars + §Decision log **and** `docs/goals.md` §v1 scope boundaries.
 3. If the task involves any visual/component change: skim `docs/atomic-design-system.md` and open `Unit/UI/DesignSystem.swift` to see what atoms/molecules already exist. Reuse > extend > create.
-4. State out loud (one line) which docs you consulted and what constraint applies. Then proceed.
+4. If the task is non-trivial UI (new screen, layout change, card design, list pattern, empty state): list `docs/references/ios-screens/` and `docs/references/details/`. Pick the closest anchor and name it. If no reference fits, ask the user before inventing visual decisions. (See `docs/references/README.md`.)
+5. State out loud (one line) which docs **and which references** you consulted, and what constraint applies. Then proceed.
 
 ---
 
@@ -134,6 +135,7 @@ Cross-reference with the canonical-modifiers memory: `feedback_unit_scroll_edge_
 ### Gatekeeper checklist (run before every UI Edit/Write)
 
 - [ ] I opened `Unit/UI/DesignSystem.swift` and checked whether an existing atom/molecule/organism already fits. (Principle 2)
+- [ ] **For any non-trivial UI change, I named the visual anchor from `docs/references/`** (which file in `ios-screens/` or `details/` this change borrows rhythm/hierarchy/density from). If no reference fits, I asked the user before inventing. (See `docs/references/README.md`.)
 - [ ] **If this change introduces a new component / UI pattern / behavior not already in the design system, I cited a source of truth before the diff** — repo first (`docs/product-compass.md`, `docs/atomic-design-system.md`, `docs/visual-language.md`, `AGENTS.md`, `Unit/UI/DesignSystem.swift`), web second (Apple HIG, lawsofux, NN/g, growth.design). If neither covers it, I asked the user before proceeding. (See `feedback_unit_research_before_new_patterns.md`)
 - [ ] **I am not adding a new `struct X: View` or new `ViewModifier` without a one-line justification of why extending the nearest primitive wouldn't work.** (Parallel-ban rule 1)
 - [ ] **I am not adding a parallel `LinearGradient` / `.mask` / `.scrollEdgeEffectStyle(.automatic, ...)` when `appScrollEdgeSoft(...)` is the canonical modifier.** (Parallel-ban rule 2)
@@ -239,3 +241,56 @@ When running an audit task (invoked by the overnight cron or `audit-prompt.md`),
 9. Write findings to `audit-report.md` in the repo root (or a timestamped report if invoked via script)
 
 The full audit checklist is in `audit-prompt.md`. Use it as the enforcement surface for Design System Violations and Compass Alignment sections of the report.
+
+---
+
+## 10. Harness — hooks + skills (mechanical enforcement)
+
+The user has repeated the same UI rules across 30+ sessions. Three layers of enforcement now exist so Claude does not have to "remember":
+
+### 10.1 PreToolUse hook (`.claude/hooks/ui-banned-list.sh`)
+
+Registered in `.claude/settings.json`. Fires before every `Edit` / `Write` / `MultiEdit` and **blocks** (exit 2) if the new content introduces any of the §5 banned patterns into a Swift file under `Unit/` (excluding `Unit/UI/DesignSystem.swift`, where tokens are defined). Patterns blocked:
+
+- `chevron.right` / `chevron.forward`
+- `Color(red:..)`, `Color.black/.white/.gray/.red/.green/.blue/.primary/.secondary`
+- Hex literals (`0xRRGGBB[AA]`)
+- `.foregroundStyle(.gray)` / `.foregroundColor(.gray)`
+- `.font(.system(size:))`, `.padding(<int>)`, `.cornerRadius(<int>)`, `RoundedRectangle(cornerRadius: <int>)`
+- `.preferredColorScheme(.dark)`
+- `.scrollEdgeEffectStyle(.automatic)` / `.hard`
+- `.weight(.regular)`, `#FF4400` / `0xFF4400`
+- `Text("–")` / `Text("—")` / `Text("0 kg")` placeholders
+- `ProcessInfo.processInfo.environment["UNIT_*"]` scaffolding
+- `ToolbarItem` + `.weight(.semibold/.bold/.heavy)` together
+- `.sheet { ScrollView … }` (heuristic)
+
+It also surfaces a **non-blocking note** when a new `struct X: View` appears in a Features file, prompting reuse-check.
+
+If the hook blocks legitimate work, the fix is to update the canonical primitive in `DesignSystem.swift` (which the hook exempts). Do NOT edit the hook to allow the violation — that defeats the purpose. If the user explicitly overrides, run the work through `--no-checks` is NOT supported; the hook fires unconditionally.
+
+### 10.2 Project skills (`.claude/skills/`)
+
+Three skills enforce the rest of the gatekeeper checklist where a hook can't:
+
+| Skill | When to invoke | Replaces |
+|---|---|---|
+| `/page-audit` | Before any single-screen review or polish task. Loads CLAUDE.md §4–§7, `DesignSystem.swift`, the closest `docs/references/` anchor, and produces a severity-ranked report tied to atom/molecule/screen layers. | Asking "is this consistent with the system?" then guessing. |
+| `/component-reuse-check` | Before declaring any new `struct X: View` / `ViewModifier` / variant. Surveys existing primitives, runs the 80% match test, returns USE / EXTEND / NEW with one-sentence justification. | Inventing parallel components. |
+| `/ui-visual-verify` | After any UI Edit/Write, before saying "done". Build → screenshot → describe what is actually visible → certify VERIFIED / NOT VERIFIED / WAIVED. | Claiming success based on the code looking right. |
+
+These skills exist because the user has explicitly said: *"you should be better than me here — I should not repeat myself every prompt."* Trigger them proactively. Do not wait for the user to type the slash command.
+
+### 10.3 Visual references (`docs/references/`)
+
+Aesthetic taste is not text-encodable. `docs/references/` holds screenshots of iOS apps Unit's design language is anchored to (Apple Sports, Streaks, Things 3, etc.). Before any non-trivial UI edit, name the closest anchor and what specifically is being borrowed. See `docs/references/README.md` for the convention. The §3 session-start checklist and the §5 gatekeeper both require this step.
+
+If `docs/references/` has no anchor for the screen type at hand, **say so before editing**. Do not invent visual decisions — ask the user for a reference, or pick the closest existing one and justify why.
+
+### 10.4 Order of operations for any UI task
+
+1. Run §3 session-start checklist (docs + references).
+2. If proposing a new component: run `/component-reuse-check` first.
+3. Make the edit. Hook fires automatically — fix any blocked patterns at the canonical layer.
+4. Run `/ui-visual-verify` before saying done.
+5. If the task was a single-screen review/polish: run `/page-audit` either at start (to plan the change) or end (to confirm nothing else drifted).
