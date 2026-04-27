@@ -49,7 +49,9 @@
       "Bash(plutil -convert xml1 -o - /Users/efbakir/Library/Developer/Xcode/DerivedData/Unit-ejzqtwbvllorngaawllbutteperc/Build/Products/Debug-iphonesimulator/Unit.app/PlugIns/UnitWidgetExtension.appex/Info.plist)",
       "Bash(plutil -extract CFBundleIdentifier raw \"/Users/efbakir/Library/Developer/Xcode/DerivedData/Unit-ejzqtwbvllorngaawllbutteperc/Build/Products/Debug-iphonesimulator/Unit.app/Info.plist\")",
       "WebFetch(domain:randallb.com)",
-      "Bash(defaults read *)"
+      "Bash(defaults read *)",
+      "Bash(gh auth *)",
+      "Bash(ssh -T git@github.com)"
     ]
   }
 }
