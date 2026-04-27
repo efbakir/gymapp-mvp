@@ -4,20 +4,20 @@
 
 :root {
   /* Unit light theme — derived from DesignSystem.swift AppColor (light mode) */
-  --unit-background: #EBEBEB;
-  --unit-card: #F6F6F6;
+  --unit-background: #F5F5F5;
+  --unit-card: #FFFFFF;
   --unit-surface: #FFFFFF;
   --unit-text-primary: #0A0A0A;
-  --unit-text-secondary: #919191;
-  --unit-border: #DCDCDC;
-  --unit-muted: #DCDCDC;
-  --unit-disabled: #C7C7C7;
+  --unit-text-secondary: #595959;
+  --unit-border: #E5E5E5;
+  --unit-muted: #E8E8E8;
+  --unit-disabled: #CBCBCB;
   --unit-accent: #0A0A0A;
   --unit-accent-foreground: #F6F6F6;
   --unit-success: #34C759;
   --unit-error: #FF3B30;
 
-  --radius: 0.75rem;
+  --radius: 0.875rem;
 }
 
 html {
@@ -37,6 +37,10 @@ body {
 @layer base {
   * {
     border-color: var(--unit-border);
+  }
+  :focus-visible {
+    outline: 2px solid var(--unit-accent);
+    outline-offset: 2px;
   }
 }
 

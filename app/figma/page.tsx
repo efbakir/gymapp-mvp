@@ -471,7 +471,7 @@ export default function FigmaExportPage() {
               </div>
             </ComponentPanel>
 
-            <ComponentPanel name="AppTabHeader + AppHeaderIconButton" layer="Organism">
+            <ComponentPanel name="AppTabHeader + toolbar actions" layer="Organism">
               <div className="flex min-h-[52px] items-center gap-4">
                 <div className="flex-1 text-[32px] font-bold tracking-[-0.04em] text-black">Program</div>
                 <button className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-[18px] shadow-[0_8px_20px_rgba(15,23,42,0.05)]">

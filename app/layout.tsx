@@ -10,9 +10,9 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: { default: "Unit — Adaptive Gym Logger", template: "%s | Unit" },
+  title: { default: "Unit — Your Gym Notebook, Upgraded", template: "%s | Unit" },
   description:
-    "The only gym logger that auto-adjusts your 8-week plan when you fail. One-time purchase. No subscription.",
+    "Log sets in one tap. Ghost values pre-fill your last session. No AI, no social, no typing. Built for lifters who already know their program.",
   metadataBase: new URL("https://unitgym.app"),
   openGraph: {
     type: "website",

@@ -13,11 +13,11 @@ export default function PrivacyPage() {
       <div className="max-w-3xl mx-auto px-unit-md md:px-unit-lg">
         <article className="prose-legal">
           <h1>Privacy Policy</h1>
-          <p className="last-updated">Last updated: March 26, 2026</p>
+          <p className="last-updated">Last updated: April 13, 2026</p>
 
           <p>
             Unit (&quot;the App&quot;) is developed and operated by{" "}
-            <span className="placeholder">[YOUR LEGAL ENTITY NAME]</span>. This
+            Efe Bakir. This
             Privacy Policy explains how we handle your information when you use
             Unit.
           </p>
@@ -86,7 +86,7 @@ export default function PrivacyPage() {
           <p>
             If you have questions about your data or wish to make a
             privacy-related request, contact us at{" "}
-            <span className="placeholder">[PRIVACY_EMAIL]</span>.
+            efeec.bakir@gmail.com.
           </p>
 
           <h2>Changes to This Policy</h2>
@@ -103,11 +103,11 @@ export default function PrivacyPage() {
           </p>
           <ul>
             <li>
-              Email: <span className="placeholder">[PRIVACY_EMAIL]</span>
+              Email: efeec.bakir@gmail.com
             </li>
             <li>
               Developer:{" "}
-              <span className="placeholder">[YOUR LEGAL ENTITY NAME]</span>
+              Efe Bakir
             </li>
           </ul>
 

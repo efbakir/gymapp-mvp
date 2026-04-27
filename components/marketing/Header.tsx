@@ -35,7 +35,7 @@ export default function Header() {
             Support
           </Link>
           <a
-            href="#PLACEHOLDER_APP_STORE_URL"
+            href="#download"
             className="text-sm font-semibold px-4 py-2 rounded-lg transition-opacity hover:opacity-80 bg-unit-accent text-unit-accent-foreground"
           >
             Download
@@ -78,7 +78,7 @@ export default function Header() {
               Support
             </Link>
             <a
-              href="#PLACEHOLDER_APP_STORE_URL"
+              href="#download"
               className="text-base font-semibold px-4 py-3 rounded-lg text-center mt-2 bg-unit-accent text-unit-accent-foreground"
             >
               Download

@@ -12,12 +12,12 @@ export default function TermsPage() {
       <div className="max-w-3xl mx-auto px-unit-md md:px-unit-lg">
         <article className="prose-legal">
           <h1>Terms of Use</h1>
-          <p className="last-updated">Last updated: March 26, 2026</p>
+          <p className="last-updated">Last updated: April 13, 2026</p>
 
           <p>
             These Terms of Use (&quot;Terms&quot;) govern your use of the Unit
             mobile application (&quot;the App&quot;) developed by{" "}
-            <span className="placeholder">[YOUR LEGAL ENTITY NAME]</span>{" "}
+            Efe Bakir{" "}
             (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;). By downloading
             or using Unit, you agree to these Terms.
           </p>
@@ -66,7 +66,7 @@ export default function TermsPage() {
           <p>
             Unit, including its design, code, visual identity, and content, is
             the intellectual property of{" "}
-            <span className="placeholder">[YOUR LEGAL ENTITY NAME]</span> and is
+            Efe Bakir and is
             protected by applicable copyright and intellectual property laws.
           </p>
 
@@ -94,7 +94,7 @@ export default function TermsPage() {
           <h2>Limitation of Liability</h2>
           <p>
             To the maximum extent permitted by applicable law,{" "}
-            <span className="placeholder">[YOUR LEGAL ENTITY NAME]</span> shall
+            Efe Bakir shall
             not be liable for any indirect, incidental, special, consequential,
             or punitive damages, or any loss of data, use, or profits, arising
             out of or related to your use of the App.
@@ -119,7 +119,7 @@ export default function TermsPage() {
           <p>
             These Terms shall be governed by and construed in accordance with
             the laws of{" "}
-            <span className="placeholder">[YOUR JURISDICTION]</span>, without
+            the Netherlands, without
             regard to conflict of law principles.
           </p>
 
@@ -129,11 +129,11 @@ export default function TermsPage() {
           </p>
           <ul>
             <li>
-              Email: <span className="placeholder">[SUPPORT_EMAIL]</span>
+              Email: efeec.bakir@gmail.com
             </li>
             <li>
               Developer:{" "}
-              <span className="placeholder">[YOUR LEGAL ENTITY NAME]</span>
+              Efe Bakir
             </li>
           </ul>
 
