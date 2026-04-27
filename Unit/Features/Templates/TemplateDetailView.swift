@@ -105,20 +105,8 @@ struct TemplateDetailView: View {
                         isEditing.toggle()
                     }
                 } label: {
-                    (isEditing ? AppIcon.checkmark : AppIcon.edit).image(size: 18, weight: .semibold)
-                        .foregroundStyle(AppColor.textPrimary)
-                        .frame(width: 44, height: 44)
-                        .background {
-                            Circle()
-                                .fill(AppColor.cardBackground)
-                        }
-                        .overlay {
-                            Circle()
-                                .stroke(AppColor.border.opacity(0.5), lineWidth: 0.5)
-                        }
-                        .contentShape(Circle())
+                    Text(isEditing ? "Done" : "Edit")
                 }
-                .buttonStyle(.plain)
                 .accessibilityLabel(isEditing ? "Done" : "Edit")
             }
         }

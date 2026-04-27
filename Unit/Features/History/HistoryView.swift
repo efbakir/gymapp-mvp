@@ -568,10 +568,10 @@ private struct CalendarMonthHeader: View {
 
     private func monthButton(icon: AppIcon, isEnabled: Bool = true, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(icon == .back ? "Back" : "Next")
-                .font(AppFont.label.font)
+            icon.image(size: 17, weight: .semibold)
                 .foregroundStyle(isEnabled ? AppColor.textPrimary : AppColor.textSecondary.opacity(0.45))
-                .frame(minWidth: 44, minHeight: 44, alignment: .center)
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .disabled(!isEnabled)

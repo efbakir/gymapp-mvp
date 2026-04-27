@@ -186,14 +186,14 @@ struct TemplatesView: View {
 
                 NavigationLink(value: split) {
                     Text("Edit program")
-                        .font(AppFont.label.font)
+                        .font(AppFont.productAction)
                         .foregroundStyle(AppColor.textPrimary)
                         .frame(maxWidth: .infinity)
-                        .frame(height: 52)
+                        .frame(height: 48)
                         .background(AppColor.controlBackground)
                         .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(ScaleButtonStyle())
             }
         }
     }

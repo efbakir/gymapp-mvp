@@ -1624,30 +1624,6 @@ struct ExerciseRow: View {
     }
 }
 
-struct DayCard<Content: View>: View {
-    let title: String
-    let subtitle: String?
-    let isExpanded: Bool
-    let action: () -> Void
-    @ViewBuilder let content: () -> Content
-
-    var body: some View {
-        AppCard {
-            VStack(alignment: .leading, spacing: isExpanded ? AppSpacing.md : 0) {
-                Button(action: action) {
-                    AppListRow(title: title, subtitle: subtitle) {
-                        EmptyView()
-                    }
-                }
-                .buttonStyle(.plain)
-
-                if isExpanded {
-                    content()
-                }
-            }
-        }
-    }
-}
 
 struct SettingsSection<Content: View>: View {
     let title: String
