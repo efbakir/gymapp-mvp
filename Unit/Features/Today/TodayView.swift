@@ -453,17 +453,7 @@ private struct TodayWorkoutDetailsSheet: View {
 
     var body: some View {
         NavigationStack {
-            AppScreen(
-                title: nil,
-                customHeader: ProductTopBar(
-                    title: "Workout",
-                    trailingActions: [
-                        .text(AppCopy.Nav.close) {
-                            dismiss()
-                        }
-                    ]
-                ).eraseToAnyView()
-            ) {
+            AppScreen(showsNativeNavigationBar: true) {
                 AppCard {
                     VStack(alignment: .leading, spacing: AppSpacing.lg) {
                         VStack(alignment: .center, spacing: AppSpacing.sm) {
@@ -512,6 +502,17 @@ private struct TodayWorkoutDetailsSheet: View {
                     }
                 }
             }
+            .navigationTitle("Workout")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(AppCopy.Nav.close) {
+                        dismiss()
+                    }
+                    .appToolbarTextStyle()
+                }
+            }
+            .appNavigationBarChrome()
         }
     }
 }

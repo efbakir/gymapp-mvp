@@ -31,14 +31,16 @@ struct SettingsView: View {
         AppScreen(showsNativeNavigationBar: true) {
             SettingsSection(title: "Preferences") {
                 AppListRow(title: "Weight unit") {
-                    AppSegmentedControl(
-                        selection: Binding(
-                            get: { SettingsWeightUnit(rawValue: unitSystem) ?? .kg },
-                            set: { unitSystem = $0.rawValue }
-                        ),
-                        items: SettingsWeightUnit.allCases,
-                        title: { $0.rawValue }
-                    )
+                    Picker("Weight unit", selection: Binding(
+                        get: { SettingsWeightUnit(rawValue: unitSystem) ?? .kg },
+                        set: { unitSystem = $0.rawValue }
+                    )) {
+                        ForEach(SettingsWeightUnit.allCases) { unit in
+                            Text(unit.rawValue).tag(unit)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .fixedSize()
                 }
             }
 

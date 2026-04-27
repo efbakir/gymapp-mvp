@@ -363,7 +363,7 @@ struct EditProgramView: View {
     }
 
     private var addDayButton: some View {
-        AppSecondaryButton("Add Day", tone: .accentSoft) {
+        AppGhostButton("Add Day") {
             showAddDay = true
         }
     }

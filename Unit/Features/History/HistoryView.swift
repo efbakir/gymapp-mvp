@@ -242,11 +242,12 @@ struct RecentSessionsView: View {
     }
 
     private var modeToggle: some View {
-        AppSegmentedControl(
-            selection: $mode,
-            items: SessionHistoryMode.allCases,
-            title: { $0.rawValue }
-        )
+        Picker("View", selection: $mode) {
+            ForEach(SessionHistoryMode.allCases) { mode in
+                Text(mode.rawValue).tag(mode)
+            }
+        }
+        .pickerStyle(.segmented)
     }
 
     private var emptyState: some View {
