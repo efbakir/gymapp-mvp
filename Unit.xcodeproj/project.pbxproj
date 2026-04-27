@@ -35,7 +35,6 @@
 		CC000000000000000000004 /* ProgressionRule+Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000000000000000100004 /* ProgressionRule+Helpers.swift */; };
 		CC000000000000000000005 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000000000000000100005 /* SettingsView.swift */; };
 		CC000000000000000000006 /* ExerciseProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000000000000000100006 /* ExerciseProgressView.swift */; };
-		CC000000000000000000007 /* CalendarTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000000000000000100007 /* CalendarTabView.swift */; };
 		OB100000000000000000001 /* OnboardingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB000000000000000000001 /* OnboardingViewModel.swift */; };
 		OB100000000000000000002 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB000000000000000000002 /* OnboardingView.swift */; };
 		OB100000000000000000003 /* OnboardingShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB000000000000000000003 /* OnboardingShell.swift */; };
@@ -118,7 +117,6 @@
 		CC000000000000000100004 /* ProgressionRule+Helpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ProgressionRule+Helpers.swift"; sourceTree = "<group>"; };
 		CC000000000000000100005 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		CC000000000000000100006 /* ExerciseProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseProgressView.swift; sourceTree = "<group>"; };
-		CC000000000000000100007 /* CalendarTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarTabView.swift; sourceTree = "<group>"; };
 		OB000000000000000000001 /* OnboardingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModel.swift; sourceTree = "<group>"; };
 		OB000000000000000000002 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		OB000000000000000000003 /* OnboardingShell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingShell.swift; sourceTree = "<group>"; };
@@ -268,7 +266,6 @@
 			isa = PBXGroup;
 			children = (
 				A2000000000000000000000D /* HistoryView.swift */,
-				CC000000000000000100007 /* CalendarTabView.swift */,
 				A2000000000000000000000E /* SessionDetailView.swift */,
 				541C84EF2F5B81BA00D0DB57 /* PRLibraryView.swift */,
 				CC000000000000000100006 /* ExerciseProgressView.swift */,
@@ -470,7 +467,6 @@
 				CC000000000000000000004 /* ProgressionRule+Helpers.swift in Sources */,
 				CC000000000000000000005 /* SettingsView.swift in Sources */,
 				CC000000000000000000006 /* ExerciseProgressView.swift in Sources */,
-				CC000000000000000000007 /* CalendarTabView.swift in Sources */,
 				OB100000000000000000001 /* OnboardingViewModel.swift in Sources */,
 				OB100000000000000000002 /* OnboardingView.swift in Sources */,
 				OB100000000000000000003 /* OnboardingShell.swift in Sources */,

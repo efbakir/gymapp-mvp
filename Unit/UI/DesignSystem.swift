@@ -162,14 +162,6 @@ struct AppDivider: View {
     }
 }
 
-enum AppShadow {
-    static func sheetLift(_ colorScheme: ColorScheme) -> (color: Color, radius: CGFloat, y: CGFloat) {
-        colorScheme == .dark
-            ? (Color.black.opacity(0.58), 28, -12)
-            : (Color.black.opacity(0.18), 26, -12)
-    }
-}
-
 enum AppIcon: String {
     case back = "arrow.left"
     case forward = "arrow.right"
@@ -683,66 +675,6 @@ struct ProductTopBar: View {
     }
 }
 
-struct IconSquareButton: View {
-    enum Style: Equatable {
-        case `default`
-        case selected
-        case muted
-        case disabled
-    }
-
-    let icon: AppIcon
-    var style: Style = .default
-    var action: (() -> Void)? = nil
-
-    var body: some View {
-        Button(action: { action?() }) {
-            icon.image(size: 16, weight: .semibold)
-                .foregroundStyle(iconColor)
-                .frame(width: 48, height: 48)
-                .background(backgroundColor)
-                .overlay {
-                    RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous)
-                        .stroke(borderColor, lineWidth: 1)
-                }
-                .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
-        }
-        .buttonStyle(ScaleButtonStyle())
-        .disabled(action == nil || style == .disabled)
-    }
-
-    private var iconColor: Color {
-        switch style {
-        case .default, .muted:
-            return AppColor.textPrimary
-        case .selected:
-            return AppColor.accentForeground
-        case .disabled:
-            return AppColor.textSecondary
-        }
-    }
-
-    private var backgroundColor: Color {
-        switch style {
-        case .default, .muted:
-            return AppColor.controlBackground
-        case .selected:
-            return AppColor.accent
-        case .disabled:
-            return AppColor.disabledSurface
-        }
-    }
-
-    private var borderColor: Color {
-        switch style {
-        case .selected:
-            return AppColor.accent
-        default:
-            return AppColor.border
-        }
-    }
-}
-
 struct WeeklyProgressStepper: View {
     struct Step: Identifiable {
         enum State {
@@ -929,68 +861,6 @@ struct SetProgressIndicator: View {
             return "Set \(step.label), upcoming"
         case .disabled:
             return "Set \(step.label), unavailable"
-        }
-    }
-}
-
-struct MetricDisplay: View {
-    enum Style {
-        case metric
-        case subdued
-        case placeholder
-    }
-
-    let value: String
-    var supportingText: String? = nil
-    var style: Style = .metric
-
-    var body: some View {
-        VStack(spacing: AppSpacing.xs) {
-            Text(value)
-                .font(valueFont)
-                .tracking(valueTracking)
-                .foregroundStyle(valueColor)
-                .multilineTextAlignment(.center)
-                .fixedSize(horizontal: false, vertical: true)
-
-            if let supportingText, !supportingText.isEmpty {
-                Text(supportingText)
-                    .font(AppFont.caption.font)
-                    .foregroundStyle(AppColor.textSecondary)
-                    .multilineTextAlignment(.center)
-            }
-        }
-        .frame(maxWidth: .infinity)
-    }
-
-    private var valueFont: Font {
-        switch style {
-        case .metric:
-            return AppFont.numericDisplay
-        case .subdued:
-            return AppFont.numericLarge
-        case .placeholder:
-            return AppFont.title.font
-        }
-    }
-
-    private var valueTracking: CGFloat {
-        switch style {
-        case .metric:
-            return AppFont.numericDisplayTracking
-        case .subdued:
-            return AppFont.numericLargeTracking
-        case .placeholder:
-            return 0
-        }
-    }
-
-    private var valueColor: Color {
-        switch style {
-        case .metric:
-            return AppColor.textPrimary
-        case .subdued, .placeholder:
-            return AppColor.textSecondary
         }
     }
 }
@@ -1443,7 +1313,6 @@ struct ExerciseCommandCard: View {
     let setLabel: String
     let metricValue: String
     var metricSupportingText: String? = nil
-    var metricStyle: MetricDisplay.Style = .metric
     var state: State = .active
     var primaryLabel: String = "Done"
     var onPrimaryAction: (() -> Void)? = nil
@@ -1603,26 +1472,6 @@ struct SessionStateBar: View {
     }
 }
 
-struct ExerciseRow: View {
-    let name: String
-    let weightText: String
-    let repsText: String
-    var isBodyweight: Bool = false
-
-    var body: some View {
-        AppListRow(title: name) {
-            Text(displayValue)
-                .font(AppFont.label.font)
-                .foregroundStyle(AppColor.textPrimary)
-                .monospacedDigit()
-        }
-    }
-
-    private var displayValue: String {
-        let load = isBodyweight && weightText == "0 kg" ? "BW" : weightText
-        return "\(load) × 1 × \(repsText)"
-    }
-}
 
 
 struct SettingsSection<Content: View>: View {
@@ -1646,47 +1495,6 @@ struct SettingsSection<Content: View>: View {
 
 private let appScreenScrollCoordinateSpace = "AppScreenScroll"
 
-struct AppTabHeader<Trailing: View>: View {
-    let title: String
-    @ViewBuilder let trailing: () -> Trailing
-
-    init(title: String, @ViewBuilder trailing: @escaping () -> Trailing) {
-        self.title = title
-        self.trailing = trailing
-    }
-
-    var body: some View {
-        GeometryReader { proxy in
-            let minY = proxy.frame(in: .named(appScreenScrollCoordinateSpace)).minY
-            let collapseProgress = min(max((AppSpacing.md - minY) / 52, 0), 1)
-
-            HStack(alignment: .center, spacing: AppSpacing.md) {
-                Text(title)
-                    .font(AppFont.display)
-                    .tracking(AppFont.displayTracking)
-                    .foregroundStyle(AppColor.textPrimary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                HStack(spacing: AppSpacing.sm) {
-                    trailing()
-                }
-            }
-            .offset(y: -collapseProgress * 8)
-            .scaleEffect(1 - (collapseProgress * 0.06), anchor: .topLeading)
-            .opacity(1.0 - (collapseProgress * 0.08))
-            .animation(.spring(response: 0.28, dampingFraction: 0.9), value: collapseProgress)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
-        }
-        .frame(height: 56)
-    }
-}
-
-extension AppTabHeader where Trailing == EmptyView {
-    init(title: String) {
-        self.init(title: title) { EmptyView() }
-    }
-}
-
 struct AppHeaderIconButton: View {
     let icon: AppIcon
     let action: () -> Void
@@ -1708,74 +1516,6 @@ struct AppHeaderIconButton: View {
     }
 }
 
-struct UnitTabItem: View {
-    let title: String
-    let icon: AppIcon
-    let isActive: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: AppSpacing.sm) {
-                icon.image(size: 24, weight: .semibold)
-                    .foregroundStyle(iconColor)
-
-                Text(title)
-                    .font(AppFont.stepIndicator)
-                    .foregroundStyle(textColor)
-                    .lineLimit(1)
-            }
-            .frame(width: 128, height: 56)
-            .background(backgroundColor)
-            .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
-        }
-        .buttonStyle(ScaleButtonStyle())
-    }
-
-    private var backgroundColor: Color {
-        isActive ? AppColor.mutedFill : .clear
-    }
-
-    private var iconColor: Color {
-        isActive ? AppColor.textSecondary : AppColor.textSecondary
-    }
-
-    private var textColor: Color {
-        isActive ? AppColor.textSecondary : AppColor.textSecondary
-    }
-}
-
-struct UnitTabBar: View {
-    struct Item: Identifiable {
-        let id: String
-        let title: String
-        let icon: AppIcon
-    }
-
-    let items: [Item]
-    let selectedID: String
-    let onSelect: (String) -> Void
-
-    var body: some View {
-        HStack(spacing: 0) {
-            ForEach(items) { item in
-                UnitTabItem(
-                    title: item.title,
-                    icon: item.icon,
-                    isActive: item.id == selectedID
-                ) {
-                    onSelect(item.id)
-                }
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.top, AppSpacing.sm)
-        .padding(.bottom, AppSpacing.smd)
-        .background(AppColor.background)
-        .shadow(color: Color.black.opacity(0.02), radius: 8, x: 0, y: -1)
-    }
-}
-
 // MARK: - Template
 
 struct PrimaryButtonConfig {
@@ -1791,7 +1531,6 @@ struct AppScreen<Content: View>: View {
     let trailingText: NavTextAction?
     let primaryButton: PrimaryButtonConfig?
     let customHeader: AnyView?
-    var usesCircularTrailingButton: Bool = false
     var navigationBarTitleDisplayMode: NavigationBarItem.TitleDisplayMode? = nil
     var hidesNavigationBar: Bool = false
     var showsNativeNavigationBar: Bool = false
@@ -1804,7 +1543,6 @@ struct AppScreen<Content: View>: View {
         trailingText: NavTextAction? = nil,
         primaryButton: PrimaryButtonConfig? = nil,
         customHeader: AnyView? = nil,
-        usesCircularTrailingButton: Bool = false,
         navigationBarTitleDisplayMode: NavigationBarItem.TitleDisplayMode? = nil,
         hidesNavigationBar: Bool = false,
         showsNativeNavigationBar: Bool = false,
@@ -1816,7 +1554,6 @@ struct AppScreen<Content: View>: View {
         self.trailingText = trailingText
         self.primaryButton = primaryButton
         self.customHeader = customHeader
-        self.usesCircularTrailingButton = usesCircularTrailingButton
         self.navigationBarTitleDisplayMode = navigationBarTitleDisplayMode
         self.hidesNavigationBar = hidesNavigationBar
         self.showsNativeNavigationBar = showsNativeNavigationBar
