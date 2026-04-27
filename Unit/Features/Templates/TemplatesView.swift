@@ -120,7 +120,7 @@ struct TemplatesView: View {
                     .padding(.top, AppSpacing.md)
                     .padding(.leading, AppSpacing.md)
 
-                AppStackedCardList(inactiveSplits) { split in
+                AppDividedList(stacked: inactiveSplits) { split in
                     let splitDays = orderedTemplates(for: split)
                     let dayCount = splitDays.count
                     let exerciseCount = splitDays.reduce(0) { $0 + $1.orderedExerciseIds.count }
@@ -137,24 +137,27 @@ struct TemplatesView: View {
     }
 
     private var emptyState: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.md) {
-            Text("Build your first program")
-                .appFont(.largeTitle)
-                .foregroundStyle(AppColor.textPrimary)
+        VStack(alignment: .leading, spacing: AppSpacing.lg) {
+            VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                Text("Build your first program")
+                    .appFont(.largeTitle)
+                    .foregroundStyle(AppColor.textPrimary)
 
-            Text("Add your training days, exercises, and starting weights so Unit can prepare the next target.")
-                .font(AppFont.body.font)
-                .foregroundStyle(AppColor.textSecondary)
-                .lineSpacing(3)
-
-            AppPrimaryButton("Create Program") {
-                showingOnboarding = true
+                Text("Add your training days, exercises, and starting weights so Unit can prepare the next target.")
+                    .font(AppFont.body.font)
+                    .foregroundStyle(AppColor.textSecondary)
             }
 
-            NavigationLink(value: ProgramLibraryDestination()) {
-                AppGhostButtonLabel(title: "Pick a starter program")
+            VStack(spacing: AppSpacing.xs) {
+                AppPrimaryButton("Create Program") {
+                    showingOnboarding = true
+                }
+
+                NavigationLink(value: ProgramLibraryDestination()) {
+                    AppGhostButtonLabel(title: "Pick a starter program")
+                }
+                .buttonStyle(ScaleButtonStyle())
             }
-            .buttonStyle(ScaleButtonStyle())
         }
         .appCardStyle()
     }
@@ -351,7 +354,7 @@ struct EditProgramView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             } else {
-                AppStackedCardList(orderedTemplates) { template in
+                AppDividedList(stacked: orderedTemplates) { template in
                     let index = orderedTemplates.firstIndex(where: { $0.id == template.id }) ?? 0
                     routineRow(template, index: index)
                 }

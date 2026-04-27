@@ -86,7 +86,7 @@ struct SessionExerciseSnapshot: Identifiable {
     let isBodyweight: Bool
     let sets: [SessionSetSnapshot]
 
-    /// Exercise summary, “3 × 15 × 27.5kg” style.
+    /// Exercise summary via `WorkoutTargetFormatter` compact `setxrepxkg` style.
     var previewPerformanceText: String? {
         guard let representativeSet = sets.first else { return nil }
         return WorkoutTargetFormatter.actualText(

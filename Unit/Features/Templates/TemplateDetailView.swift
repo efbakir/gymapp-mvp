@@ -135,7 +135,7 @@ struct TemplateDetailView: View {
     @ViewBuilder
     private func exerciseTargetSubtitle(for exercise: Exercise) -> some View {
         if let planned = plannedTargetDisplay(for: exercise) {
-            Text("\(planned.setCount) × \(planned.reps)")
+            Text(WorkoutTargetFormatter.setRepCompact(setCount: planned.setCount, reps: planned.reps) ?? "")
                 .font(AppFont.performance)
                 .foregroundStyle(AppColor.textPrimary)
                 .monospacedDigit()

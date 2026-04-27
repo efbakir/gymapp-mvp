@@ -42,23 +42,24 @@ struct OnboardingSplitBuilderView: View {
         ) {
             VStack(alignment: .leading, spacing: AppSpacing.lg) {
 
-                // Day count stepper
-                HStack {
-                    Text("Days per week")
-                        .font(AppFont.body.font)
-                        .foregroundStyle(AppColor.textPrimary)
-                    Spacer()
-                    AppStepper(
-                        value: "\(vm.dayCount)",
-                        onDecrement: { vm.updateDayCount(vm.dayCount - 1) },
-                        onIncrement: { vm.updateDayCount(vm.dayCount + 1) }
-                    )
+                // Day count stepper — default AppCard inset (lg) matches list card below
+                AppCard {
+                    HStack {
+                        Text("Days per week")
+                            .font(AppFont.body.font)
+                            .foregroundStyle(AppColor.textPrimary)
+                        Spacer()
+                        AppStepper(
+                            value: "\(vm.dayCount)",
+                            onDecrement: { vm.updateDayCount(vm.dayCount - 1) },
+                            onIncrement: { vm.updateDayCount(vm.dayCount + 1) }
+                        )
+                    }
                 }
-                .appCardStyle()
 
-                // Day name fields — one card, divided rows
-                AppCard(contentInset: 0) {
-                    AppDividedList(data: Array(0..<vm.dayCount), id: \.self, dividerLeading: AppSpacing.md, dividerTrailing: AppSpacing.md) { i in
+                // Day name fields — same card inset as stepper; divided rows (SessionDetailView pattern)
+                AppCard {
+                    AppDividedList(data: Array(0..<vm.dayCount), id: \.self) { i in
                         HStack(spacing: AppSpacing.sm) {
                             Text("\(i + 1)")
                                 .font(AppFont.caption.font)
@@ -77,15 +78,13 @@ struct OnboardingSplitBuilderView: View {
                                     else { focusedDay = nil }
                                 }
                         }
-                        .padding(.horizontal, AppSpacing.md)
-                        .frame(minHeight: 48)
+                        .padding(.vertical, AppSpacing.md)
                         .contentShape(Rectangle())
                         .onTapGesture { focusedDay = i }
                     }
                 }
             }
         }
-        .scrollDismissesKeyboard(.interactively)
         .onChange(of: vm.dayCount) { _, newValue in
             guard let focusedDay else { return }
             if focusedDay >= newValue {

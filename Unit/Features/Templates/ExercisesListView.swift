@@ -99,6 +99,11 @@ struct ExercisesListView: View {
     }
 
     private func deleteExercises(at offsets: IndexSet) {
+        let deletedIds = Set(offsets.map { filteredExercises[$0].id })
+        let allTemplates = (try? modelContext.fetch(FetchDescriptor<DayTemplate>())) ?? []
+        for template in allTemplates where template.orderedExerciseIds.contains(where: deletedIds.contains) {
+            template.orderedExerciseIds.removeAll { deletedIds.contains($0) }
+        }
         for index in offsets {
             modelContext.delete(filteredExercises[index])
         }

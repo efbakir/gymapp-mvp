@@ -79,6 +79,8 @@ struct OnboardingExercisesView: View {
                                 AppIcon.reorder.image(size: 14, weight: .semibold)
                                     .foregroundStyle(AppColor.textSecondary)
                                     .frame(width: 20, height: 20)
+                                    .frame(minWidth: 44, minHeight: 44)
+                                    .contentShape(Rectangle())
                                     .onDrag {
                                         draggedExerciseID = ex.id
                                         return NSItemProvider(object: ex.id.uuidString as NSString)
@@ -101,7 +103,7 @@ struct OnboardingExercisesView: View {
                                 } label: {
                                     AppIcon.close.image(size: 12, weight: .semibold)
                                         .foregroundStyle(AppColor.textSecondary)
-                                        .padding(AppSpacing.sm)
+                                        .frame(minWidth: 44, minHeight: 44)
                                         .contentShape(Rectangle())
                                 }
                             }
@@ -112,7 +114,8 @@ struct OnboardingExercisesView: View {
                             .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
                             .overlay(
                                 RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous)
-                                    .stroke(focusedExerciseID == ex.id ? AppColor.accent.opacity(0.5) : Color.clear, lineWidth: 1.5)
+                                    .stroke(AppColor.accent.opacity(focusedExerciseID == ex.id ? 0.5 : 0), lineWidth: 1.5)
+                                    .animation(.easeOut(duration: 0.18), value: focusedExerciseID == ex.id)
                             )
                             .onTapGesture {
                                 focusedExerciseID = ex.id
@@ -130,22 +133,9 @@ struct OnboardingExercisesView: View {
                     }
                 }
 
-                // Add exercise button
-                Button {
+                AppGhostButton("Add exercise") {
                     showingAddSheet = true
-                } label: {
-                    HStack(spacing: AppSpacing.sm) {
-                        AppIcon.add.image(size: 14, weight: .semibold)
-                        Text("Add exercise")
-                            .font(AppFont.body.font)
-                    }
-                    .foregroundStyle(AppColor.accent)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 48)
-                    .background(AppColor.accentSoft)
-                    .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
                 }
-                .buttonStyle(ScaleButtonStyle())
             }
         }
         .sheet(isPresented: $showingAddSheet, onDismiss: {
@@ -156,7 +146,6 @@ struct OnboardingExercisesView: View {
                 .presentationDetents([.medium, .large])
                 .appBottomSheetChrome()
         }
-        .scrollDismissesKeyboard(.interactively)
         .onChange(of: selectedDayIndex) { _, _ in
             focusedExerciseID = nil
             draggedExerciseID = nil

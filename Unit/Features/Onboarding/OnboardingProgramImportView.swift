@@ -9,6 +9,31 @@ import SwiftUI
 import PhotosUI
 import Vision
 
+/// Single source of truth for paste-mode copy (subtitle + editor placeholder examples).
+private enum ProgramPasteFormatGuide {
+    /// Shown under the title in `OnboardingShell` for paste import only.
+    static let subtitle =
+        "Day name on its own line (Push, Pull, Legs, Upper, Lower, Full body, Arms, Chest, Back, Shoulders, Day 1 to Day 6, or a weekday). "
+        + "Each exercise line: name, then setxrepxkg, or kgxrep if you omit sets. Use kg or lb, or BW for bodyweight. "
+        + "Lines starting with // are skipped."
+
+    /// Placeholder is examples only so it does not repeat the subtitle.
+    static let placeholderExamples = [
+        "Push",
+        "Bench press 4x8x60kg",
+        "Incline DB press 3x10x22kg",
+        "",
+        "Pull",
+        "Deadlift 3x5x100kg",
+        "Pull-up 4x8 BW",
+        "Barbell row 4x8x60kg",
+        "",
+        "Legs",
+        "Squat 4x6x80kg",
+        "Leg press 3x10x120kg",
+    ].joined(separator: "\n")
+}
+
 struct OnboardingProgramImportView: View {
     @Environment(OnboardingViewModel.self) private var vm
 
@@ -38,6 +63,7 @@ struct OnboardingProgramImportView: View {
     var body: some View {
         OnboardingShell(
             title: parsedDays.isEmpty ? inputTitle : "Check your program",
+            subtitle: parsedDays.isEmpty ? helperSubtitle : "Check this before you continue. You can still edit the exercises next.",
             ctaLabel: parsedDays.isEmpty ? parseLabel : "Use program",
             ctaEnabled: parsedDays.isEmpty ? canParse && !isParsing : !parsedDays.isEmpty,
             progressStep: progressStep,
@@ -83,11 +109,7 @@ struct OnboardingProgramImportView: View {
 
     @ViewBuilder
     private var inputSection: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.xl) {
-            Text(helperCopy)
-                .font(AppFont.body.font)
-                .foregroundStyle(AppColor.textSecondary)
-
+        VStack(alignment: .leading, spacing: AppSpacing.sm) {
             if isPhotoMode {
                 let hasPhoto = selectedPhotoData != nil
                 AppSecondaryButton(
@@ -108,16 +130,12 @@ struct OnboardingProgramImportView: View {
                         .foregroundStyle(AppColor.textSecondary)
                 }
             } else {
-                TextEditor(text: $pastedText)
-                    .font(AppFont.body.font)
-                    .foregroundStyle(AppColor.textPrimary)
-                    .scrollContentBackground(.hidden)
-                    .padding(AppSpacing.sm)
-                    .frame(minHeight: 220)
-                    .background(AppColor.cardBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous))
-                    .textInputAutocapitalization(.words)
-                    .autocorrectionDisabled()
+                AppTextEditor(
+                    text: $pastedText,
+                    placeholder: ProgramPasteFormatGuide.placeholderExamples
+                )
+                .textInputAutocapitalization(.words)
+                .autocorrectionDisabled()
             }
         }
 
@@ -134,10 +152,6 @@ struct OnboardingProgramImportView: View {
 
     @ViewBuilder
     private var reviewSection: some View {
-        Text("Check this before you continue. You can still edit the exercises next.")
-            .font(AppFont.body.font)
-            .foregroundStyle(AppColor.textSecondary)
-
         VStack(spacing: AppSpacing.sm) {
             ForEach(parsedDays) { day in
                 VStack(alignment: .leading, spacing: AppSpacing.sm) {
@@ -153,15 +167,23 @@ struct OnboardingProgramImportView: View {
                                     .foregroundStyle(AppColor.textPrimary)
                                     .frame(maxWidth: .infinity, alignment: .leading)
 
-                                Text(exerciseSummary(exercise))
+                                Text(
+                                    WorkoutTargetFormatter.importedProgramExerciseSummary(
+                                        sets: exercise.sets,
+                                        reps: exercise.reps,
+                                        weightKg: exercise.weightKg
+                                    )
+                                )
                                     .font(AppFont.caption.font)
                                     .foregroundStyle(AppColor.textSecondary)
                                     .multilineTextAlignment(.trailing)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.85)
                             }
                             .padding(.horizontal, AppSpacing.sm)
                             .padding(.vertical, AppSpacing.sm)
                             .background(AppColor.background)
-                            .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
+                            .clipShape(RoundedRectangle(cornerRadius: AppRadius.sm, style: .continuous))
                         }
                     }
                 }
@@ -169,25 +191,19 @@ struct OnboardingProgramImportView: View {
             }
         }
 
-        Button {
+        AppGhostButton("Try again") {
             parsedDays = []
-        } label: {
-            Text("Try again")
-                .font(AppFont.body.font)
-                .foregroundStyle(AppColor.textSecondary)
-                .frame(minHeight: 44)
         }
-        .buttonStyle(ScaleButtonStyle())
     }
 
-    private var helperCopy: String {
+    private var helperSubtitle: String? {
         switch vm.importMethod {
         case .photo:
             return "Use a clear photo of the full page."
         case .paste:
-            return "Paste your plan as it is."
+            return ProgramPasteFormatGuide.subtitle
         case .manual:
-            return ""
+            return nil
         }
     }
 
@@ -223,20 +239,6 @@ struct OnboardingProgramImportView: View {
             return
         }
         parsedDays = parsed
-    }
-
-    private func exerciseSummary(_ exercise: ImportedProgramExercise) -> String {
-        var parts: [String] = []
-        if let sets = exercise.sets {
-            parts.append("\(sets) sets")
-        }
-        if let reps = exercise.reps {
-            parts.append("\(reps) reps")
-        }
-        if let weightKg = exercise.weightKg {
-            parts.append(WorkoutTargetFormatter.weightDisplay(weightKg))
-        }
-        return parts.isEmpty ? "Exercise only" : parts.joined(separator: " · ")
     }
 }
 
@@ -291,6 +293,10 @@ enum ProgramImportParser {
         }
 
         for line in lines {
+            if line.hasPrefix("//") {
+                continue
+            }
+
             if let heading = parsedDayHeading(from: line) {
                 flushCurrentDay()
                 currentDayName = heading

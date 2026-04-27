@@ -800,15 +800,16 @@ final class TodayDashboardViewModel {
                 )
             }
 
-            let displayTarget = "\(max(lastSets.count, 1)) × \(representative.reps)"
+            let setCount = max(lastSets.count, 1)
+            let displayTarget = WorkoutTargetFormatter.setRepCompact(setCount: setCount, reps: representative.reps)
+                ?? "\(representative.reps)"
 
-            let weightLabel: String
+            let lastPerformanceLabel: String
             if exercise.isBodyweight {
-                weightLabel = "BW"
+                lastPerformanceLabel = "Last BW"
             } else {
-                weightLabel = WorkoutTargetFormatter.weightDisplay(representative.weight)
+                lastPerformanceLabel = "Last \(WorkoutTargetFormatter.weightCompact(representative.weight))"
             }
-            let lastPerformanceLabel = "Last \(weightLabel)"
 
             return ExerciseTarget(
                 exerciseName: exercise.displayName,

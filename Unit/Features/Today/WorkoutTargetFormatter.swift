@@ -9,7 +9,7 @@ import Foundation
 
 enum WorkoutTargetFormatter {
 
-    /// Format a weight value with the user's preferred unit label.
+    /// Format a weight value with the user's preferred unit label (spaced, for labels and sentences).
     static func weightDisplay(_ kg: Double) -> String {
         let unit = UserDefaults.standard.string(forKey: "unitSystem") ?? "kg"
         if unit == "lb" {
@@ -19,22 +19,57 @@ enum WorkoutTargetFormatter {
         return "\(kg.weightString) kg"
     }
 
+    /// Inline weight token for compact metrics (`60kg`, `132.5lb`).
+    static func weightCompact(_ kg: Double) -> String {
+        let unit = UserDefaults.standard.string(forKey: "unitSystem") ?? "kg"
+        if unit == "lb" {
+            let lb = kg * 2.20462
+            return "\(lb.weightString)lb"
+        }
+        return "\(kg.weightString)kg"
+    }
+
+    /// Sets and reps only (no weight), e.g. `4x8`.
+    static func setRepCompact(setCount: Int, reps: Int) -> String? {
+        guard setCount > 0, reps > 0 else { return nil }
+        return "\(setCount)x\(reps)"
+    }
+
+    /// Canonical inline load: `setxrepxkg` when set count is known (`> 0`), else `kgxrep` or `BWxrep`.
+    static func compactLoadText(sets: Int?, reps: Int?, weightKg: Double?, isBodyweight: Bool) -> String? {
+        guard let reps, reps > 0 else { return nil }
+
+        let setCount = sets ?? 0
+        let w = weightKg ?? 0
+        let hasWeight = w > 0 && !isBodyweight
+
+        if isBodyweight {
+            if setCount > 0 {
+                return "\(setCount)x\(reps)xBW"
+            }
+            return "BWx\(reps)"
+        }
+
+        guard hasWeight else { return nil }
+
+        if setCount > 0 {
+            return "\(setCount)x\(reps)x\(weightCompact(w))"
+        }
+        return "\(weightCompact(w))x\(reps)"
+    }
+
+    /// Single logged set or ghost row: no set index, `kgxrep` / `BWxrep`.
     static func setMetricText(
         weightKg: Double,
         reps: Int,
         isBodyweight: Bool,
         bodyweightLabel: String = "BW"
     ) -> String? {
-        guard reps > 0 else { return nil }
-
-        if isBodyweight {
-            return "\(bodyweightLabel) × \(reps)"
-        }
-
-        guard weightKg > 0 else { return nil }
-        return "\(weightDisplay(weightKg)) × \(reps)"
+        _ = bodyweightLabel
+        return compactLoadText(sets: nil, reps: reps, weightKg: weightKg, isBodyweight: isBodyweight)
     }
 
+    /// Full session or planned target: `setxrepxkg` / `BW` token.
     static func performanceText(
         weightKg: Double,
         setCount: Int,
@@ -42,21 +77,12 @@ enum WorkoutTargetFormatter {
         isBodyweight: Bool,
         bodyweightLabel: String = "BW"
     ) -> String? {
-        guard setCount > 0, reps > 0 else { return nil }
-
-        if isBodyweight {
-            return "\(setCount) × \(reps) × \(bodyweightLabel)"
-        }
-
-        guard weightKg > 0 else { return nil }
-        return "\(setCount) × \(reps) × \(weightDisplay(weightKg))"
+        _ = bodyweightLabel
+        return compactLoadText(sets: setCount, reps: reps, weightKg: weightKg, isBodyweight: isBodyweight)
     }
 
     static func volumeText(setCount: Int, reps: Int) -> String? {
-        guard setCount > 0, reps > 0 else { return nil }
-        let setLabel = setCount == 1 ? "set" : "sets"
-        let repLabel = reps == 1 ? "rep" : "reps"
-        return "\(setCount) \(setLabel) × \(reps) \(repLabel)"
+        setRepCompact(setCount: setCount, reps: reps)
     }
 
     static func trustedTargetText(weightKg: Double, setCount: Int, reps: Int, isBodyweight: Bool) -> String? {
@@ -75,10 +101,19 @@ enum WorkoutTargetFormatter {
             setCount: setCount,
             reps: reps,
             isBodyweight: isBodyweight
-        ) ?? "\(reps)"
+        ) ?? (reps > 0 ? "\(reps)" : "0")
     }
 
     static func lastText(weightKg: Double, setCount: Int, reps: Int, isBodyweight: Bool) -> String {
         "Last \(actualText(weightKg: weightKg, setCount: setCount, reps: reps, isBodyweight: isBodyweight))"
+    }
+
+    /// Parsed import row: `weightKg == nil` with reps or sets implies bodyweight-style line.
+    static func importedProgramExerciseSummary(sets: Int?, reps: Int?, weightKg: Double?) -> String {
+        let inferredBodyweight = (weightKg == nil) && (reps != nil || sets != nil)
+        if let line = compactLoadText(sets: sets, reps: reps, weightKg: weightKg, isBodyweight: inferredBodyweight) {
+            return line
+        }
+        return "Exercise only"
     }
 }

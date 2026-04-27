@@ -134,6 +134,7 @@ Cross-reference with the canonical-modifiers memory: `feedback_unit_scroll_edge_
 ### Gatekeeper checklist (run before every UI Edit/Write)
 
 - [ ] I opened `Unit/UI/DesignSystem.swift` and checked whether an existing atom/molecule/organism already fits. (Principle 2)
+- [ ] **If this change introduces a new component / UI pattern / behavior not already in the design system, I cited a source of truth before the diff** — repo first (`docs/product-compass.md`, `docs/atomic-design-system.md`, `docs/visual-language.md`, `AGENTS.md`, `Unit/UI/DesignSystem.swift`), web second (Apple HIG, lawsofux, NN/g, growth.design). If neither covers it, I asked the user before proceeding. (See `feedback_unit_research_before_new_patterns.md`)
 - [ ] **I am not adding a new `struct X: View` or new `ViewModifier` without a one-line justification of why extending the nearest primitive wouldn't work.** (Parallel-ban rule 1)
 - [ ] **I am not adding a parallel `LinearGradient` / `.mask` / `.scrollEdgeEffectStyle(.automatic, ...)` when `appScrollEdgeSoft(...)` is the canonical modifier.** (Parallel-ban rule 2)
 - [ ] The change introduces no new raw colors, fonts, spacings, or radii — only tokens. (§Banned below)

@@ -13,6 +13,7 @@ struct OnboardingShell<Content: View>: View {
     @Environment(\.dismiss) private var dismiss
 
     let title: String
+    var subtitle: String? = nil
     var ctaLabel: String = "Continue"
     var ctaEnabled: Bool = true
     var progressStep: Int? = nil
@@ -45,9 +46,21 @@ struct OnboardingShell<Content: View>: View {
             hidesNavigationBar: true
         ) {
             VStack(alignment: .leading, spacing: AppSpacing.lg) {
-                Text(title)
-                    .appFont(.largeTitle)
-                    .foregroundStyle(AppColor.textPrimary)
+                VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                    Text(title)
+                        .appFont(.largeTitle)
+                        .foregroundStyle(AppColor.textPrimary)
+                        .contentTransition(.opacity)
+                        .animation(.easeInOut(duration: 0.25), value: title)
+
+                    if let subtitle {
+                        Text(subtitle)
+                            .font(AppFont.body.font)
+                            .foregroundStyle(AppColor.textSecondary)
+                            .contentTransition(.opacity)
+                            .animation(.easeInOut(duration: 0.25), value: subtitle)
+                    }
+                }
 
                 content()
             }
@@ -56,17 +69,17 @@ struct OnboardingShell<Content: View>: View {
 }
 
 /// Segmented progress indicator — one capsule per step, filled up to `step`.
-/// Centered at the top of the screen. Inactive segments use border color,
-/// active segments use primary text color.
+/// Centered at the top of the screen. Inactive segments use border color;
+/// completed/current segments use `progressSegmentFill` (softer than full `textPrimary`).
 struct OnboardingProgressBar: View {
     let step: Int
     let total: Int
 
     var body: some View {
-        HStack(spacing: AppSpacing.sm) {
+        HStack(spacing: AppSpacing.xs) {
             ForEach(0..<max(total, 1), id: \.self) { index in
                 Capsule()
-                    .fill(index < step ? AppColor.textPrimary : AppColor.border)
+                    .fill(index < step ? AppColor.progressSegmentFill : AppColor.border)
                     .frame(width: 40, height: 6)
                     .animation(.easeInOut(duration: 0.25), value: step)
             }

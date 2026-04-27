@@ -42,7 +42,7 @@ struct ProgramLibraryView: View {
                         .foregroundStyle(AppColor.textSecondary)
                         .appCardStyle()
                 } else {
-                    AppStackedCardList(filteredPrograms) { program in
+                    AppDividedList(stacked: filteredPrograms) { program in
                         NavigationLink(value: program) {
                             programRow(program)
                         }

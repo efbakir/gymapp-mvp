@@ -37,6 +37,9 @@ enum AppColor {
     static let secondaryLabel = Color(UIColor.secondaryLabel)
     static let border = Color(uiColor: uicolorAdaptive(light: 0xE5E5E5, dark: 0x373C47))
 
+    /// Filled segment in multi-step progress (e.g. onboarding) — softer than `textPrimary` but reads clearly against `border` for inactive steps.
+    static let progressSegmentFill = Color(uiColor: uicolorAdaptive(light: 0x3A3A3A, dark: 0xA8ADB8))
+
     static let accent = Color(uiColor: uicolorAdaptive(light: 0x0A0A0A, dark: 0xF3F4F6))
     static let accentForeground = Color(uiColor: uicolorAdaptive(light: 0xF6F6F6, dark: 0x111317))
 
@@ -159,10 +162,10 @@ enum AppFont {
     static let overline: Font = .system(size: 10, weight: .semibold, design: .rounded)
     static let smallLabel: Font = .system(size: 11, weight: .medium, design: .rounded)
     static let display: Font = .system(size: 36, weight: .bold, design: .rounded)
-    /// Splash brand showcase — `display` reads small next to a 96pt icon. Splash-only; do not use elsewhere.
-    static let splashTitle: Font = .system(size: 72, weight: .bold, design: .rounded)
+    /// Splash brand showcase — sized to read big next to the brand mark without dominating. Splash-only; do not use elsewhere.
+    static let splashTitle: Font = .system(size: 56, weight: .bold, design: .rounded)
     /// Splash support copy — eyebrow ("Welcome to") + tagline. Matched size so they read as a pair. Splash-only.
-    static let splashWelcome: Font = .system(size: 20, weight: .medium, design: .rounded)
+    static let splashWelcome: Font = .system(size: 16, weight: .medium, design: .rounded)
     static let numericDisplay: Font = .system(size: 36, weight: .bold, design: .rounded).monospacedDigit()
     static let numericLarge: Font = .system(size: 28, weight: .bold, design: .rounded).monospacedDigit()
     static let compactLabel: Font = .system(size: 12, weight: .semibold, design: .rounded).monospacedDigit()
@@ -211,6 +214,11 @@ enum AppRadius {
     static let md: CGFloat = 14
     static let lg: CGFloat = 30
     static let sheet: CGFloat = 40
+
+    /// Corner radius for a square tile so `RoundedRectangle(..., style: .continuous)` matches the iPhone Home Screen app icon mask (Apple icon grid: `10/57 × side length`).
+    static func appIconHomeScreenCornerRadius(sideLength: CGFloat) -> CGFloat {
+        sideLength * 10 / 57
+    }
 }
 
 /// Shared sizing for day/week steppers and compact day badges (Paper e.g. node 2P1-0).
@@ -571,6 +579,44 @@ struct AppStepper: View {
     }
 }
 
+/// Multi-line text input with a greyed-out placeholder shown when empty.
+/// Canonical chrome for any free-form paragraph editor — never style a raw
+/// `TextEditor` in a feature view. `TextField` already has native placeholder
+/// support, so this atom exists specifically to give `TextEditor` parity.
+///
+/// Caller-applied modifiers (`.textInputAutocapitalization`, `.autocorrectionDisabled`,
+/// `.focused`, etc.) propagate through the wrapper to the underlying `TextEditor`.
+struct AppTextEditor: View {
+    @Binding var text: String
+    let placeholder: String
+    var minHeight: CGFloat = 220
+
+    var body: some View {
+        ZStack(alignment: .topLeading) {
+            TextEditor(text: $text)
+                .font(AppFont.body.font)
+                .foregroundStyle(AppColor.textPrimary)
+                .scrollContentBackground(.hidden)
+                .padding(AppSpacing.sm)
+
+            if text.isEmpty {
+                Text(placeholder)
+                    .font(AppFont.body.font)
+                    .foregroundStyle(AppColor.textSecondary)
+                    // TextEditor's internal NSTextContainer inset is ~5pt horizontal,
+                    // ~8pt vertical — offset the placeholder so it sits on the cursor.
+                    .padding(.horizontal, AppSpacing.sm + 5)
+                    .padding(.top, AppSpacing.sm + 8)
+                    .allowsHitTesting(false)
+            }
+        }
+        .frame(minHeight: minHeight, alignment: .topLeading)
+        .background(AppColor.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous))
+        .appCardElevation()
+    }
+}
+
 /// Full-width filled CTA — the **single** dominant action on any Gym-Test screen.
 /// Use inside `AppScreen(primaryButton:)` for sticky bottom CTAs, or inline for
 /// in-card primaries. Never more than one on screen in core logging flows.
@@ -592,7 +638,7 @@ struct AppPrimaryButton: View {
                 .foregroundStyle(isEnabled ? AppColor.accentForeground : AppColor.textDisabled)
                 .frame(maxWidth: .infinity)
                 .frame(height: 60)
-                .background(isEnabled ? AppColor.accent : AppColor.accent.opacity(0.18))
+                .background(isEnabled ? AppColor.accent : AppColor.disabledSurface)
                 .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
         }
         .buttonStyle(ScaleButtonStyle())
@@ -1198,7 +1244,7 @@ struct WeeklyProgressStepper: View {
 }
 
 /// Set-step tracker inside `WorkoutCommandCard`. Renders the current set as a
-/// filled capsule ("Set 2"), completed/failed sets as `reps×weight` chips, and
+/// filled capsule ("Set 2"), completed/failed sets as compact `kgxrep` chips, and
 /// upcoming sets as numbered circles. Used only in active workout flows.
 struct SetProgressIndicator: View {
     struct Step: Identifiable {
@@ -1217,8 +1263,8 @@ struct SetProgressIndicator: View {
         var weightText: String? = nil
 
         var chipText: String? {
-            guard let reps, let weightText else { return nil }
-            return "\(reps)×\(weightText)"
+            guard let reps, let weightText, !weightText.isEmpty else { return nil }
+            return "\(weightText)x\(reps)"
         }
     }
 
@@ -1338,7 +1384,7 @@ struct RestTimerControl: View {
 
     var body: some View {
         VStack(spacing: AppSpacing.xs) {
-            HStack(spacing: AppSpacing.sm) {
+            HStack(spacing: AppSpacing.lg) {
                 adjustButton(icon: .remove, action: onDecrease)
 
                 Button(action: { onToggle?() }) {
@@ -1391,9 +1437,17 @@ struct RestTimerControl: View {
         }
     }
 
-    /// Capsule fill + stroke for running / paused / idle; plain text for **ready** (rest complete).
+    /// Capsule fill + stroke for **idle / paused / disabled** so the affordance reads as
+    /// tappable when not actively counting. Drops to plain text for **running** and **ready**:
+    /// while running, the numeral is the hero of the screen (Beside-style isolation); when
+    /// ready, the absence of chrome reads as a deliberate "done resting" beat.
     private var showsTimerCapsule: Bool {
-        state != .ready
+        switch state {
+        case .running, .ready:
+            return false
+        case .idle, .paused, .disabled:
+            return true
+        }
     }
 
     private var timerCenterForeground: Color {
@@ -1761,28 +1815,52 @@ struct EmptyStateCard: View {
     }
 }
 
-/// Flat list with an `AppDivider` between rows — use inside a single `AppCard`
-/// when rows share a subject (e.g. exercise sets in a session summary). For
-/// independently-tappable rows with their own card each, use `AppStackedCardList`.
+/// Canonical row-list primitive. Two styles:
+/// - `.divided` (default): flat list with `AppDivider` between rows — use inside a
+///   single shared `AppCard` when rows share a subject (e.g. exercise sets in a
+///   session summary).
+/// - `.stacked`: each row gets its own `AppCard` with spacing between — use when
+///   rows are independently tappable items (e.g. routine list, programs).
+///
+/// Replaces the former `AppStackedCardList` parallel-implementation. Never add a
+/// new list container; extend this style enum if a new variant is genuinely needed.
 struct AppDividedList<Data, ID, RowContent>: View
     where Data: RandomAccessCollection, ID: Hashable, RowContent: View
 {
+    enum Style {
+        case divided
+        case stacked
+    }
+
     let data: Data
     let id: KeyPath<Data.Element, ID>
+    var style: Style = .divided
     var dividerLeading: CGFloat = 0
     var dividerTrailing: CGFloat = 0
+    var stackedSpacing: CGFloat = AppSpacing.sm
     @ViewBuilder let content: (Data.Element) -> RowContent
 
     var body: some View {
         let items = Array(data)
-        VStack(alignment: .leading, spacing: 0) {
-            ForEach(items.indices, id: \.self) { index in
-                if index > 0 {
-                    AppDivider()
-                        .padding(.leading, dividerLeading)
-                        .padding(.trailing, dividerTrailing)
+        switch style {
+        case .divided:
+            VStack(alignment: .leading, spacing: 0) {
+                ForEach(items.indices, id: \.self) { index in
+                    if index > 0 {
+                        AppDivider()
+                            .padding(.leading, dividerLeading)
+                            .padding(.trailing, dividerTrailing)
+                    }
+                    content(items[index])
                 }
-                content(items[index])
+            }
+        case .stacked:
+            VStack(alignment: .leading, spacing: stackedSpacing) {
+                ForEach(items.indices, id: \.self) { index in
+                    AppCard {
+                        content(items[index])
+                    }
+                }
             }
         }
     }
@@ -1797,46 +1875,21 @@ extension AppDividedList where Data.Element: Identifiable, ID == Data.Element.ID
     ) {
         self.data = data
         self.id = \.id
+        self.style = .divided
         self.dividerLeading = dividerLeading
         self.dividerTrailing = dividerTrailing
         self.content = content
     }
-}
 
-/// Stacks rows into individual `AppCard`s with spacing between them — used when
-/// each row carries multiple pieces of information (title + subtitle) and is
-/// independently tappable. Inherits `AppCard`'s default inset so stacked-card
-/// rows match every other card surface in the app. For flat single-line rows
-/// inside a shared card, use `AppDividedList` instead.
-struct AppStackedCardList<Data, ID, RowContent>: View
-    where Data: RandomAccessCollection, ID: Hashable, RowContent: View
-{
-    let data: Data
-    let id: KeyPath<Data.Element, ID>
-    var spacing: CGFloat = AppSpacing.sm
-    @ViewBuilder let content: (Data.Element) -> RowContent
-
-    var body: some View {
-        let items = Array(data)
-        VStack(alignment: .leading, spacing: spacing) {
-            ForEach(items.indices, id: \.self) { index in
-                AppCard {
-                    content(items[index])
-                }
-            }
-        }
-    }
-}
-
-extension AppStackedCardList where Data.Element: Identifiable, ID == Data.Element.ID {
     init(
-        _ data: Data,
+        stacked data: Data,
         spacing: CGFloat = AppSpacing.sm,
         @ViewBuilder content: @escaping (Data.Element) -> RowContent
     ) {
         self.data = data
         self.id = \.id
-        self.spacing = spacing
+        self.style = .stacked
+        self.stackedSpacing = spacing
         self.content = content
     }
 }
@@ -2287,6 +2340,7 @@ struct AppScreen<Content: View>: View {
                 ScrollView {
                     paddedMainContent
                 }
+                .scrollDismissesKeyboard(.interactively)
                 .appScrollEdgeSoft(
                     top: !hidesNavigationBar || showsNativeNavigationBar,
                     bottom: hasBottomBar
@@ -2344,6 +2398,21 @@ struct AppScreen<Content: View>: View {
         }
         .background(AppColor.background.ignoresSafeArea())
         .toolbar(showsNativeNavigationBar ? .automatic : .hidden, for: .navigationBar)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    UIApplication.shared.sendAction(
+                        #selector(UIResponder.resignFirstResponder),
+                        to: nil,
+                        from: nil,
+                        for: nil
+                    )
+                }
+                .font(AppFont.label.font)
+                .foregroundStyle(AppColor.accent)
+            }
+        }
     }
 }
 

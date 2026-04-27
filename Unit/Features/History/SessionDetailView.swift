@@ -44,16 +44,23 @@ struct SessionDetailView: View {
         AppScreen(
             showsNativeNavigationBar: true
         ) {
-            Text(templateName)
-                .font(AppFont.title.font)
-                .foregroundStyle(AppColor.textPrimary)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                Text(templateName)
+                    .font(AppFont.title.font)
+                    .foregroundStyle(AppColor.textPrimary)
+
+                Text("\(session.date.formatted(.dateTime.month(.abbreviated).day())) · \(session.date.formatted(.dateTime.hour().minute()))")
+                    .font(AppFont.caption.font)
+                    .foregroundStyle(AppColor.textSecondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
 
             if !exerciseSnapshots.isEmpty {
-                AppCard {
-                    AppDividedList(exerciseSnapshots) { exercise in
-                        SessionExerciseSummary(exercise: exercise)
-                            .padding(.vertical, AppSpacing.md)
+                VStack(spacing: AppSpacing.md) {
+                    ForEach(exerciseSnapshots) { exercise in
+                        AppCard {
+                            SessionExerciseSummary(exercise: exercise)
+                        }
                     }
                 }
             }

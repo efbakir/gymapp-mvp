@@ -210,10 +210,11 @@ struct ActiveWorkoutView: View {
 
     private func metricValue(for section: WorkoutExerciseSectionModel) -> String {
         if let lastValues = lastLoggedValues(for: section.exercise.id) {
-            if section.exercise.isBodyweight {
-                return "\(lastValues.reps) x BW"
-            }
-            return "\(lastValues.reps) x \(WorkoutTargetFormatter.weightDisplay(lastValues.weight))"
+            return WorkoutTargetFormatter.setMetricText(
+                weightKg: lastValues.weight,
+                reps: lastValues.reps,
+                isBodyweight: section.exercise.isBodyweight
+            ) ?? emptyMetricPlaceholder()
         }
         if let lastActual = section.lastActualText {
             return lastActual
@@ -646,10 +647,11 @@ struct ActiveWorkoutView: View {
     }
 
     private func logEntrySubtitle(for entry: SetEntry, exercise: Exercise) -> String {
-        if exercise.isBodyweight {
-            return "\(entry.reps) x BW"
-        }
-        return "\(entry.reps) x \(WorkoutTargetFormatter.weightDisplay(entry.weight))"
+        WorkoutTargetFormatter.setMetricText(
+            weightKg: entry.weight,
+            reps: entry.reps,
+            isBodyweight: exercise.isBodyweight
+        ) ?? "\(entry.reps)"
     }
 
     private func lastLoggedValues(for exerciseID: UUID) -> (weight: Double, reps: Int)? {
@@ -677,7 +679,7 @@ struct ActiveWorkoutView: View {
                 if section.exercise.isBodyweight {
                     weightText = "BW"
                 } else if entry.weight > 0 {
-                    weightText = WorkoutTargetFormatter.weightDisplay(entry.weight)
+                    weightText = WorkoutTargetFormatter.weightCompact(entry.weight)
                 }
             } else if !section.hasReachedPlannedSetGoal && index == section.entries.count {
                 state = .current
@@ -1569,7 +1571,7 @@ private struct WarmupRow: View {
                 .padding(.vertical, AppSpacing.sm)
                 .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(ScaleButtonStyle())
 
             if isExpanded {
                 VStack(spacing: 0) {
@@ -1611,7 +1613,13 @@ private struct WarmupSetButton: View {
                 Image(systemName: isDone ? "checkmark.circle.fill" : "circle")
                     .font(AppFont.caption.font)
                     .foregroundStyle(isDone ? AppColor.textPrimary : AppColor.textSecondary)
-                Text("\(WorkoutTargetFormatter.weightDisplay(warmup.weightKg)) × \(warmup.reps)")
+                Text(
+                    WorkoutTargetFormatter.setMetricText(
+                        weightKg: warmup.weightKg,
+                        reps: warmup.reps,
+                        isBodyweight: false
+                    ) ?? "\(warmup.reps)"
+                )
                     .font(AppFont.caption.font)
                     .foregroundStyle(AppColor.textPrimary)
                 Spacer(minLength: 0)
@@ -1623,7 +1631,7 @@ private struct WarmupSetButton: View {
             .padding(.vertical, AppSpacing.sm)
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(ScaleButtonStyle())
         .disabled(isDone)
     }
 }

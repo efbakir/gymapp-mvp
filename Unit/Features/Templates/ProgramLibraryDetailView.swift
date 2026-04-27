@@ -83,7 +83,7 @@ struct ProgramLibraryDetailView: View {
 
                         ForEach(day.items) { item in
                             AppListRow(title: item.exerciseName, style: .display) {
-                                Text("\(item.setCount) × \(item.repTarget)")
+                                Text(WorkoutTargetFormatter.setRepCompact(setCount: item.setCount, reps: item.repTarget) ?? "")
                                     .font(AppFont.muted.font)
                                     .foregroundStyle(AppFont.muted.color)
                                     .monospacedDigit()
