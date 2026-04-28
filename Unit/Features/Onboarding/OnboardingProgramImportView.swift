@@ -13,8 +13,7 @@ import Vision
 private enum ProgramPasteFormatGuide {
     /// Combined intro (replaces separate subtitle + footer under the editor). Full rules stay in the format sheet.
     static let subtitle =
-        "Paste from Notes, chat, or a document. One day per line, then exercises (kg, lb, or BW). "
-        + "Include at least one day and one exercise. Lines starting with // are skipped."
+        "Paste from Notes, chat, or a document. One day per line, exercises below."
 
     /// Placeholder is examples only — short, by design (long rules live in the format examples sheet).
     static let placeholderExamples = [
@@ -147,7 +146,7 @@ private struct FormatExamplesSheet: View {
 
                 ruleSection(
                     title: "Weight units",
-                    body: "Use kg, lb, or BW for bodyweight. Lines starting with // are skipped."
+                    body: "Use kg, lb, or BW for bodyweight. We convert to your app unit automatically."
                 )
             }
 
@@ -357,7 +356,7 @@ enum ProgramImportParser {
 
 #Preview {
     NavigationStack {
-        OnboardingProgramImportView(progressStep: 2, progressTotal: 6) { }
+        OnboardingProgramImportView(progressStep: 3, progressTotal: 4) { }
             .environment(OnboardingViewModel())
     }
 }

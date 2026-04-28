@@ -100,7 +100,6 @@ struct UnitApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .fontDesign(.rounded)
                 .preferredColorScheme(.light)
         }
         .modelContainer(sharedModelContainer)

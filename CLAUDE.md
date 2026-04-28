@@ -9,7 +9,10 @@ This file is intentionally tight. Detail spills into:
 - [`docs/claude/design-system.md`](docs/claude/design-system.md) — full banned-list with rationale, parallel-implementation ban examples, full gatekeeper checklist
 - [`docs/claude/harness.md`](docs/claude/harness.md) — full hook pattern list, skills, audit mode, order of operations
 
-Other source-of-truth docs: `docs/product-compass.md`, `docs/goals.md`, `AGENTS.md`, `docs/atomic-design-system.md`, `docs/visual-language.md`, `docs/references/`.
+Other source-of-truth docs:
+- Product: `PRODUCT.md` (root — persona, voice, anti-references, principles), `docs/product-compass.md`, `docs/goals.md`, `docs/AGENTS.md`
+- Design: `DESIGN.md` (root — palette, type, components, do/don't) + `DESIGN.json` (machine-readable mirror), `docs/atomic-design-system.md`, `docs/visual-language.md`
+- References: `docs/references/` (ios-screens/, details/, notes/)
 
 ---
 
@@ -28,7 +31,7 @@ Other source-of-truth docs: `docs/product-compass.md`, `docs/goals.md`, `AGENTS.
 
 1. Read this file to the end.
 2. If the task involves UI, product direction, or scope: skim `docs/product-compass.md` §Pillars + §Decision log **and** `docs/goals.md` §v1 scope boundaries.
-3. If the task involves any visual/component change: skim `docs/atomic-design-system.md` and open `Unit/UI/DesignSystem.swift`. Reuse > extend > create.
+3. If the task involves any visual/component change: skim `DESIGN.md` (root — single-page system summary) and `docs/atomic-design-system.md`, then open `Unit/UI/DesignSystem.swift`. Reuse > extend > create.
 4. If the task is non-trivial UI: list `docs/references/ios-screens/` and `docs/references/details/`. Pick the closest anchor. If none fits, ask the user before inventing.
 5. State out loud (one line) which docs and references you consulted, then proceed.
 

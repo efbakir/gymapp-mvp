@@ -68,6 +68,6 @@ struct OnboardingOptionCard: View {
 
 #Preview {
     NavigationStack {
-        OnboardingImportMethodView(progressStep: 1, progressTotal: 6) { _ in }
+        OnboardingImportMethodView(progressStep: 2, progressTotal: 4) { _ in }
     }
 }

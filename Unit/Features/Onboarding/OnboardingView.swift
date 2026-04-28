@@ -81,6 +81,7 @@ enum OnboardingPreferences {
 // MARK: - Route
 
 enum OnboardingRoute: Hashable {
+    case unitPicker
     case importMethod
     case programImport
     case splitBuilder
@@ -116,7 +117,7 @@ struct OnboardingView: View {
                 showsDismiss: isRestart,
                 onDismiss: dismissOnboarding
             ) {
-                path.append(OnboardingRoute.importMethod)
+                path.append(OnboardingRoute.unitPicker)
             }
             .navigationDestination(for: OnboardingRoute.self) { route in
                 destinationView(route)
@@ -154,8 +155,14 @@ struct OnboardingView: View {
     @ViewBuilder
     private func destinationView(_ route: OnboardingRoute) -> some View {
         switch route {
+        case .unitPicker:
+            OnboardingUnitPickerView(progressStep: 1, progressTotal: totalRequiredSteps) { unit in
+                vm.unitSystem = unit
+                path.append(OnboardingRoute.importMethod)
+            }
+
         case .importMethod:
-            OnboardingImportMethodView(progressStep: 1, progressTotal: totalRequiredSteps) { method in
+            OnboardingImportMethodView(progressStep: 2, progressTotal: totalRequiredSteps) { method in
                 vm.importMethod = method
                 switch method {
                 case .manual:
@@ -166,23 +173,23 @@ struct OnboardingView: View {
             }
 
         case .programImport:
-            OnboardingProgramImportView(progressStep: 2, progressTotal: totalRequiredSteps) {
+            OnboardingProgramImportView(progressStep: 3, progressTotal: totalRequiredSteps) {
                 path.append(OnboardingRoute.exercises)
             }
 
         case .splitBuilder:
-            OnboardingSplitBuilderView(progressStep: 2, progressTotal: totalRequiredSteps) {
+            OnboardingSplitBuilderView(progressStep: 3, progressTotal: totalRequiredSteps) {
                 path.append(OnboardingRoute.exercises)
             }
 
         case .exercises:
-            OnboardingExercisesView(progressStep: 3, progressTotal: totalRequiredSteps) {
+            OnboardingExercisesView(progressStep: 4, progressTotal: totalRequiredSteps) {
                 commitProgram()
             }
         }
     }
 
-    private var totalRequiredSteps: Int { 3 }
+    private var totalRequiredSteps: Int { 4 }
 
     // MARK: - Commit
 

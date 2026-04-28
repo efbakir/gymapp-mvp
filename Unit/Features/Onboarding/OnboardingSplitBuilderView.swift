@@ -85,7 +85,7 @@ struct OnboardingSplitBuilderView: View {
 
 #Preview {
     NavigationStack {
-        OnboardingSplitBuilderView(progressStep: 2, progressTotal: 6) { }
+        OnboardingSplitBuilderView(progressStep: 3, progressTotal: 4) { }
             .environment(OnboardingViewModel())
     }
     .tint(AppColor.accent)

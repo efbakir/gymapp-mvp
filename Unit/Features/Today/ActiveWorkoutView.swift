@@ -52,6 +52,15 @@ struct ActiveWorkoutView: View {
     /// Bumped exactly once when the lifter finishes the workout. Drives the
     /// session-finish success notification haptic.
     @State private var workoutFinishedPhase: Int = 0
+    /// Bumped each time a logged set beats the all-time prior best for that exercise.
+    /// Drives a heavy-impact haptic on top of `setLoggedPhase`'s `.success` so the
+    /// PR moment is a distinct, milestone-feeling tap. Pure derivation in `completeSet`
+    /// — no eager scan elsewhere.
+    @State private var setPRPhase: Int = 0
+    /// IDs of `SetEntry`s logged this session that were PRs at log time. `progressSteps`
+    /// reads this to flip the chip to accent chrome, so the milestone persists visually
+    /// for the rest of the workout (the haptic only fires once at log).
+    @State private var prSetEntryIDs: Set<UUID> = []
 
     /// Plus / minus on the rest timer adjust by this many seconds (minimum rest stays 30s).
     private static let restTimerAdjustStepSeconds = 30
@@ -200,6 +209,7 @@ struct ActiveWorkoutView: View {
                 metricValue: metricValue(for: section),
                 metricSupportingText: metricSupportingText(for: section),
                 metricIsHint: metricIsPlaceholder(for: section),
+                metricIsGhost: metricIsGhost(for: section),
                 state: workoutCommandCardState(for: section),
                 primaryLabel: AppCopy.Workout.completeSet,
                 onPrimaryAction: section.hasReachedPlannedSetGoal ? nil : {
@@ -215,6 +225,7 @@ struct ActiveWorkoutView: View {
                     )
                 },
                 setLoggedSignal: setLoggedPhase,
+                setPRSignal: setPRPhase,
                 timerValue: timerDisplayText,
                 timerState: timerControlState,
                 onTimerDecrease: adjustRestTimerAction,
@@ -261,6 +272,40 @@ struct ActiveWorkoutView: View {
         if lastLoggedValues(for: section.exercise.id) != nil { return false }
         if section.lastActualText != nil { return false }
         return true
+    }
+
+    private func metricIsGhost(for section: WorkoutExerciseSectionModel) -> Bool {
+        if lastLoggedValues(for: section.exercise.id) != nil { return false }
+        return section.lastActualText != nil
+    }
+
+    /// All-time best working set for `exerciseID`, drawn from completed prior sessions
+    /// and from already-logged working sets in the current session — minus `entryID` if
+    /// supplied. Returns nil when there's no prior data to beat (a brand-new exercise),
+    /// which means the first log is *not* flagged a PR. Conservative on purpose: a PR
+    /// signal only feels meaningful when there was a baseline.
+    private func priorBest(for exerciseID: UUID, excluding entryID: UUID? = nil) -> (weight: Double, reps: Int)? {
+        let priorSessionEntries = sessions
+            .filter { $0.isCompleted }
+            .flatMap { session in
+                session.setEntries.filter { entry in
+                    entry.exerciseId == exerciseID
+                        && entry.isCompleted
+                        && !entry.isWarmup
+                }
+            }
+        let currentSessionEntries = session.setEntries.filter { entry in
+            entry.exerciseId == exerciseID
+                && entry.isCompleted
+                && !entry.isWarmup
+                && entry.id != entryID
+        }
+        let combined = priorSessionEntries + currentSessionEntries
+        return combined
+            .max { lhs, rhs in
+                lhs.weight == rhs.weight ? lhs.reps < rhs.reps : lhs.weight < rhs.weight
+            }
+            .map { ($0.weight, $0.reps) }
     }
 
     var body: some View {
@@ -727,6 +772,7 @@ struct ActiveWorkoutView: View {
             let state: SetProgressIndicator.Step.State
             var reps: Int?
             var weightText: String?
+            var isPR: Bool = false
 
             if index < section.entries.count {
                 let entry = section.entries[index]
@@ -737,6 +783,7 @@ struct ActiveWorkoutView: View {
                 } else if entry.weight > 0 {
                     weightText = WorkoutTargetFormatter.weightCompact(entry.weight)
                 }
+                isPR = prSetEntryIDs.contains(entry.id)
             } else if !section.hasReachedPlannedSetGoal && index == section.entries.count {
                 state = .current
             } else {
@@ -748,7 +795,8 @@ struct ActiveWorkoutView: View {
                 label: "\(index + 1)",
                 state: state,
                 reps: reps,
-                weightText: weightText
+                weightText: weightText,
+                isPR: isPR
             )
         }
     }
@@ -909,6 +957,19 @@ struct ActiveWorkoutView: View {
         // haptic fires regardless of Reduce Motion — accessibility doctrine
         // explicitly permits tactile feedback.
         setLoggedPhase &+= 1
+
+        // Compare against the prior all-time best (excluding the just-inserted
+        // entry). When it beats the baseline, mark the entry so its chip flips
+        // to accent chrome and stack a heavy-impact haptic on top of the
+        // success cue. No baseline → no PR (first-ever log doesn't fire).
+        if let prior = priorBest(for: exercise.id, excluding: entry.id) {
+            let beats = weight > prior.weight
+                || (weight == prior.weight && reps > prior.reps)
+            if beats {
+                prSetEntryIDs.insert(entry.id)
+                setPRPhase &+= 1
+            }
+        }
 
         let completedWorkingSetCount = currentEntries(for: exercise.id)
             .filter { !$0.isWarmup }
@@ -1702,10 +1763,6 @@ private struct WarmupRow: View {
         .background(
             RoundedRectangle(cornerRadius: AppRadius.md)
                 .fill(AppColor.cardBackground)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: AppRadius.md)
-                .stroke(AppColor.border, lineWidth: 0.5)
         )
     }
 }

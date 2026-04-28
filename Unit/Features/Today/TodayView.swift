@@ -153,7 +153,7 @@ struct TodayView: View {
                     discardStaleSession(session)
                 }
             } message: { _ in
-                Text("You left a workout in progress. Mark it complete or discard it.")
+                Text("It's still open. Save what you logged or discard it.")
             }
             .appToast(message: $toastMessage)
         }
@@ -196,10 +196,9 @@ struct TodayView: View {
                     Button {
                         showsRoutinePickSheet = true
                     } label: {
-                        Label("Today's routine", systemImage: "calendar")
+                        Label("Choose today's routine", systemImage: "calendar")
                             .labelStyle(.iconOnly)
                     }
-                    .accessibilityLabel("Choose today's routine")
                 }
             }
             ToolbarItem(placement: .topBarTrailing) {
@@ -263,9 +262,9 @@ struct TodayView: View {
         switch state {
         case .noProgram:
             EmptyStateCard(
-                eyebrow: "Programs",
-                title: "Create your first program",
-                message: "Set up one simple recurring program so Unit can show the last session before every set.",
+                eyebrow: "Get started",
+                title: "No program yet.",
+                message: "Add a routine to start logging.",
                 buttonLabel: "Create program"
             ) {
                 appTabSelection(.program)
@@ -276,7 +275,7 @@ struct TodayView: View {
                 eyebrow: context.eyebrow,
                 title: context.title,
                 message: context.message,
-                buttonLabel: "Finish set up"
+                buttonLabel: "Continue setup"
             ) {
                 appTabSelection(.program)
             }
@@ -301,6 +300,7 @@ struct TodayView: View {
                                 PreviewListRow(
                                     title: target.exerciseName,
                                     subtitle: target.displayTarget,
+                                    style: .metricFirst,
                                     isEmptyHint: target.isEmptyHint
                                 )
                             }
@@ -314,7 +314,7 @@ struct TodayView: View {
         case .restDay(let context):
             EmptyStateCard(
                 eyebrow: "Rest day",
-                title: "Enjoy your rest",
+                title: "Nothing today.",
                 message: context.programName
             )
         }
@@ -440,7 +440,6 @@ private struct TodayWorkoutDetailsSheet: View {
                 .padding(.horizontal, AppSpacing.lg)
                 .padding(.vertical, AppSpacing.lg)
             }
-            .navigationTitle("Workout")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -477,8 +476,8 @@ final class TodayDashboardViewModel {
             return .setupIncomplete(
                 SetupIncompleteContext(
                     eyebrow: "Programs",
-                    title: "Finish set up",
-                    message: "Add at least one routine before starting workouts."
+                    title: "No routines yet",
+                    message: "Add one to start logging."
                 )
             )
         }
@@ -605,7 +604,7 @@ final class TodayDashboardViewModel {
             return "Usually \(scheduled.displayName) today"
         }
         if scheduledTemplate == nil {
-            return "Extra session (not on your weekly plan)"
+            return "Not in your weekly plan"
         }
         return nil
     }
@@ -623,7 +622,7 @@ final class TodayDashboardViewModel {
                 SetupIncompleteContext(
                     eyebrow: split.name,
                     title: template.displayName,
-                    message: "Add at least one exercise before starting this workout."
+                    message: "Add exercises to start this workout."
                 )
             )
         }
@@ -639,7 +638,7 @@ final class TodayDashboardViewModel {
                 SetupIncompleteContext(
                     eyebrow: split.name,
                     title: template.displayName,
-                    message: "Add exercises to see today's targets."
+                    message: "Add exercises so they show up here."
                 )
             )
         }
@@ -648,9 +647,9 @@ final class TodayDashboardViewModel {
         let lastLabel: String? = lastDate.map { date in
             let days = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: date), to: Calendar.current.startOfDay(for: Date())).day ?? 0
             switch days {
-            case 0: return "Last performed today"
-            case 1: return "Last performed yesterday"
-            default: return "Last performed \(days) days ago"
+            case 0: return "Today"
+            case 1: return "Yesterday"
+            default: return "\(days) days ago"
             }
         }
 
@@ -806,7 +805,7 @@ private struct TodayRoutinePickSheet: View {
                                 }
                                 Spacer(minLength: AppSpacing.sm)
                                 if hasWeeklySchedule, template.scheduledWeekday == todayWeekday {
-                                    Text("Plan")
+                                    Text("Today")
                                         .font(AppFont.caption.font)
                                         .foregroundStyle(AppColor.textSecondary)
                                 }
@@ -831,7 +830,7 @@ private struct TodayRoutinePickSheet: View {
             }
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 if hasActiveOverride {
-                    AppPrimaryButton(hasWeeklySchedule ? "Use scheduled day" : "Use suggested routine") {
+                    AppPrimaryButton(hasWeeklySchedule ? "Use scheduled day" : "Use the next routine") {
                         onUseDefault()
                     }
                     .padding(.horizontal, AppSpacing.lg)

@@ -33,17 +33,14 @@ struct OnboardingSplashView: View {
                 Spacer()
 
                 VStack(spacing: 0) {
-                    // `BrandLogo` on chrome-matched tile (no shadow). Opacity softens the mark vs pure black.
                     Image("BrandLogo")
                         .resizable()
                         .interpolation(.high)
                         .scaledToFit()
-                        .opacity(0.78)
                         .frame(width: Self.logoSide, height: Self.logoSide)
-                        .background(AppColor.background)
                         .clipShape(
                             RoundedRectangle(
-                                cornerRadius: AppRadius.splashLogoTileCornerRadius(sideLength: Self.logoSide),
+                                cornerRadius: AppRadius.appIconHomeScreenCornerRadius(sideLength: Self.logoSide),
                                 style: .continuous
                             )
                         )

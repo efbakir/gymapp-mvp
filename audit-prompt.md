@@ -6,12 +6,15 @@ You are auditing the Unit iOS app. Your job is to check whether the current code
 
 Read these files in order before doing anything else:
 
-1. `docs/product-compass.md` — strategic decisions, pillars, decision log
-2. `AGENTS.md` — UX rules, product model, scope fences (if missing, read `docs/AGENTS.md`)
-3. `DESIGN_SYSTEM.md` — design system entrypoint (points to the real docs + code)
-4. `docs/atomic-design-system.md` — atoms/molecules/organisms/templates rules
-5. `docs/visual-language.md` — visual hierarchy + Gym Test visual rules
-6. `docs/goals.md` — measurable targets and v1 scope boundaries
+1. `CLAUDE.md` — session-level intent doc (push-back mandate, scope fence, design system hard rules, harness)
+2. `PRODUCT.md` — persona, voice, anti-references, design principles
+3. `DESIGN.md` — palette, typography (Geist / Geist Mono), components, do/don't
+4. `docs/product-compass.md` — strategic decisions, pillars, decision log
+5. `docs/AGENTS.md` — UX rules, product model, scope fences
+6. `docs/atomic-design-system.md` — atoms/molecules/organisms/templates rules
+7. `docs/visual-language.md` — visual hierarchy + Gym Test visual rules
+8. `docs/goals.md` — measurable targets and v1 scope boundaries
+9. `docs/claude/scope.md` — full v1 ships / does-not-ship list and deleted files
 
 Internalise the rules. Every finding you report must reference a specific rule from one of these files.
 
@@ -22,7 +25,7 @@ Scan every `.swift` file under the project source directory (this repo currently
 ### Compass alignment
 
 - [ ] Any UI that references "cycle", "week of", "week N of 8", or "weekly increase" as a required/prominent concept (should be demoted per `docs/product-compass.md` decision log 2026-03-26)
-- [ ] Any active `ProgressionEngine` concepts surfaced in UI (should be deferred per compass + `AGENTS.md`)
+- [ ] Any active `ProgressionEngine` concepts surfaced in UI (should be deferred per compass + `docs/AGENTS.md`). Note: `Unit/Engine/`, `Cycle.swift`, `ProgressionRule*.swift`, and `Unit/Features/Cycles/` were deleted from the repo — flag any reintroduction.
 - [ ] Any "Day N ·" prefixes that imply rigid day numbering (should use template/routine names only)
 - [ ] Any social features, sharing, or community code (explicitly out of scope)
 

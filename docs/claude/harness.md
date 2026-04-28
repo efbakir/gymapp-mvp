@@ -72,8 +72,8 @@ If `docs/references/` has no anchor for the screen type at hand, **say so before
 When running an audit task (invoked by the overnight cron or `audit-prompt.md`), Claude should:
 
 1. Read `docs/product-compass.md` first — source of truth.
-2. Read `AGENTS.md` (or `docs/AGENTS.md`) for UX rules and scope fences.
-3. Read `DESIGN_SYSTEM.md` (points to `docs/atomic-design-system.md` and `docs/visual-language.md`).
+2. Read `docs/AGENTS.md` for UX rules and scope fences.
+3. Read `DESIGN.md` (root — palette, type, components, do/don't) and `DESIGN_SYSTEM.md` (entrypoint to `docs/atomic-design-system.md` and `docs/visual-language.md`).
 4. Read `docs/goals.md` for measurable targets and v1 scope boundaries.
 5. Scan every SwiftUI view file.
 6. Build and run the app in the iOS Simulator.

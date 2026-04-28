@@ -1,98 +1,81 @@
 # Unit
 
-**Gym logging focused on speed and clarity** (see `docs/product-compass.md` for live positioning decisions).
+**A zero-friction gym logger for athletes who already know how to train.**
 
-Unit is an iOS app for **fast set logging**, **program organization**, and **training history**—with an optional **8-week cycle / progression engine** when you want targets and auto-adjustment. Product narrative is evolving; the compass doc is the source of truth for what we claim in public copy.
+Unit replaces the paper notebook and the Notes app with a tool that survives gym fatigue and earns its place on the dock through daily utility. The core paradigm is **ghost values** — last session's weight and reps are pre-filled, and one tap confirms a set. The primary program unit is the **Template**, not 8-week cycles, not periodisation engines, not weekly increment rules.
 
-## Core paradigm: Target vs. Actual
+Authoritative product / design docs:
 
-The 8-Week Cycle is the primary container. Before every set, the engine shows you the target weight. You log the actual. When you fail:
-
-- **1–2 misses** → weight repeats next week
-- **3 consecutive misses** → 10% automatic deload
-
-No spreadsheets. No guesswork. The app is the coach.
+- **[`PRODUCT.md`](PRODUCT.md)** — persona, voice, anti-references, design principles
+- **[`DESIGN.md`](DESIGN.md)** — palette, typography, components, do/don't (mirrored machine-readably in [`DESIGN.json`](DESIGN.json))
+- **[`CLAUDE.md`](CLAUDE.md)** — session-level intent doc for AI agents working on this repo
+- [`docs/product-compass.md`](docs/product-compass.md) — live positioning decisions and the decision log
+- [`docs/goals.md`](docs/goals.md) — measurable targets and v1 scope boundaries
+- [`docs/AGENTS.md`](docs/AGENTS.md) — UX rules, product model, scope fences
 
 ## Tech stack
 
 - **Swift 6** (strict concurrency)
-- **SwiftUI** (NavigationStack)
-- **SwiftData** (local-first; schema ready for CloudKit later)
+- **SwiftUI** (NavigationStack, custom `AppScreen` template)
+- **SwiftData** (local-first; no CloudKit in v1)
 - **iOS 18+**
 - **Live Activities** (rest timer on Lock Screen / Dynamic Island)
-- **Swift Charts** (tonnage heatmap, PR sparklines, rest day tonnage bars)
+- **Swift Charts** (history sparklines, progress views)
+- **Geist / Geist Mono** (bundled `.ttf` fonts in `Unit/Resources/Fonts/`)
 
 ## Project structure
 
 ```
-AtlasLog/
-  AtlasLogApp.swift         — App entry, ModelContainer, PreviewSampleData
-  ContentView.swift         — Tab navigation + AtlasTheme tokens
-  Engine/
-    ProgressionEngine.swift — Pure functional progression engine (all targets computed here)
+Unit/
+  UnitApp.swift              — App entry, ModelContainer
+  ContentView.swift          — Root tab navigation + AppScreen wiring
+  UI/
+    DesignSystem.swift       — Atoms, molecules, organisms, AppScreen template (single file)
   Models/
-    Cycle.swift             — 8-week cycle container
-    ProgressionRule.swift   — Per-exercise progression parameters
-    WorkoutSession.swift    — Session (cycleId, weekNumber added)
-    SetEntry.swift          — Set (rir, targetWeight, targetReps, metTarget added)
-    DayTemplate.swift       — Split + DayTemplate
-    Exercise.swift          — Exercise
+    DayTemplate.swift        — Template (split + ordered exerciseIds + planned sets/reps)
+    Exercise.swift           — Exercise (displayName, aliases, isBodyweight)
+    WorkoutSession.swift     — Session (date, templateId, isCompleted)
+    SetEntry.swift           — Set (weight, reps, rpe, isWarmup, isCompleted, setIndex)
   Features/
-    Today/
-      TodayView.swift       — Training Day / Rest Day / No Cycle context cards
-      ActiveWorkoutView.swift — Target column, RIR stepper, failure modal, toast
-    Cycles/
-      CyclesView.swift      — 8-week list, empty state, past cycles
-      WeekDetailView.swift  — Target vs. actual per exercise per week
-      CreateCycleView.swift — Cycle creation with per-exercise overrides
-      CycleSettingsView.swift — Increment, reset, danger zone
-    Templates/              — Split and day template management
-    History/
-      HistoryView.swift     — Calendar heatmap + session list
-      PRLibraryView.swift   — Epley/Brzycki e1RM library with sparklines
-      SessionDetailView.swift
-AtlasLogWidget/             — Widget Extension (rest timer Live Activity)
-docs/                       — Strategy, design, positioning, HIG reference
+    Today/                   — TodayView, ActiveWorkoutView, TrainingWeekProgress, RestTimerAttributes
+    Templates/                — TemplatesView, TemplateDetailView, AddTemplateView, ProgramLibrary*
+    History/                  — HistoryView (single list), SessionDetailView, ExerciseProgressView
+    Onboarding/               — Splash, import method, program-import, split-builder, exercises
+    Settings/                 — SettingsView (weight unit, restart onboarding)
+    Subscription/             — PaywallView, StoreManager
+    ProgramLaunch/            — Quick-start affordances
+  Resources/
+    Fonts/                   — Geist + Geist Mono .ttf files
+docs/                        — Product, design, references, claude/ intent spillovers
 ```
 
 ## Data model (SwiftData)
 
-- **Split** — id, name, orderedTemplateIds
+- **DayTemplate** — id, name, splitId, orderedExerciseIds, plannedSetsByExerciseId, plannedRepsByExerciseId, lastPerformedDate
 - **Exercise** — id, displayName, aliases, notes, isBodyweight
-- **DayTemplate** — id, name, splitId, orderedExerciseIds, lastPerformedDate
-- **WorkoutSession** — id, date, templateId, isCompleted, **cycleId**, **weekNumber**
-- **SetEntry** — id, sessionId, exerciseId, weight, reps, rpe, **rir**, **targetWeight**, **targetReps**, **metTarget**, isWarmup, isCompleted, setIndex
-- **Cycle** — id, name, splitId, startDate, weekCount, globalIncrementKg, isActive, isCompleted
-- **ProgressionRule** — id, cycleId, exerciseId, incrementKg, baseWeightKg, baseReps, consecutiveFailures, isDeloaded, deloadPercent
+- **WorkoutSession** — id, date, templateId, isCompleted
+- **SetEntry** — id, sessionId, exerciseId, weight, reps, rpe, isWarmup, isCompleted, setIndex
 
-**Rule**: Targets are always computed by `ProgressionEngine.swift`. Never stored per-week.
+**Rule:** Ghost values are computed at read-time from the most recent completed `SetEntry` for the same exercise (any template). They are never persisted.
 
-## Progression engine
+## Out of v1 scope
 
-```
-Actual ≥ Target          → success, failures = 0, next week += increment
-Actual < Target          → failure, failures += 1, next week repeats weight
-3 consecutive failures   → 10% deload, failures = 0, isDeloaded = true
-```
+The following were intentionally cut or deferred — see [`docs/claude/scope.md`](docs/claude/scope.md) for the full list:
+
+- `ProgressionEngine`, auto-increment, deload rules → deferred post-v1
+- 8-week cycles, `Cycle`, `WeekDetailView`, "Week N of M" → templates replace cycles
+- Target-vs-actual weight columns → ghost values only
+- Plate calculator, social / feeds / sharing, exercise discovery → not for this product
+- CloudKit sync → local-first only
+- Paywall on core logging → core logging is free
 
 ## Build and run
 
-1. Open `AtlasLog.xcodeproj` in Xcode.
-2. Select the **AtlasLog** scheme and a simulator or device (iOS 18+).
+1. Open `Unit.xcodeproj` in Xcode 16+.
+2. Select the **Unit** scheme and an iPhone simulator running iOS 18+.
 3. Build and run (⌘R).
 
-The **AtlasLogWidgetExtension** target is built with the app and provides the rest timer Live Activity.
-
-## Design and product
-
-- **Product manifesto**: [docs/PRODUCT_MANIFESTO.md](docs/PRODUCT_MANIFESTO.md)
-- **App positioning**: [docs/APP_POSITIONING.md](docs/APP_POSITIONING.md)
-- **Use cases**: [docs/USE_CASES.md](docs/USE_CASES.md)
-- **Apple HIG reference**: [docs/apple-hig.md](docs/apple-hig.md)
-- **Design principles**: [docs/design-principles.md](docs/design-principles.md)
-- **Visual language**: [docs/visual-language.md](docs/visual-language.md) (light-first; app appearance locked to **Light**)
-- **Competitors**: [docs/competitors.md](docs/competitors.md), [docs/competitors-analysis.md](docs/competitors-analysis.md)
-- **Goals**: [docs/goals.md](docs/goals.md)
+The **UnitWidgetExtension** target is built alongside the app and provides the rest timer Live Activity.
 
 ## License
 

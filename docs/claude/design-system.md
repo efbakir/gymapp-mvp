@@ -43,7 +43,7 @@ Cross-reference: `feedback_unit_scroll_edge_soft.md` in memory.
 
 - [ ] I opened `Unit/UI/DesignSystem.swift` and checked whether an existing atom/molecule/organism already fits.
 - [ ] **For any non-trivial UI change, I named the visual anchor from `docs/references/`** (which file in `ios-screens/` or `details/` this change borrows rhythm/hierarchy/density from). If no reference fits, I asked the user before inventing. (See `docs/references/README.md`.)
-- [ ] **If this change introduces a new component / UI pattern / behavior not already in the design system, I cited a source of truth before the diff** — repo first (`docs/product-compass.md`, `docs/atomic-design-system.md`, `docs/visual-language.md`, `AGENTS.md`, `Unit/UI/DesignSystem.swift`), web second (Apple HIG, lawsofux, NN/g, growth.design). If neither covers it, I asked the user before proceeding.
+- [ ] **If this change introduces a new component / UI pattern / behavior not already in the design system, I cited a source of truth before the diff** — repo first (`PRODUCT.md`, `DESIGN.md`, `docs/product-compass.md`, `docs/atomic-design-system.md`, `docs/visual-language.md`, `docs/AGENTS.md`, `Unit/UI/DesignSystem.swift`), web second (Apple HIG, lawsofux, NN/g, growth.design). If neither covers it, I asked the user before proceeding.
 - [ ] **I am not adding a new `struct X: View` or new `ViewModifier` without a one-line justification** of why extending the nearest primitive wouldn't work.
 - [ ] **I am not adding a parallel `LinearGradient` / `.mask` / `.scrollEdgeEffectStyle(.automatic, ...)`** when `appScrollEdgeSoft(...)` is the canonical modifier.
 - [ ] The change introduces no new raw colors, fonts, spacings, or radii — only tokens.

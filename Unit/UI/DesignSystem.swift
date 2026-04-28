@@ -94,6 +94,31 @@ extension Font {
     }
 }
 
+/// UIKit mirrors of `Font.geist` / `Font.geistMono` for surfaces that have to
+/// reach for a `UIFont` directly — `UINavigationBarAppearance`, `UITabBarItem`,
+/// `UISegmentedControl`. Keeps the chrome on the same atom as the SwiftUI body
+/// type so the app never paints SF Pro by accident. Falls back to `systemFont`
+/// only if PostScript registration fails (defensive — not expected in shipping).
+extension UIFont {
+    static func geist(_ weight: Font.AppWeight, size: CGFloat) -> UIFont {
+        UIFont(name: "Geist-\(weight.suffix)", size: size) ?? systemFont(ofSize: size, weight: weight.uiKitWeight)
+    }
+
+    static func geistMono(_ weight: Font.AppWeight, size: CGFloat) -> UIFont {
+        UIFont(name: "GeistMono-\(weight.suffix)", size: size) ?? .monospacedSystemFont(ofSize: size, weight: weight.uiKitWeight)
+    }
+}
+
+extension Font.AppWeight {
+    var uiKitWeight: UIFont.Weight {
+        switch self {
+        case .medium:   return .medium
+        case .semibold: return .semibold
+        case .bold:     return .bold
+        }
+    }
+}
+
 /// Typography tokens. Every font lives as an enum case so its associated
 /// tracking is bundled with it — call sites apply both at once via
 /// `.appFont(.X)` (Text) or `.font(AppFont.X.font)` + `.tracking(AppFont.X.tracking)`
@@ -213,11 +238,6 @@ enum AppRadius {
     static func appIconHomeScreenCornerRadius(sideLength: CGFloat) -> CGFloat {
         sideLength * 10 / 57
     }
-
-    /// Splash welcome logo tile — smaller radius than the Home Screen icon mask for a slightly squarer tile.
-    static func splashLogoTileCornerRadius(sideLength: CGFloat) -> CGFloat {
-        appIconHomeScreenCornerRadius(sideLength: sideLength) * 0.68
-    }
 }
 
 /// Shared sizing for day/week steppers and compact day badges (Paper e.g. node 2P1-0).
@@ -329,18 +349,18 @@ struct AppDivider: View {
     }
 }
 
-/// Shared card elevation — single hairline stroke. Per visual-language.md
-/// §1, §4, §9, cards separate from the page through **fill contrast**, not
-/// shadows. The stroke is the only chrome added here.
+/// Shared card elevation — no-op now that elevation is fill-contrast-only.
+/// Per DESIGN.md §4 (Flat-By-Default Rule), Bond cards separate from the Milk
+/// page through the 6.25% lightness step alone. No stroke, no shadow — both
+/// fight the flat doctrine. Retained as a stable extension point so callers
+/// (`AppCard`, `appCardStyle`, `appCardElevation()`) keep a single chrome
+/// pivot if a future variant ever needs lift (e.g. card over photographic
+/// onboarding background). Today it intentionally renders flat.
 private struct AppCardElevation: ViewModifier {
     var cornerRadius: CGFloat = AppRadius.lg
 
     func body(content: Content) -> some View {
         content
-            .overlay {
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .stroke(AppColor.border, lineWidth: 1)
-            }
     }
 }
 
@@ -355,19 +375,16 @@ private struct AppInputElevation: ViewModifier {
     }
 }
 
-/// Workout logging surface — same chrome as `AppCardElevation`: fill + stroke.
-/// `AppCard` is the canonical card; this exists only because the workout panel
-/// composes its own internal layout (hairline divider between metric and timer)
-/// and can't pass through `AppCard`'s VStack-of-content pattern.
+/// Workout logging surface — same chrome as `AppCard`: Bond fill + continuous
+/// corner clip, no stroke (Flat-By-Default Rule, DESIGN.md §4). `AppCard` is
+/// the canonical card; this exists only because the workout panel composes
+/// its own internal layout (hairline divider between metric and timer) and
+/// can't pass through `AppCard`'s VStack-of-content pattern.
 private struct AppWorkoutPanelChrome: ViewModifier {
     func body(content: Content) -> some View {
         content
             .background(AppColor.cardBackground)
             .clipShape(RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                    .stroke(AppColor.border, lineWidth: 1)
-            }
     }
 }
 
@@ -413,12 +430,13 @@ enum AppIcon: String {
     case moveUp = "arrow.up"
     case moveDown = "arrow.down"
     case more = "ellipsis.circle"
+    case scalemass = "scalemass"
 
     var systemName: String { rawValue }
 
     func image(size: CGFloat = 17, weight: Font.Weight = .semibold) -> some View {
         Image(systemName: systemName)
-            .font(.system(size: size, weight: weight, design: .rounded))
+            .font(.system(size: size, weight: weight))
     }
 }
 
@@ -1211,6 +1229,11 @@ struct SetProgressIndicator: View {
         let state: State
         var reps: Int? = nil
         var weightText: String? = nil
+        /// Marks a completed step that beat the prior all-time best for this exercise
+        /// (computed in `ActiveWorkoutView.completeSet`). The chip flips to accent
+        /// chrome so the milestone persists for the rest of the session — pairs with
+        /// the heavy-impact haptic that fires once at log time.
+        var isPR: Bool = false
 
         var chipText: String? {
             guard let reps, let weightText, !weightText.isEmpty else { return nil }
@@ -1219,6 +1242,11 @@ struct SetProgressIndicator: View {
     }
 
     let steps: [Step]
+    /// Bumped by the parent each time a set is logged. Drives a one-shot SF Symbols
+    /// bounce on every already-mounted ✓ chip so newly-landed sets give the
+    /// previously-logged checkmarks a quiet sympathy nod. Newest chip arrives via
+    /// the parent's `withAnimation(.appReveal)` and doesn't need its own bounce.
+    var setLoggedSignal: Int? = nil
 
     var body: some View {
         HStack(spacing: AppSpacing.sm) {
@@ -1236,6 +1264,7 @@ struct SetProgressIndicator: View {
                         HStack(spacing: AppSpacing.xxs) {
                             if step.state == .completed {
                                 AppIcon.checkmark.image(size: 10, weight: .bold)
+                                    .symbolEffect(.bounce, options: .nonRepeating, value: setLoggedSignal ?? 0)
                             } else {
                                 AppIcon.remove.image(size: 10, weight: .bold)
                             }
@@ -1243,10 +1272,10 @@ struct SetProgressIndicator: View {
                                 .font(.geistMono(.semibold, size: 12))
                                 .lineLimit(1)
                         }
-                        .foregroundStyle(AppColor.textSecondary)
+                        .foregroundStyle(step.isPR ? AppColor.accentForeground : AppColor.textSecondary)
                         .padding(.horizontal, AppSpacing.sm)
                         .frame(height: 24)
-                        .background(Capsule().fill(AppColor.controlBackground))
+                        .background(Capsule().fill(step.isPR ? AppColor.accent : AppColor.controlBackground))
                     } else {
                         ZStack {
                             Circle()
@@ -1461,25 +1490,52 @@ struct RestTimerControl: View {
 
 // MARK: - PreviewListRow + PreviewListContainer
 
-/// Two-line row for preview lists inside cards (Today's exercise preview,
-/// Programs day list). Uses `AppFont.sectionHeader` for title + `listSecondary`
-/// for subtitle. `isEmptyHint = true` demotes the subtitle to a softer hint
-/// color for cold-start rows like "No prior sets".
+/// Two-line row for preview lists inside cards.
+///
+/// Two styles, picked by the caller's read intent:
+/// - `.nameFirst` (default): title (program / template / routine name) leads in
+///   `sectionHeader`, subtitle follows in quiet `body`. Right for browsing
+///   lists where the user identifies the row by name (Programs, Templates,
+///   day lists).
+/// - `.metricFirst`: subtitle leads in monospaced bold, title follows in quiet
+///   `caption`. Honors DESIGN.md §3 Numerics-First Rule for workout-adjacent
+///   previews where the lifter already knows the workout and is glancing for
+///   data (Today's exercise preview).
+///
+/// `isEmptyHint = true` softens the data line (caption font + secondary color)
+/// for cold-start rows like "No prior sets".
 struct PreviewListRow: View {
+    enum Style {
+        case nameFirst
+        case metricFirst
+    }
+
     let title: String
     let subtitle: String
-    /// When `true`, subtitle uses lighter system secondary label (empty-state hints).
+    var style: Style = .nameFirst
     var isEmptyHint: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.xs) {
-            Text(title)
-                .font(AppFont.sectionHeader.font)
-                .foregroundStyle(titleColor)
+            switch style {
+            case .nameFirst:
+                Text(title)
+                    .font(AppFont.sectionHeader.font)
+                    .foregroundStyle(AppColor.textPrimary)
 
-            Text(subtitle)
-                .font(subtitleFont)
-                .foregroundStyle(subtitleColor)
+                Text(subtitle)
+                    .font(nameFirstSubtitleFont)
+                    .foregroundStyle(AppColor.textSecondary)
+
+            case .metricFirst:
+                Text(subtitle)
+                    .font(metricFont)
+                    .foregroundStyle(metricColor)
+
+                Text(title)
+                    .font(AppFont.caption.font)
+                    .foregroundStyle(AppColor.textSecondary)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, AppSpacing.sm)
@@ -1487,14 +1543,16 @@ struct PreviewListRow: View {
         .contentShape(Rectangle())
     }
 
-    private var titleColor: Color { AppColor.textPrimary }
-
-    private var subtitleFont: Font {
+    private var nameFirstSubtitleFont: Font {
         isEmptyHint ? AppFont.caption.font : AppFont.body.font
     }
 
-    private var subtitleColor: Color {
-        AppColor.textSecondary
+    private var metricFont: Font {
+        isEmptyHint ? AppFont.caption.font : AppFont.productAction.font
+    }
+
+    private var metricColor: Color {
+        isEmptyHint ? AppColor.textSecondary : AppColor.textPrimary
     }
 }
 
@@ -1532,10 +1590,12 @@ struct PreviewListContainer<Content: View>: View {
 
 // MARK: - Organisms
 
-/// Canonical card surface — white fill, continuous corners, thin stroke,
-/// dual lift shadows. The default chrome for any grouped surface. Use `.appCardStyle()`
-/// instead when a wrapper type is awkward (e.g. applied to an existing VStack
-/// without re-nesting). Never invent inline `.background(...).clipShape(...)` chrome.
+/// Canonical card surface — Bond (`#FFFFFF`) fill on a Milk (`#F5F5F5`) page,
+/// continuous corners at `AppRadius.lg` (22pt), no stroke, no shadow. Cards
+/// lift through fill-value contrast alone (DESIGN.md §4 Flat-By-Default Rule).
+/// The default chrome for any grouped surface. Use `.appCardStyle()` instead
+/// when a wrapper type is awkward (e.g. applied to an existing VStack without
+/// re-nesting). Never invent inline `.background(...).clipShape(...)` chrome.
 struct AppCard<Content: View>: View {
     /// Outer inset for card chrome. System default is `AppSpacing.lg` (24pt) so every
     /// card has 24pt visual breathing room from card edge to content. Use the default
@@ -1583,9 +1643,9 @@ struct AppSessionHighlightRow<Trailing: View>: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: AppSpacing.md) {
-            VStack(alignment: .leading, spacing: AppSpacing.xxs) {
+            VStack(alignment: .leading, spacing: AppSpacing.xs) {
                 Text(eyebrow)
-                    .font(AppFont.sectionHeader.font)
+                    .font(AppFont.caption.font)
                     .foregroundStyle(AppColor.textSecondary)
 
                 Text(title)
@@ -2033,6 +2093,11 @@ struct WorkoutCommandCard: View {
     var metricSupportingText: String? = nil
     /// When true, the metric line uses body-sized copy instead of the large numeric display (placeholders).
     var metricIsHint: Bool = false
+    /// Pre-fill from a prior session (no working set logged this session yet). Renders the
+    /// metric in `textSecondary` so users can tell at a glance whether the number is a
+    /// suggestion to beat or a value already committed. Recolors via `appReveal` when
+    /// the first set lands and the value transitions to logged.
+    var metricIsGhost: Bool = false
     var state: State = .active
     var primaryLabel: String = AppCopy.Workout.completeSet
     var onPrimaryAction: (() -> Void)? = nil
@@ -2042,18 +2107,30 @@ struct WorkoutCommandCard: View {
     /// being threaded through `UIImpactFeedbackGenerator` at the call site.
     /// Pass `nil` for non-active surfaces (previews) — feedback is a no-op then.
     var setLoggedSignal: Int? = nil
+    /// Bumped by the parent only when the just-logged set beat the prior all-time best
+    /// for this exercise. Routes a heavy-impact haptic on top of the regular `.success`
+    /// — same atom layer, distinct moment. The `setLoggedSignal` haptic still fires; this
+    /// stacks for the milestone feel.
+    var setPRSignal: Int? = nil
     var timerValue: String? = nil
     var timerState: RestTimerControl.State = .idle
     var onTimerDecrease: (() -> Void)? = nil
     var onTimerToggle: (() -> Void)? = nil
     var onTimerIncrease: (() -> Void)? = nil
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Toggles for ~800ms each time `setPRSignal` increments — replaces the quiet
+    /// `metricSupportingText` line ("Last session …") with a Verde "Personal record"
+    /// chip so the peak emotional moment of a session is held visibly long enough
+    /// to register before the metric prefill cross-fades to the next set.
+    @State private var prBadgeVisible: Bool = false
+
     var body: some View {
         VStack(alignment: .center, spacing: 0) {
             VStack(alignment: .center, spacing: AppSpacing.lg) {
                 HStack {
                     Spacer(minLength: 0)
-                    SetProgressIndicator(steps: progressSteps)
+                    SetProgressIndicator(steps: progressSteps, setLoggedSignal: setLoggedSignal)
                     Spacer(minLength: 0)
                 }
                 .frame(maxWidth: .infinity)
@@ -2067,13 +2144,7 @@ struct WorkoutCommandCard: View {
 
                 metricHero
 
-                if let metricSupportingText, !metricSupportingText.isEmpty {
-                    Text(metricSupportingText)
-                        .font(AppFont.caption.font)
-                        .foregroundStyle(AppColor.textSecondary)
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+                metricSupportingSlot
 
                 if state != .completed {
                     AppPrimaryButton(
@@ -2106,6 +2177,45 @@ struct WorkoutCommandCard: View {
         .frame(maxWidth: .infinity)
         .appWorkoutPanelChrome()
         .sensoryFeedback(.success, trigger: setLoggedSignal)
+        .sensoryFeedback(.impact(weight: .heavy, intensity: 1.0), trigger: setPRSignal)
+        .onChange(of: setPRSignal) { _, _ in
+            showPRBadge()
+        }
+    }
+
+    private func showPRBadge() {
+        prBadgeVisible = true
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 800_000_000)
+            prBadgeVisible = false
+        }
+    }
+
+    @ViewBuilder
+    private var metricSupportingSlot: some View {
+        Group {
+            if prBadgeVisible {
+                HStack(spacing: AppSpacing.xs) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(AppFont.body.font)
+                        .foregroundStyle(AppColor.success)
+                    Text("Personal record")
+                        .font(AppFont.label.font)
+                        .foregroundStyle(AppColor.textPrimary)
+                }
+                .padding(.horizontal, AppSpacing.smd)
+                .padding(.vertical, AppSpacing.xs)
+                .background(AppColor.successSoft, in: Capsule())
+                .accessibilityLabel("Personal record")
+            } else if let metricSupportingText, !metricSupportingText.isEmpty {
+                Text(metricSupportingText)
+                    .font(AppFont.caption.font)
+                    .foregroundStyle(AppColor.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .appAnimation(.appReveal, value: prBadgeVisible, reduceMotion: reduceMotion)
     }
 
     @ViewBuilder
@@ -2144,7 +2254,7 @@ struct WorkoutCommandCard: View {
         Text(metricValue)
             .font(AppFont.numericDisplay.font)
             .tracking(AppFont.numericDisplay.tracking)
-            .foregroundStyle(AppColor.textPrimary)
+            .foregroundStyle(metricIsGhost ? AppColor.textSecondary : AppColor.textPrimary)
             .monospacedDigit()
             .multilineTextAlignment(.center)
             .minimumScaleFactor(0.55)
@@ -2584,13 +2694,16 @@ extension View {
             .modifier(AppCardElevation())
     }
 
-    /// Apply the canonical card shadow/stroke to a view that already provides its own
-    /// background and clip shape (e.g. ad-hoc cards that can't use `AppCard` or `appCardStyle`).
+    /// Apply the canonical card chrome to a view that already provides its own
+    /// background and clip shape (e.g. ad-hoc cards that can't use `AppCard` or
+    /// `appCardStyle`). Renders flat — fill contrast carries separation.
     func appCardElevation() -> some View {
         modifier(AppCardElevation())
     }
 
-    /// Card fill + canonical shadows — active workout command/timer panel (no border stroke).
+    /// Bond fill + continuous-corner clip for the active workout command/timer
+    /// panel. Flat by doctrine; the panel's internal hairline divider between
+    /// metric and timer is the only line in the surface.
     func appWorkoutPanelChrome() -> some View {
         modifier(AppWorkoutPanelChrome())
     }

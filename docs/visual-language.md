@@ -13,7 +13,7 @@
 
 ### Surfaces (role-based)
 - **Page background** (`AppColor.background`): `#F5F5F5` — calm, neutral, softer than pure white. Use as the bar surface too — there is no separate `barBackground` token.
-- **Card surface** (`AppColor.cardBackground`): White `#FFFFFF` — cards separate from the page through **fill contrast** + a 1pt `border` stroke, **not shadows**.
+- **Card surface** (`AppColor.cardBackground`): White `#FFFFFF` — cards separate from the Milk page through **fill contrast** alone (a 6.25% lightness step), **not shadows and not borders**. See `DESIGN.md` §4 "The Flat-By-Default Rule".
 - **Row-on-card fill** (`AppColor.cardRowFill`): `#F5F5F5` — for elements nested inside `AppCard` (use with `AppRadius.sm` and `AppSpacing.sm`, per the Figma source of truth).
 
 ### Text
@@ -63,7 +63,7 @@ Keep the token set **small**. New roles need a Gym Test or clarity justification
 
 ## 4. Layout and structure
 
-- **Cards**: Rounded rectangle (`AppRadius.card` = 22) with iOS continuous corners, padding `AppSpacing.lg` (24). Separation from background is **contrast** + a 1pt `border` stroke — never drop shadows.
+- **Cards**: Rounded rectangle (`AppRadius.card` = 22) with iOS continuous corners, padding `AppSpacing.lg` (24). Separation from background is **fill contrast** alone — never drop shadows, never a border stroke (per `DESIGN.md` §4).
 - **One primary CTA** on high-stress flows: full-width black (accent) button pattern via `AppPrimaryButton` unless a documented exception exists.
 - **Compact controls and buttons**: `AppRadius.md` = 14 with iOS continuous corners.
 - **Spacing**: 4pt grid via `AppSpacing` — consistent section gaps vs. tight in-card grouping.
@@ -78,7 +78,7 @@ Pick the simplest UI that still satisfies the Gym Test. Keep the component surfa
 - `AppPrimaryButton` as the single dominant CTA (high contrast)
 - `AppListRow` and `AppStepper` for fast, compact controls
 - Session: `WorkoutCommandCard` (target + set progress) + `SessionStateBar` (rest/ready/next)
-- Today: `WeeklyProgressStepper` + `ExercisePreviewStrip` (horizontal rail + overflow fade)
+- Today: `ExercisePreviewStrip` (horizontal rail + overflow fade) + week-of-routine progress rendered through the standard `AppCard` + `AppFont` lockup
 
 Patterns we rely on:
 - Large tap targets and minimal steps for logging

@@ -8,13 +8,6 @@ import SwiftData
 import SwiftUI
 import UIKit
 
-private extension UIFont {
-    func rounded() -> UIFont {
-        guard let descriptor = fontDescriptor.withDesign(.rounded) else { return self }
-        return UIFont(descriptor: descriptor, size: pointSize)
-    }
-}
-
 struct ContentView: View {
     @AppStorage(wrappedValue: false, "hasSeenPaywall") private var hasSeenPaywall
     @AppStorage(wrappedValue: false, "showOnboardingRestart") private var showOnboardingRestart
@@ -103,8 +96,8 @@ struct ContentView: View {
 
     private func configureNavigationBarAppearance() {
         let titleColor = UIColor(AppColor.textPrimary)
-        let titleFont = UIFont.systemFont(ofSize: 17, weight: .semibold).rounded()
-        let largeTitleFont = UIFont.systemFont(ofSize: 34, weight: .bold).rounded()
+        let titleFont = UIFont.geist(.bold, size: 17)
+        let largeTitleFont = UIFont.geist(.bold, size: 34)
 
         let appearance = UINavigationBarAppearance()
         appearance.configureWithDefaultBackground()
@@ -128,8 +121,8 @@ struct ContentView: View {
         let segmentedControl = UISegmentedControl.appearance()
         segmentedControl.backgroundColor = UIColor(AppColor.controlBackground)
         segmentedControl.selectedSegmentTintColor = UIColor(AppColor.cardBackground)
-        let normalFont = UIFont.systemFont(ofSize: 14, weight: .medium).rounded()
-        let selectedFont = UIFont.systemFont(ofSize: 14, weight: .semibold).rounded()
+        let normalFont = UIFont.geist(.medium, size: 14)
+        let selectedFont = UIFont.geist(.semibold, size: 14)
         segmentedControl.setTitleTextAttributes(
             [.foregroundColor: UIColor(AppColor.textSecondary), .font: normalFont],
             for: .normal
@@ -141,7 +134,7 @@ struct ContentView: View {
     }
 
     private func configureTabBarAppearance() {
-        let tabFont = UIFont.systemFont(ofSize: 10, weight: .medium).rounded()
+        let tabFont = UIFont.geist(.medium, size: 10)
         let attributes: [NSAttributedString.Key: Any] = [.font: tabFont]
         UITabBarItem.appearance().setTitleTextAttributes(attributes, for: .normal)
         UITabBarItem.appearance().setTitleTextAttributes(attributes, for: .selected)

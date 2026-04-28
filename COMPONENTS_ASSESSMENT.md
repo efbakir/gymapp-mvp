@@ -1,4 +1,6 @@
-# Components Assessment — 2026-04-15
+# Components Assessment — 2026-04-15 (historical snapshot)
+
+> ⚠️ **Historical / mostly resolved.** This is a frozen audit snapshot. Many of the issues below have since been addressed in later commits — `Unit/Features/Cycles/` and `CalendarTabView.swift` / `PRLibraryView.swift` were deleted, `AppFont.performance` was added, `AppCardList(data) { row }` is now the canonical list-in-card primitive (with hook enforcement), the soft-status colour tokens (`successSoft` / `warningSoft` / `errorSoft`) were added, the parallel implementation ban now lives in `CLAUDE.md` §4, etc. Treat this file as archive context for *why* certain primitives exist, not as an active to-do list. The current canonical inventory lives in `Unit/UI/DesignSystem.swift` and is documented in `DESIGN.md` + `docs/atomic-design-system.md`.
 
 Goal: find near-duplicate components, point them at the canonical `DesignSystem.swift` equivalent, and list what to delete. You decide which consolidations to ship.
 

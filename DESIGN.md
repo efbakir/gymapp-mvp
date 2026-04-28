@@ -16,43 +16,43 @@ colors:
   signal: "#FF3B30"
 typography:
   display:
-    fontFamily: "SF Pro Rounded, -apple-system, system-ui, sans-serif"
-    fontSize: "36px"
+    fontFamily: "Geist, -apple-system, system-ui, sans-serif"
+    fontSize: "56px"
     fontWeight: 700
     lineHeight: 1.05
-    letterSpacing: "-0.6px"
+    letterSpacing: "-1.2px"
   headline:
-    fontFamily: "SF Pro Rounded, -apple-system, system-ui, sans-serif"
+    fontFamily: "Geist, -apple-system, system-ui, sans-serif"
     fontSize: "22px"
     fontWeight: 700
     lineHeight: 1.15
     letterSpacing: "-0.4px"
   title:
-    fontFamily: "SF Pro Rounded, -apple-system, system-ui, sans-serif"
+    fontFamily: "Geist, -apple-system, system-ui, sans-serif"
     fontSize: "24px"
-    fontWeight: 600
+    fontWeight: 700
     lineHeight: 1.2
-    letterSpacing: "-0.3px"
+    letterSpacing: "-0.4px"
   body:
-    fontFamily: "SF Pro Rounded, -apple-system, system-ui, sans-serif"
+    fontFamily: "Geist, -apple-system, system-ui, sans-serif"
     fontSize: "17px"
     fontWeight: 500
     lineHeight: 1.35
     letterSpacing: "normal"
   label:
-    fontFamily: "SF Pro Rounded, -apple-system, system-ui, sans-serif"
+    fontFamily: "GeistMono, ui-monospace, SFMono-Regular, monospace"
     fontSize: "17px"
-    fontWeight: 600
+    fontWeight: 700
     lineHeight: 1.25
     letterSpacing: "normal"
   caption:
-    fontFamily: "SF Pro Rounded, -apple-system, system-ui, sans-serif"
+    fontFamily: "Geist, -apple-system, system-ui, sans-serif"
     fontSize: "15px"
     fontWeight: 500
     lineHeight: 1.3
     letterSpacing: "normal"
   numeric:
-    fontFamily: "SF Pro Rounded, -apple-system, system-ui, sans-serif"
+    fontFamily: "GeistMono, ui-monospace, SFMono-Regular, monospace"
     fontSize: "36px"
     fontWeight: 700
     lineHeight: 1
@@ -143,7 +143,7 @@ This system explicitly rejects the visual category of "fitness tracker" software
 - Flat by doctrine — separation through fill contrast, never shadows
 - Numerics-first hierarchy (monospaced digits at display size dominate every workout screen)
 - One Ink-black primary CTA per stress screen, full-width, 60pt tall
-- Surface area kept small: 12 colors, 7 type roles, 4 radii, 8 spacing steps — and growing them requires a Gym Test justification
+- Surface area kept small: 12 colors, ~14 `AppFont` cases (Geist sans + Geist Mono), 3 radii, 8 spacing steps — and growing them requires a Gym Test justification
 
 ## 2. Colors: The Material-Shop Palette
 
@@ -173,7 +173,7 @@ The palette is named like materials in a workshop, not like UI states. There is 
 
 **The One Ink Rule.** Ink is reserved for the single primary action on a stress screen. If a screen has two Ink-filled buttons, one of them is wrong. Secondary actions take Pumice. Tertiary actions take Ghost (text-only, no fill).
 
-**The Flat-By-Default Rule.** Cards never carry a drop shadow. Separation between Milk page and Bond card is the 6.25% lightness step and nothing more. If a card needs more weight, the card is in the wrong place — not under-shadowed.
+**The Flat-By-Default Rule.** Cards never carry a drop shadow **or a stroke**. Separation between Milk page and Bond card is the 6.25% lightness step and nothing more. A hairline border at full opacity is the same failure mode as a shadow — both add chrome that fill contrast already provides. If a card needs more weight, the card is in the wrong place — not under-shadowed and not under-bordered.
 
 **The Spark-Is-Splash Rule.** `#FF4400` orange is permitted in the splash screen and nowhere else. It is the legacy of a previous brand decision, retained for launch identity, banned everywhere downstream.
 
@@ -181,21 +181,29 @@ The palette is named like materials in a workshop, not like UI states. There is 
 
 ## 3. Typography
 
-**Display Font:** SF Pro Rounded (system, `.rounded` design)
-**Body Font:** SF Pro Rounded (same family — rounded throughout)
-**Numeric Font:** SF Pro Rounded with `monospacedDigit` (the workout signature)
+**Sans Font:** Geist (bundled `.ttf` in `Unit/Resources/Fonts/`, weights Medium / SemiBold / Bold)
+**Mono Font:** Geist Mono (numerics, primary CTAs, set-result rows — fixed-width digits under fatigue)
 
-**Character:** A single rounded sans across the whole system. Rounded over neutral because the surfaces are so quiet that humanist warmth keeps the page from feeling clinical. Numerics get monospaced digits so weight and rep columns stay aligned at every Dynamic Type size — the lifter scans down a column, not across a row.
+Both ship as bundled `.ttf` and are registered via `UIAppFonts` in `Info.plist`. Always reach typography via the `AppFont` enum — never `Font.custom("Geist*")` or `Font.custom("GeistMono*")` in feature code.
+
+**Character:** Geist is a humanist neo-grotesque — quiet, neutral, with just enough warmth to keep the page from reading as clinical. Numerics, primary CTAs, and the workout-signature rows pivot to Geist Mono so weight and rep columns stay aligned at every Dynamic Type size — the lifter scans down a column, not across a row.
 
 ### Hierarchy
 
-- **Display** (700, 36px, line-height 1.05, tracking -0.6): Splash titles and hero numerics. Rare in-app — earns its size by carrying the moment.
-- **Headline** (700, 22px, line-height 1.15, tracking -0.4): Screen-level large titles. One per screen, top of the scroll.
-- **Title** (600, 24px, line-height 1.2, tracking -0.3): Product top-bar headings, exercise names on workout cards.
-- **Body** (500, 17px, line-height 1.35): Default reading copy. List rows, descriptions, paragraph text. Capped at ~70 characters per line in long-form contexts.
-- **Label** (600, 17px, line-height 1.25): Button labels, primary control text. Heavier than body so CTAs have authority.
-- **Caption** (500, 15px, line-height 1.3): Secondary metadata, helper text, timer subtitles.
-- **Numeric** (700, 36px, line-height 1, tracking -0.6, monospaced digits): Weights, reps, rest-timer countdown. The workout signature.
+- **Splash title** (Geist Bold 56, line-height 1.05, tracking -1.2): Splash welcome only.
+- **Headline / large title** (Geist Bold 22, tracking -0.4): Screen-level titles. One per screen.
+- **Product heading** (Geist Bold 24, tracking -0.4): `ProductTopBar` headings, hero copy on empty states.
+- **Title** (Geist Bold 20): Section titles, exercise names on workout cards.
+- **Section header** (Geist Bold 17): 17pt bold section headings — also the canonical button-label style for sans buttons (no separate `label` case).
+- **Body** (Geist Medium 17, line-height 1.35): Default reading copy. List rows, descriptions, paragraph text.
+- **Caption** (Geist Medium 15): Secondary metadata, helper text, timer subtitles.
+- **Muted** (Geist Medium 13): Footnotes and very secondary copy.
+- **Overline** (Geist SemiBold 10): Top-of-card overline labels.
+- **Small label** (Geist Medium 11, tracking +1.0): Tiny uppercase "WAS" / "MOST POPULAR" style chips.
+- **Numeric display** (Geist Mono Bold 36, tracking -0.6): Weights, reps, rest-timer countdown. The workout signature.
+- **Product action** (Geist Mono Bold 17): Primary CTA labels and top-bar text actions.
+- **Performance** (Geist Mono SemiBold 15): Set-result / PR rows in History.
+- **Step indicator** (Geist Mono SemiBold 14): Set step counters in `SetProgressIndicator`.
 
 ### Named Rules
 
@@ -273,7 +281,7 @@ These guardrails carry PRODUCT.md's anti-references through into pixels. Every "
 ### Do:
 
 - **Do** use Ink (`#0A0A0A`) as the single primary CTA color, and exactly one Ink CTA per stress screen.
-- **Do** separate Bond (`#FFFFFF`) cards from the Milk (`#F5F5F5`) page through fill contrast alone — never with a drop shadow.
+- **Do** separate Bond (`#FFFFFF`) cards from the Milk (`#F5F5F5`) page through fill contrast alone — never with a drop shadow, never with a stroke.
 - **Do** use monospaced-digit numerics (`AppFont.numericDisplay` / `numericLarge`) for every weight, rep count, and timer value, so columns align at every Dynamic Type size.
 - **Do** use `AppCardList(data) { row }` for any list-inside-a-card pattern. It bakes the canonical 8pt vertical / 24pt horizontal inset recipe.
 - **Do** use `appScrollEdgeSoft(top:bottom:)` whenever content scrolls behind a fixed bar.
@@ -296,6 +304,7 @@ These guardrails carry PRODUCT.md's anti-references through into pixels. Every "
 - **Don't** use a side-stripe border (`border-left` > 1px as a colored accent) on any card or row. Forbidden universally.
 - **Don't** use gradient text or `background-clip: text` for emphasis. Use weight or size.
 - **Don't** ship per-row shadowed cards stacked vertically. A list is one card with N rows, never N cards.
+- **Don't** add a hairline stroke to card chrome. Bond on Milk is the separation; a 1pt border at full opacity is the same failure mode as a drop shadow.
 - **Don't** show "0 kg" for bodyweight exercises. Show "BW". Don't use `–` or `—` placeholder copy.
 - **Don't** build a target-vs-actual weight column UI. Ghost values only.
 - **Don't** copy the Strong/Hevy/Jefit spreadsheet aesthetic — parallel target/actual columns, dense numeric rows, busy timer chrome. The whole "gym tracker app" visual category is the trap.

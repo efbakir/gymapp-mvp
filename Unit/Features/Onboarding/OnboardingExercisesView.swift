@@ -57,10 +57,10 @@ struct OnboardingExercisesView: View {
                     if !dayExs.isEmpty {
                         AppCardList(dayExs) { ex in
                             VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                                HStack {
+                                HStack(spacing: AppSpacing.sm) {
                                     AppIcon.reorder.image(size: 15, weight: .semibold)
                                         .foregroundStyle(AppColor.textSecondary)
-                                        .frame(minWidth: 44, minHeight: 44, alignment: .leading)
+                                        .frame(minWidth: 44, minHeight: 44)
                                         .contentShape(Rectangle())
                                         .onDrag {
                                             draggedExerciseID = ex.id
@@ -74,7 +74,7 @@ struct OnboardingExercisesView: View {
                                         .textInputAutocapitalization(.words)
                                         .autocorrectionDisabled()
                                         .submitLabel(.done)
-                                    Spacer()
+                                    Spacer(minLength: 0)
                                     Button {
                                         vm.dayExercises[selectedDayIndex].removeAll { $0.id == ex.id }
                                         vm.baselines.removeValue(forKey: ex.id)
@@ -84,7 +84,7 @@ struct OnboardingExercisesView: View {
                                     } label: {
                                         AppIcon.close.image(size: 15, weight: .semibold)
                                             .foregroundStyle(AppColor.textSecondary)
-                                            .frame(minWidth: 44, minHeight: 44, alignment: .trailing)
+                                            .frame(minWidth: 44, minHeight: 44)
                                             .contentShape(Rectangle())
                                     }
                                 }
@@ -144,6 +144,15 @@ struct OnboardingExercisesView: View {
                     .padding(.horizontal, AppSpacing.xs / 2)
                 }
                 .appScrollEdgeSoft()
+                // iOS 18 horizontal ScrollView reports unbounded ideal width,
+                // which the parent VStack adopts and then propagates through
+                // AppScreen's `safeAreaInset(.top)` — silently cancelling the
+                // canonical 16pt screen padding for the whole screen
+                // (header + content body + bottom CTA). Anchor the trailing
+                // edge with a fixed-size hint so the ScrollView accepts the
+                // proposed width instead of demanding infinity.
+                .frame(maxWidth: .infinity)
+                .fixedSize(horizontal: false, vertical: true)
             }
         )
         .sheet(isPresented: $showingAddSheet, onDismiss: {
@@ -271,12 +280,13 @@ struct ExerciseSearchSheet: View {
                     .listRowBackground(AppColor.cardBackground)
                 }
             }
+            .listSectionSpacing(0)
             .scrollContentBackground(.hidden)
             .background(AppColor.sheetBackground.ignoresSafeArea())
             .scrollDismissesKeyboard(.immediately)
             .navigationTitle("Add Exercise")
             .navigationBarTitleDisplayMode(.inline)
-            .searchable(text: $query, prompt: "Search or type exercise name")
+            .searchable(text: $query, prompt: "Search")
             .searchFocused($isSearchFocused)
             .textInputAutocapitalization(.words)
             .autocorrectionDisabled()
@@ -307,7 +317,7 @@ struct ExerciseSearchSheet: View {
 
 #Preview {
     NavigationStack {
-        OnboardingExercisesView(progressStep: 3, progressTotal: 6) { }
+        OnboardingExercisesView(progressStep: 4, progressTotal: 4) { }
             .environment({
                 let vm = OnboardingViewModel()
                 vm.seedSampleData()
