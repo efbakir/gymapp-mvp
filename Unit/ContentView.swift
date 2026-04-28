@@ -24,6 +24,7 @@ struct ContentView: View {
 
     @State private var selectedTab: RootTab = .today
     @State private var store: StoreManager
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// Uses `UserDefaults.standard` in the app; pass an isolated suite in `#Preview` so canvas state does not touch real onboarding flags.
     init(userDefaults: UserDefaults = .standard) {
@@ -44,17 +45,27 @@ struct ContentView: View {
     }
 
     var body: some View {
-        Group {
+        // Soft cross-fade between onboarding shells and the main tab view.
+        // The native tap on the system tab bar is intentionally instant
+        // (iOS-native expectation, see CLAUDE.md §4 "Prefer iOS-native"); this
+        // transition only fires on the onboarding → main hand-off, which is a
+        // root-view swap, not a tab swipe.
+        ZStack {
             if needsOnboarding {
                 OnboardingView()
+                    .transition(.opacity)
             } else if showOnboardingRestart {
                 OnboardingView(isRestart: true)
+                    .transition(.opacity)
             } else {
                 // Paywall deferred — ship v1 free to validate retention
                 // without price as a confound. Monetize after proving habit.
                 mainTabView
+                    .transition(.opacity)
             }
         }
+        .appAnimation(.appEnter, value: needsOnboarding, reduceMotion: reduceMotion)
+        .appAnimation(.appEnter, value: showOnboardingRestart, reduceMotion: reduceMotion)
         .background(AppColor.background.ignoresSafeArea())
         .onAppear {
             configureNavigationBarAppearance()
@@ -77,10 +88,16 @@ struct ContentView: View {
                 }
                 .tag(RootTab.program)
         }
-        .tint(AppColor.systemTint)
+        .tint(AppColor.accent)
         .toolbar(hasActiveSession ? .hidden : .visible, for: .tabBar)
+        // Programmatic tab switches (deep links, "Start workout" routing)
+        // animate via the token system; user-driven taps on the native tab
+        // bar bypass this code path and remain instant. The Reduce-Motion
+        // guard keeps the underlying state assignment intact.
         .environment(\.appTabSelection, AppTabSelection { tab in
-            selectedTab = tab
+            withAnimation(reduceMotion ? nil : .appState) {
+                selectedTab = tab
+            }
         })
     }
 

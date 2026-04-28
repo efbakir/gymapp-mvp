@@ -10,6 +10,7 @@ import SwiftUI
 
 struct PaywallView: View {
     @Environment(StoreManager.self) private var store
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var onDismiss: () -> Void
 
     var body: some View {
@@ -23,14 +24,14 @@ struct PaywallView: View {
 
                     VStack(alignment: .leading, spacing: AppSpacing.sm) {
                         Text("Your plan is ready")
-                            .font(AppFont.stepIndicator)
+                            .font(AppFont.stepIndicator.font)
                             .foregroundStyle(AppColor.textSecondary)
                             .textCase(.uppercase)
-                            .tracking(AppFont.uppercaseLabelTracking)
+                            .tracking(AppFont.smallLabel.tracking)
 
                         Text("Unlock Unit")
-                            .font(AppFont.display)
-                            .tracking(AppFont.displayTracking)
+                            .font(AppFont.numericDisplay.font)
+                            .tracking(AppFont.numericDisplay.tracking)
                             .foregroundStyle(AppColor.textPrimary)
                     }
                     .padding(.top, AppSpacing.xxl)
@@ -78,13 +79,16 @@ struct PaywallView: View {
                     // MARK: - CTA
 
                     VStack(spacing: AppSpacing.smd) {
-                        AppPrimaryButton(ctaTitle) {
+                        AppPrimaryButton(
+                            ctaTitle,
+                            isLoading: store.isLoading
+                        ) {
                             Task { await store.purchase() }
                         }
 
                         Button(action: onDismiss) {
                             Text("Not now")
-                                .font(AppFont.label.font)
+                                .font(AppFont.sectionHeader.font)
                                 .foregroundStyle(AppColor.textSecondary)
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 44)
@@ -134,7 +138,7 @@ struct PaywallView: View {
 
             VStack(alignment: .leading, spacing: AppSpacing.xxs) {
                 Text(title)
-                    .font(AppFont.label.font)
+                    .font(AppFont.sectionHeader.font)
                     .foregroundStyle(AppColor.textPrimary)
 
                 Text(body)
@@ -163,7 +167,7 @@ struct PaywallView: View {
         let badge = badgeText(for: tier)
 
         return Button {
-            withAnimation(.easeInOut(duration: 0.15)) {
+            withAnimation(reduceMotion ? nil : .appPress) {
                 store.selectedTier = tier
             }
         } label: {
@@ -173,11 +177,11 @@ struct PaywallView: View {
                         .font(AppFont.caption.font)
                         .foregroundStyle(AppColor.textSecondary)
                         .textCase(.uppercase)
-                        .tracking(AppFont.uppercaseLabelTracking)
+                        .tracking(AppFont.smallLabel.tracking)
 
                     Text(priceText(for: tier))
-                        .font(AppFont.productHeading)
-                        .tracking(AppFont.productHeadingTracking)
+                        .font(AppFont.productHeading.font)
+                        .tracking(AppFont.productHeading.tracking)
                         .foregroundStyle(AppColor.textPrimary)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
@@ -204,12 +208,12 @@ struct PaywallView: View {
 
                 if let badge {
                     Text(badge)
-                        .font(AppFont.smallLabel)
-                        .tracking(AppFont.uppercaseLabelTracking)
+                        .font(AppFont.smallLabel.font)
+                        .tracking(AppFont.smallLabel.tracking)
                         .textCase(.uppercase)
                         .foregroundStyle(AppColor.accentForeground)
                         .padding(.horizontal, AppSpacing.sm)
-                        .padding(.vertical, 3)
+                        .padding(.vertical, AppSpacing.xs)
                         .background(AppColor.accent)
                         .clipShape(Capsule())
                         .offset(y: -10)

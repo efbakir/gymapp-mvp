@@ -69,7 +69,7 @@ struct TemplateDetailView: View {
             AddExerciseToTemplateView(template: template)
                 .appBottomSheetChrome()
         }
-        .tint(AppColor.systemTint)
+        .tint(AppColor.accent)
     }
 
     private func exerciseRow(_ exercise: Exercise) -> some View {
@@ -119,7 +119,7 @@ struct TemplateDetailView: View {
     private func exerciseTargetSubtitle(for exercise: Exercise) -> some View {
         if let planned = plannedTargetDisplay(for: exercise) {
             Text(WorkoutTargetFormatter.setRepCompact(setCount: planned.setCount, reps: planned.reps) ?? "")
-                .font(AppFont.performance)
+                .font(AppFont.performance.font)
                 .foregroundStyle(AppColor.textPrimary)
                 .monospacedDigit()
         } else {
@@ -191,7 +191,7 @@ private struct TemplateExerciseReorderDropDelegate: DropDelegate {
             return
         }
 
-        withAnimation(reduceMotion ? nil : .spring(response: 0.22, dampingFraction: 0.9)) {
+        withAnimation(reduceMotion ? nil : .appConfirm) {
             var ids = template.orderedExerciseIds
             let moved = ids.remove(at: fromIndex)
             ids.insert(moved, at: toIndex)
@@ -320,7 +320,7 @@ struct AddExerciseToTemplateView: View {
                 }
             }
             .appNavigationBarChrome()
-            .tint(AppColor.systemTint)
+            .tint(AppColor.accent)
             .onAppear { isSearchFocused = true }
         }
     }

@@ -122,7 +122,7 @@ struct OnboardingView: View {
                 destinationView(route)
             }
         }
-        .tint(AppColor.systemTint)
+        .tint(AppColor.accent)
         .environment(vm)
         .alert("Something went wrong", isPresented: $commitError) {
             Button("Try Again", role: .cancel) { }

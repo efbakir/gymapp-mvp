@@ -48,6 +48,8 @@ struct SessionDetailView: View {
                 Text(templateName)
                     .font(AppFont.title.font)
                     .foregroundStyle(AppColor.textPrimary)
+                    .lineLimit(2)
+                    .truncationMode(.tail)
 
                 Text(session.date.formatted(.dateTime.month(.abbreviated).day().hour().minute()))
                     .font(AppFont.caption.font)

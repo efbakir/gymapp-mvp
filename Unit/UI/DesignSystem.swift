@@ -10,49 +10,41 @@ import UIKit
 
 // MARK: - Atoms
 
-// MARK: Pre-refinement values (revert by replacing the block below)
-// background: 0xEBEBEB | barBackground: 0xEBEBEB | cardBackground: 0xF6F6F6
-// sheetBackground: 0xF6F6F6 | controlBackground: 0xEBEBEB | mutedFill: 0xDCDCDC
-// disabledSurface: 0xC7C7C7 | border: 0xDCDCDC
-// AppRadius — sm: 8, md: 12, lg: 20, card: 20
-// AppCard shadow — ring black 6%, lift r1 y1 black 6%, ambient r2 y0 black 4%
-
 /// Role-based color tokens. Every color used in the app resolves to a case here —
-/// no `Color.black/.gray`, no raw hex literals in page files. Adaptive (light/dark)
-/// via `uicolorAdaptive`, but the design is light-first per visual-language.md.
+/// no `Color.black/.gray`, no raw hex literals in page files. **Light-mode only**
+/// per CLAUDE.md §4 rule 3 — no dark-mode variants are maintained.
 enum AppColor {
-    static let background = Color(uiColor: uicolorAdaptive(light: 0xF5F5F5, dark: 0x0E0F12))
-    static let barBackground = Color(uiColor: uicolorAdaptive(light: 0xF5F5F5, dark: 0x13151A))
-    static let cardBackground = Color(uiColor: uicolorAdaptive(light: 0xFFFFFF, dark: 0x1D2026))
+    // Surfaces
+    static let background = Color(uiColor: uicolor(0xF5F5F5))
+    static let cardBackground = Color(uiColor: uicolor(0xFFFFFF))
     /// Soft inset fill for elements nested inside `AppCard` (exercise rows, chips, inline cells).
     /// Matches page background so rows read as quiet recesses on white. Use with `AppRadius.sm` (10) +
     /// `AppSpacing.sm` (8) padding per the Figma source of truth. Do not use for top-level controls.
-    static let cardRowFill = Color(uiColor: uicolorAdaptive(light: 0xF5F5F5, dark: 0x2C313A))
-    static let sheetBackground = Color(uiColor: uicolorAdaptive(light: 0xFFFFFF, dark: 0x21252D))
-    static let controlBackground = Color(uiColor: uicolorAdaptive(light: 0xE8E8E8, dark: 0x2C313A))
-    static let mutedFill = Color(uiColor: uicolorAdaptive(light: 0xE8E8E8, dark: 0x313640))
-    static let disabledSurface = Color(uiColor: uicolorAdaptive(light: 0xE8E8E8, dark: 0x2C313A))
+    static let cardRowFill = Color(uiColor: uicolor(0xF5F5F5))
+    static let sheetBackground = Color(uiColor: uicolor(0xFFFFFF))
+    /// Neutral surface for steppers, segmented track, disabled buttons, muted chip fills.
+    /// Single canonical "secondary surface" token.
+    static let controlBackground = Color(uiColor: uicolor(0xE8E8E8))
 
-    static let textPrimary = Color(uiColor: uicolorAdaptive(light: 0x0A0A0A, dark: 0xF5F7FA))
-    static let textSecondary = Color(uiColor: uicolorAdaptive(light: 0x595959, dark: 0xB3B8C2))
+    // Text
+    static let textPrimary = Color(uiColor: uicolor(0x0A0A0A))
+    static let textSecondary = Color(uiColor: uicolor(0x595959))
     /// Disabled primary/secondary buttons — softer than `textSecondary` so inactive reads clearly.
-    static let textDisabled = Color(uiColor: uicolorAdaptive(light: 0x949494, dark: 0x7A808C))
-    /// Matches `UIColor.secondaryLabel` — lighter than `textSecondary`; empty-state hints in dense lists.
-    static let secondaryLabel = Color(UIColor.secondaryLabel)
-    static let border = Color(uiColor: uicolorAdaptive(light: 0xE5E5E5, dark: 0x373C47))
+    static let textDisabled = Color(uiColor: uicolor(0x949494))
+    static let border = Color(uiColor: uicolor(0xE5E5E5))
 
     /// Filled segment in multi-step progress (e.g. onboarding) — softer than `textPrimary` but reads clearly against `border` for inactive steps.
-    static let progressSegmentFill = Color(uiColor: uicolorAdaptive(light: 0x3A3A3A, dark: 0xA8ADB8))
+    static let progressSegmentFill = Color(uiColor: uicolor(0x3A3A3A))
 
-    static let accent = Color(uiColor: uicolorAdaptive(light: 0x0A0A0A, dark: 0xF3F4F6))
-    static let accentForeground = Color(uiColor: uicolorAdaptive(light: 0xF6F6F6, dark: 0x111317))
+    // Interactive
+    static let accent = Color(uiColor: uicolor(0x0A0A0A))
+    static let accentForeground = Color(uiColor: uicolor(0xF6F6F6))
+    static let accentSoft = Color(uiColor: uicolor(0xEBEBEB))
 
-    /// Toolbar/tab tint — matches `accent` (neutral) so nav and tab chrome stay on-brand, not system blue.
-    static let systemTint = accent
-    static let accentSoft = Color(uiColor: uicolorAccentSoft())
-    static let success = Color(uiColor: uicolorAdaptive(light: 0x34C759, dark: 0x30D158))
-    static let warning = Color(uiColor: uicolorAdaptive(light: 0xFF9500, dark: 0xFF9F0A))
-    static let error = Color(uiColor: uicolorAdaptive(light: 0xFF3B30, dark: 0xFF453A))
+    // Status
+    static let success = Color(uiColor: uicolor(0x34C759))
+    static let warning = Color(uiColor: uicolor(0xFF9500))
+    static let error = Color(uiColor: uicolor(0xFF3B30))
 
     /// Soft tint fills for status surfaces (calendar day cells, status badges).
     /// Replaces scattered `AppColor.success.opacity(0.18)` and peers.
@@ -63,129 +55,119 @@ enum AppColor {
     /// Accessible text colors paired with the matching `*Soft` backgrounds.
     /// Vivid `success` / `warning` fail WCAG AA contrast when set as text on their own
     /// soft tint; these darker shades are the chip foreground.
-    static let successOnSoft = Color(uiColor: uicolorAdaptive(light: 0x1D7A38, dark: 0x6FE08A))
-    static let warningOnSoft = Color(uiColor: uicolorAdaptive(light: 0x8A4A00, dark: 0xFFC777))
-    static let errorOnSoft = Color(uiColor: uicolorAdaptive(light: 0xB3261E, dark: 0xFF8A82))
+    static let successOnSoft = Color(uiColor: uicolor(0x1D7A38))
+    static let warningOnSoft = Color(uiColor: uicolor(0x8A4A00))
+    static let errorOnSoft = Color(uiColor: uicolor(0xB3261E))
 
-    static let scrim = Color(uiColor: uicolorScrim())
-    static let shadow = Color(uiColor: uicolorAdaptive(light: 0x000000, dark: 0x000000))
-
-    /// Splash tagline emphasis — orange override. Splash-only; do not use elsewhere (orange is otherwise reserved for the home-screen icon per §5).
-    static let splashAccent = Color(uiColor: uicolorAdaptive(light: 0xFF4400, dark: 0xFF5A1F))
-
-    private nonisolated static func uicolorAdaptive(light: UInt32, dark: UInt32) -> UIColor {
-        UIColor { trait in
-            let hex = trait.userInterfaceStyle == .dark ? dark : light
-            return UIColor(
-                red: CGFloat((hex & 0xFF0000) >> 16) / 255,
-                green: CGFloat((hex & 0x00FF00) >> 8) / 255,
-                blue: CGFloat(hex & 0x0000FF) / 255,
-                alpha: 1
-            )
-        }
+    private nonisolated static func uicolor(_ hex: UInt32) -> UIColor {
+        UIColor(
+            red: CGFloat((hex & 0xFF0000) >> 16) / 255,
+            green: CGFloat((hex & 0x00FF00) >> 8) / 255,
+            blue: CGFloat(hex & 0x0000FF) / 255,
+            alpha: 1
+        )
     }
-
-    private nonisolated static func uicolorAccentSoft() -> UIColor {
-        UIColor { trait in
-            trait.userInterfaceStyle == .dark
-                ? UIColor(white: 1, alpha: 0.14)
-                : UIColor(
-                    red: 235 / 255,
-                    green: 235 / 255,
-                    blue: 235 / 255,
-                    alpha: 1
-                )
-        }
-    }
-
-    private nonisolated static func uicolorScrim() -> UIColor {
-        UIColor { trait in
-            trait.userInterfaceStyle == .dark
-                ? UIColor(white: 0, alpha: 0.58)
-                : UIColor(white: 0, alpha: 0.34)
-        }
-    }
-
 }
 
-/// Typography tokens. Prefer a case here over inline `.font(.system(size:))` so
-/// hierarchy stays consistent. Minimum weight across the app is **medium** (500) —
-/// never `.regular`. Static members (`numericDisplay`, `productHeading`, etc.) cover
-/// one-off display contexts that don't map to the body hierarchy.
+/// Bundled custom font helpers. PostScript names match the .ttf filenames in
+/// `Unit/Resources/Fonts/`. Use these only via `AppFont`; do not call from
+/// feature code.
+extension Font {
+    /// Weight subset we ship — Geist is bundled as Medium / SemiBold / Bold only.
+    enum AppWeight {
+        case medium, semibold, bold
+        var suffix: String {
+            switch self {
+            case .medium:   return "Medium"
+            case .semibold: return "SemiBold"
+            case .bold:     return "Bold"
+            }
+        }
+    }
+
+    static func geist(_ weight: AppWeight, size: CGFloat) -> Font {
+        .custom("Geist-\(weight.suffix)", size: size)
+    }
+
+    static func geistMono(_ weight: AppWeight, size: CGFloat) -> Font {
+        .custom("GeistMono-\(weight.suffix)", size: size)
+    }
+}
+
+/// Typography tokens. Every font lives as an enum case so its associated
+/// tracking is bundled with it — call sites apply both at once via
+/// `.appFont(.X)` (Text) or `.font(AppFont.X.font)` + `.tracking(AppFont.X.tracking)`
+/// (other views). Sans is **Geist**; numeric/CTA cases use **Geist Mono** for
+/// fixed-width digits under fatigue. Minimum weight across the app is **medium**
+/// (500) — never `.regular`. PostScript names match the bundled .ttf filenames.
 enum AppFont {
+    // Body hierarchy
     case largeTitle
     case title
     case sectionHeader
     case body
-    case label
     case caption
-    /// Second line under a list title (e.g. “12 exercises”) — use with `sectionHeader` on the line above.
-    case listSecondary
     case muted
+
+    // Display / specialized — previously loose `static let`s, now first-class cases
+    /// 10pt semibold — top-of-card overline labels.
+    case overline
+    /// 11pt medium with +1.0 tracking — tiny uppercase "WAS" / "MOST POPULAR" style labels.
+    case smallLabel
+    /// 56pt bold — splash welcome title only.
+    case splashTitle
+    /// 16pt medium — splash welcome eyebrow / tagline pair.
+    case splashWelcome
+    /// 36pt mono bold — workout metric hero, big numerics.
+    case numericDisplay
+    /// 14pt mono semibold — set step counters in `SetProgressIndicator`.
+    case stepIndicator
+    /// 24pt bold — product-screen heading on `ProductTopBar`, hero copy on empty states.
+    case productHeading
+    /// 17pt mono bold — primary CTA labels, top-bar text actions.
+    case productAction
+    /// 15pt mono semibold — set-result / PR rows in History.
+    case performance
 
     var font: Font {
         switch self {
-        case .largeTitle:
-            return .system(size: 22, weight: .bold, design: .rounded)
-        case .title:
-            return .system(size: 20, weight: .semibold, design: .rounded)
-        case .sectionHeader:
-            return .system(size: 17, weight: .semibold, design: .rounded)
-        case .body:
-            return .system(size: 17, weight: .medium, design: .rounded)
-        case .label:
-            return .system(size: 17, weight: .semibold, design: .rounded)
-        case .caption:
-            return .system(size: 15, weight: .medium, design: .rounded)
-        case .listSecondary:
-            return .system(size: 16, weight: .medium, design: .rounded)
-        case .muted:
-            return .system(size: 13, weight: .medium, design: .rounded)
+        case .largeTitle:     return .geist(.bold,     size: 22)
+        case .title:          return .geist(.bold,     size: 20)
+        case .sectionHeader:  return .geist(.bold,     size: 17)
+        case .body:           return .geist(.medium,   size: 17)
+        case .caption:        return .geist(.medium,   size: 15)
+        case .muted:          return .geist(.medium,   size: 13)
+        case .overline:       return .geist(.semibold, size: 10)
+        case .smallLabel:     return .geist(.medium,   size: 11)
+        case .splashTitle:    return .geist(.bold,     size: 56)
+        case .splashWelcome:  return .geist(.medium,   size: 16)
+        case .productHeading: return .geist(.bold,     size: 24)
+        case .numericDisplay: return .geistMono(.bold,     size: 36)
+        case .stepIndicator:  return .geistMono(.semibold, size: 14)
+        case .productAction:  return .geistMono(.bold,     size: 17)
+        case .performance:    return .geistMono(.semibold, size: 15)
         }
     }
 
     var color: Color {
         switch self {
-        case .muted:
-            return AppColor.textSecondary
-        default:
-            return AppColor.textPrimary
+        case .muted: return AppColor.textSecondary
+        default:     return AppColor.textPrimary
         }
     }
 
-    /// Tracking value for display-level text (tighter spacing for large sizes).
+    /// Tracking baked into the case — apply via `.appFont(.X)` on Text and it lands automatically.
+    /// Call sites should never pull a loose tracking constant from elsewhere.
     var tracking: CGFloat {
         switch self {
-        case .largeTitle:
-            return -0.4
-        default:
-            return 0
+        case .largeTitle:     return -0.4
+        case .splashTitle:    return -1.2
+        case .productHeading: return -0.4
+        case .numericDisplay: return -0.6
+        case .smallLabel:     return 1.0    // uppercase-caps spacing
+        default:              return 0
         }
     }
-
-    static let overline: Font = .system(size: 10, weight: .semibold, design: .rounded)
-    static let smallLabel: Font = .system(size: 11, weight: .medium, design: .rounded)
-    static let display: Font = .system(size: 36, weight: .bold, design: .rounded)
-    /// Splash brand showcase — sized to read big next to the brand mark without dominating. Splash-only; do not use elsewhere.
-    static let splashTitle: Font = .system(size: 56, weight: .bold, design: .rounded)
-    /// Splash support copy — eyebrow ("Welcome to") + tagline. Matched size so they read as a pair. Splash-only.
-    static let splashWelcome: Font = .system(size: 16, weight: .medium, design: .rounded)
-    static let numericDisplay: Font = .system(size: 36, weight: .bold, design: .rounded).monospacedDigit()
-    static let numericLarge: Font = .system(size: 28, weight: .bold, design: .rounded).monospacedDigit()
-    static let compactLabel: Font = .system(size: 12, weight: .semibold, design: .rounded).monospacedDigit()
-    static let stepIndicator: Font = .system(size: 14, weight: .semibold, design: .rounded).monospacedDigit()
-    static let productHeading: Font = .system(size: 24, weight: .semibold, design: .rounded)
-    static let productAction: Font = .system(size: 17, weight: .semibold, design: .rounded).monospacedDigit()
-    /// Set-result / PR rows. Matches inline `.system(size: 15, weight: .semibold, design: .rounded).monospacedDigit()`.
-    static let performance: Font = .system(size: 15, weight: .semibold, design: .rounded).monospacedDigit()
-
-    /// Tracking for static font properties (display-level gets tighter spacing).
-    static let displayTracking: CGFloat = -0.6
-    static let splashTitleTracking: CGFloat = -1.2
-    static let productHeadingTracking: CGFloat = -0.3
-    static let numericDisplayTracking: CGFloat = -0.6
-    static let numericLargeTracking: CGFloat = -0.4
-    static let uppercaseLabelTracking: CGFloat = 1.0
 }
 
 extension Text {
@@ -194,6 +176,7 @@ extension Text {
         self.font(style.font).tracking(style.tracking)
     }
 }
+
 
 /// 4pt-grid spacing tokens. Use instead of `.padding(16)` / literal gaps so section
 /// rhythm stays consistent. `smd` (12) fills the gap between `sm` and `md` for
@@ -211,13 +194,20 @@ enum AppSpacing {
 }
 
 /// Corner radius tokens, all used with `RoundedRectangle(style: .continuous)`.
-/// `sm` compact chips/cells, `md` buttons + inputs, `lg` cards, `sheet` sheet
-/// presentation corners. No other radii should appear in page code.
+/// `sm` compact chips/cells, `md` buttons + inputs, `lg` (`card`) cards.
+/// No other radii should appear in page code.
 enum AppRadius {
     static let sm: CGFloat = 10
     static let md: CGFloat = 14
-    static let lg: CGFloat = 30
-    static let sheet: CGFloat = 40
+    /// Card outer radius. Concentric-radius math holds for `AppCardList` rows
+    /// (card 22 − row inset 12 = row pill 10 = `sm`) and for any inline button
+    /// (card 22 − button inset 8 = button radius 14 = `md`). Default `AppCard`
+    /// content inset is `lg` (24), where concentric math doesn't apply because
+    /// content is plain text/buttons rather than nested radii.
+    static let lg: CGFloat = 22
+    /// Semantic alias — prefer `card` at call sites where the radius is a card's
+    /// outer corner (the docs and visual-language.md both reference `AppRadius.card`).
+    static let card: CGFloat = lg
 
     /// Corner radius for a square tile so `RoundedRectangle(..., style: .continuous)` matches the iPhone Home Screen app icon mask (Apple icon grid: `10/57 × side length`).
     static func appIconHomeScreenCornerRadius(sideLength: CGFloat) -> CGFloat {
@@ -236,6 +226,94 @@ enum AppProgressChipMetrics {
     static var compactHorizontalPadding: CGFloat { AppSpacing.sm }
 }
 
+/// Motion tokens. The single source of truth for every duration, curve, and spring
+/// in the app. Page files call `.appPress` / `.appState` / etc. — never raw
+/// `.easeInOut(duration:)` literals.
+///
+/// Doctrine, restated for the next reader:
+/// - **State only.** Motion conveys feedback, reveal, transition between views.
+///   Decorative motion is banned in the hot loop (PRODUCT.md, DESIGN.md §4).
+/// - **Ease-out only.** No bounce, no elastic, no overshoot. Users are mid-set.
+/// - **≤ 320 ms.** The product register cap. Anything longer reads as laggy.
+/// - **Exit ≈ 75 % of enter.** Symmetry between dismissal and presentation reads
+///   wrong on touch devices — exits should feel decisive.
+///
+/// Reduce Motion is a call-site contract: `reduceMotion ? nil : .appXxx`, or use
+/// `.appAnimation(_:value:reduceMotion:)`. There is no global wrapper because
+/// every surface needs to decide its own fallback (sometimes nil, sometimes a
+/// shorter cross-fade). See `OnboardingSplashView` for the canonical pattern.
+enum AppMotion {
+    enum Duration {
+        /// 150 ms — instant feedback (button press, toggle confirm). Matches `ScaleButtonStyle`.
+        static let press: Double = 0.15
+        /// 200 ms — state toggle (toast in/out, tier select, mode swap).
+        static let state: Double = 0.20
+        /// 250 ms — content reveal (text content swap, progress fill).
+        static let reveal: Double = 0.25
+        /// 320 ms — entrance (card / sheet appear, hero element).
+        static let enter: Double = 0.32
+        /// 180 ms — exit (~75 % of enter; dismissal is decisive).
+        static let exit: Double = 0.18
+    }
+
+    /// Easing curves translated from the design-for-AI motion doctrine
+    /// (cubic-bezier values are the same as `--ease-out-quart/quint/expo`).
+    enum Curve {
+        /// `cubic-bezier(0.25, 1, 0.5, 1)` — smooth, refined. Default for state changes.
+        static func quart(_ duration: Double) -> Animation {
+            .timingCurve(0.25, 1, 0.5, 1, duration: duration)
+        }
+        /// `cubic-bezier(0.22, 1, 0.36, 1)` — slightly snappier. Default for entrances.
+        static func quint(_ duration: Double) -> Animation {
+            .timingCurve(0.22, 1, 0.36, 1, duration: duration)
+        }
+        /// `cubic-bezier(0.16, 1, 0.3, 1)` — confident, decisive. Reserve for hero moments.
+        static func expo(_ duration: Double) -> Animation {
+            .timingCurve(0.16, 1, 0.3, 1, duration: duration)
+        }
+    }
+
+    /// Confirmation spring (segmented pill, set-completed pulse). Damping ≥ 0.85
+    /// keeps it brisk — anything looser reads as "bouncy" and is banned by doctrine.
+    static let confirmSpring: Animation = .spring(response: 0.32, dampingFraction: 0.85)
+}
+
+extension Animation {
+    /// 150 ms easeInOut — button press feedback. Ties `ScaleButtonStyle` to
+    /// the token system; previously hardcoded.
+    static let appPress: Animation = .easeInOut(duration: AppMotion.Duration.press)
+
+    /// 200 ms ease-out-quart — state toggles (visibility, mode swaps, tier select).
+    static let appState: Animation = AppMotion.Curve.quart(AppMotion.Duration.state)
+
+    /// 250 ms ease-out-quart — content swap (numeric text, progress fills).
+    static let appReveal: Animation = AppMotion.Curve.quart(AppMotion.Duration.reveal)
+
+    /// 320 ms ease-out-quint — entrance (card appear, sheet present, hero land).
+    static let appEnter: Animation = AppMotion.Curve.quint(AppMotion.Duration.enter)
+
+    /// 180 ms ease-out-quart — exit (75 % of enter, decisive).
+    static let appExit: Animation = AppMotion.Curve.quart(AppMotion.Duration.exit)
+
+    /// Spring for confirmation pulses (segmented pill move, set logged). Same
+    /// numbers the segmented pill already used; lifted so all confirm-class
+    /// motion stays in lockstep.
+    static let appConfirm: Animation = AppMotion.confirmSpring
+}
+
+extension View {
+    /// `.animation(_:value:)` with a Reduce Motion gate baked in. Pass the
+    /// environment's `accessibilityReduceMotion` value; the modifier resolves
+    /// to `nil` when true, so the change still happens but instantly.
+    func appAnimation<V: Equatable>(
+        _ animation: Animation,
+        value: V,
+        reduceMotion: Bool
+    ) -> some View {
+        self.animation(reduceMotion ? nil : animation, value: value)
+    }
+}
+
 /// Canonical row separator. 1pt hairline at `AppColor.border.opacity(0.55)` —
 /// the same value the active-workout lineup hand-rolled before consolidation.
 /// Used by `AppDividedList` (and a handful of card-row contexts that compose
@@ -251,55 +329,45 @@ struct AppDivider: View {
     }
 }
 
-/// Shared card elevation — used by AppCard and .appCardStyle() for consistent depth.
+/// Shared card elevation — single hairline stroke. Per visual-language.md
+/// §1, §4, §9, cards separate from the page through **fill contrast**, not
+/// shadows. The stroke is the only chrome added here.
 private struct AppCardElevation: ViewModifier {
     var cornerRadius: CGFloat = AppRadius.lg
-
-    @Environment(\.colorScheme) private var colorScheme
 
     func body(content: Content) -> some View {
         content
             .overlay {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .stroke(
-                        colorScheme == .dark
-                            ? Color.white.opacity(0.08)
-                            : Color.black.opacity(0.03),
-                        lineWidth: 1
-                    )
+                    .stroke(AppColor.border, lineWidth: 1)
             }
-            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0 : 0.06), radius: 6, x: 0, y: 3)
-            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0 : 0.04), radius: 16, x: 0, y: 8)
     }
 }
 
-/// Subtle lift for sheet-hosted input fields so they read as controls (not flat blocks)
-/// while staying softer than full `AppCardElevation`. Borders remain the primary affordance.
+/// Sheet-hosted input field chrome — no-op now that elevation is contrast-only.
+/// Retained as a stable extension point if a future variant ever needs to lift
+/// inputs (e.g. sheet stacking). Today it intentionally renders flat.
 private struct AppInputElevation: ViewModifier {
     let enabled: Bool
-    @Environment(\.colorScheme) private var colorScheme
 
     func body(content: Content) -> some View {
-        if enabled {
-            content
-                .shadow(color: Color.black.opacity(colorScheme == .dark ? 0 : 0.04), radius: 4, x: 0, y: 2)
-                .shadow(color: Color.black.opacity(colorScheme == .dark ? 0 : 0.03), radius: 10, x: 0, y: 6)
-        } else {
-            content
-        }
+        content
     }
 }
 
-/// Workout logging surface: card fill + same lift shadows as `AppCardElevation` (no stroke — shadow only).
+/// Workout logging surface — same chrome as `AppCardElevation`: fill + stroke.
+/// `AppCard` is the canonical card; this exists only because the workout panel
+/// composes its own internal layout (hairline divider between metric and timer)
+/// and can't pass through `AppCard`'s VStack-of-content pattern.
 private struct AppWorkoutPanelChrome: ViewModifier {
-    @Environment(\.colorScheme) private var colorScheme
-
     func body(content: Content) -> some View {
         content
             .background(AppColor.cardBackground)
             .clipShape(RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous))
-            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0 : 0.06), radius: 6, x: 0, y: 3)
-            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0 : 0.04), radius: 16, x: 0, y: 8)
+            .overlay {
+                RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
+                    .stroke(AppColor.border, lineWidth: 1)
+            }
     }
 }
 
@@ -448,24 +516,41 @@ struct AppStepper: View {
     let onDecrement: () -> Void
     let onIncrement: () -> Void
 
+    /// Phase counters drive `.sensoryFeedback` so every ± tap fires a haptic
+    /// without requiring callers to thread one through. `.increase` /
+    /// `.decrease` are the iOS-native semantic pair (introduced iOS 17) that
+    /// matches stepper interactions exactly.
+    @State private var incrementPhase: Int = 0
+    @State private var decrementPhase: Int = 0
+
     var body: some View {
         HStack(spacing: AppSpacing.sm) {
-            stepButton(icon: .remove, action: onDecrement)
+            stepButton(icon: .remove) {
+                decrementPhase &+= 1
+                onDecrement()
+            }
 
             Text(value)
-                .font(AppFont.label.font)
-                .foregroundStyle(AppFont.label.color)
+                .font(AppFont.sectionHeader.font)
+                .foregroundStyle(AppFont.sectionHeader.color)
                 .monospacedDigit()
                 .lineLimit(1)
                 .fixedSize(horizontal: true, vertical: false)
                 .frame(minWidth: minimumValueWidth)
+                .contentTransition(.numericText())
+                .animation(.appReveal, value: value)
 
-            stepButton(icon: .add, action: onIncrement)
+            stepButton(icon: .add) {
+                incrementPhase &+= 1
+                onIncrement()
+            }
         }
         .padding(.horizontal, AppSpacing.sm)
         .padding(.vertical, AppSpacing.xs)
         .background(AppColor.controlBackground)
         .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
+        .sensoryFeedback(.increase, trigger: incrementPhase)
+        .sensoryFeedback(.decrease, trigger: decrementPhase)
     }
 
     private func stepButton(icon: AppIcon, action: @escaping () -> Void) -> some View {
@@ -475,7 +560,7 @@ struct AppStepper: View {
                 .frame(width: 36, height: 36)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(ScaleButtonStyle())
         .frame(minWidth: 44, minHeight: 44)
     }
 }
@@ -503,7 +588,7 @@ struct AppTextEditor: View {
             if text.isEmpty {
                 Text(placeholder)
                     .font(AppFont.body.font)
-                    .foregroundStyle(AppColor.secondaryLabel)
+                    .foregroundStyle(AppColor.textSecondary)
                     // TextEditor's internal NSTextContainer inset is ~5pt horizontal,
                     // ~8pt vertical — offset the placeholder so it sits on the cursor.
                     .padding(.horizontal, AppSpacing.md + 5)
@@ -524,34 +609,51 @@ struct AppTextEditor: View {
 struct AppPrimaryButton: View {
     let label: String
     var isEnabled: Bool = true
+    var isLoading: Bool = false
     let action: () -> Void
 
-    init(_ label: String, isEnabled: Bool = true, action: @escaping () -> Void) {
+    init(_ label: String, isEnabled: Bool = true, isLoading: Bool = false, action: @escaping () -> Void) {
         self.label = label
         self.isEnabled = isEnabled
+        self.isLoading = isLoading
         self.action = action
     }
 
+    private var isInteractive: Bool { isEnabled && !isLoading }
+
     var body: some View {
         Button(action: action) {
-            Text(label)
-                .font(AppFont.productAction)
-                .foregroundStyle(isEnabled ? AppColor.accentForeground : AppColor.textDisabled)
-                .frame(maxWidth: .infinity)
-                .frame(height: 60)
-                .background(isEnabled ? AppColor.accent : AppColor.disabledSurface)
-                .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
+            ZStack {
+                Text(label)
+                    .font(AppFont.productAction.font)
+                    .foregroundStyle(isEnabled ? AppColor.accentForeground : AppColor.textDisabled)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .minimumScaleFactor(0.9)
+                    .padding(.horizontal, AppSpacing.md)
+                    .opacity(isLoading ? 0 : 1)
+                if isLoading {
+                    ProgressView()
+                        .tint(AppColor.accentForeground)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 60)
+            .background(isEnabled ? AppColor.accent : AppColor.controlBackground)
+            .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
         }
         .buttonStyle(ScaleButtonStyle())
-        .disabled(!isEnabled)
+        .disabled(!isInteractive)
+        .accessibilityLabel(label)
+        .accessibilityValue(isLoading ? Text("loading") : Text(""))
     }
 }
 
 /// Filled secondary action used **only** by active-workout organisms — the
 /// `metricHero` "Log" pill in `WorkoutCommandCard` and the inline "Next exercise"
-/// row in `SessionStateBar`. Not exposed as a general button: feature code uses
-/// `AppPrimaryButton` (sticky CTA) or `AppGhostButton` (quiet action) instead.
-struct AppSecondaryButton: View {
+/// row in `SessionStateBar`. `fileprivate` so feature code cannot compose it:
+/// page files use `AppPrimaryButton` (sticky CTA) or `AppGhostButton` (quiet action).
+fileprivate struct AppSecondaryButton: View {
     enum Tone {
         case `default`
         case accentSoft
@@ -621,7 +723,7 @@ struct AppSecondaryButton: View {
                             }
                             VStack(alignment: .center, spacing: AppSpacing.xxs) {
                                 Text(label)
-                                    .font(AppFont.productAction)
+                                    .font(AppFont.productAction.font)
                                     .foregroundStyle(foregroundColor)
                                 Text(trimmedDetail)
                                     .font(AppFont.caption.font)
@@ -640,7 +742,7 @@ struct AppSecondaryButton: View {
                             }
                             VStack(alignment: .leading, spacing: AppSpacing.xxs) {
                                 Text(label)
-                                    .font(AppFont.productAction)
+                                    .font(AppFont.productAction.font)
                                     .foregroundStyle(foregroundColor)
                                 Text(trimmedDetail)
                                     .font(AppFont.caption.font)
@@ -658,7 +760,7 @@ struct AppSecondaryButton: View {
                                 .foregroundStyle(foregroundColor)
                         }
                         Text(label)
-                            .font(AppFont.productAction)
+                            .font(AppFont.productAction.font)
                             .foregroundStyle(foregroundColor)
                     }
                 }
@@ -690,11 +792,11 @@ struct AppSecondaryButton: View {
                     .foregroundStyle(foregroundColor)
             }
             Text(label)
-                .font(AppFont.productAction)
+                .font(AppFont.productAction.font)
                 .foregroundStyle(foregroundColor)
                 .lineLimit(1)
             Text(trimmedDetail)
-                .font(AppFont.productAction)
+                .font(AppFont.productAction.font)
                 .foregroundStyle(detailColor)
                 .lineLimit(1)
                 .minimumScaleFactor(0.85)
@@ -740,7 +842,7 @@ struct AppGhostButtonLabel: View {
 
     var body: some View {
         Text(title)
-            .font(AppFont.productAction)
+            .font(AppFont.productAction.font)
             .foregroundStyle(isEnabled ? AppColor.textPrimary : AppColor.textDisabled)
             .multilineTextAlignment(.center)
             .frame(maxWidth: .infinity)
@@ -825,7 +927,7 @@ struct AppTag: View {
                 icon.image(size: 12, weight: .semibold)
             }
             Text(text)
-                .font(AppFont.stepIndicator)
+                .font(AppFont.stepIndicator.font)
         }
         .foregroundStyle(foregroundColor)
     }
@@ -849,7 +951,7 @@ struct AppTag: View {
         case .success: return AppColor.successSoft
         case .warning: return AppColor.warningSoft
         case .error: return AppColor.errorSoft
-        case .muted: return AppColor.mutedFill
+        case .muted: return AppColor.controlBackground
         case .custom(_, let bg): return bg
         }
     }
@@ -886,6 +988,10 @@ struct AppDropdownChip<Content: View>: View {
                 Capsule()
                     .fill(isActive ? AppColor.textPrimary : AppColor.accentSoft)
             )
+            // Visible capsule stays compact; hit zone extends to 44pt floor
+            // so the chip rhythm reads the same as `AppFilterChip` next to it.
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(isActive ? .isSelected : [])
@@ -936,8 +1042,12 @@ struct AppFilterChip: View {
                 Capsule()
                     .fill(isSelected ? AppColor.textPrimary : AppColor.accentSoft)
             )
+            // Visible capsule stays compact; hit zone extends to 44pt floor
+            // for one-handed reachability without changing the chip's rhythm.
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(ScaleButtonStyle())
         .accessibilityAddTraits(isSelected ? .isSelected : [])
         .accessibilityHint(
             showsClearGlyphWhenSelected && isSelected ? "Tap to clear filter" : "Tap to filter"
@@ -992,7 +1102,7 @@ private struct ProductTopBarAction: View {
                 switch content {
                 case .text(let label):
                     Text(label)
-                        .font(AppFont.productAction)
+                        .font(AppFont.productAction.font)
                         .foregroundStyle(AppColor.textSecondary)
                         .frame(minWidth: 60, minHeight: 48)
 
@@ -1051,10 +1161,10 @@ struct ProductTopBar: View {
 
             Text(title)
                 .font(titleFont)
-                .foregroundStyle(AppColor.textSecondary)
+                .foregroundStyle(AppColor.textPrimary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.85)
-                .tracking(AppFont.productHeadingTracking)
+                .tracking(AppFont.productHeading.tracking)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             HStack(spacing: AppSpacing.sm) {
@@ -1068,8 +1178,8 @@ struct ProductTopBar: View {
 
     private var titleFont: Font {
         switch size {
-        case .md: return AppFont.productHeading
-        case .large: return AppFont.productHeading
+        case .md: return AppFont.productHeading.font
+        case .large: return AppFont.productHeading.font
         }
     }
 
@@ -1116,7 +1226,7 @@ struct SetProgressIndicator: View {
                 Group {
                     if step.state == .current {
                         Text("Set \(step.label)")
-                            .font(AppFont.stepIndicator)
+                            .font(AppFont.stepIndicator.font)
                             .foregroundStyle(AppColor.accentForeground)
                             .padding(.horizontal, AppSpacing.smd)
                             .frame(height: 24)
@@ -1130,7 +1240,7 @@ struct SetProgressIndicator: View {
                                 AppIcon.remove.image(size: 10, weight: .bold)
                             }
                             Text(chipText)
-                                .font(AppFont.compactLabel)
+                                .font(.geistMono(.semibold, size: 12))
                                 .lineLimit(1)
                         }
                         .foregroundStyle(AppColor.textSecondary)
@@ -1152,7 +1262,7 @@ struct SetProgressIndicator: View {
                                     .foregroundStyle(AppColor.textPrimary)
                             default:
                                 Text(step.label)
-                                    .font(AppFont.stepIndicator)
+                                    .font(AppFont.stepIndicator.font)
                                     .foregroundStyle(foregroundColor(for: step.state))
                             }
                         }
@@ -1252,10 +1362,16 @@ struct RestTimerControl: View {
     private var timerCenterTapLabel: some View {
         HStack(spacing: AppSpacing.sm) {
             Text(timeText)
-                .font(AppFont.numericDisplay)
-                .tracking(AppFont.numericDisplayTracking)
+                .font(AppFont.numericDisplay.font)
+                .tracking(AppFont.numericDisplay.tracking)
                 .foregroundStyle(timerCenterForeground)
                 .monospacedDigit()
+                // Per-second countdown roll. iOS picks the changed digits and
+                // fades them downward so the timer reads as deliberately
+                // ticking instead of flickering. State-only motion → not
+                // gated by Reduce Motion (cross-fade survives the system pref).
+                .contentTransition(.numericText(countsDown: true))
+                .animation(.appReveal, value: timeText)
 
             if let indicatorIcon {
                 indicatorIcon.image(size: 18, weight: .semibold)
@@ -1374,17 +1490,19 @@ struct PreviewListRow: View {
     private var titleColor: Color { AppColor.textPrimary }
 
     private var subtitleFont: Font {
-        isEmptyHint ? AppFont.caption.font : AppFont.listSecondary.font
+        isEmptyHint ? AppFont.caption.font : AppFont.body.font
     }
 
     private var subtitleColor: Color {
-        isEmptyHint ? AppColor.secondaryLabel : AppColor.textSecondary
+        AppColor.textSecondary
     }
 }
 
 /// Scrollable, capped-height container for `PreviewListRow`s — used on Today hero
-/// and in program active-card previews. Auto-fades the bottom edge when content
-/// exceeds `maxHeight` so truncation reads intentionally.
+/// and in program active-card previews. Top + bottom edges fade via the
+/// canonical `appScrollEdgeSoft()` so truncation reads intentionally; the OS
+/// only renders the fade where scrolling actually clips, so short content
+/// stays flat without measuring height by hand.
 struct PreviewListContainer<Content: View>: View {
     var maxHeight: CGFloat = 228
     /// Vertical gap between rows. Tight by default so the container padding can breathe around the group.
@@ -1393,12 +1511,6 @@ struct PreviewListContainer<Content: View>: View {
     var contentPadding: CGFloat = AppSpacing.md
     @ViewBuilder let content: () -> Content
 
-    @State private var contentHeight: CGFloat = 0
-
-    private var showsFade: Bool {
-        contentHeight > maxHeight
-    }
-
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: rowSpacing) {
@@ -1406,47 +1518,15 @@ struct PreviewListContainer<Content: View>: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(contentPadding)
-            .background(
-                GeometryReader { proxy in
-                    Color.clear.preference(
-                        key: PreviewListContentHeightKey.self,
-                        value: proxy.size.height
-                    )
-                }
-            )
         }
         .scrollIndicators(.hidden)
         .frame(maxWidth: .infinity)
         .frame(maxHeight: maxHeight)
-        .onPreferenceChange(PreviewListContentHeightKey.self) { contentHeight = $0 }
-        .background(AppColor.controlBackground)
-        .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
-        .overlay(alignment: .bottom) {
-            if showsFade {
-                LinearGradient(
-                    colors: [AppColor.controlBackground.opacity(0), AppColor.controlBackground],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .frame(height: 24)
-                .clipShape(
-                    UnevenRoundedRectangle(
-                        bottomLeadingRadius: AppRadius.md,
-                        bottomTrailingRadius: AppRadius.md,
-                        style: .continuous
-                    )
-                )
-                .allowsHitTesting(false)
-            }
-        }
-    }
-}
-
-private struct PreviewListContentHeightKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = max(value, nextValue())
+        .appScrollEdgeSoft()
+        // Canonical row-on-card recipe (Figma source of truth, 2026-04-27):
+        // `cardRowFill` + `AppRadius.sm` for any element nested inside `AppCard`.
+        .background(AppColor.cardRowFill)
+        .clipShape(RoundedRectangle(cornerRadius: AppRadius.sm, style: .continuous))
     }
 }
 
@@ -1505,18 +1585,21 @@ struct AppSessionHighlightRow<Trailing: View>: View {
         HStack(alignment: .center, spacing: AppSpacing.md) {
             VStack(alignment: .leading, spacing: AppSpacing.xxs) {
                 Text(eyebrow)
-                    .font(AppFont.label.font)
+                    .font(AppFont.sectionHeader.font)
                     .foregroundStyle(AppColor.textSecondary)
 
                 Text(title)
                     .font(AppFont.title.font)
                     .foregroundStyle(AppColor.textPrimary)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .lineLimit(2)
+                    .truncationMode(.tail)
 
                 if let caption, !caption.isEmpty {
                     Text(caption)
                         .font(AppFont.caption.font)
                         .foregroundStyle(AppColor.textSecondary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
                 }
             }
 
@@ -1594,18 +1677,18 @@ struct AppToast: ViewModifier {
                         .padding(.vertical, AppSpacing.sm)
                         .background(AppColor.cardBackground)
                         .clipShape(Capsule())
-                        .appCardElevation()
+                        .overlay(Capsule().stroke(AppColor.border, lineWidth: 1))
                         .padding(.bottom, AppSpacing.xl)
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                         .task(id: text) {
                             try? await Task.sleep(for: .seconds(duration))
-                            withAnimation(.easeInOut(duration: 0.2)) {
+                            withAnimation(.appState) {
                                 message = nil
                             }
                         }
                 }
             }
-            .animation(.easeInOut(duration: 0.2), value: message)
+            .animation(.appState, value: message)
     }
 }
 
@@ -1645,21 +1728,21 @@ struct EmptyStateCard<Content: View>: View {
 
                 VStack(alignment: .center, spacing: AppSpacing.xs) {
                     Text(title)
-                        .font(AppFont.productHeading)
-                        .tracking(AppFont.productHeadingTracking)
+                        .font(AppFont.productHeading.font)
+                        .tracking(AppFont.productHeading.tracking)
                         .foregroundStyle(AppColor.textPrimary)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
 
                     Text(message)
-                        .font(AppFont.productAction)
+                        .font(AppFont.productAction.font)
                         .foregroundStyle(AppColor.textSecondary)
                         .multilineTextAlignment(.center)
 
                     if let note {
                         Text(note)
                             .font(AppFont.caption.font)
-                            .foregroundStyle(AppColor.secondaryLabel)
+                            .foregroundStyle(AppColor.textSecondary)
                             .multilineTextAlignment(.center)
                     }
                 }
@@ -1954,6 +2037,11 @@ struct WorkoutCommandCard: View {
     var primaryLabel: String = AppCopy.Workout.completeSet
     var onPrimaryAction: (() -> Void)? = nil
     var onSecondaryAction: (() -> Void)? = nil
+    /// Bumped by the parent each time a set is logged. Drives the success
+    /// haptic on this card so the feedback lives at the atom layer instead of
+    /// being threaded through `UIImpactFeedbackGenerator` at the call site.
+    /// Pass `nil` for non-active surfaces (previews) — feedback is a no-op then.
+    var setLoggedSignal: Int? = nil
     var timerValue: String? = nil
     var timerState: RestTimerControl.State = .idle
     var onTimerDecrease: (() -> Void)? = nil
@@ -1971,8 +2059,8 @@ struct WorkoutCommandCard: View {
                 .frame(maxWidth: .infinity)
 
                 Text(exerciseName)
-                    .font(AppFont.productHeading)
-                    .tracking(AppFont.productHeadingTracking)
+                    .font(AppFont.productHeading.font)
+                    .tracking(AppFont.productHeading.tracking)
                     .foregroundStyle(AppColor.textPrimary)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
@@ -2017,6 +2105,7 @@ struct WorkoutCommandCard: View {
         }
         .frame(maxWidth: .infinity)
         .appWorkoutPanelChrome()
+        .sensoryFeedback(.success, trigger: setLoggedSignal)
     }
 
     @ViewBuilder
@@ -2036,7 +2125,7 @@ struct WorkoutCommandCard: View {
                         metricValueText
 
                         Text("Adjust")
-                            .font(AppFont.smallLabel)
+                            .font(AppFont.smallLabel.font)
                             .foregroundStyle(AppColor.textSecondary)
                     }
                     .frame(maxWidth: .infinity)
@@ -2053,13 +2142,29 @@ struct WorkoutCommandCard: View {
     @ViewBuilder
     private var metricValueText: some View {
         Text(metricValue)
-            .font(AppFont.numericDisplay)
-            .tracking(AppFont.numericDisplayTracking)
+            .font(AppFont.numericDisplay.font)
+            .tracking(AppFont.numericDisplay.tracking)
             .foregroundStyle(AppColor.textPrimary)
             .monospacedDigit()
             .multilineTextAlignment(.center)
             .minimumScaleFactor(0.55)
             .lineLimit(3)
+            // Numeric cross-fade between sets — when prefill updates after a
+            // logged set, the weight × reps swap reads as a soft handoff
+            // instead of a flicker. SwiftUI selects per-glyph fade for the
+            // changed digits and leaves the rest static.
+            .contentTransition(.numericText())
+            .accessibilityLabel(Self.voiceOverLabel(forMetric: metricValue))
+    }
+
+    /// Translate the compact metric token (`3x8x80kg`, `BWx12`) into a
+    /// VoiceOver-friendly phrase. `x` becomes " by ", `BW` expands to
+    /// "bodyweight". Keeps the visible glyphs untouched — the numeric column
+    /// stays tight on screen while screen-reader users get a sentence.
+    static func voiceOverLabel(forMetric metric: String) -> String {
+        metric
+            .replacingOccurrences(of: "BW", with: "bodyweight")
+            .replacingOccurrences(of: "x", with: " by ")
     }
 }
 
@@ -2093,7 +2198,7 @@ struct SessionStateBar: View {
                     .padding(.bottom, AppSpacing.lg)
             }
             .frame(maxWidth: .infinity)
-            .background(AppColor.barBackground)
+            .background(AppColor.background)
         }
     }
 
@@ -2152,7 +2257,7 @@ struct SessionStateBar: View {
                 .padding(.top, AppSpacing.sm)
                 .padding(.bottom, AppSpacing.lg)
                 .frame(maxWidth: .infinity)
-                .background(AppColor.barBackground)
+                .background(AppColor.background)
             }
         }
     }
@@ -2277,6 +2382,7 @@ struct SettingsSection<Content: View>: View {
 struct PrimaryButtonConfig {
     let label: String
     var isEnabled: Bool = true
+    var isLoading: Bool = false
     let action: () -> Void
 }
 
@@ -2378,6 +2484,7 @@ struct AppScreen<Content: View>: View {
                         AppPrimaryButton(
                             primaryButton.label,
                             isEnabled: primaryButton.isEnabled,
+                            isLoading: primaryButton.isLoading,
                             action: primaryButton.action
                         )
                     }
@@ -2393,7 +2500,7 @@ struct AppScreen<Content: View>: View {
                 .padding(.horizontal, AppSpacing.md)
                 .padding(.bottom, AppSpacing.sm)
                 .frame(maxWidth: .infinity)
-                .background(AppColor.barBackground)
+                .background(AppColor.background)
             }
         }
         .background(AppColor.background.ignoresSafeArea())
@@ -2410,7 +2517,7 @@ struct AppScreen<Content: View>: View {
                             for: nil
                         )
                     }
-                    .font(AppFont.label.font)
+                    .font(AppFont.sectionHeader.font)
                     .foregroundStyle(AppColor.accent)
                 }
             }
@@ -2594,8 +2701,10 @@ enum AppIconCircleSize {
 // MARK: - Custom segmented control
 
 /// SwiftUI segmented control with a soft (non-pill) radius, larger label text,
-/// and a **single sliding** shadowed selected pill (spring-animated) on a track
-/// that reads clearly against `AppColor.background`.
+/// and a **single sliding** selected pill (spring-animated) on a track that
+/// reads clearly against `AppColor.background`. The pill separates from the
+/// track via fill contrast (white on grey), not shadow — matches the
+/// flat-by-fill rule from visual-language.md §4.
 struct AppSegmentedControl<Item: Hashable & Identifiable>: View {
     @Binding var selection: Item
     let items: [Item]
@@ -2607,27 +2716,21 @@ struct AppSegmentedControl<Item: Hashable & Identifiable>: View {
     /// Uniform inset between the track edge and the pill (applied on all four sides).
     /// Using a single value keeps the pill visually centered inside the track.
     private let trackPadding: CGFloat = 4
-    @Environment(\.colorScheme) private var colorScheme
 
-    private var pillFill: Color {
-        colorScheme == .dark ? AppColor.cardBackground : Color.white
-    }
+    private var pillFill: Color { AppColor.cardBackground }
 
-    /// Track fill — `mutedFill` is a step darker than `AppColor.background`
-    /// so the track reads as a separated surface without needing a drop shadow.
-    private var trackFill: Color { AppColor.mutedFill }
+    /// Track fill — `controlBackground` is a step darker than `AppColor.background`
+    /// so the track reads as a separated surface via contrast alone.
+    private var trackFill: Color { AppColor.controlBackground }
 
     var body: some View {
-        // Track shape — shared between the background fill and the pill clip so
-        // the pill's shadow is trimmed to the exact inner curve of the track.
         let trackShape = RoundedRectangle(cornerRadius: trackRadius, style: .continuous)
 
         ZStack(alignment: .leading) {
             // 1. Track background.
             trackShape.fill(trackFill)
 
-            // 2. Pill (with shadow), clipped to the track shape so the shadow
-            //    cannot bleed past any edge — even in a separate render pass.
+            // 2. Pill — flat fill, no shadow.
             GeometryReader { geo in
                 let count = max(items.count, 1)
                 let segmentWidth = geo.size.width / CGFloat(count)
@@ -2638,16 +2741,18 @@ struct AppSegmentedControl<Item: Hashable & Identifiable>: View {
                 RoundedRectangle(cornerRadius: pillRadius, style: .continuous)
                     .fill(pillFill)
                     .frame(width: segmentWidth, height: pillHeight)
-                    .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.35 : 0.12), radius: 4, x: 0, y: 2)
-                    .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.2 : 0.06), radius: 1, x: 0, y: 1)
                     .offset(x: pillX)
-                    .animation(.spring(response: 0.34, dampingFraction: 0.84), value: selection.id)
+                    .animation(.appConfirm, value: selection.id)
             }
             .padding(trackPadding)
-            .compositingGroup()
             .clipShape(trackShape)
 
             // 3. Labels — drawn above the pill, never clipped so text stays crisp.
+            //    Segment buttons span the full track height (40pt) so each tap
+            //    target meets the 40pt hit-area floor; visual centering is
+            //    unchanged because the text glyph is centered in the frame.
+            //    Horizontal trackPadding still applies so first/last labels
+            //    don't kiss the track edge.
             HStack(spacing: 0) {
                 ForEach(items) { item in
                     let isSelected = item == selection
@@ -2657,16 +2762,16 @@ struct AppSegmentedControl<Item: Hashable & Identifiable>: View {
                         }
                     } label: {
                         Text(title(item))
-                            .font(.system(size: 16, weight: .semibold, design: .rounded))
+                            .font(.geist(.semibold, size: 16))
                             .foregroundStyle(isSelected ? AppColor.textPrimary : AppColor.textSecondary)
                             .frame(maxWidth: .infinity)
-                            .frame(height: height - trackPadding * 2)
+                            .frame(height: height)
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                 }
             }
-            .padding(trackPadding)
+            .padding(.horizontal, trackPadding)
         }
         .frame(height: height)
     }
@@ -2690,13 +2795,15 @@ private struct AppBottomSheetChromeModifier: ViewModifier {
     }
 }
 
-/// Canonical press-feedback button style — 0.96x scale + 150ms easing.
-/// Apply to every tappable card or row so "press" reads consistently.
+/// Canonical press-feedback button style — 0.96x scale + `.appPress` easing.
+/// Apply to every tappable card or row so "press" reads consistently. Press is
+/// a touch confirmation, not motion, so this is intentionally not gated by
+/// Reduce Motion (per Apple HIG: tactile feedback is permitted).
 struct ScaleButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .scaleEffect(configuration.isPressed ? 0.96 : 1)
-            .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
+            .animation(.appPress, value: configuration.isPressed)
     }
 }
 

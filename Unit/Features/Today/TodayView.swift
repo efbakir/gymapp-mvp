@@ -120,7 +120,7 @@ struct TodayView: View {
                 .presentationDetents([.medium, .large])
                 .appBottomSheetChrome()
             }
-            .tint(AppColor.systemTint)
+            .tint(AppColor.accent)
             .onAppear {
                 checkStaleSession()
                 QuickStartSupport.cleanupOrphanedTemplates(
@@ -183,7 +183,7 @@ struct TodayView: View {
             if reduceMotion {
                 didAppearCard = true
             } else {
-                withAnimation(.easeOut(duration: 0.4).delay(0.1)) {
+                withAnimation(.appEnter.delay(0.1)) {
                     didAppearCard = true
                 }
             }
@@ -386,21 +386,21 @@ private struct TodayWorkoutDetailsSheet: View {
                 VStack(spacing: AppSpacing.lg) {
                     VStack(alignment: .center, spacing: AppSpacing.sm) {
                         Text(context.templateName)
-                            .font(AppFont.productHeading)
-                            .tracking(AppFont.productHeadingTracking)
+                            .font(AppFont.productHeading.font)
+                            .tracking(AppFont.productHeading.tracking)
                             .foregroundStyle(AppColor.textPrimary)
                             .multilineTextAlignment(.center)
                             .fixedSize(horizontal: false, vertical: true)
 
                         Text(context.programName)
-                            .font(AppFont.productAction)
+                            .font(AppFont.productAction.font)
                             .foregroundStyle(AppColor.textSecondary)
                             .multilineTextAlignment(.center)
 
                         if let note = context.scheduleNote {
                             Text(note)
                                 .font(AppFont.caption.font)
-                                .foregroundStyle(AppColor.secondaryLabel)
+                                .foregroundStyle(AppColor.textSecondary)
                                 .multilineTextAlignment(.center)
                         }
 
@@ -429,8 +429,8 @@ private struct TodayWorkoutDetailsSheet: View {
                             Spacer(minLength: 0)
 
                             Text(target.displayTarget)
-                                .font(AppFont.productAction)
-                                .foregroundStyle(target.isEmptyHint ? AppColor.secondaryLabel : AppColor.textSecondary)
+                                .font(AppFont.productAction.font)
+                                .foregroundStyle(AppColor.textSecondary)
                                 .monospacedDigit()
                         }
                     }
@@ -808,7 +808,7 @@ private struct TodayRoutinePickSheet: View {
                                 if hasWeeklySchedule, template.scheduledWeekday == todayWeekday {
                                     Text("Plan")
                                         .font(AppFont.caption.font)
-                                        .foregroundStyle(AppColor.secondaryLabel)
+                                        .foregroundStyle(AppColor.textSecondary)
                                 }
                             }
                             .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
@@ -842,7 +842,7 @@ private struct TodayRoutinePickSheet: View {
             }
             .appNavigationBarChrome()
         }
-        .tint(AppColor.systemTint)
+        .tint(AppColor.accent)
     }
 
     private func weekdayShort(_ weekday: Int) -> String? {

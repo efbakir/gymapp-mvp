@@ -40,7 +40,7 @@ struct OnboardingSplashView: View {
                         .scaledToFit()
                         .opacity(0.78)
                         .frame(width: Self.logoSide, height: Self.logoSide)
-                        .background(AppColor.barBackground)
+                        .background(AppColor.background)
                         .clipShape(
                             RoundedRectangle(
                                 cornerRadius: AppRadius.splashLogoTileCornerRadius(sideLength: Self.logoSide),
@@ -51,20 +51,20 @@ struct OnboardingSplashView: View {
 
                     VStack(spacing: AppSpacing.xxs) {
                         Text("Welcome to")
-                            .font(AppFont.splashWelcome)
-                            .foregroundStyle(AppColor.secondaryLabel)
+                            .font(AppFont.splashWelcome.font)
+                            .foregroundStyle(AppColor.textSecondary)
 
                         Text("Unit")
-                            .font(AppFont.splashTitle)
-                            .tracking(AppFont.splashTitleTracking)
+                            .font(AppFont.splashTitle.font)
+                            .tracking(AppFont.splashTitle.tracking)
                             .foregroundStyle(AppColor.textPrimary)
                     }
                     .padding(.top, AppSpacing.xl)
                     .modifier(staggered(1))
 
                     Text("Your upgraded gym notebook")
-                        .font(AppFont.splashWelcome)
-                        .foregroundStyle(AppColor.secondaryLabel)
+                        .font(AppFont.splashWelcome.font)
+                        .foregroundStyle(AppColor.textSecondary)
                         .lineLimit(1)
                         .minimumScaleFactor(0.8)
                         .multilineTextAlignment(.center)
@@ -105,8 +105,14 @@ struct OnboardingSplashView: View {
     }
 }
 
-/// Splash-only entry stagger: each block fades + translates in with an 80ms-per-index delay.
+/// Splash-only entry stagger: each block fades + translates in with an 80 ms-per-index delay.
 /// Honors Reduce Motion. Kept file-private — promote to DesignSystem.swift if a second screen needs it.
+///
+/// Uses the canonical `.appEnter` curve (ease-out-quint, 320 ms) for the
+/// staggered reveal. Under Reduce Motion the offset collapses to zero and
+/// the curve drops to `.appReveal` (250 ms) with no per-index delay, so the
+/// splash still resolves on the same timing budget without any translation.
+/// This is the only sanctioned hero-entrance moment in the app.
 private struct StaggeredEntry: ViewModifier {
     let index: Int
     let hasAppeared: Bool
@@ -118,8 +124,8 @@ private struct StaggeredEntry: ViewModifier {
             .offset(y: hasAppeared || reduceMotion ? 0 : 8)
             .animation(
                 reduceMotion
-                    ? .easeOut(duration: 0.2)
-                    : .easeOut(duration: 0.4).delay(Double(index) * 0.08),
+                    ? .appReveal
+                    : .appEnter.delay(Double(index) * 0.08),
                 value: hasAppeared
             )
     }

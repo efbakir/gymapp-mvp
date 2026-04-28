@@ -58,7 +58,7 @@ struct ProgramLibraryDetailView: View {
         } message: {
             Text("This adds the program to your list. Any missing exercises will be created automatically.")
         }
-        .tint(AppColor.systemTint)
+        .tint(AppColor.accent)
     }
 
     private var headerBlock: some View {

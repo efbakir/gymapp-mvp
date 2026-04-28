@@ -84,7 +84,7 @@ struct TemplatesView: View {
                 }
                 .appBottomSheetChrome()
             }
-            .tint(AppColor.systemTint)
+            .tint(AppColor.accent)
             .onAppear {
                 QuickStartSupport.cleanupOrphanedTemplates(
                     modelContext: modelContext,
@@ -327,7 +327,7 @@ struct EditProgramView: View {
                 isReordering.toggle()
             }
             .font(AppFont.caption.font)
-            .foregroundStyle(AppColor.systemTint)
+            .foregroundStyle(AppColor.accent)
             .accessibilityLabel(isReordering ? "Finish reordering" : "Reorder routines")
         }
     }
@@ -370,7 +370,7 @@ struct EditProgramView: View {
                     moveTemplate(at: index, direction: .up)
                 } label: {
                     AppIcon.moveUp.image(size: 12, weight: .semibold)
-                        .foregroundStyle(index > 0 ? AppColor.textSecondary : AppColor.disabledSurface)
+                        .foregroundStyle(index > 0 ? AppColor.textSecondary : AppColor.controlBackground)
                         .frame(width: 44, height: 44)
                         .contentShape(Rectangle())
                 }
@@ -381,7 +381,7 @@ struct EditProgramView: View {
                     moveTemplate(at: index, direction: .down)
                 } label: {
                     AppIcon.moveDown.image(size: 12, weight: .semibold)
-                        .foregroundStyle(index < orderedTemplates.count - 1 ? AppColor.textSecondary : AppColor.disabledSurface)
+                        .foregroundStyle(index < orderedTemplates.count - 1 ? AppColor.textSecondary : AppColor.controlBackground)
                         .frame(width: 44, height: 44)
                         .contentShape(Rectangle())
                 }

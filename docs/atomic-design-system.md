@@ -11,40 +11,50 @@ Unit’s interface follows **atomic design** (Brad Frost): build screens **botto
 
 | Layer | Role | Location in repo |
 |-------|------|-------------------|
-| **Atoms** | Indivisible tokens and base primitives (color, type, spacing, radius, icons, divider) | `Unit/UI/Atoms/AppAtoms.swift` |
-| **Molecules** | Small reusable composites with one job | `Unit/UI/Molecules/AppMolecules.swift` |
-| **Organisms** | Larger sections (cards, settings groups) | `Unit/UI/Organisms/AppOrganisms.swift` |
-| **Templates** | Screen shell: nav, scroll, padding, optional sticky CTA | `Unit/UI/Templates/AppScreen.swift` |
+| **Atoms** | Indivisible tokens and base primitives (color, type, spacing, radius, icons, divider) | `Unit/UI/DesignSystem.swift` (`AppColor`, `AppFont`, `AppSpacing`, `AppRadius`, `AppIcon`, `AppDivider`) |
+| **Molecules** | Small reusable composites with one job | `Unit/UI/DesignSystem.swift` (`AppListRow`, `AppStepper`, `AppPrimaryButton`, etc.) |
+| **Organisms** | Larger sections (cards, settings groups) | `Unit/UI/DesignSystem.swift` (`AppCard`, `ProductTopBar`, `WorkoutCommandCard`, etc.) |
+| **Templates** | Screen shell: nav, scroll, padding, optional sticky CTA | `Unit/UI/DesignSystem.swift` (`AppScreen`) |
 | **Pages** | Real screens with real data | `Unit/Features/**/**/*View.swift` |
+
+All atoms, molecules, organisms, and the screen template live in **one file** (`DesignSystem.swift`). The atomic taxonomy above is the conceptual map, not the file layout — keep the single-file layout unless the file genuinely outgrows it.
 
 **Rule:** Prefer tracing every visual decision to **`AppColor`**, **`AppFont`**, **`AppSpacing`**, **`AppRadius`**, or **`AppIcon`**. Legacy feature code may still reference older theme types during migration — new work must use atoms.
 
 ---
 
-## Atoms (`AppAtoms.swift`)
+## Atoms
 
 ### Colour — `AppColor`
 
 Defined in code today (hex → `Color` via `UIColor`). Names express **role**, not implementation.
+**Light-mode only** per CLAUDE.md §4 rule 3 — no dark-mode variants are maintained.
 
-- **Surfaces**: `background` = milk `#EBEBEB`, `surface` / `cardBackground` = white `#F6F6F6`, `border` = dark milk `#DCDCDC`
-- **Text**: `textPrimary` = black `#0A0A0A`, `mutedText` = `#646464`, `textSecondary` = `#919191`, `disabledSurface` = `#C7C7C7`
-- **Interactive**: `accent` = black `#0A0A0A`, `accentSoft` = milk `#EBEBEB`, `disabled`, `border`
-- **Status**: `success` = green `#34C759`, `error` = red `#FF3B30`, `warning`
+- **Surfaces**: `background` = `#F5F5F5`, `cardBackground` = `#FFFFFF`, `cardRowFill` = `#F5F5F5` (nested-in-card recipe), `sheetBackground` = `#FFFFFF`, `controlBackground` = `#E8E8E8` (single canonical neutral surface — steppers, segmented track, disabled buttons, muted chips), `border` = `#E5E5E5`
+- **Text**: `textPrimary` = `#0A0A0A`, `textSecondary` = `#595959`, `textDisabled` = `#949494`
+- **Progress**: `progressSegmentFill` = `#3A3A3A` (filled segment in onboarding's multi-step progress)
+- **Interactive**: `accent` = `#0A0A0A`, `accentForeground` = `#F6F6F6`, `accentSoft` = `#EBEBEB`. `accent` doubles as the `.tint(...)` on every NavigationStack — there is no separate `systemTint`.
+- **Status**: `success` = `#34C759`, `warning` = `#FF9500`, `error` = `#FF3B30`. Plus accessible chip pairs `successSoft`/`successOnSoft`, `warningSoft`/`warningOnSoft`, `errorSoft`/`errorOnSoft`.
 
 **Rules**
 
 - Do not scatter `Color(red:green:blue:)` or raw hex in feature views — extend `AppColor` if a new role is justified.
 - Prefer semantic names (`textSecondary`) over `.gray` / `.black` in new UI.
+- For `.tint(...)`, always pass `AppColor.accent` (not a local `Color`).
 
 ### Typography — `AppFont`
 
-Cases map to `Font` (+ optional `color`) via `.font` / `.color` accessors. Use **`AppFont.numericDisplay`** and **`AppFont.overline`** for workout numerics and small caps labels where specified in `visual-language.md`.
+Every font is an enum case that bundles its `font`, `color`, and `tracking`. Apply via `.appFont(.X)` on `Text` (font + tracking together) or `.font(AppFont.X.font)` elsewhere. Sans is **Geist**; numeric/CTA cases (`numericDisplay`, `stepIndicator`, `productAction`, `performance`) use **Geist Mono** for fixed-width digits under fatigue. Both ship as `.ttf` in `Unit/Resources/Fonts/` (registered via `UIAppFonts` in `Info.plist`).
+
+Body hierarchy: `largeTitle`, `title`, `sectionHeader`, `body`, `caption`, `muted`.
+Display / specialized: `overline`, `smallLabel`, `splashTitle`, `splashWelcome`, `numericDisplay`, `stepIndicator`, `productHeading`, `productAction`, `performance`.
 
 **Rules**
 
-- **Never use regular (400) font weight.** The minimum weight across the entire app is **medium** (500). All `AppFont` cases use Inter-Medium or heavier — never Inter-Regular.
-- Avoid inline `.font(.system(size:weight:))` in page files for standard hierarchy; use `AppFont` cases.
+- **Never use regular (400) font weight.** The minimum weight across the entire app is **medium** (500). Geist is bundled in Medium, SemiBold, Bold only.
+- Avoid inline `.font(.geist(...))` / `.font(.geistMono(...))` in page files for standard hierarchy; use `AppFont` cases. Inline `.font(.system(...))` is reserved for SF Symbol weight on `AppIcon` only.
+- Tracking is **bundled with each case** — never load a loose `*Tracking` constant; either use `.appFont(.X)` (Text) or `.tracking(AppFont.X.tracking)`.
+- For 17pt bold section headings AND button labels, use `sectionHeader` (or `productAction` if the label needs monospaced digits). There is no separate `label` case.
 
 ### Spacing — `AppSpacing` · Radius — `AppRadius`
 
@@ -53,8 +63,9 @@ Use named steps (`xs` … `xl` / `sm` … `lg`) for padding, `VStack` spacing, a
 **Rules**
 
 - Avoid magic numbers like `.padding(16)` in new screens — use `AppSpacing.md` (or documented composition).
-- Large surfaces and cards use **`AppRadius.card` = 20**.
+- Large surfaces and cards use **`AppRadius.card` (alias of `lg`) = 22**.
 - Buttons and compact controls use **`AppRadius.md` = 14**.
+- Compact chips, row pills, and elements nested inside `AppCard` use **`AppRadius.sm` = 10** with `AppColor.cardRowFill` (Figma source-of-truth recipe).
 - Rounded shapes should use iOS-style continuous corners, not default sharp rounding.
 
 ### Icons — `AppIcon`
@@ -72,7 +83,7 @@ Use instead of bare `Divider()` where the design system specifies a hairline wit
 
 ---
 
-## Molecules (`AppMolecules.swift`)
+## Molecules
 
 | Component | Purpose |
 |-----------|---------|
@@ -92,7 +103,7 @@ Use instead of bare `Divider()` where the design system specifies a hairline wit
 
 ---
 
-## Organisms (`AppOrganisms.swift`)
+## Organisms
 
 | Component | Purpose |
 |-----------|---------|
@@ -110,7 +121,7 @@ Use instead of bare `Divider()` where the design system specifies a hairline wit
 
 ---
 
-## Templates (`AppScreen.swift`)
+## Templates
 
 **`AppScreen`** is the standard page wrapper: optional custom header, legacy nav bar path, horizontal padding, scroll content, optional sticky `AppPrimaryButton`.
 
@@ -148,7 +159,7 @@ Allowed in `*View.swift`:
 | Native UITabBar visuals on root screens | `UnitTabBar` via app-shell `safeAreaInset` |
 | `AppTabHeader` large-title root chrome on Today / Program | `ProductTopBar` |
 | `chevron.right` on `AppListRow`-style content | Context + row tap; no decorative chevron |
-| `Inter-Regular` or `.regular` weight anywhere | `Inter-Medium` minimum; use `AppFont` cases |
+| `.regular` weight anywhere; calling `Font.custom("Geist*"/"GeistMono*")` directly | `AppFont` cases (Medium minimum); never bypass `AppFont` for Geist |
 | New hex colours in Features | `AppColor` extension or asset + wrapper |
 | Page-specific workout timer cards / custom command panels | `ExerciseCommandCard` + `SessionStateBar` |
 | Floating text-only header actions without visible tap area | `ProductTopBarAction` |
@@ -168,4 +179,6 @@ Allowed in `*View.swift`:
 
 | Date | Change |
 |------|--------|
+| 2026-04-28 (later) | Token simplification pass: removed `barBackground` (= `background`), `secondaryLabel` (= `textSecondary`), `systemTint` (= `accent`), `shadow`/`scrim` (orphans — chrome modifiers are stroke-only post-shadow refactor), `AppFont.listSecondary` (1 use → `body`), `AppFont.numericLarge` (0 uses), `AppFont.compactLabel` (1 internal use → inline), `AppRadius.sheet` (0 uses). Doc updated to match the actual single-file layout (`Unit/UI/DesignSystem.swift`) — empty `Atoms/Molecules/Organisms/Templates` subdirectories deleted. Two minor feature drifts fixed: `.headline` toolbar title in `ActiveWorkoutView` → `AppFont.sectionHeader`; `.padding(.vertical, 3)` in `PaywallView` → `AppSpacing.xs`. |
+| 2026-04-28 | DS audit fixes: light-only palette (no dark variants), card chrome is now contrast + stroke (no shadows) per visual-language.md, `AppFont` flattened to single enum (statics folded into cases, tracking bundled), `mutedFill` / `disabledSurface` collapsed into `controlBackground`, `AppFont.label` / `display` removed (use `sectionHeader` / `numericDisplay`), `splashAccent` removed (orange `#FF4400` was banned + unused), stale config comment block dropped, `AppRadius.card` alias added (= `lg` = 22), `PreviewListContainer` uses canonical `cardRowFill` + `AppRadius.sm`. |
 | 2026-03 | Initial doc: maps atomic layers to `Unit/UI/*`, aligns with `AppAtoms` / `AppScreen`. |

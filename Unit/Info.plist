@@ -6,10 +6,12 @@
 	<true/>
 	<key>UIAppFonts</key>
 	<array>
-		<string>Inter-Regular.ttf</string>
-		<string>Inter-Medium.ttf</string>
-		<string>Inter-SemiBold.ttf</string>
-		<string>Inter-Bold.ttf</string>
+		<string>Geist-Medium.ttf</string>
+		<string>Geist-SemiBold.ttf</string>
+		<string>Geist-Bold.ttf</string>
+		<string>GeistMono-Medium.ttf</string>
+		<string>GeistMono-SemiBold.ttf</string>
+		<string>GeistMono-Bold.ttf</string>
 	</array>
 </dict>
 </plist>

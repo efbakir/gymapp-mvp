@@ -275,7 +275,7 @@ struct TrainingWeekStripView: View {
         switch item.presentation {
         case .chip:
             Text(item.shortLabel)
-                .font(AppFont.stepIndicator)
+                .font(AppFont.stepIndicator.font)
                 .foregroundStyle(AppColor.accentForeground)
                 .padding(.horizontal, AppSpacing.md)
                 .padding(.vertical, AppSpacing.xs)
@@ -297,7 +297,7 @@ struct TrainingWeekStripView: View {
                         .foregroundStyle(AppColor.textSecondary)
                 case .weekNumber(let n):
                     Text("\(n)")
-                        .font(AppFont.stepIndicator)
+                        .font(AppFont.stepIndicator.font)
                         .foregroundStyle(AppColor.textPrimary)
                         .monospacedDigit()
                 }
@@ -363,7 +363,7 @@ struct TodayWeekOverviewSheet: View {
                             HStack(alignment: .center) {
                                 VStack(alignment: .leading, spacing: AppSpacing.xs) {
                                     Text(day.title)
-                                        .font(AppFont.label.font)
+                                        .font(AppFont.sectionHeader.font)
                                         .foregroundStyle(AppColor.textPrimary)
 
                                     Text(day.subtitle)
@@ -415,7 +415,7 @@ struct TodayWeekOverviewSheet: View {
                 .foregroundStyle(AppColor.textSecondary)
         case .upcoming:
             AppIcon.circle.image(size: 20, weight: .semibold)
-                .foregroundStyle(AppColor.mutedFill)
+                .foregroundStyle(AppColor.controlBackground)
         }
     }
 }

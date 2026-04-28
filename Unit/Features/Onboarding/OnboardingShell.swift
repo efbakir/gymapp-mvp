@@ -11,6 +11,7 @@ import SwiftUI
 
 struct OnboardingShell<Content: View, StickyAccessory: View>: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     let title: String
     var subtitle: String? = nil
@@ -53,15 +54,15 @@ struct OnboardingShell<Content: View, StickyAccessory: View>: View {
                 .appFont(.largeTitle)
                 .foregroundStyle(AppColor.textPrimary)
                 .contentTransition(.opacity)
-                .animation(.easeInOut(duration: 0.25), value: title)
+                .appAnimation(.appReveal, value: title, reduceMotion: reduceMotion)
 
             if let subtitle {
                 Text(subtitle)
                     .appFont(.caption)
-                    .foregroundStyle(AppColor.secondaryLabel)
+                    .foregroundStyle(AppColor.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
                     .contentTransition(.opacity)
-                    .animation(.easeInOut(duration: 0.25), value: subtitle)
+                    .appAnimation(.appReveal, value: subtitle, reduceMotion: reduceMotion)
             }
         }
     }
@@ -120,13 +121,15 @@ struct OnboardingProgressBar: View {
     let step: Int
     let total: Int
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     var body: some View {
         HStack(spacing: AppSpacing.xs) {
             ForEach(0..<max(total, 1), id: \.self) { index in
                 Capsule()
                     .fill(index < step ? AppColor.progressSegmentFill : AppColor.border)
                     .frame(width: 40, height: 6)
-                    .animation(.easeInOut(duration: 0.25), value: step)
+                    .appAnimation(.appReveal, value: step, reduceMotion: reduceMotion)
             }
         }
         .frame(maxWidth: .infinity, alignment: .center)

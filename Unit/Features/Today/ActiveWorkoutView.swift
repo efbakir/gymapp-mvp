@@ -36,6 +36,22 @@ struct ActiveWorkoutView: View {
     @State private var pendingExerciseForSetup: Exercise?
     @State private var customSetCounts: [UUID: Int] = [:]
     @State private var warmupExpanded: Bool = false
+    /// Bumped on every successful `completeSet`. Drives the
+    /// `.sensoryFeedback(.success, trigger:)` on `WorkoutCommandCard`, so the
+    /// haptic lives at the atom layer instead of being fired imperatively
+    /// from the view-model. Wraps via `&+=` to stay non-monotonic-safe.
+    @State private var setLoggedPhase: Int = 0
+    /// Re-entrancy guard. Two ultra-fast "Done" taps inside the same runloop
+    /// could fire `completeSet` twice → duplicate `SetEntry` insert, double
+    /// `setLoggedPhase` bump, double rest-timer start. Flipped true on entry,
+    /// reset on the next runloop tick so legitimate next-set logging works.
+    @State private var isLoggingSet: Bool = false
+    /// Bumped when a warmup set lands. Lighter haptic than working sets so the
+    /// lifter can tell warmup from work without looking.
+    @State private var warmupLoggedPhase: Int = 0
+    /// Bumped exactly once when the lifter finishes the workout. Drives the
+    /// session-finish success notification haptic.
+    @State private var workoutFinishedPhase: Int = 0
 
     /// Plus / minus on the rest timer adjust by this many seconds (minimum rest stays 30s).
     private static let restTimerAdjustStepSeconds = 30
@@ -119,6 +135,16 @@ struct ActiveWorkoutView: View {
         return AppCopy.EmptyState.noPriorSets
     }
 
+    /// True while the rest timer is running and ≤ 3 seconds remain.
+    /// Drives the final-3s warning haptic on the screen — bound to
+    /// `.sensoryFeedback(.warning, trigger:)` with a `false → true` filter so
+    /// the haptic fires once when the lifter enters the heads-up window, not
+    /// on every tick. Visual treatment is intentionally absent (numeric
+    /// countdown already cross-fades; pulse / ring fill is decorative motion).
+    private var isRestFinalCountdown: Bool {
+        restTimer.isRunning && restTimer.secondsRemaining > 0 && restTimer.secondsRemaining <= 3
+    }
+
     private var timerDisplayText: String {
         if showsReadyState && restTimer.secondsRemaining == 0 && !restTimer.isRunning {
             return "Ready"
@@ -188,6 +214,7 @@ struct ActiveWorkoutView: View {
                         prefill: section.prefill
                     )
                 },
+                setLoggedSignal: setLoggedPhase,
                 timerValue: timerDisplayText,
                 timerState: timerControlState,
                 onTimerDecrease: adjustRestTimerAction,
@@ -260,7 +287,7 @@ struct ActiveWorkoutView: View {
         .toolbar {
             ToolbarItem(placement: .principal) {
                 Text(workoutNavigationTitle)
-                    .font(.headline)
+                    .font(AppFont.sectionHeader.font)
                     .foregroundStyle(AppColor.textPrimary)
                     .lineLimit(1)
                     .truncationMode(.tail)
@@ -298,6 +325,29 @@ struct ActiveWorkoutView: View {
         }
         .appNavigationBarChrome()
         .toolbar(.hidden, for: .tabBar)
+        // Final-3s heads-up: a single warning haptic when the rest countdown
+        // enters the ≤3s window while running. No visual emphasis — brand
+        // doctrine treats final-seconds pulses / ring fills as decorative,
+        // and the haptic survives Reduce Motion (it is permitted tactile
+        // feedback). The closure filter fires only on `false → true` so we
+        // don't haptic-spam every tick.
+        .sensoryFeedback(.warning, trigger: isRestFinalCountdown) { old, new in
+            !old && new
+        }
+        // Rest finished → soft success on transition to ready. Distinct from
+        // the warning above so the lifter can hear/feel "now". Filter mirrors
+        // the heads-up: only `false → true`.
+        .sensoryFeedback(.success, trigger: showsReadyState) { old, new in
+            !old && new
+        }
+        // Warmup logged → light impact (replaces the previous imperative
+        // `UIImpactFeedbackGenerator(style: .light)` call). Lighter than the
+        // working-set success so the lifter can tell warmup from work without
+        // looking at the screen.
+        .sensoryFeedback(.impact(weight: .light), trigger: warmupLoggedPhase)
+        // Workout finished → notification-style success haptic (replaces the
+        // imperative `UINotificationFeedbackGenerator` in `finishWorkout`).
+        .sensoryFeedback(.success, trigger: workoutFinishedPhase)
         .sheet(isPresented: $showLineup) {
             exerciseListSheet
                 .presentationDetents([.medium, .large])
@@ -412,7 +462,7 @@ struct ActiveWorkoutView: View {
         AppCard {
             VStack(alignment: .center, spacing: AppSpacing.md) {
                 Text("Add your first exercise")
-                    .font(AppFont.productHeading)
+                    .font(AppFont.productHeading.font)
                     .foregroundStyle(AppColor.textPrimary)
 
                 Text("Search existing exercises or create a new one.")
@@ -547,14 +597,14 @@ struct ActiveWorkoutView: View {
         HStack(alignment: .center, spacing: AppSpacing.md) {
             VStack(alignment: .leading, spacing: AppSpacing.xs) {
                 Text(section.exercise.displayName)
-                    .font(AppFont.productAction)
+                    .font(AppFont.productAction.font)
                     .foregroundStyle(isDone ? AppColor.textSecondary : AppColor.textPrimary)
                     .multilineTextAlignment(.leading)
 
                 if let subtitle = exerciseListSubtitle(for: section) {
                     Text(subtitle)
-                        .font(AppFont.productAction)
-                        .foregroundStyle(isDone ? AppColor.mutedFill : AppColor.textSecondary)
+                        .font(AppFont.productAction.font)
+                        .foregroundStyle(isDone ? AppColor.controlBackground : AppColor.textSecondary)
                 }
             }
 
@@ -626,13 +676,13 @@ struct ActiveWorkoutView: View {
         HStack {
             VStack(alignment: .leading, spacing: AppSpacing.xs) {
                 Text("Set \(index + 1)")
-                    .font(AppFont.productAction)
+                    .font(AppFont.productAction.font)
                     .foregroundStyle(isDone ? AppColor.textSecondary : AppColor.textPrimary)
 
                 if let entry {
                     Text(logEntrySubtitle(for: entry, exercise: section.exercise))
-                        .font(AppFont.productAction)
-                        .foregroundStyle(AppColor.mutedFill)
+                        .font(AppFont.productAction.font)
+                        .foregroundStyle(AppColor.controlBackground)
                 }
             }
 
@@ -791,7 +841,7 @@ struct ActiveWorkoutView: View {
         guard selectedExerciseIndex < sectionModels.count - 1 else { return }
         showsReadyState = false
         restTimer.stop()
-        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.18)) {
+        withAnimation(reduceMotion ? nil : .appExit) {
             selectedExerciseIndex += 1
         }
     }
@@ -800,17 +850,15 @@ struct ActiveWorkoutView: View {
         exercise: Exercise,
         prefill: SetPrefill?
     ) {
-        // Auto-complete with values from previous set in this session
-        if let lastValues = lastLoggedValues(for: exercise.id) {
+        if let prefill, prefill.source != .planned {
             completeSet(
                 exercise: exercise,
-                weight: lastValues.weight,
-                reps: lastValues.reps
+                weight: prefill.weight,
+                reps: prefill.reps
             )
             return
         }
 
-        // First set: open manual entry
         adjustResultPayload = AdjustResultPayload(
             exercise: exercise,
             prefill: prefill
@@ -823,6 +871,10 @@ struct ActiveWorkoutView: View {
         reps: Int,
         note: String = ""
     ) {
+        guard !isLoggingSet else { return }
+        isLoggingSet = true
+        DispatchQueue.main.async { isLoggingSet = false }
+
         let setIndex = currentEntries(for: exercise.id).count
 
         let entry = SetEntry(
@@ -838,17 +890,30 @@ struct ActiveWorkoutView: View {
             note: note
         )
         entry.session = session
-        modelContext.insert(entry)
-        try? modelContext.save()
 
-        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        // The metric value displayed by `WorkoutCommandCard` reads through
+        // `currentEntries`, which mutates as soon as we insert. Wrapping the
+        // insertion in `withAnimation` lets SwiftUI propagate the transaction
+        // through `@Query` re-renders, so the card's `.contentTransition(.numericText())`
+        // engages — the next prefill weight × reps cross-fades into view
+        // instead of flickering. `nil` under Reduce Motion preserves the
+        // mutation but skips the cross-fade.
+        withAnimation(reduceMotion ? nil : .appReveal) {
+            modelContext.insert(entry)
+            try? modelContext.save()
+            showsReadyState = false
+        }
+
+        // Trigger the success haptic on `WorkoutCommandCard` via the bound
+        // `setLoggedSignal` (replaces the previous raw UIKit impact). The
+        // haptic fires regardless of Reduce Motion — accessibility doctrine
+        // explicitly permits tactile feedback.
+        setLoggedPhase &+= 1
 
         let completedWorkingSetCount = currentEntries(for: exercise.id)
             .filter { !$0.isWarmup }
             .count
         let plannedCount = plannedSetCount(for: exercise.id)
-
-        showsReadyState = false
 
         if completedWorkingSetCount >= plannedCount {
             restTimer.stop()
@@ -880,7 +945,7 @@ struct ActiveWorkoutView: View {
         entry.session = session
         modelContext.insert(entry)
         try? modelContext.save()
-        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        warmupLoggedPhase &+= 1
     }
 
     private func warmupSets(
@@ -913,7 +978,7 @@ struct ActiveWorkoutView: View {
         restTimer.stop()
         session.isCompleted = true
         try? modelContext.save()
-        UINotificationFeedbackGenerator().notificationOccurred(.success)
+        workoutFinishedPhase &+= 1
     }
 
     private func addExerciseToWorkout(_ exercise: Exercise) {
@@ -1113,12 +1178,12 @@ private struct AdjustResultSheet: View {
             HStack(spacing: AppSpacing.xs) {
                 TextField("0", text: text)
                     .keyboardType(keyboardType)
-                    .font(AppFont.numericDisplay)
+                    .font(AppFont.numericDisplay.font)
                     .multilineTextAlignment(.center)
 
                 if let suffix {
                     Text(suffix)
-                        .font(AppFont.productAction)
+                        .font(AppFont.productAction.font)
                         .foregroundStyle(AppColor.textSecondary)
                 }
             }
@@ -1278,7 +1343,7 @@ private struct AddExerciseSheet: View {
                 }
             }
             .appNavigationBarChrome()
-            .tint(AppColor.systemTint)
+            .tint(AppColor.accent)
             .onAppear { isSearchFocused = true }
         }
     }
@@ -1293,8 +1358,15 @@ private struct AddExerciseSheet: View {
 }
 
 struct SetPrefill {
+    enum Source {
+        case currentSession
+        case priorSession
+        case planned
+    }
+
     let weight: Double
     let reps: Int
+    let source: Source
 }
 
 @MainActor
@@ -1311,7 +1383,11 @@ final class ActiveWorkoutViewModel {
             .sorted { $0.setIndex < $1.setIndex }
 
         if let currentLast = currentEntries.last {
-            return SetPrefill(weight: currentLast.weight, reps: currentLast.reps)
+            return SetPrefill(
+                weight: currentLast.weight,
+                reps: currentLast.reps,
+                source: .currentSession
+            )
         }
 
         if let reference = latestSessionSet(
@@ -1319,11 +1395,15 @@ final class ActiveWorkoutViewModel {
             currentSession: currentSession,
             sessions: sessions
         ) {
-            return SetPrefill(weight: reference.weight, reps: reference.reps)
+            return SetPrefill(
+                weight: reference.weight,
+                reps: reference.reps,
+                source: .priorSession
+            )
         }
 
         if let plannedReps, plannedReps > 0 {
-            return SetPrefill(weight: 0, reps: plannedReps)
+            return SetPrefill(weight: 0, reps: plannedReps, source: .planned)
         }
 
         return nil
@@ -1574,10 +1654,12 @@ private struct WarmupRow: View {
     @Binding var isExpanded: Bool
     let onLog: (WarmupGenerator.WarmupSet) -> Void
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     var body: some View {
         VStack(spacing: 0) {
             Button {
-                withAnimation(.easeInOut(duration: 0.2)) {
+                withAnimation(reduceMotion ? nil : .appState) {
                     isExpanded.toggle()
                 }
             } label: {

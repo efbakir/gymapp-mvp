@@ -153,6 +153,7 @@ struct RecentSessionsView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var mode: SessionHistoryMode
     @State private var filter: SessionHistoryFilter = .all
@@ -220,8 +221,8 @@ struct RecentSessionsView: View {
                     }
                     .transition(.opacity)
                 }
-                .animation(.easeInOut(duration: 0.22), value: mode)
-                .animation(.easeInOut(duration: 0.2), value: filter)
+                .appAnimation(.appState, value: mode, reduceMotion: reduceMotion)
+                .appAnimation(.appState, value: filter, reduceMotion: reduceMotion)
             }
         }
         .navigationTitle("History")
@@ -666,7 +667,7 @@ private struct CalendarGrid: View {
             HStack(spacing: AppSpacing.smd) {
                 ForEach(weekdayHeaders, id: \.self) { header in
                     Text(header)
-                        .font(AppFont.smallLabel)
+                        .font(AppFont.smallLabel.font)
                         .foregroundStyle(AppColor.textSecondary)
                         .frame(maxWidth: .infinity)
                 }
@@ -888,7 +889,7 @@ struct SessionExerciseSummary: View {
                 Spacer(minLength: AppSpacing.sm)
 
                 Text(actualText(for: set))
-                    .font(AppFont.performance)
+                    .font(AppFont.performance.font)
                     .foregroundStyle(AppColor.textPrimary)
                     .multilineTextAlignment(.trailing)
                     .monospacedDigit()

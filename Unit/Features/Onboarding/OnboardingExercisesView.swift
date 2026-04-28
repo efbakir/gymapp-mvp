@@ -201,7 +201,7 @@ private struct ExerciseReorderDropDelegate: DropDelegate {
             return
         }
 
-        withAnimation(reduceMotion ? nil : .spring(response: 0.22, dampingFraction: 0.9)) {
+        withAnimation(reduceMotion ? nil : .appConfirm) {
             let movedExercise = exercises.remove(at: fromIndex)
             exercises.insert(movedExercise, at: toIndex)
         }
@@ -292,7 +292,7 @@ struct ExerciseSearchSheet: View {
                 }
             }
             .appNavigationBarChrome()
-            .tint(AppColor.systemTint)
+            .tint(AppColor.accent)
             .onAppear { isSearchFocused = true }
         }
     }
@@ -314,5 +314,5 @@ struct ExerciseSearchSheet: View {
                 return vm
             }())
     }
-    .tint(AppColor.systemTint)
+    .tint(AppColor.accent)
 }

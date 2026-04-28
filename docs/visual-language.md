@@ -1,6 +1,6 @@
 # Unit — Visual language
 
-**Adaptive (light/dark), calm, performance-focused.** The UI is built with the **atomic design system** (`atomic-design-system.md`): tokens live in `AppAtoms.swift`, screens compose through `AppScreen` and shared molecules/organisms.
+**Light-mode only, calm, performance-focused.** The UI is built with the **atomic design system** (`atomic-design-system.md`): tokens live in `DesignSystem.swift`, screens compose through `AppScreen` and shared molecules/organisms.
 
 **Core test:** Can a tired user read the screen and log a set in under 3 seconds?
 
@@ -8,18 +8,19 @@
 
 ## 1. Color
 
-### Theme mode (auto)
-All key palette roles are **adaptive**. When the iPhone switches light/dark appearance, the app’s UI colors update automatically via the system trait environment.
+### Theme mode
+**Light only** per CLAUDE.md §4 rule 3 — no dark-mode variants are maintained.
 
-### Surfaces (role-based; light baseline values)
-- **Page background** (`AppColor.background`): Milk `#EBEBEB` (light) — calm, neutral, and softer than pure white.
-- **Elevated / nav surface** (`AppColor.barBackground`): `#EBEBEB` (light baseline for bars).
-- **Card surface** (`AppColor.cardBackground`): White `#F6F6F6` (light) — cards separate from the page through **fill contrast**, not shadows.
+### Surfaces (role-based)
+- **Page background** (`AppColor.background`): `#F5F5F5` — calm, neutral, softer than pure white. Use as the bar surface too — there is no separate `barBackground` token.
+- **Card surface** (`AppColor.cardBackground`): White `#FFFFFF` — cards separate from the page through **fill contrast** + a 1pt `border` stroke, **not shadows**.
+- **Row-on-card fill** (`AppColor.cardRowFill`): `#F5F5F5` — for elements nested inside `AppCard` (use with `AppRadius.sm` and `AppSpacing.sm`, per the Figma source of truth).
 
 ### Text
 
 - **Primary** (`AppColor.textPrimary`): Black `#0A0A0A` for body, titles, and key data.
-- **Secondary / muted** (`AppColor.textSecondary`, `AppColor.mutedText`): `#919191` and `#646464` for labels, subtitles, and helper copy.
+- **Secondary** (`AppColor.textSecondary`): `#595959` for labels, subtitles, helper copy, and empty-state hints.
+- **Disabled** (`AppColor.textDisabled`): `#949494` for disabled buttons and inactive controls.
 
 ### Accent and primary CTA (high contrast)
 - **Primary CTA background** (`AppColor.accent`): Ink ink in light mode, near-white in dark mode.
@@ -50,19 +51,19 @@ Keep the token set **small**. New roles need a Gym Test or clarity justification
 ## 3. Typography
 
 - **Hierarchy**: Weight, reps, timers, and targets dominate. Exercise names and metadata are secondary.
-- **Font**: **SF Pro** (via `.system`), using **`AppFont`** variants.
-  - **Title / headings**: `AppFont.largeTitle`, `AppFont.title`, `AppFont.sectionHeader`, `AppFont.productHeading`.
-  - **Body / labels**: `AppFont.body`, `AppFont.label`, `AppFont.caption`, `AppFont.muted`.
-  - **Workout numerics**: `AppFont.numericDisplay` / `AppFont.numericLarge` (monospaced digits) for fast fatigue-friendly reading.
-- Prefer `AppFont` cases over inline `.font(.system(...))` so typography stays consistent.
-- **Rule**: Never use regular (400) font weight anywhere in the app. The minimum weight is **medium** (500). Body, caption, and muted text all use Inter-Medium, not Inter-Regular.
+- **Font**: **Geist** (sans) and **Geist Mono** (numerics / CTAs), bundled as `.ttf` in `Unit/Resources/Fonts/`. Always reach typography via **`AppFont`** variants — never `Font.custom(...)` directly in feature code.
+  - **Title / headings (Geist Sans)**: `AppFont.largeTitle`, `AppFont.title`, `AppFont.sectionHeader`, `AppFont.productHeading`. (`sectionHeader` doubles as the button label style — there is no separate `label` case.)
+  - **Body / labels (Geist Sans)**: `AppFont.body`, `AppFont.caption`, `AppFont.muted`.
+  - **Workout numerics (Geist Mono)**: `AppFont.numericDisplay` for fast fatigue-friendly reading; `AppFont.performance` and `AppFont.stepIndicator` for compact numeric rows and step counters; `AppFont.productAction` for primary CTA labels with mono digits.
+- Prefer `AppFont` cases over inline `.font(.geist(...))` / `.font(.geistMono(...))` so typography stays consistent.
+- **Rule**: Never use regular (400) font weight anywhere in the app. The minimum weight is **medium** (500). Geist is bundled in three weights only: Medium, SemiBold, Bold.
 - **Rule**: If text doesn’t help log or understand state, remove or demote it.
 
 ---
 
 ## 4. Layout and structure
 
-- **Cards**: Rounded rectangle (`AppRadius.card` = 20) with iOS continuous corners, padding `AppSpacing.md`. Separation from background is **contrast**, not drop shadows.
+- **Cards**: Rounded rectangle (`AppRadius.card` = 22) with iOS continuous corners, padding `AppSpacing.lg` (24). Separation from background is **contrast** + a 1pt `border` stroke — never drop shadows.
 - **One primary CTA** on high-stress flows: full-width black (accent) button pattern via `AppPrimaryButton` unless a documented exception exists.
 - **Compact controls and buttons**: `AppRadius.md` = 14 with iOS continuous corners.
 - **Spacing**: 4pt grid via `AppSpacing` — consistent section gaps vs. tight in-card grouping.

@@ -88,5 +88,5 @@ struct OnboardingSplitBuilderView: View {
         OnboardingSplitBuilderView(progressStep: 2, progressTotal: 6) { }
             .environment(OnboardingViewModel())
     }
-    .tint(AppColor.systemTint)
+    .tint(AppColor.accent)
 }

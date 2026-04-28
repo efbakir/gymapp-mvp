@@ -14,6 +14,7 @@ struct AddTemplateView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @State private var name = ""
+    @State private var isSaving = false
 
     private var canSave: Bool {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -22,7 +23,7 @@ struct AddTemplateView: View {
     var body: some View {
         NavigationStack {
             AppScreen(
-                primaryButton: PrimaryButtonConfig(label: "Create Day", isEnabled: canSave, action: save),
+                primaryButton: PrimaryButtonConfig(label: "Create Day", isEnabled: canSave, isLoading: isSaving, action: save),
                 customHeader: ProductTopBar(
                     title: "New Day",
                     trailingActions: [
@@ -44,6 +45,9 @@ struct AddTemplateView: View {
     }
 
     private func save() {
+        guard !isSaving else { return }
+        isSaving = true
+
         let template = DayTemplate(
             name: name.trimmingCharacters(in: .whitespacesAndNewlines),
             splitId: split.id

@@ -74,7 +74,7 @@ struct SettingsView: View {
                 }
             }
         }
-        .tint(AppColor.systemTint)
+        .tint(AppColor.accent)
         .confirmationDialog(
             "Start onboarding again?",
             isPresented: $showingRestartConfirmation,

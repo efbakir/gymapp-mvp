@@ -50,10 +50,12 @@
 		UI100000000000000000006 /* AppCopy.swift in Sources */ = {isa = PBXBuildFile; fileRef = UI000000000000000000006 /* AppCopy.swift */; };
 		SUB100000000000000000001 /* StoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = SUB000000000000000000001 /* StoreManager.swift */; };
 		SUB100000000000000000002 /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SUB000000000000000000002 /* PaywallView.swift */; };
-		FT100000000000000000001 /* Inter-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FT000000000000000000001 /* Inter-Regular.ttf */; };
-		FT100000000000000000002 /* Inter-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FT000000000000000000002 /* Inter-Medium.ttf */; };
-		FT100000000000000000003 /* Inter-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FT000000000000000000003 /* Inter-SemiBold.ttf */; };
-		FT100000000000000000004 /* Inter-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FT000000000000000000004 /* Inter-Bold.ttf */; };
+		FT100000000000000000001 /* Geist-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FT000000000000000000001 /* Geist-Medium.ttf */; };
+		FT100000000000000000002 /* Geist-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FT000000000000000000002 /* Geist-SemiBold.ttf */; };
+		FT100000000000000000003 /* Geist-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FT000000000000000000003 /* Geist-Bold.ttf */; };
+		FT100000000000000000004 /* GeistMono-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FT000000000000000000004 /* GeistMono-Medium.ttf */; };
+		FT100000000000000000010 /* GeistMono-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FT000000000000000000010 /* GeistMono-SemiBold.ttf */; };
+		FT100000000000000000011 /* GeistMono-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FT000000000000000000011 /* GeistMono-Bold.ttf */; };
 		WE100000000000000000001 /* RestTimerLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000001 /* RestTimerLiveActivity.swift */; };
 		WE100000000000000000002 /* UnitWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000002 /* UnitWidgetBundle.swift */; };
 		WE100000000000000000003 /* RestTimerAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000010 /* RestTimerAttributes.swift */; };
@@ -133,10 +135,12 @@
 		UI000000000000000000006 /* AppCopy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCopy.swift; sourceTree = "<group>"; };
 		SUB000000000000000000001 /* StoreManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreManager.swift; sourceTree = "<group>"; };
 		SUB000000000000000000002 /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
-		FT000000000000000000001 /* Inter-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Inter-Regular.ttf"; sourceTree = "<group>"; };
-		FT000000000000000000002 /* Inter-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Inter-Medium.ttf"; sourceTree = "<group>"; };
-		FT000000000000000000003 /* Inter-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Inter-SemiBold.ttf"; sourceTree = "<group>"; };
-		FT000000000000000000004 /* Inter-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Inter-Bold.ttf"; sourceTree = "<group>"; };
+		FT000000000000000000001 /* Geist-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Geist-Medium.ttf"; sourceTree = "<group>"; };
+		FT000000000000000000002 /* Geist-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Geist-SemiBold.ttf"; sourceTree = "<group>"; };
+		FT000000000000000000003 /* Geist-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Geist-Bold.ttf"; sourceTree = "<group>"; };
+		FT000000000000000000004 /* GeistMono-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "GeistMono-Medium.ttf"; sourceTree = "<group>"; };
+		FT000000000000000000010 /* GeistMono-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "GeistMono-SemiBold.ttf"; sourceTree = "<group>"; };
+		FT000000000000000000011 /* GeistMono-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "GeistMono-Bold.ttf"; sourceTree = "<group>"; };
 		FT000000000000000000005 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		WE000000000000000000001 /* UnitWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = UnitWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -339,10 +343,12 @@
 		FT200000000000000000001 /* Fonts */ = {
 			isa = PBXGroup;
 			children = (
-				FT000000000000000000001 /* Inter-Regular.ttf */,
-				FT000000000000000000002 /* Inter-Medium.ttf */,
-				FT000000000000000000003 /* Inter-SemiBold.ttf */,
-				FT000000000000000000004 /* Inter-Bold.ttf */,
+				FT000000000000000000001 /* Geist-Medium.ttf */,
+				FT000000000000000000002 /* Geist-SemiBold.ttf */,
+				FT000000000000000000003 /* Geist-Bold.ttf */,
+				FT000000000000000000004 /* GeistMono-Medium.ttf */,
+				FT000000000000000000010 /* GeistMono-SemiBold.ttf */,
+				FT000000000000000000011 /* GeistMono-Bold.ttf */,
 			);
 			path = Fonts;
 			sourceTree = "<group>";
@@ -421,10 +427,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				A1000000000000000000000F /* Assets.xcassets in Resources */,
-				FT100000000000000000001 /* Inter-Regular.ttf in Resources */,
-				FT100000000000000000002 /* Inter-Medium.ttf in Resources */,
-				FT100000000000000000003 /* Inter-SemiBold.ttf in Resources */,
-				FT100000000000000000004 /* Inter-Bold.ttf in Resources */,
+				FT100000000000000000001 /* Geist-Medium.ttf in Resources */,
+				FT100000000000000000002 /* Geist-SemiBold.ttf in Resources */,
+				FT100000000000000000003 /* Geist-Bold.ttf in Resources */,
+				FT100000000000000000004 /* GeistMono-Medium.ttf in Resources */,
+				FT100000000000000000010 /* GeistMono-SemiBold.ttf in Resources */,
+				FT100000000000000000011 /* GeistMono-Bold.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

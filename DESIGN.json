@@ -1,0 +1,221 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-04-28T00:00:00Z",
+  "title": "Design System: Unit",
+  "platform": "ios-swiftui",
+  "platformNote": "Unit is iOS / SwiftUI. The HTML/CSS component snippets below are web approximations of the canonical SwiftUI primitives in Unit/UI/DesignSystem.swift, generated for live-panel rendering only — they are not used by the app.",
+  "extensions": {
+    "colorMeta": {
+      "ink": {
+        "role": "primary",
+        "displayName": "Ink",
+        "canonical": "#0A0A0A",
+        "dark": "#F3F4F6",
+        "tonalRamp": ["#0A0A0A", "#1A1A1A", "#2C2C2C", "#404040", "#595959", "#7A7A7A", "#949494", "#C7C7C7"]
+      },
+      "milk": {
+        "role": "neutral",
+        "displayName": "Milk",
+        "canonical": "#F5F5F5",
+        "dark": "#0E0F12",
+        "tonalRamp": ["#0E0F12", "#1D2026", "#2C313A", "#595959", "#949494", "#C7C7C7", "#E5E5E5", "#F5F5F5"]
+      },
+      "bond": {
+        "role": "neutral",
+        "displayName": "Bond",
+        "canonical": "#FFFFFF",
+        "dark": "#1D2026",
+        "tonalRamp": ["#1D2026", "#2C313A", "#3F4550", "#595959", "#949494", "#D4D4D4", "#F5F5F5", "#FFFFFF"]
+      },
+      "pumice": {
+        "role": "neutral",
+        "displayName": "Pumice",
+        "canonical": "#E8E8E8",
+        "dark": "#2C313A",
+        "tonalRamp": ["#2C313A", "#3F4550", "#595959", "#7A7A7A", "#949494", "#C7C7C7", "#E0E0E0", "#E8E8E8"]
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#E5E5E5",
+        "dark": "#373C47",
+        "tonalRamp": ["#373C47", "#4A4F5A", "#5C616B", "#7A7F88", "#949CA5", "#B5BBC2", "#D4D8DC", "#E5E5E5"]
+      },
+      "ash": {
+        "role": "neutral",
+        "displayName": "Ash",
+        "canonical": "#595959",
+        "dark": "#B3B8C2",
+        "tonalRamp": ["#1A1A1A", "#2C2C2C", "#404040", "#595959", "#7A7A7A", "#949494", "#B5B5B5", "#D4D4D4"]
+      },
+      "mist": {
+        "role": "neutral",
+        "displayName": "Mist",
+        "canonical": "#949494",
+        "dark": "#7A808C",
+        "tonalRamp": ["#404040", "#595959", "#6E6E6E", "#7A7A7A", "#949494", "#B5B5B5", "#D4D4D4", "#EAEAEA"]
+      },
+      "chalk": {
+        "role": "neutral",
+        "displayName": "Chalk",
+        "canonical": "#F6F6F6",
+        "dark": "#111317",
+        "tonalRamp": ["#111317", "#1D2026", "#2C313A", "#595959", "#949494", "#C7C7C7", "#E5E5E5", "#F6F6F6"]
+      },
+      "spark": {
+        "role": "off-system",
+        "displayName": "Spark",
+        "displayNote": "Splash screen only. Forbidden in app shell.",
+        "canonical": "#FF4400",
+        "dark": "#FF5A1F",
+        "tonalRamp": ["#3D1000", "#5C1800", "#7A2000", "#A52C00", "#CC3500", "#FF4400", "#FF7A40", "#FFBFA1"]
+      },
+      "verde": {
+        "role": "system-success",
+        "displayName": "Verde",
+        "canonical": "#34C759",
+        "dark": "#30D158",
+        "tonalRamp": ["#0F3D1B", "#185C2A", "#1F7A38", "#2A9E48", "#34C759", "#5FD37C", "#90E2A6", "#C8F1D5"]
+      },
+      "amber": {
+        "role": "system-warning",
+        "displayName": "Amber",
+        "canonical": "#FF9500",
+        "dark": "#FF9F0A",
+        "tonalRamp": ["#3D2300", "#5C3500", "#7A4700", "#A55F00", "#CC7700", "#FF9500", "#FFB347", "#FFD9A1"]
+      },
+      "signal": {
+        "role": "system-error",
+        "displayName": "Signal",
+        "canonical": "#FF3B30",
+        "dark": "#FF453A",
+        "tonalRamp": ["#3D0E0B", "#5C1611", "#7A1D17", "#A52720", "#CC3028", "#FF3B30", "#FF7A72", "#FFBFB9"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Splash titles and rare hero numerics. Earns its size by carrying the moment." },
+      "headline": { "displayName": "Headline", "purpose": "Screen-level large titles. One per screen, top of scroll." },
+      "title": { "displayName": "Title", "purpose": "ProductTopBar headings, exercise names on workout cards." },
+      "body": { "displayName": "Body", "purpose": "Default reading copy. List rows, descriptions, paragraph text." },
+      "label": { "displayName": "Label", "purpose": "Button labels, primary control text. Heavier than body so CTAs have authority." },
+      "caption": { "displayName": "Caption", "purpose": "Secondary metadata, helper text, timer subtitles." },
+      "numeric": { "displayName": "Numeric", "purpose": "Weights, reps, rest-timer countdown. Monospaced digits so columns align at every Dynamic Type size. The workout signature." }
+    },
+    "shadows": [],
+    "shadowsNote": "Unit is a flat system by doctrine. Cards lift off the page through fill contrast (Bond #FFFFFF on Milk #F5F5F5, a 6.25% lightness step). The Flat-By-Default Rule is non-negotiable.",
+    "motion": [],
+    "motionNote": "No motion tokens defined. State changes use SwiftUI default animations. Reduced Motion is honored via accessibilityReduceMotion — cross-fades and opacity only.",
+    "breakpoints": [],
+    "breakpointsNote": "iOS portrait only. Mobile-locked at 430pt max width. No landscape, no responsive web breakpoints."
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single Ink-black CTA. One per stress screen, full-width, 60pt tall.",
+      "html": "<button class=\"ds-btn-primary\">Done</button>",
+      "css": ".ds-btn-primary { background: #0A0A0A; color: #F6F6F6; font-family: 'SF Pro Rounded', -apple-system, system-ui, sans-serif; font-size: 17px; font-weight: 600; line-height: 1.25; padding: 16px 24px; min-height: 60px; border: none; border-radius: 14px; cursor: pointer; transition: opacity 0.15s ease-out, transform 0.15s ease-out; } .ds-btn-primary:hover { opacity: 0.92; } .ds-btn-primary:active { transform: scale(0.98); } .ds-btn-primary:disabled { background: #E8E8E8; color: #949494; cursor: not-allowed; transform: none; opacity: 1; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Pumice-fill secondary action. Used when a screen has more than one action and the second is genuinely secondary.",
+      "html": "<button class=\"ds-btn-secondary\">Cancel</button>",
+      "css": ".ds-btn-secondary { background: #E8E8E8; color: #0A0A0A; font-family: 'SF Pro Rounded', -apple-system, system-ui, sans-serif; font-size: 17px; font-weight: 600; line-height: 1.25; padding: 16px 24px; min-height: 60px; border: none; border-radius: 14px; cursor: pointer; transition: background 0.15s ease-out; } .ds-btn-secondary:hover { background: #DDDDDD; } .ds-btn-secondary:active { background: #D4D4D4; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Text-only trigger for 'Add X' actions inside cards. The accentSoft Secondary tone is banned for this purpose; this is its job.",
+      "html": "<button class=\"ds-btn-ghost\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M8 3v10M3 8h10\" stroke=\"#0A0A0A\" stroke-width=\"2\" stroke-linecap=\"round\"/></svg><span>Add exercise</span></button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; gap: 8px; background: transparent; color: #0A0A0A; font-family: 'SF Pro Rounded', -apple-system, system-ui, sans-serif; font-size: 17px; font-weight: 600; line-height: 1.25; padding: 16px 24px; min-height: 60px; border: none; border-radius: 14px; cursor: pointer; transition: opacity 0.15s ease-out; } .ds-btn-ghost:hover { opacity: 0.7; }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Bond-white surface on a Milk page. Separation through fill contrast — never shadow.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-title\">Bench Press</div><div class=\"ds-card-numeric\">100 kg × 5</div><button class=\"ds-card-cta\">Done</button></div>",
+      "css": ".ds-card { background: #FFFFFF; border-radius: 22px; padding: 24px; display: flex; flex-direction: column; gap: 24px; max-width: 360px; } .ds-card-title { font-family: 'SF Pro Rounded', -apple-system, system-ui, sans-serif; font-size: 24px; font-weight: 600; line-height: 1.2; letter-spacing: -0.3px; color: #0A0A0A; } .ds-card-numeric { font-family: 'SF Pro Rounded', -apple-system, system-ui, sans-serif; font-size: 36px; font-weight: 700; line-height: 1; letter-spacing: -0.6px; color: #0A0A0A; font-variant-numeric: tabular-nums; } .ds-card-cta { background: #0A0A0A; color: #F6F6F6; font-family: 'SF Pro Rounded', -apple-system, system-ui, sans-serif; font-size: 17px; font-weight: 600; padding: 16px 24px; min-height: 60px; border: none; border-radius: 14px; cursor: pointer; }"
+    },
+    {
+      "name": "Card Row Recess",
+      "kind": "custom",
+      "refersTo": "card-row",
+      "description": "The signature recess pattern. A Milk row inset into a Bond card with 10px radius and 8px padding. The single canonical row-on-card recipe.",
+      "html": "<div class=\"ds-card ds-card--row-demo\"><div class=\"ds-card-row\"><span class=\"ds-card-row-label\">Set 1</span><span class=\"ds-card-row-value\">100 kg × 5</span></div><div class=\"ds-card-row\"><span class=\"ds-card-row-label\">Set 2</span><span class=\"ds-card-row-value\">100 kg × 5</span></div></div>",
+      "css": ".ds-card--row-demo { background: #FFFFFF; border-radius: 22px; padding: 24px; display: flex; flex-direction: column; gap: 8px; max-width: 320px; } .ds-card-row { background: #F5F5F5; border-radius: 10px; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; min-height: 36px; } .ds-card-row-label { font-family: 'SF Pro Rounded', -apple-system, system-ui, sans-serif; font-size: 15px; font-weight: 500; color: #595959; } .ds-card-row-value { font-family: 'SF Pro Rounded', -apple-system, system-ui, sans-serif; font-size: 17px; font-weight: 600; color: #0A0A0A; font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "List Row",
+      "kind": "card",
+      "refersTo": "list-row",
+      "description": "Row inside AppCardList. 52pt minimum height, 24px horizontal padding, separated by Hairline divider.",
+      "html": "<div class=\"ds-list-card\"><div class=\"ds-list-row\"><span class=\"ds-list-row-title\">Bench Press</span><span class=\"ds-list-row-meta\">3 × 5</span></div><div class=\"ds-list-divider\"></div><div class=\"ds-list-row\"><span class=\"ds-list-row-title\">Overhead Press</span><span class=\"ds-list-row-meta\">3 × 5</span></div><div class=\"ds-list-divider\"></div><div class=\"ds-list-row\"><span class=\"ds-list-row-title\">Barbell Row</span><span class=\"ds-list-row-meta\">3 × 8</span></div></div>",
+      "css": ".ds-list-card { background: #FFFFFF; border-radius: 22px; padding: 8px 0; max-width: 360px; } .ds-list-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 24px; min-height: 52px; } .ds-list-row-title { font-family: 'SF Pro Rounded', -apple-system, system-ui, sans-serif; font-size: 17px; font-weight: 500; color: #0A0A0A; } .ds-list-row-meta { font-family: 'SF Pro Rounded', -apple-system, system-ui, sans-serif; font-size: 15px; font-weight: 500; color: #595959; font-variant-numeric: tabular-nums; } .ds-list-divider { height: 1px; background: rgba(229, 229, 229, 0.55); margin: 0 24px; }"
+    },
+    {
+      "name": "Stepper",
+      "kind": "input",
+      "refersTo": "stepper",
+      "description": "The fundamental tweak-a-number control. Pumice capsule with 44×44pt minimum tap targets on each side.",
+      "html": "<div class=\"ds-stepper\"><button class=\"ds-stepper-btn\" aria-label=\"Decrease\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 14 14\" fill=\"none\"><path d=\"M3 7h8\" stroke=\"#0A0A0A\" stroke-width=\"2\" stroke-linecap=\"round\"/></svg></button><span class=\"ds-stepper-value\">100</span><button class=\"ds-stepper-btn\" aria-label=\"Increase\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 14 14\" fill=\"none\"><path d=\"M7 3v8M3 7h8\" stroke=\"#0A0A0A\" stroke-width=\"2\" stroke-linecap=\"round\"/></svg></button></div>",
+      "css": ".ds-stepper { display: inline-flex; align-items: center; background: #E8E8E8; border-radius: 14px; padding: 4px 8px; min-height: 44px; } .ds-stepper-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; background: transparent; border: none; cursor: pointer; transition: opacity 0.15s ease-out; } .ds-stepper-btn:hover { opacity: 0.6; } .ds-stepper-value { min-width: 60px; text-align: center; font-family: 'SF Pro Rounded', -apple-system, system-ui, sans-serif; font-size: 17px; font-weight: 600; color: #0A0A0A; font-variant-numeric: tabular-nums; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Lab Notebook",
+    "overview": "Unit is the gym notebook a serious lifter has been writing in for a year — quiet, page-like, and trusted because it never gets in the way. The visual system is built around a single belief: under fatigue, the only things that should compete for the eye are the numbers the lifter is reading and the one button they need to press next. Everything else recedes into milk-grey paper and bond-white cards. The aesthetic is iron and paper: solid Ink (#0A0A0A) accents on Bond (#FFFFFF) cards floating on a Milk (#F5F5F5) page. There is no glow, no gradient, no decorative motion in the hot loop. Cards separate from the page through fill contrast, never through drop shadows. Numerics use monospaced digits and dominate visual hierarchy — weight, reps, and timers are the loudest elements on every screen because they are the data the lifter is actually reading mid-set. This system explicitly rejects the visual category of fitness tracker software. It is not a Strong/Hevy/Jefit spreadsheet, not a Strava feed, not a Whoop dashboard. There are no neon data viz arcs, no gradient hero metrics, no recovery rings, no badge animations, no stock-photo athletes. If a pixel doesn't help log faster or read state more clearly under fatigue, it does not belong.",
+    "keyCharacteristics": [
+      "Light-first, system-honoring (light mode is the design baseline; dark adapts via system trait, never drives decisions)",
+      "Flat by doctrine — separation through fill contrast, never shadows",
+      "Numerics-first hierarchy (monospaced digits at display size dominate every workout screen)",
+      "One Ink-black primary CTA per stress screen, full-width, 60pt tall",
+      "Surface area kept small: 12 colors, 7 type roles, 4 radii, 8 spacing steps — and growing them requires a Gym Test justification"
+    ],
+    "rules": [
+      { "name": "The One Ink Rule", "body": "Ink is reserved for the single primary action on a stress screen. If a screen has two Ink-filled buttons, one of them is wrong. Secondary actions take Pumice. Tertiary actions take Ghost (text-only, no fill).", "section": "colors" },
+      { "name": "The Flat-By-Default Rule", "body": "Cards never carry a drop shadow. Separation between Milk page and Bond card is the 6.25% lightness step and nothing more. If a card needs more weight, the card is in the wrong place — not under-shadowed.", "section": "elevation" },
+      { "name": "The Spark-Is-Splash Rule", "body": "#FF4400 orange is permitted in the splash screen and nowhere else. It is the legacy of a previous brand decision, retained for launch identity, banned everywhere downstream.", "section": "colors" },
+      { "name": "The Soft-Pair Rule", "body": "Verde / Amber / Signal never carry state alone. They always pair with an icon or a text label. Color blindness is the test, not the exception.", "section": "colors" },
+      { "name": "The Medium-Floor Rule", "body": "No text in the system uses regular (400) weight. The minimum is medium (500). At gym lighting and one-handed glance distance, regular weight goes mushy; medium reads at the same speed as bold without the heaviness.", "section": "typography" },
+      { "name": "The Numerics-First Rule", "body": "On any workout screen, the largest and heaviest element is a number — never a label, never an exercise name, never an icon. If something else is winning the visual hierarchy on a logging screen, the screen is wrong.", "section": "typography" },
+      { "name": "The No-Decoration Rule", "body": "No gradient text. No background-clip: text. No letter-spaced uppercase decoration. Type carries weight through size and weight contrast alone.", "section": "typography" },
+      { "name": "The Soft-Edge Rule", "body": "Content scrolling behind a fixed bar fades through the canonical appScrollEdgeSoft(top:bottom:) modifier — never a hand-rolled LinearGradient or .mask. This is the only legitimate elevation technique in the system, and there is exactly one implementation of it.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do use Ink (#0A0A0A) as the single primary CTA color, and exactly one Ink CTA per stress screen.",
+      "Do separate Bond (#FFFFFF) cards from the Milk (#F5F5F5) page through fill contrast alone — never with a drop shadow.",
+      "Do use monospaced-digit numerics (AppFont.numericDisplay / numericLarge) for every weight, rep count, and timer value, so columns align at every Dynamic Type size.",
+      "Do use AppCardList(data) { row } for any list-inside-a-card pattern. It bakes the canonical 8pt vertical / 24pt horizontal inset recipe.",
+      "Do use appScrollEdgeSoft(top:bottom:) whenever content scrolls behind a fixed bar.",
+      "Do use the cardRowFill recess recipe (Milk fill + 10px radius + 8px padding) for any nested element inside a Bond card.",
+      "Do keep AppRadius concentric — a 14px button inside a 22px card with 8px padding (22 − 8 = 14).",
+      "Do pair Verde / Amber / Signal with an icon or label every time. Color is never the only carrier of state.",
+      "Do keep touch targets ≥ 44×44pt everywhere. The Gym Test (one-handed, sweaty, fatigued) is the floor, not the ceiling.",
+      "Do honor accessibilityReduceMotion — cross-fades and opacity only, no parallax or elastic."
+    ],
+    "donts": [
+      "Don't introduce a parallel LinearGradient or .mask for scroll-edge fades — appScrollEdgeSoft is the single canonical implementation.",
+      "Don't invent a new struct X: View / ViewModifier / variant when the existing canonical primitive in DesignSystem.swift covers ~80% of the case. Extend the canonical with style: / variant: / tone: instead. Parallel implementations are the worst drift in the system.",
+      "Don't use chevron.right / chevron.forward anywhere. The system has no row-disclosure chevrons by doctrine.",
+      "Don't use raw Divider(). Use AppDivider (Hairline at 55% opacity).",
+      "Don't apply .weight(.semibold/.bold/.heavy) to ToolbarItem buttons. Toolbar chrome defers to iOS-native.",
+      "Don't put ScrollView or AppCard as the root child of .sheet { }. Sheet roots are plain VStack.",
+      "Don't use Spark orange (#FF4400) anywhere outside the splash screen. The accent is Ink.",
+      "Don't use regular (400) font weight. The medium-floor is non-negotiable.",
+      "Don't use a side-stripe border (border-left > 1px as a colored accent) on any card or row. Forbidden universally.",
+      "Don't use gradient text or background-clip: text for emphasis. Use weight or size.",
+      "Don't ship per-row shadowed cards stacked vertically. A list is one card with N rows, never N cards.",
+      "Don't show '0 kg' for bodyweight exercises. Show 'BW'. Don't use – or — placeholder copy.",
+      "Don't build a target-vs-actual weight column UI. Ghost values only.",
+      "Don't copy the Strong/Hevy/Jefit spreadsheet aesthetic — parallel target/actual columns, dense numeric rows, busy timer chrome. The whole 'gym tracker app' visual category is the trap.",
+      "Don't copy Strava / Nike Training Club patterns — feeds, badges, friend activity, share prompts, motivational hero copy, lifestyle photography of athletes mid-jump.",
+      "Don't copy Whoop / Oura aesthetics — dark dashboards, neon data viz arcs, gradient hero metrics, recovery rings, sleep-score chrome. Unit is not a wellness product; it is a working tool.",
+      "Don't add SaaS landing-page clichés to the marketing surface — stock-photo athletes, 'transform your training' hero copy, three-icon feature grids, pricing tiers above the fold."
+    ]
+  }
+}

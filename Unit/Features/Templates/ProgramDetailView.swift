@@ -78,7 +78,7 @@ struct ProgramDetailView: View {
         } message: {
             Text("Today and your schedule will switch to this program's routines.")
         }
-        .tint(AppColor.systemTint)
+        .tint(AppColor.accent)
     }
 
     // MARK: - Routine Days

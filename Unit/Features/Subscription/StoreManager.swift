@@ -92,7 +92,10 @@ final class StoreManager {
     @MainActor
     func purchase(tier: Tier) async {
         guard let product = product(for: tier) else { return }
+        guard !isLoading else { return }
         purchaseError = nil
+        isLoading = true
+        defer { isLoading = false }
 
         do {
             let result = try await product.purchase()
@@ -118,6 +121,9 @@ final class StoreManager {
 
     @MainActor
     func restore() async {
+        guard !isLoading else { return }
+        isLoading = true
+        defer { isLoading = false }
         do {
             try await AppStore.sync()
             await checkEntitlement()
