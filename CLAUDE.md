@@ -1,296 +1,184 @@
 # Unit — Claude Code context
 
-> This file is the session-level **intent document**. Read it, internalize it, then act.
+> Session-level **intent document**. Read it, internalize it, then act.
 > Framework: centralize intent → distribute execution → feedback loop. You get the *why*; decide the *how* within these fences.
-> If a request in this session conflicts with anything here, **pause and push back before executing**. That is the job.
+> If a request conflicts with anything here, **pause and push back before executing**. That is the job.
+
+This file is intentionally tight. Detail spills into:
+- [`docs/claude/scope.md`](docs/claude/scope.md) — full v1 ships / does-not-ship list, push-back phrasing, deleted files
+- [`docs/claude/design-system.md`](docs/claude/design-system.md) — full banned-list with rationale, parallel-implementation ban examples, full gatekeeper checklist
+- [`docs/claude/harness.md`](docs/claude/harness.md) — full hook pattern list, skills, audit mode, order of operations
+
+Other source-of-truth docs: `docs/product-compass.md`, `docs/goals.md`, `AGENTS.md`, `docs/atomic-design-system.md`, `docs/visual-language.md`, `docs/references/`.
 
 ---
 
-## 1. North star (one sentence)
+## North star
 
 **Unit is a zero-friction gym logger. Every decision is judged by *seconds per set logged under fatigue*. Everything else is secondary.**
 
-Non-negotiables that flow from this:
 - **Gym Test**: one-handed, sweaty, ≤ 3 seconds to log a set.
 - **Ghost values** (pre-fill from last session) are the primary logging mechanism.
 - **Templates** are the program unit — not cycles, not weeks, not engines.
 - **Local-first, light-first, quiet UI.** No social, no feeds, no recommendations.
 
-Source of truth docs: `docs/product-compass.md`, `docs/goals.md`, `AGENTS.md`, `DESIGN_SYSTEM.md`, `docs/atomic-design-system.md`, `docs/visual-language.md`, `docs/references/` (visual taste anchors).
-
 ---
 
-## 2. Push-back mandate (read this before accepting any task)
-
-The user has explicitly said: *"you should be better than me here — I should not repeat myself every prompt."* Translation: **drift prevention is your job, not theirs.**
-
-When the user asks for something that violates this file — push back **before** writing code. Cite the rule. Offer the in-scope alternative. Do not silently comply and let the app grow messier.
-
-### MVP scope — authoritative sources (cite these when pushing back)
-
-1. **`docs/goals.md` §v1 scope boundaries** — the Ships / Does not ship list. Highest-specificity MVP reference.
-2. **`docs/product-compass.md` §Pillars (MVP boundary row) + §Decision log (2026-03-26 entries)** — the *why* behind each boundary.
-3. **`CLAUDE.md` §4** (this file) — banned-list quick reference.
-
-### MVP v1 scope (pinned inline so pushback doesn't require a file fetch)
-
-**Ships in v1** (`docs/goals.md`):
-- Template-based logging with ghost values
-- Three onboarding paths: text-paste, redo-from-history, manual builder
-- Auto rest timer with Lock Screen / Dynamic Island
-- History view (list + calendar)
-- Exercise library (search + custom exercise creation)
-- Haptic confirmation on set logged
-- PR detection + notification
-
-**Does not ship in v1** (`docs/goals.md` + compass decisions):
-- `ProgressionEngine` (auto-increment, fail modes, deload)
-- CloudKit sync
-- Social features (feed, profiles, sharing)
-- Exercise discovery / recommendation
-- Subscription paywall on core logging
-- 8-week cycles as primary container; "Week N of M" UI
-- Day-N rigid numbering; target-vs-actual weight UI
-- Plate calculator; conditioning days; pricing component on landing
-
-### Push back on (non-exhaustive)
-
-- Anything on the "Does not ship" list above or §4 banned-list
-- Net-new components when an existing atom/molecule/organism would do (§5)
-- Dark-mode-first visual decisions
-- Anything that adds taps, modals, or reading time to the Active Workout flow
-- Adding tokens/variants/radii/weights when simplification would do
-
-### Phrasing template
-
-*"Before I do this — it conflicts with [rule] in [file:section]. The in-scope way to solve your underlying problem is [Y]. Want me to do Y instead, or is this an explicit override of the MVP boundary?"*
-
-If the user explicitly overrides ("yes, do it anyway / ignore the rule"), proceed — and note the override in your response so the deviation is visible, not silent.
-
----
-
-## 3. Session-start checklist (before the first Edit/Write)
+## §1. Session-start checklist (before the first Edit/Write)
 
 1. Read this file to the end.
 2. If the task involves UI, product direction, or scope: skim `docs/product-compass.md` §Pillars + §Decision log **and** `docs/goals.md` §v1 scope boundaries.
-3. If the task involves any visual/component change: skim `docs/atomic-design-system.md` and open `Unit/UI/DesignSystem.swift` to see what atoms/molecules already exist. Reuse > extend > create.
-4. If the task is non-trivial UI (new screen, layout change, card design, list pattern, empty state): list `docs/references/ios-screens/` and `docs/references/details/`. Pick the closest anchor and name it. If no reference fits, ask the user before inventing visual decisions. (See `docs/references/README.md`.)
-5. State out loud (one line) which docs **and which references** you consulted, and what constraint applies. Then proceed.
+3. If the task involves any visual/component change: skim `docs/atomic-design-system.md` and open `Unit/UI/DesignSystem.swift`. Reuse > extend > create.
+4. If the task is non-trivial UI: list `docs/references/ios-screens/` and `docs/references/details/`. Pick the closest anchor. If none fits, ask the user before inventing.
+5. State out loud (one line) which docs and references you consulted, then proceed.
 
 ---
 
-## 4. Scope fence — banned from v1 (do not resurrect, do not propose)
+## §2. Push-back mandate
+
+The user has said: *"you should be better than me here — I should not repeat myself every prompt."* Translation: **drift prevention is your job, not theirs.**
+
+When a request violates this file — push back **before** writing code. Cite the rule. Offer the in-scope alternative. Do not silently comply.
+
+Phrasing: *"Before I do this — it conflicts with [rule] in [file:section]. The in-scope way to solve your underlying problem is [Y]. Want me to do Y instead, or is this an explicit override?"*
+
+If the user explicitly overrides, proceed — and note the override in your response so the deviation is visible. Full phrasing template, ships/does-not-ship list, and per-banned-item alternatives are in [`docs/claude/scope.md`](docs/claude/scope.md).
+
+---
+
+## §3. Scope fence — banned from v1
 
 Per compass decision 2026-03-26, these are **removed** or **deferred**. Claude keeps trying to re-add them. Stop.
 
-| Banned | Why | If user asks |
-|---|---|---|
-| `ProgressionEngine`, auto-increment, deload rules | Deferred post-v1 (compass 2026-03-26). Deleted from main UI. | Offer ghost-value history as the in-scope alternative. |
-| 8-week cycles, `Cycle`, `WeekDetailView`, "Week N of M" | Demoted to optional layer. Templates replace cycles. | Use template-based flow. |
-| "Day N ·" rigid numbering prefixes | Banned (audit-prompt). Use template/routine names. | Use the template name. |
-| Target-vs-actual weight UI in active workout | Banned. Ghost values only. | Ghost value prefill. |
-| Plate calculator | Explicitly skipped. | Decline. |
-| Social / sharing / feeds / community | Anti-persona. Compass §User segment. | Decline. |
-| Exercise discovery / recommendation | Athletes choose their own exercises. | Decline. |
-| Pricing component on landing | Removed. | Decline. |
-| Conditioning days in imported programs | Filter out. | Filter on import. |
-| CloudKit sync | Post-v1. | Local-first only. |
-| Paywall on core logging | Core logging is free. | Paywall only on non-core features. |
+| Banned | Why |
+|---|---|
+| `ProgressionEngine`, auto-increment, deload rules | Deferred post-v1. |
+| 8-week cycles, `Cycle`, `WeekDetailView`, "Week N of M" | Templates replace cycles. |
+| "Day N ·" rigid numbering prefixes | Use template/routine names. |
+| Target-vs-actual weight UI | Ghost values only. |
+| Plate calculator | Skipped. |
+| Social / feeds / sharing / community | Anti-persona. |
+| Exercise discovery / recommendation | Athletes choose their own. |
+| Pricing component on landing | Removed. |
+| Conditioning days in imported programs | Filter on import. |
+| CloudKit sync | Post-v1. Local-first only. |
+| Paywall on core logging | Core logging is free. |
 
-Files deleted from repo (see `git status` — don't recreate): `Unit/Engine/ProgressionEngine.swift`, `Unit/Features/Cycles/*`, `Unit/Models/Cycle.swift`, `Unit/Models/ProgressionRule*.swift`, `Unit/Features/Onboarding/OnboardingCycleStartView.swift`, `Unit/Features/Onboarding/OnboardingProgressionView.swift`.
+Files deleted from repo (don't recreate): see [`docs/claude/scope.md`](docs/claude/scope.md).
 
 ---
 
-## 5. Design system — hard rules
+## §4. Design system — hard rules
 
-### The 5 principles (apply to every UI decision)
+### The 5 principles
 
-1. **Keep it simple.** Default to removing, not adding. Fewer tokens, fewer variants, fewer words, fewer screens. If a change grows the system, justify it out loud before shipping. (See §8 for the simplification bias.)
-2. **Reuse components. Do not create new ones.** Before writing any new `View`, grep `Unit/UI/DesignSystem.swift` and the existing molecules/organisms. If something ~80% fits — use it or extend it. Duplicates are worse than imperfect reuse. *Creating a parallel component is an explicit decision that requires the user's okay.*
-3. **Light mode only.** The app is light-mode only. No dark-mode styling, no `.preferredColorScheme(.dark)`, no dark-first visual decisions. Tokens may have dark values for system compatibility, but visual review and screenshots happen in light mode.
-4. **Portrait only.** The app does not rotate. Landscape is not supported. Never design for or test in landscape. If you touch orientation config, keep it locked to portrait.
-5. **Gatekeeper every UI change.** Before Edit/Write on any `.swift` view file, run the checklist below. Fail-closed: if a gate fails, fix it before proceeding or flag it to the user.
+1. **Keep it simple.** Default to removing. Fewer tokens, variants, words, screens.
+2. **Reuse components.** Grep `Unit/UI/DesignSystem.swift` first. ~80% fit → use or extend. *New primitives require explicit user okay.*
+3. **Light mode only.** No `.preferredColorScheme(.dark)`, no dark-first decisions.
+4. **Portrait only.** No landscape support.
+5. **Gatekeeper every UI change.** Run the inline checklist below. Fail-closed.
 
 ### Parallel-implementation ban (the #1 current drift)
 
-The most frequent recent failure mode: Claude **invents a new struct / helper / modifier / variant when extending the existing canonical one would do.** This is worse than any hex literal, because it bakes drift into the design system itself.
+Claude **invents a new struct / helper / modifier / variant when extending the existing canonical one would do.** This is worse than any hex literal — it bakes drift into the design system itself.
 
-Concrete violations from recent sessions (do not repeat):
-- Created `AppStackedCardList` instead of extending `AppDividedList` with a `style:` param.
-- Kept an `appScrollEdgeSoftTop(enabled:)` helper using `.automatic` when the only correct value is `.soft` and both edges should be covered — canonical is `appScrollEdgeSoft(top:bottom:)`.
-- Added `.font(...).weight(.semibold)` on `TodayView` toolbar buttons while every other view used iOS-native default weight.
-- Reached for `AppSecondaryButton(tone: .accentSoft, icon: .add)` where `AppGhostButton` was the right atom.
-- Wrapped `.sheet` content in `ScrollView { AppCard { ... } }` — sheets already provide chrome.
-- Fixed a LinearGradient fade inline on a screen when the canonical `appScrollEdgeSoft` already existed.
+- **Default: extend > create.** Before any new `struct X: View` / `ViewModifier` / variant in `DesignSystem.swift`, grep for the closest primitive. Cover ~80% → extend with `style:` / `variant:` / `tone:`. Otherwise justify in one sentence.
+- **One canonical modifier per concern.** `appScrollEdgeSoft(top:bottom:)` for fades behind bars. `AppCardList(data) { row }` for lists in cards. `AppGhostButton` for "Add X" triggers. Never fork.
+- **Fix the canonical, migrate callers, don't create a parallel.**
+- **Toolbar chrome defers to iOS-native.** No `.weight(...)` on `ToolbarItem` buttons.
+- **Sheet roots are plain `VStack`.** No `ScrollView` / `AppCard` wrapper inside `.sheet { }`.
 
-Rules:
-1. **Default: extend > create.** Before declaring any new `struct X: View` (or new `ViewModifier`, or new variant token) in `Unit/UI/DesignSystem.swift`, grep the file for the closest existing primitive. If one covers ~80%, extend it with a `style:` / `variant:` / `tone:` param. If you still want to create a new one, state the justification in one sentence. *No silent new primitives.*
-2. **One canonical modifier per concern.** `scrollEdgeEffectStyle` lives behind `appScrollEdgeSoft(top:bottom:)`. Fades behind bars live behind the same modifier. Never add a parallel `LinearGradient` mask to a `Features/**/*.swift` view to achieve the same effect.
-3. **Fix the canonical, migrate callers, don't fork.** If the canonical helper is wrong, update it and its callers in the same change. Do not leave the old one limping while the new one ships.
-4. **Toolbar chrome defers to iOS-native.** No `.weight(.semibold/.bold/.heavy)` on `ToolbarItem` buttons unless every toolbar in the app uses the same weight. Prefer iOS default.
-5. **Sheet roots are plain `VStack`.** `.sheet { }` content does not need its own `ScrollView` + `AppCard` wrapper. Sheets have chrome.
-
-Cross-reference with the canonical-modifiers memory: `feedback_unit_scroll_edge_soft.md`.
+Concrete recent violations + full rules: [`docs/claude/design-system.md`](docs/claude/design-system.md).
 
 ### Gatekeeper checklist (run before every UI Edit/Write)
 
-- [ ] I opened `Unit/UI/DesignSystem.swift` and checked whether an existing atom/molecule/organism already fits. (Principle 2)
-- [ ] **For any non-trivial UI change, I named the visual anchor from `docs/references/`** (which file in `ios-screens/` or `details/` this change borrows rhythm/hierarchy/density from). If no reference fits, I asked the user before inventing. (See `docs/references/README.md`.)
-- [ ] **If this change introduces a new component / UI pattern / behavior not already in the design system, I cited a source of truth before the diff** — repo first (`docs/product-compass.md`, `docs/atomic-design-system.md`, `docs/visual-language.md`, `AGENTS.md`, `Unit/UI/DesignSystem.swift`), web second (Apple HIG, lawsofux, NN/g, growth.design). If neither covers it, I asked the user before proceeding. (See `feedback_unit_research_before_new_patterns.md`)
-- [ ] **I am not adding a new `struct X: View` or new `ViewModifier` without a one-line justification of why extending the nearest primitive wouldn't work.** (Parallel-ban rule 1)
-- [ ] **I am not adding a parallel `LinearGradient` / `.mask` / `.scrollEdgeEffectStyle(.automatic, ...)` when `appScrollEdgeSoft(...)` is the canonical modifier.** (Parallel-ban rule 2)
-- [ ] The change introduces no new raw colors, fonts, spacings, or radii — only tokens. (§Banned below)
-- [ ] The change adds no net-new component without the user's explicit okay. (Principle 2)
-- [ ] The change is light-mode correct. No dark-mode-first decisions. (Principle 3)
-- [ ] The change does not assume landscape or rotated layout. (Principle 4)
-- [ ] If this is a bug fix, I confirmed whether the bug is at the atom/molecule layer. **If yes, I fix only `DesignSystem.swift` — not also the feature file.** (§6)
-- [ ] If I edited a `ToolbarItem` button, I did not add `.weight(...)` unless I'm changing the convention app-wide in the same turn.
-- [ ] If I edited `.sheet { }` content, the root is a plain `VStack` (no `ScrollView` / `AppCard` wrapper). Use `presentationDetents` for height.
-- [ ] The screen is wrapped in `AppScreen`. All CTAs use `AppPrimaryButton`. Cards use `AppCard` / `appCardStyle()`. No `chevron.right`. No `Divider()` where `AppDivider` applies.
-- [ ] Touch targets ≥ 44×44pt. No regular font weight. No orange `#FF4400` (accent is `0x0A0A0A`).
-- [ ] Copy is explicit, not a `–` / `—` placeholder. Bodyweight shows "BW", not "0 kg".
-- [ ] No `ProcessInfo.processInfo.environment["UNIT_*"]` / `UNIT_START_TAB` / `UNIT_AUTO_OPEN` screenshot-scaffolding left in `ContentView.swift` or any `Features/**/*.swift`. Revert temp scaffolding before turn end.
+- [ ] I checked `Unit/UI/DesignSystem.swift` for an existing primitive that fits.
+- [ ] For non-trivial UI I named the visual anchor from `docs/references/`. If none fits, I asked first.
+- [ ] If introducing a new component / pattern not in the DS, I cited a source of truth (repo first, web second). If neither covers it, I asked.
+- [ ] No new `struct X: View` / `ViewModifier` without a one-line justification.
+- [ ] No parallel `LinearGradient` / `.mask` / `.scrollEdgeEffectStyle(.automatic, ...)` where `appScrollEdgeSoft(...)` exists.
+- [ ] No new raw colors, fonts, spacings, or radii — only tokens.
+- [ ] Light-mode correct. No landscape assumptions.
+- [ ] Bug fix: confirmed whether the bug is at the atom/molecule layer. If yes, fix only `DesignSystem.swift`.
+- [ ] `ToolbarItem` button has no `.weight(...)`.
+- [ ] `.sheet { }` root is a plain `VStack` with `presentationDetents`.
+- [ ] Screen wrapped in `AppScreen`. CTAs use `AppPrimaryButton`. Cards use `AppCard`. No `chevron.right`. No raw `Divider()`.
+- [ ] Touch targets ≥ 44×44pt. No regular weight. No orange `#FF4400` (accent is `0x0A0A0A`).
+- [ ] Copy is explicit. Bodyweight shows "BW", not "0 kg". No `–` / `—` placeholders.
+- [ ] No `ProcessInfo.processInfo.environment["UNIT_*"]` scaffolding left in `ContentView.swift` or `Features/**/*.swift`.
 
-### Banned in view code (strict — no silent exceptions)
+### Banned in view code (top hits — full list with rationale in [`docs/claude/design-system.md`](docs/claude/design-system.md))
 
-- Hex literals, `Color(red:green:blue:)`, `Color.black/.white/.gray/.red/.green/.blue/.primary/.secondary`
-- `.foregroundStyle(.gray)` / `.foregroundColor(.gray)`
-- `.font(.system(size:...))`, raw `.font(.body/.caption/.title)` where an `AppFont.*` applies
-- Hardcoded paddings (`.padding(16)`, `.padding(.horizontal, 20)`) — use `AppSpacing.*`
-- Hardcoded corner radii — use `AppRadius.*`
-- `chevron.right` / `chevron.forward`
-- `Divider()` where `AppDivider` is required
-- Inline button styling for primary CTAs — use `AppPrimaryButton`
-- Inline card chrome — use `AppCard` / `appCardStyle()`
-- Screens not wrapped in `AppScreen`
-- `regular` font weight
-- Orange accent `#FF4400` (replaced by darkest black `0x0A0A0A`)
-- `.preferredColorScheme(.dark)` or any dark-mode-first styling decision
-- Any landscape-only layout assumption
-- "0 kg" for bodyweight exercises (show "BW" or "No history yet")
-- En-dash `–` / em-dash `—` as placeholder copy — write the explicit string
-- `.scrollEdgeEffectStyle(.automatic, ...)` or `.hard` — always `.soft`, and route through `appScrollEdgeSoft(top:bottom:)`, never inline
-- `LinearGradient` / `.mask` used as a fade under a fixed bar in `Features/**/*.swift` — use `appScrollEdgeSoft` only
-- `.font(...).weight(.semibold/.bold/.heavy)` on `ToolbarItem` buttons — iOS-native default weight
-- `AppSecondaryButton(tone: .accentSoft, icon: .add, ...)` as a section "Add X" trigger — use `AppGhostButton`
-- `ScrollView` or `AppCard` as the **root** child of `.sheet { }` — use plain `VStack` with `presentationDetents`
-- `ProcessInfo.processInfo.environment["UNIT_*"]` scaffolding committed in `ContentView.swift` or any `Features/**/*.swift` — test-only, must be reverted before turn end
-- Any new `struct X: View` / new `ViewModifier` / new variant added to `Unit/UI/DesignSystem.swift` **without an explicit one-line justification** of why the nearest existing primitive couldn't be extended (see Parallel-implementation ban)
+- Hex literals, `Color(red:..)`, `Color.black/.white/.gray/...`, `.foregroundStyle(.gray)`
+- `.font(.system(size:))`, raw `.font(.body/.caption/.title)`, `.padding(<int>)`, hardcoded radii
+- `chevron.right` / `chevron.forward`; `Divider()` where `AppDivider` applies
+- Inline button/card chrome instead of `AppPrimaryButton` / `AppCard` / `AppScreen`
+- `regular` font weight; orange `#FF4400`
+- `.preferredColorScheme(.dark)`; landscape assumptions
+- `.scrollEdgeEffectStyle(.automatic, ...)` or `.hard` — always `.soft` via `appScrollEdgeSoft(top:bottom:)`
+- `LinearGradient` / `.mask` fade under fixed bars in `Features/**/*.swift`
+- `.weight(.semibold/.bold/.heavy)` on `ToolbarItem` buttons
+- `AppSecondaryButton(tone: .accentSoft, icon: .add, ...)` for "Add X" — use `AppGhostButton`
+- `ScrollView` or `AppCard` as the **root** child of `.sheet { }`
+- `AppCard(contentInset: 0)` outside `DesignSystem.swift` — use `AppCardList`
+- Hand-composed `AppCard { AppDividedList(…) }` outside `DesignSystem.swift` — use `AppCardList(data) { row }`
+- "0 kg" for bodyweight; `–` / `—` placeholder copy
+- `ProcessInfo.processInfo.environment["UNIT_*"]` committed in non-test code
 
-`Unit/UI/DesignSystem.swift` is the **only** place raw values live. Every other file uses tokens. No exceptions without the user's explicit override.
-
-**Prefer iOS-native over custom**: bottom sheets, tab bar chrome, buttons, arrows, navigation. Custom chrome only when system primitives genuinely can't express the design.
+`Unit/UI/DesignSystem.swift` is the **only** place raw values live. **Prefer iOS-native over custom**: bottom sheets, tab bar, buttons, navigation.
 
 ---
 
-## 6. Fix level — atoms > molecules > screens
+## §5. Fix level — atoms > molecules > screens
 
-If a visual/spacing/shadow/radius/color bug appears on one screen, it is **almost always an atom or molecule problem**. Fix it there. The user has said this repeatedly:
+A visual/spacing/shadow/radius/color bug on one screen is **almost always an atom or molecule problem**. Fix it there.
 
 > "apply design system rules. follow the design system. make it consistent. make it system level"
 > "identify the inconsistencies and fix them in the atom and molecules level"
-> "Make a system-level improvement … across the app"
 
-Rule: after any visual fix, ask "would this bug appear on sibling screens if I only patched this one file?" If yes, **move the fix up a layer** — to `Unit/UI/DesignSystem.swift` (or the specific molecule/organism file) — so every screen benefits in one change.
-
----
-
-## 7. Verification gates — before saying "done"
-
-Do **not** declare a task done based on the code looking right. Until you have verified, say: *"edits applied, not yet verified."*
-
-For **code changes that compile**:
-- Build succeeds (`xcodebuild` or similar).
-
-For **UI/visual changes**:
-- Build + install + launch on iOS Simulator.
-- Screenshot the affected screen(s) via `xcrun simctl io booted screenshot`.
-- Visually confirm the change. Flag padding/alignment/shadow drift even if not asked.
-- If the change is system-level (atoms/molecules), screenshot **at least 2 sibling screens** to confirm no regression.
-
-If you cannot verify (tooling/build broken), say so plainly. Never fake it. The user has called this out: *"still buggy", "still containing the shadow", "i cant launch the app"* — these are all failures to verify.
+Rule: after any visual fix, ask "would this bug appear on sibling screens if I only patched this one file?" If yes, **move the fix up a layer** — to `DesignSystem.swift` or the specific molecule — so every screen benefits in one change.
 
 ---
 
-## 8. Simplification bias
+## §6. Verification gates — before saying "done"
 
-When deciding between:
-- adding vs removing → prefer **removing**
-- extending a token set vs collapsing → prefer **collapsing**
-- new variant vs reuse → prefer **reuse**
-- explaining in copy vs making it obvious → prefer **making it obvious, then cutting the copy**
+Do **not** declare a task done based on the code looking right. Until verified, say: *"edits applied, not yet verified."*
 
-User quotes: *"radius font size etc they are too much. even colors are too much. simplify."* / *"trying to simplify the app."*
+- **Code that compiles**: build succeeds (`xcodebuild`).
+- **UI/visual changes**: build + install + launch on iOS Simulator. Screenshot via `xcrun simctl io booted screenshot`. Visually confirm. Flag drift even if not asked.
+- **System-level (atoms/molecules)**: screenshot **at least 2 sibling screens** to confirm no regression.
+
+If you cannot verify (tooling/build broken, lid closed, background run), say so plainly. Never fake it.
+
+---
+
+## §7. Simplification bias
+
+- adding vs removing → **remove**
+- extending a token set vs collapsing → **collapse**
+- new variant vs reuse → **reuse**
+- explaining in copy vs making it obvious → **make it obvious, then cut the copy**
+
+> *"radius font size etc they are too much. even colors are too much. simplify."*
 
 If a change grows the design system rather than tightening it, justify the growth explicitly or don't ship it.
 
 ---
 
-## 9. Audit mode (preserved)
+## §8. Harness — hooks + skills
 
-When running an audit task (invoked by the overnight cron or `audit-prompt.md`), Claude should:
+Three layers of mechanical enforcement so Claude doesn't have to "remember". Full details in [`docs/claude/harness.md`](docs/claude/harness.md).
 
-1. Read `docs/product-compass.md` first — source of truth
-2. Read `AGENTS.md` (or `docs/AGENTS.md`) for UX rules and scope fences
-3. Read `DESIGN_SYSTEM.md` (points to `docs/atomic-design-system.md` and `docs/visual-language.md`)
-4. Read `docs/goals.md` for measurable targets and v1 scope boundaries
-5. Scan every SwiftUI view file
-6. Build and run the app in the iOS Simulator
-7. Take screenshots of every reachable screen
-8. Compare each screenshot against the compass, design system, and goals
-9. Write findings to `audit-report.md` in the repo root (or a timestamped report if invoked via script)
+- **PreToolUse hook** (`.claude/hooks/ui-banned-list.sh`): blocks Edit/Write/MultiEdit when banned patterns hit Swift files under `Unit/` (excluding `DesignSystem.swift`). If it blocks legitimate work → fix the canonical primitive, never the hook.
+- **Skills** (`.claude/skills/`): `/page-audit` (single-screen review), `/component-reuse-check` (before any new component), `/ui-visual-verify` (before saying "done"). **Trigger proactively** — don't wait for the slash command.
+- **Visual references** (`docs/references/`): aesthetic taste is not text-encodable. Name the closest anchor before any non-trivial UI edit. If no anchor fits, ask before inventing.
 
-The full audit checklist is in `audit-prompt.md`. Use it as the enforcement surface for Design System Violations and Compass Alignment sections of the report.
+### Order of operations for any UI task
 
----
+1. §1 session-start checklist (docs + references).
+2. New component? → `/component-reuse-check` first.
+3. Make the edit. Hook fires automatically — fix blocks at the canonical layer.
+4. `/ui-visual-verify` before saying done.
+5. Single-screen review/polish? → `/page-audit` at start or end.
 
-## 10. Harness — hooks + skills (mechanical enforcement)
-
-The user has repeated the same UI rules across 30+ sessions. Three layers of enforcement now exist so Claude does not have to "remember":
-
-### 10.1 PreToolUse hook (`.claude/hooks/ui-banned-list.sh`)
-
-Registered in `.claude/settings.json`. Fires before every `Edit` / `Write` / `MultiEdit` and **blocks** (exit 2) if the new content introduces any of the §5 banned patterns into a Swift file under `Unit/` (excluding `Unit/UI/DesignSystem.swift`, where tokens are defined). Patterns blocked:
-
-- `chevron.right` / `chevron.forward`
-- `Color(red:..)`, `Color.black/.white/.gray/.red/.green/.blue/.primary/.secondary`
-- Hex literals (`0xRRGGBB[AA]`)
-- `.foregroundStyle(.gray)` / `.foregroundColor(.gray)`
-- `.font(.system(size:))`, `.padding(<int>)`, `.cornerRadius(<int>)`, `RoundedRectangle(cornerRadius: <int>)`
-- `.preferredColorScheme(.dark)`
-- `.scrollEdgeEffectStyle(.automatic)` / `.hard`
-- `.weight(.regular)`, `#FF4400` / `0xFF4400`
-- `Text("–")` / `Text("—")` / `Text("0 kg")` placeholders
-- `ProcessInfo.processInfo.environment["UNIT_*"]` scaffolding
-- `ToolbarItem` + `.weight(.semibold/.bold/.heavy)` together
-- `.sheet { ScrollView … }` (heuristic)
-
-It also surfaces a **non-blocking note** when a new `struct X: View` appears in a Features file, prompting reuse-check.
-
-If the hook blocks legitimate work, the fix is to update the canonical primitive in `DesignSystem.swift` (which the hook exempts). Do NOT edit the hook to allow the violation — that defeats the purpose. If the user explicitly overrides, run the work through `--no-checks` is NOT supported; the hook fires unconditionally.
-
-### 10.2 Project skills (`.claude/skills/`)
-
-Three skills enforce the rest of the gatekeeper checklist where a hook can't:
-
-| Skill | When to invoke | Replaces |
-|---|---|---|
-| `/page-audit` | Before any single-screen review or polish task. Loads CLAUDE.md §4–§7, `DesignSystem.swift`, the closest `docs/references/` anchor, and produces a severity-ranked report tied to atom/molecule/screen layers. | Asking "is this consistent with the system?" then guessing. |
-| `/component-reuse-check` | Before declaring any new `struct X: View` / `ViewModifier` / variant. Surveys existing primitives, runs the 80% match test, returns USE / EXTEND / NEW with one-sentence justification. | Inventing parallel components. |
-| `/ui-visual-verify` | After any UI Edit/Write, before saying "done". Build → screenshot → describe what is actually visible → certify VERIFIED / NOT VERIFIED / WAIVED. | Claiming success based on the code looking right. |
-
-These skills exist because the user has explicitly said: *"you should be better than me here — I should not repeat myself every prompt."* Trigger them proactively. Do not wait for the user to type the slash command.
-
-### 10.3 Visual references (`docs/references/`)
-
-Aesthetic taste is not text-encodable. `docs/references/` holds screenshots of iOS apps Unit's design language is anchored to (Apple Sports, Streaks, Things 3, etc.). Before any non-trivial UI edit, name the closest anchor and what specifically is being borrowed. See `docs/references/README.md` for the convention. The §3 session-start checklist and the §5 gatekeeper both require this step.
-
-If `docs/references/` has no anchor for the screen type at hand, **say so before editing**. Do not invent visual decisions — ask the user for a reference, or pick the closest existing one and justify why.
-
-### 10.4 Order of operations for any UI task
-
-1. Run §3 session-start checklist (docs + references).
-2. If proposing a new component: run `/component-reuse-check` first.
-3. Make the edit. Hook fires automatically — fix any blocked patterns at the canonical layer.
-4. Run `/ui-visual-verify` before saying done.
-5. If the task was a single-screen review/polish: run `/page-audit` either at start (to plan the change) or end (to confirm nothing else drifted).
+Audit mode (overnight cron) details: [`docs/claude/harness.md`](docs/claude/harness.md) §5.
