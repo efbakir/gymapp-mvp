@@ -29,7 +29,7 @@ struct SettingsView: View {
 
     var body: some View {
         AppScreen(showsNativeNavigationBar: true) {
-            SettingsSection(title: "Preferences") {
+            SettingsSection(title: "Preferences", contentInset: AppSpacing.sm) {
                 AppListRow(title: "Weight unit") {
                     AppSegmentedControl(
                         selection: Binding(

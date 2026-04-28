@@ -49,23 +49,20 @@ struct SessionDetailView: View {
                     .font(AppFont.title.font)
                     .foregroundStyle(AppColor.textPrimary)
 
-                Text("\(session.date.formatted(.dateTime.month(.abbreviated).day())) · \(session.date.formatted(.dateTime.hour().minute()))")
+                Text(session.date.formatted(.dateTime.month(.abbreviated).day().hour().minute()))
                     .font(AppFont.caption.font)
                     .foregroundStyle(AppColor.textSecondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
             if !exerciseSnapshots.isEmpty {
-                VStack(spacing: AppSpacing.md) {
-                    ForEach(exerciseSnapshots) { exercise in
-                        AppCard {
-                            SessionExerciseSummary(exercise: exercise)
-                        }
-                    }
+                AppCardList(exerciseSnapshots) { exercise in
+                    SessionExerciseSummary(exercise: exercise)
+                        .padding(.vertical, AppSpacing.sm)
                 }
             }
         }
-        .navigationTitle("Session")
+        .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .appNavigationBarChrome()
         .toolbar(.hidden, for: .tabBar)

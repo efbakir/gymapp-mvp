@@ -250,17 +250,10 @@ struct RecentSessionsView: View {
     }
 
     private var emptyState: some View {
-        AppCard {
-            VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                Text("No sessions yet")
-                    .font(AppFont.sectionHeader.font)
-                    .foregroundStyle(AppColor.textPrimary)
-
-                Text("Completed workouts will appear here so you can check the last session or browse by date.")
-                    .font(AppFont.body.font)
-                    .foregroundStyle(AppColor.textSecondary)
-            }
-        }
+        EmptyStateCard(
+            title: "No sessions yet",
+            message: "Completed workouts will appear here so you can check the last session or browse by date."
+        )
     }
 
     private func startWorkout(for templateId: UUID) {
@@ -317,7 +310,6 @@ struct RecentSessionsView: View {
             if filteredSortedDays.isEmpty && !showsMissedInList {
                 filteredEmptyState
             } else {
-                // Single flat stack so gaps between missed rows and completed rows are identical.
                 VStack(alignment: .leading, spacing: AppSpacing.sm) {
                     if showsMissedInList {
                         ForEach(earlierWeekItems) { info in
@@ -327,13 +319,13 @@ struct RecentSessionsView: View {
                         }
                     }
 
-                    ForEach(filteredSortedDays, id: \.date) { day in
-                        ForEach(day.sessions) { snapshot in
+                    if !flattenedHistorySessions.isEmpty {
+                        AppCardList(flattenedHistorySessions) { snapshot in
                             Button {
-                                selectedDate = day.date
-                                selectedPayload = SelectedSessionsPayload(date: day.date, sessions: [snapshot])
+                                selectedDate = Calendar.current.startOfDay(for: snapshot.date)
+                                selectedPayload = SelectedSessionsPayload(date: snapshot.date, sessions: [snapshot])
                             } label: {
-                                SessionPreviewCard(snapshot: snapshot)
+                                historySessionRow(for: snapshot)
                             }
                             .buttonStyle(ScaleButtonStyle())
                         }
@@ -343,17 +335,30 @@ struct RecentSessionsView: View {
         }
     }
 
+    private var flattenedHistorySessions: [SessionSnapshot] {
+        filteredSortedDays.flatMap { $0.sessions }
+    }
+
+    @ViewBuilder
+    private func historySessionRow(for snapshot: SessionSnapshot) -> some View {
+        AppSessionHighlightRow(
+            eyebrow: snapshot.date.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day()),
+            title: snapshot.templateName,
+            caption: snapshot.compactExerciseHeadline
+        ) {
+            AppTag(text: snapshot.state.title, style: snapshot.state.tagStyle, layout: .compactCapsule)
+        }
+    }
+
     private var historyFilterChips: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: AppSpacing.xs) {
-                ForEach(SessionHistoryFilter.allCases.filter { $0 != .all }) { option in
-                    AppFilterChip(
-                        label: option.rawValue,
-                        isSelected: filter == option,
-                        showsClearGlyphWhenSelected: true
-                    ) {
-                        filter = (filter == option) ? .all : option
-                    }
+        AppFilterChipBar {
+            ForEach(SessionHistoryFilter.allCases.filter { $0 != .all }) { option in
+                AppFilterChip(
+                    label: option.rawValue,
+                    isSelected: filter == option,
+                    showsClearGlyphWhenSelected: true
+                ) {
+                    filter = (filter == option) ? .all : option
                 }
             }
         }
@@ -362,7 +367,7 @@ struct RecentSessionsView: View {
     private var filteredEmptyState: some View {
         Text("Nothing to show")
             .font(AppFont.body.font)
-            .foregroundStyle(AppColor.textSecondary.opacity(0.6))
+            .foregroundStyle(AppColor.textDisabled)
             .frame(maxWidth: .infinity)
             .padding(.top, AppSpacing.xxl)
     }
@@ -536,33 +541,6 @@ extension SessionSnapshot {
         case .partial: return AppColor.warning
         case .skipped: return AppColor.error
         }
-    }
-}
-
-@ViewBuilder
-fileprivate func sessionPreviewCardContent(snapshot: SessionSnapshot, showDisclosure: Bool) -> some View {
-    HStack(alignment: .center, spacing: AppSpacing.md) {
-        VStack(alignment: .leading, spacing: AppSpacing.xxs) {
-            Text(snapshot.date.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day()))
-                .font(AppFont.label.font)
-                .foregroundStyle(AppColor.textSecondary)
-
-            Text(snapshot.templateName)
-                .font(AppFont.title.font)
-                .foregroundStyle(AppColor.textPrimary)
-                .fixedSize(horizontal: false, vertical: true)
-
-            if let compactExerciseHeadline = snapshot.compactExerciseHeadline {
-                Text(compactExerciseHeadline)
-                    .font(AppFont.caption.font)
-                    .foregroundStyle(AppColor.textSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-
-        Spacer(minLength: 0)
-
-        AppTag(text: snapshot.state.title, style: snapshot.state.tagStyle)
     }
 }
 
@@ -769,15 +747,16 @@ private struct CalendarDayCell: View {
         }
     }
 
-    /// Selection ring always wins; otherwise missed/today get a light outline, the rest are clear.
+    /// Selection ring always wins; today reads as a stronger focal ring (textPrimary)
+    /// to read distinct from a quieter missed outline (border).
     private var strokeColor: Color {
         if model.isSelected {
             return AppColor.textPrimary
         }
         switch model.status {
-        case .missed:
-            return AppColor.border
         case .today:
+            return AppColor.textPrimary
+        case .missed:
             return AppColor.border
         case .completed, .default, .future:
             return .clear
@@ -809,19 +788,6 @@ private struct CalendarDayCell: View {
         }
         let selected = model.isSelected ? ", selected" : ""
         return "\(dateLabel), \(stateLabel)\(selected)"
-    }
-}
-
-/// Shared session card used by the History list, calendar selected-day list,
-/// and anywhere else a single session preview appears. One component, one set
-/// of specs (AppCard container + sessionPreviewCardContent).
-struct SessionPreviewCard: View {
-    let snapshot: SessionSnapshot
-
-    var body: some View {
-        AppCard(contentInset: AppSpacing.lg) {
-            sessionPreviewCardContent(snapshot: snapshot, showDisclosure: false)
-        }
     }
 }
 
@@ -867,10 +833,15 @@ private struct SessionSummaryCard: View {
     let snapshot: SessionSnapshot
 
     var body: some View {
-        AppCard {
+        AppSessionHighlightCard(
+            eyebrow: snapshot.date.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day()),
+            title: snapshot.templateName,
+            caption: snapshot.compactExerciseHeadline,
+            trailing: {
+                AppTag(text: snapshot.state.title, style: snapshot.state.tagStyle, layout: .compactCapsule)
+            }
+        ) {
             VStack(alignment: .leading, spacing: AppSpacing.md) {
-                sessionPreviewCardContent(snapshot: snapshot, showDisclosure: false)
-
                 if let contextNote = snapshot.contextNote {
                     AppTag(text: contextNote, style: .muted)
                 }
@@ -891,17 +862,28 @@ struct SessionExerciseSummary: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.sm) {
-            ForEach(Array(exercise.sets.enumerated()), id: \.element.id) { index, set in
-                setBlock(for: set, isFirst: index == 0)
+            Text(exercise.name)
+                .font(AppFont.sectionHeader.font)
+                .foregroundStyle(AppColor.textPrimary)
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            ForEach(exercise.sets) { set in
+                setBlock(for: set)
             }
         }
     }
 
     @ViewBuilder
-    private func setBlock(for set: SessionSetSnapshot, isFirst: Bool) -> some View {
+    private func setBlock(for set: SessionSetSnapshot) -> some View {
         VStack(alignment: .leading, spacing: AppSpacing.xs) {
             HStack(alignment: .firstTextBaseline, spacing: AppSpacing.md) {
-                leadingLabel(for: set, isFirst: isFirst)
+                if let label = perSetPositionLabel(for: set) {
+                    Text(label)
+                        .font(Self.setLabelFont)
+                        .foregroundStyle(AppColor.textSecondary)
+                        .multilineTextAlignment(.leading)
+                }
 
                 Spacer(minLength: AppSpacing.sm)
 
@@ -920,27 +902,11 @@ struct SessionExerciseSummary: View {
         }
     }
 
-    @ViewBuilder
-    private func leadingLabel(for set: SessionSetSnapshot, isFirst: Bool) -> some View {
-        if isFirst {
-            Text(exercise.name)
-                .font(AppFont.sectionHeader.font)
-                .foregroundStyle(AppColor.textPrimary)
-                .multilineTextAlignment(.leading)
-        } else if let label = perSetPositionLabel(for: set) {
-            Text(label)
-                .font(Self.setLabelFont)
-                .foregroundStyle(AppColor.textSecondary)
-                .multilineTextAlignment(.leading)
-        }
-    }
-
-    /// Explains which set in the workout this row is (e.g. “Set 2 of 4”). Hidden when there is only one set.
     private func perSetPositionLabel(for set: SessionSetSnapshot) -> String? {
         let total = exercise.sets.count
         guard total > 1 else { return nil }
         let n = set.setIndex + 1
-        return "Set \(n) of \(total)"
+        return "Set \(n)"
     }
 
     private func actualText(for set: SessionSetSnapshot) -> String {

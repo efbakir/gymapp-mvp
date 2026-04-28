@@ -76,6 +76,12 @@ final class DayTemplate {
     var lastPerformedDate: Date?
     /// Calendar weekday: 1=Sun, 2=Mon … 7=Sat.  0 = unscheduled (rotation mode).
     var scheduledWeekday: Int = 0
+    /// Per-exercise planned set count, used as the first-session ghost before any
+    /// real history exists. JSON-encoded `[exerciseId.uuidString: Int]`.
+    var plannedSetsByExerciseIdData: Data?
+    /// Per-exercise planned rep count, used as the first-session ghost before any
+    /// real history exists. JSON-encoded `[exerciseId.uuidString: Int]`.
+    var plannedRepsByExerciseIdData: Data?
 
     init(
         id: UUID = UUID(),
@@ -83,7 +89,9 @@ final class DayTemplate {
         splitId: UUID? = nil,
         orderedExerciseIds: [UUID] = [],
         lastPerformedDate: Date? = nil,
-        scheduledWeekday: Int = 0
+        scheduledWeekday: Int = 0,
+        plannedSetsByExerciseId: [UUID: Int] = [:],
+        plannedRepsByExerciseId: [UUID: Int] = [:]
     ) {
         self.id = id
         self.name = name
@@ -91,6 +99,8 @@ final class DayTemplate {
         self.orderedExerciseIdsData = (try? JSONEncoder().encode(orderedExerciseIds.map { $0.uuidString })) ?? nil
         self.lastPerformedDate = lastPerformedDate
         self.scheduledWeekday = scheduledWeekday
+        self.plannedSetsByExerciseIdData = Self.encodePlanMap(plannedSetsByExerciseId)
+        self.plannedRepsByExerciseIdData = Self.encodePlanMap(plannedRepsByExerciseId)
     }
 
     /// Strips "Day N · " prefix if present, returning just the routine name.
@@ -111,5 +121,47 @@ final class DayTemplate {
         set {
             orderedExerciseIdsData = try? JSONEncoder().encode(newValue.map { $0.uuidString })
         }
+    }
+
+    var plannedSetsByExerciseId: [UUID: Int] {
+        get { Self.decodePlanMap(plannedSetsByExerciseIdData) }
+        set { plannedSetsByExerciseIdData = Self.encodePlanMap(newValue) }
+    }
+
+    var plannedRepsByExerciseId: [UUID: Int] {
+        get { Self.decodePlanMap(plannedRepsByExerciseIdData) }
+        set { plannedRepsByExerciseIdData = Self.encodePlanMap(newValue) }
+    }
+
+    func plannedSets(for exerciseId: UUID) -> Int? { plannedSetsByExerciseId[exerciseId] }
+    func plannedReps(for exerciseId: UUID) -> Int? { plannedRepsByExerciseId[exerciseId] }
+
+    func setPlannedSets(_ value: Int?, for exerciseId: UUID) {
+        var map = plannedSetsByExerciseId
+        if let value { map[exerciseId] = value } else { map.removeValue(forKey: exerciseId) }
+        plannedSetsByExerciseId = map
+    }
+
+    func setPlannedReps(_ value: Int?, for exerciseId: UUID) {
+        var map = plannedRepsByExerciseId
+        if let value { map[exerciseId] = value } else { map.removeValue(forKey: exerciseId) }
+        plannedRepsByExerciseId = map
+    }
+
+    private static func encodePlanMap(_ map: [UUID: Int]) -> Data? {
+        let stringKeyed = Dictionary(uniqueKeysWithValues: map.map { ($0.key.uuidString, $0.value) })
+        return try? JSONEncoder().encode(stringKeyed)
+    }
+
+    private static func decodePlanMap(_ data: Data?) -> [UUID: Int] {
+        guard let data,
+              let decoded = try? JSONDecoder().decode([String: Int].self, from: data) else {
+            return [:]
+        }
+        var result: [UUID: Int] = [:]
+        for (key, value) in decoded {
+            if let uuid = UUID(uuidString: key) { result[uuid] = value }
+        }
+        return result
     }
 }

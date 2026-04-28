@@ -84,18 +84,15 @@ struct ProgramDetailView: View {
     // MARK: - Routine Days
 
     private var routineDaysCard: some View {
-        AppCard(contentInset: 0) {
-            AppDividedList(orderedTemplates) { template in
-                let index = orderedTemplates.firstIndex(where: { $0.id == template.id }) ?? 0
-                NavigationLink(value: template) {
-                    PreviewListRow(
-                        title: template.displayName,
-                        subtitle: routineSubtitle(dayIndex: index, template: template)
-                    )
-                    .padding(.horizontal, AppSpacing.md)
-                }
-                .buttonStyle(ScaleButtonStyle())
+        AppCardList(orderedTemplates) { template in
+            let index = orderedTemplates.firstIndex(where: { $0.id == template.id }) ?? 0
+            NavigationLink(value: template) {
+                PreviewListRow(
+                    title: template.displayName,
+                    subtitle: routineSubtitle(dayIndex: index, template: template)
+                )
             }
+            .buttonStyle(ScaleButtonStyle())
         }
     }
 

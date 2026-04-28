@@ -72,6 +72,8 @@ struct ExercisesListView: View {
             ExerciseDetailView(exercise: exercise)
         }
         .searchable(text: $query, prompt: "Search by name or alias")
+        .textInputAutocapitalization(.words)
+        .autocorrectionDisabled()
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
@@ -117,43 +119,37 @@ private struct ExerciseFilterChips: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.xs) {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: AppSpacing.xs) {
+            AppFilterChipBar(contentInset: AppSpacing.md) {
+                AppFilterChip(
+                    label: "All muscles",
+                    isSelected: selectedMuscle == nil,
+                    action: { selectedMuscle = nil }
+                )
+                ForEach(MuscleGroup.allCases) { group in
                     AppFilterChip(
-                        label: "All muscles",
-                        isSelected: selectedMuscle == nil,
-                        action: { selectedMuscle = nil }
+                        label: group.displayName,
+                        isSelected: selectedMuscle == group,
+                        action: {
+                            selectedMuscle = selectedMuscle == group ? nil : group
+                        }
                     )
-                    ForEach(MuscleGroup.allCases) { group in
-                        AppFilterChip(
-                            label: group.displayName,
-                            isSelected: selectedMuscle == group,
-                            action: {
-                                selectedMuscle = selectedMuscle == group ? nil : group
-                            }
-                        )
-                    }
                 }
-                .padding(.horizontal, AppSpacing.md)
             }
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: AppSpacing.xs) {
+            AppFilterChipBar(contentInset: AppSpacing.md) {
+                AppFilterChip(
+                    label: "All equipment",
+                    isSelected: selectedEquipment == nil,
+                    action: { selectedEquipment = nil }
+                )
+                ForEach(Equipment.allCases) { equipment in
                     AppFilterChip(
-                        label: "All equipment",
-                        isSelected: selectedEquipment == nil,
-                        action: { selectedEquipment = nil }
+                        label: equipment.displayName,
+                        isSelected: selectedEquipment == equipment,
+                        action: {
+                            selectedEquipment = selectedEquipment == equipment ? nil : equipment
+                        }
                     )
-                    ForEach(Equipment.allCases) { equipment in
-                        AppFilterChip(
-                            label: equipment.displayName,
-                            isSelected: selectedEquipment == equipment,
-                            action: {
-                                selectedEquipment = selectedEquipment == equipment ? nil : equipment
-                            }
-                        )
-                    }
                 }
-                .padding(.horizontal, AppSpacing.md)
             }
         }
         .padding(.vertical, AppSpacing.sm)
@@ -313,14 +309,15 @@ struct ExerciseDetailView: View {
             .appCardStyle()
 
             if summaries.isEmpty {
-                Text("No logged sessions yet.")
-                    .font(AppFont.body.font)
-                    .foregroundStyle(AppColor.textSecondary)
-                    .appCardStyle()
+                EmptyStateCard(
+                    title: "No logged sessions yet",
+                    message: "Sessions logged for this exercise will appear here with their 1RM trend and volume."
+                )
             } else {
                 VStack(alignment: .leading, spacing: AppSpacing.sm) {
                     Text("Estimated 1RM Trend")
                         .font(AppFont.sectionHeader.font)
+                        .foregroundStyle(AppColor.textPrimary)
                     Chart(trendAscending) { item in
                         LineMark(
                             x: .value("Date", item.sessionDate),
@@ -340,6 +337,7 @@ struct ExerciseDetailView: View {
                 VStack(alignment: .leading, spacing: AppSpacing.sm) {
                     Text("Session Volume")
                         .font(AppFont.sectionHeader.font)
+                        .foregroundStyle(AppColor.textPrimary)
                     Chart(trendAscending) { item in
                         BarMark(
                             x: .value("Date", item.sessionDate),
@@ -354,6 +352,7 @@ struct ExerciseDetailView: View {
                 VStack(alignment: .leading, spacing: AppSpacing.sm) {
                     Text("Past Sessions")
                         .font(AppFont.sectionHeader.font)
+                        .foregroundStyle(AppColor.textPrimary)
 
                     ForEach(summaries) { summary in
                         VStack(alignment: .leading, spacing: AppSpacing.xs) {

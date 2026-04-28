@@ -86,13 +86,11 @@ struct ContentView: View {
 
     private func configureNavigationBarAppearance() {
         let titleColor = UIColor(AppColor.textPrimary)
-        let backgroundColor = UIColor(AppColor.barBackground)
         let titleFont = UIFont.systemFont(ofSize: 17, weight: .semibold).rounded()
         let largeTitleFont = UIFont.systemFont(ofSize: 34, weight: .bold).rounded()
 
         let appearance = UINavigationBarAppearance()
-        appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = backgroundColor
+        appearance.configureWithDefaultBackground()
         appearance.shadowColor = .clear
         appearance.titleTextAttributes = [.foregroundColor: titleColor, .font: titleFont]
         appearance.largeTitleTextAttributes = [.foregroundColor: titleColor, .font: largeTitleFont]
@@ -112,7 +110,7 @@ struct ContentView: View {
     private func configureSegmentedControlAppearance() {
         let segmentedControl = UISegmentedControl.appearance()
         segmentedControl.backgroundColor = UIColor(AppColor.controlBackground)
-        segmentedControl.selectedSegmentTintColor = UIColor.white
+        segmentedControl.selectedSegmentTintColor = UIColor(AppColor.cardBackground)
         let normalFont = UIFont.systemFont(ofSize: 14, weight: .medium).rounded()
         let selectedFont = UIFont.systemFont(ofSize: 14, weight: .semibold).rounded()
         segmentedControl.setTitleTextAttributes(

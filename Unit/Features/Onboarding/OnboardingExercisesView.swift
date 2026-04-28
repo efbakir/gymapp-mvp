@@ -21,21 +21,21 @@ struct OnboardingExercisesView: View {
     @State private var draggedExerciseID: UUID?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private func exerciseNameBinding(dayIndex: Int, exerciseIndex: Int) -> Binding<String> {
+    private func exerciseNameBinding(dayIndex: Int, exerciseID: UUID) -> Binding<String> {
         Binding(
             get: {
                 guard vm.dayExercises.indices.contains(dayIndex),
-                      vm.dayExercises[dayIndex].indices.contains(exerciseIndex) else {
+                      let i = vm.dayExercises[dayIndex].firstIndex(where: { $0.id == exerciseID }) else {
                     return ""
                 }
-                return vm.dayExercises[dayIndex][exerciseIndex].name
+                return vm.dayExercises[dayIndex][i].name
             },
             set: { newValue in
                 guard vm.dayExercises.indices.contains(dayIndex),
-                      vm.dayExercises[dayIndex].indices.contains(exerciseIndex) else {
+                      let i = vm.dayExercises[dayIndex].firstIndex(where: { $0.id == exerciseID }) else {
                     return
                 }
-                vm.dayExercises[dayIndex][exerciseIndex].name = newValue
+                vm.dayExercises[dayIndex][i].name = newValue
             }
         )
     }
@@ -45,78 +45,69 @@ struct OnboardingExercisesView: View {
 
         OnboardingShell(
             title: "Add exercises",
-            ctaLabel: "Create My Program",
+            ctaLabel: "Create my program",
             ctaEnabled: vm.exercisesAreValid,
             progressStep: progressStep,
             progressTotal: progressTotal,
-            onContinue: onContinue
-        ) {
-            VStack(alignment: .leading, spacing: AppSpacing.md) {
-
-                // Day tab strip
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: AppSpacing.sm) {
-                        ForEach(0..<vm.dayCount, id: \.self) { i in
-                            OnboardingDayChip(
-                                name: vm.dayNames[i],
-                                isSelected: selectedDayIndex == i,
-                                showsDot: vm.dayExercises[i].isEmpty
-                            ) {
-                                selectedDayIndex = i
-                            }
-                        }
-                    }
-                    .padding(.horizontal, AppSpacing.xs / 2)
-                }
-
-                // Exercise list for selected day
+            onContinue: onContinue,
+            content: {
                 let dayExs = vm.dayExercises.indices.contains(selectedDayIndex) ? vm.dayExercises[selectedDayIndex] : []
 
-                if !dayExs.isEmpty {
-                    VStack(spacing: AppSpacing.xs) {
-                        ForEach(Array(dayExs.enumerated()), id: \.element.id) { exerciseIndex, ex in
-                            HStack {
-                                AppIcon.reorder.image(size: 14, weight: .semibold)
-                                    .foregroundStyle(AppColor.textSecondary)
-                                    .frame(width: 20, height: 20)
-                                    .frame(minWidth: 44, minHeight: 44)
-                                    .contentShape(Rectangle())
-                                    .onDrag {
-                                        draggedExerciseID = ex.id
-                                        return NSItemProvider(object: ex.id.uuidString as NSString)
-                                    }
-
-                                TextField("Exercise name", text: exerciseNameBinding(dayIndex: selectedDayIndex, exerciseIndex: exerciseIndex))
-                                    .font(AppFont.body.font)
-                                    .foregroundStyle(AppColor.textPrimary)
-                                    .focused($focusedExerciseID, equals: ex.id)
-                                    .textInputAutocapitalization(.words)
-                                    .autocorrectionDisabled()
-                                    .submitLabel(.done)
-                                Spacer()
-                                Button {
-                                    vm.dayExercises[selectedDayIndex].removeAll { $0.id == ex.id }
-                                    vm.baselines.removeValue(forKey: ex.id)
-                                    if focusedExerciseID == ex.id {
-                                        focusedExerciseID = nil
-                                    }
-                                } label: {
-                                    AppIcon.close.image(size: 12, weight: .semibold)
+                VStack(alignment: .leading, spacing: AppSpacing.md) {
+                    if !dayExs.isEmpty {
+                        AppCardList(dayExs) { ex in
+                            VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                                HStack {
+                                    AppIcon.reorder.image(size: 15, weight: .semibold)
                                         .foregroundStyle(AppColor.textSecondary)
-                                        .frame(minWidth: 44, minHeight: 44)
+                                        .frame(minWidth: 44, minHeight: 44, alignment: .leading)
                                         .contentShape(Rectangle())
+                                        .onDrag {
+                                            draggedExerciseID = ex.id
+                                            return NSItemProvider(object: ex.id.uuidString as NSString)
+                                        }
+
+                                    TextField("Exercise name", text: exerciseNameBinding(dayIndex: selectedDayIndex, exerciseID: ex.id))
+                                        .font(AppFont.body.font)
+                                        .foregroundStyle(AppColor.textPrimary)
+                                        .focused($focusedExerciseID, equals: ex.id)
+                                        .textInputAutocapitalization(.words)
+                                        .autocorrectionDisabled()
+                                        .submitLabel(.done)
+                                    Spacer()
+                                    Button {
+                                        vm.dayExercises[selectedDayIndex].removeAll { $0.id == ex.id }
+                                        vm.baselines.removeValue(forKey: ex.id)
+                                        if focusedExerciseID == ex.id {
+                                            focusedExerciseID = nil
+                                        }
+                                    } label: {
+                                        AppIcon.close.image(size: 15, weight: .semibold)
+                                            .foregroundStyle(AppColor.textSecondary)
+                                            .frame(minWidth: 44, minHeight: 44, alignment: .trailing)
+                                            .contentShape(Rectangle())
+                                    }
                                 }
+                                .frame(height: 48)
+
+                                HStack(spacing: AppSpacing.md) {
+                                    plannedStepper(
+                                        label: "Sets",
+                                        value: ex.plannedSets,
+                                        onDecrement: { vm.adjustPlannedSets(dayIndex: selectedDayIndex, exerciseId: ex.id, delta: -1) },
+                                        onIncrement: { vm.adjustPlannedSets(dayIndex: selectedDayIndex, exerciseId: ex.id, delta: 1) }
+                                    )
+                                    plannedStepper(
+                                        label: "Reps",
+                                        value: ex.plannedReps,
+                                        onDecrement: { vm.adjustPlannedReps(dayIndex: selectedDayIndex, exerciseId: ex.id, delta: -1) },
+                                        onIncrement: { vm.adjustPlannedReps(dayIndex: selectedDayIndex, exerciseId: ex.id, delta: 1) }
+                                    )
+                                    Spacer(minLength: 0)
+                                }
+                                .padding(.leading, AppSpacing.xxl)
                             }
-                            .padding(.horizontal, AppSpacing.md)
-                            .frame(height: 48)
-                            .background(AppColor.cardBackground)
-                            .contentShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
-                            .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous)
-                                    .stroke(AppColor.accent.opacity(focusedExerciseID == ex.id ? 0.5 : 0), lineWidth: 1.5)
-                                    .animation(.easeOut(duration: 0.18), value: focusedExerciseID == ex.id)
-                            )
+                            .contentShape(Rectangle())
                             .onTapGesture {
                                 focusedExerciseID = ex.id
                             }
@@ -131,13 +122,30 @@ struct OnboardingExercisesView: View {
                             )
                         }
                     }
-                }
 
-                AppGhostButton("Add exercise") {
-                    showingAddSheet = true
+                    AppGhostButton("Add exercise") {
+                        showingAddSheet = true
+                    }
                 }
+            },
+            stickyAccessory: {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: AppSpacing.sm) {
+                        ForEach(0..<vm.dayCount, id: \.self) { i in
+                            AppFilterChip(
+                                label: vm.dayNames[i],
+                                isSelected: selectedDayIndex == i,
+                                showsTrailingDot: vm.dayExercises[i].isEmpty
+                            ) {
+                                selectedDayIndex = i
+                            }
+                        }
+                    }
+                    .padding(.horizontal, AppSpacing.xs / 2)
+                }
+                .appScrollEdgeSoft()
             }
-        }
+        )
         .sheet(isPresented: $showingAddSheet, onDismiss: {
             focusedExerciseID = nil
         }) {
@@ -156,6 +164,25 @@ struct OnboardingExercisesView: View {
             }
             focusedExerciseID = nil
             draggedExerciseID = nil
+        }
+    }
+
+    @ViewBuilder
+    private func plannedStepper(
+        label: String,
+        value: Int,
+        onDecrement: @escaping () -> Void,
+        onIncrement: @escaping () -> Void
+    ) -> some View {
+        HStack(spacing: AppSpacing.sm) {
+            Text(label)
+                .font(AppFont.caption.font)
+                .foregroundStyle(AppColor.textSecondary)
+            AppStepper(
+                value: "\(value)",
+                onDecrement: onDecrement,
+                onIncrement: onIncrement
+            )
         }
     }
 }
@@ -213,87 +240,61 @@ struct ExerciseSearchSheet: View {
     }
 
     var body: some View {
-        ZStack {
-            AppColor.cardBackground.ignoresSafeArea()
-
-            VStack(spacing: 0) {
-                // Search bar
-                HStack(spacing: AppSpacing.sm) {
-                    AppIcon.search.image()
-                        .foregroundStyle(AppColor.textSecondary)
-                    TextField("Search or type exercise name", text: $query)
-                        .focused($isSearchFocused)
-                        .foregroundStyle(AppColor.textPrimary)
-                        .textInputAutocapitalization(.words)
-                        .autocorrectionDisabled()
-                        .submitLabel(.done)
-                        .onSubmit {
-                            let trimmed = query.trimmingCharacters(in: .whitespaces)
-                            if !trimmed.isEmpty { addExercise(name: trimmed) }
+        NavigationStack {
+            List {
+                if showCustomOption {
+                    let trimmed = query.trimmingCharacters(in: .whitespaces)
+                    Button {
+                        addExercise(name: trimmed)
+                    } label: {
+                        HStack(spacing: AppSpacing.sm) {
+                            AppIcon.addCircle.image()
+                                .foregroundStyle(AppColor.accent)
+                            Text("Add \"\(trimmed)\"")
+                                .font(AppFont.body.font)
+                                .foregroundStyle(AppColor.textPrimary)
                         }
-                    if !query.isEmpty {
-                        Button { query = "" } label: {
-                            AppIcon.xmarkFilled.image()
-                                .foregroundStyle(AppColor.textSecondary)
-                        }
+                        .frame(minHeight: 44, alignment: .leading)
                     }
+                    .listRowBackground(AppColor.cardBackground)
                 }
-                .padding(AppSpacing.sm)
-                .background(AppColor.cardBackground)
-                .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
-                .padding(AppSpacing.md)
 
-                AppDivider()
-
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 0) {
-                        // Custom entry option
-                        if showCustomOption {
-                            let trimmed = query.trimmingCharacters(in: .whitespaces)
-                            Button {
-                                addExercise(name: trimmed)
-                            } label: {
-                                HStack {
-                                    AppIcon.addCircle.image()
-                                        .foregroundStyle(AppColor.accent)
-                                    Text("Add \"\(trimmed)\"")
-                                        .font(AppFont.body.font)
-                                        .foregroundStyle(AppColor.textPrimary)
-                                }
-                                .padding(.horizontal, AppSpacing.md)
-                                .frame(height: 48)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .contentShape(Rectangle())
-                            }
-                            .buttonStyle(ScaleButtonStyle())
-
-                            AppDivider()
-                                .padding(.horizontal, AppSpacing.md)
-                        }
-
-                        // Library suggestions
-                        ForEach(filteredSuggestions, id: \.self) { name in
-                            Button {
-                                addExercise(name: name)
-                            } label: {
-                                Text(name)
-                                    .font(AppFont.body.font)
-                                    .foregroundStyle(AppColor.textPrimary)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding(.horizontal, AppSpacing.md)
-                                    .frame(height: 48)
-                                    .contentShape(Rectangle())
-                            }
-                            .buttonStyle(ScaleButtonStyle())
-
-                            AppDivider()
-                                .padding(.horizontal, AppSpacing.md)
-                        }
+                ForEach(filteredSuggestions, id: \.self) { name in
+                    Button {
+                        addExercise(name: name)
+                    } label: {
+                        Text(name)
+                            .font(AppFont.body.font)
+                            .foregroundStyle(AppColor.textPrimary)
+                            .frame(minHeight: 44, alignment: .leading)
                     }
+                    .listRowBackground(AppColor.cardBackground)
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(AppColor.sheetBackground.ignoresSafeArea())
+            .scrollDismissesKeyboard(.immediately)
+            .navigationTitle("Add Exercise")
+            .navigationBarTitleDisplayMode(.inline)
+            .searchable(text: $query, prompt: "Search or type exercise name")
+            .searchFocused($isSearchFocused)
+            .textInputAutocapitalization(.words)
+            .autocorrectionDisabled()
+            .onSubmit(of: .search) {
+                let trimmed = query.trimmingCharacters(in: .whitespaces)
+                guard !trimmed.isEmpty else { return }
+                addExercise(name: trimmed)
+            }
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                        .appToolbarTextStyle()
+                }
+            }
+            .appNavigationBarChrome()
+            .tint(AppColor.systemTint)
+            .onAppear { isSearchFocused = true }
         }
-        .onAppear { isSearchFocused = true }
     }
 
     private func addExercise(name: String) {

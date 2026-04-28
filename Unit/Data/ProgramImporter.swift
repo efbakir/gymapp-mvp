@@ -53,12 +53,22 @@ enum ProgramImporter {
 
         var dayTemplates: [DayTemplate] = []
         for day in template.days {
-            let exerciseIds = day.items.map { resolveExercise(named: $0.exerciseName).id }
+            var exerciseIds: [UUID] = []
+            var plannedSets: [UUID: Int] = [:]
+            var plannedReps: [UUID: Int] = [:]
+            for item in day.items {
+                let exercise = resolveExercise(named: item.exerciseName)
+                exerciseIds.append(exercise.id)
+                if item.setCount > 0 { plannedSets[exercise.id] = item.setCount }
+                if item.repTarget > 0 { plannedReps[exercise.id] = item.repTarget }
+            }
             let dayTemplate = DayTemplate(
                 name: day.name,
                 splitId: split.id,
                 orderedExerciseIds: exerciseIds,
-                scheduledWeekday: day.weekday ?? 0
+                scheduledWeekday: day.weekday ?? 0,
+                plannedSetsByExerciseId: plannedSets,
+                plannedRepsByExerciseId: plannedReps
             )
             context.insert(dayTemplate)
             dayTemplates.append(dayTemplate)

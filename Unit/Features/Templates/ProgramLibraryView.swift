@@ -37,16 +37,13 @@ struct ProgramLibraryView: View {
                 filterBar
 
                 if filteredPrograms.isEmpty {
-                    Text("No programs match these filters.")
-                        .font(AppFont.body.font)
-                        .foregroundStyle(AppColor.textSecondary)
-                        .appCardStyle()
+                    AppEmptyHint("No programs match these filters.")
                 } else {
-                    AppDividedList(stacked: filteredPrograms) { program in
+                    AppCardList(filteredPrograms) { program in
                         NavigationLink(value: program) {
                             programRow(program)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(ScaleButtonStyle())
                     }
                 }
             }
@@ -57,49 +54,45 @@ struct ProgramLibraryView: View {
             ProgramLibraryDetailView(program: program)
         }
         .appNavigationBarChrome()
-        .appScrollEdgeSoft()
     }
 
     private var filterBar: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: AppSpacing.xs) {
-                AppDropdownChip(
-                    label: selectedLevel?.displayName ?? "Level",
-                    isActive: selectedLevel != nil
-                ) {
-                    Picker("Level", selection: $selectedLevel) {
-                        Text("All").tag(ProgramTemplate.Level?.none)
-                        ForEach(ProgramTemplate.Level.allCases) { level in
-                            Text(level.displayName).tag(Optional(level))
-                        }
-                    }
-                }
-
-                AppDropdownChip(
-                    label: selectedGoal?.displayName ?? "Goal",
-                    isActive: selectedGoal != nil
-                ) {
-                    Picker("Goal", selection: $selectedGoal) {
-                        Text("All").tag(ProgramTemplate.Goal?.none)
-                        ForEach(ProgramTemplate.Goal.allCases) { goal in
-                            Text(goal.displayName).tag(Optional(goal))
-                        }
-                    }
-                }
-
-                AppDropdownChip(
-                    label: selectedDays.map { "\($0) days" } ?? "Days/week",
-                    isActive: selectedDays != nil
-                ) {
-                    Picker("Days/week", selection: $selectedDays) {
-                        Text("All").tag(Int?.none)
-                        ForEach(daysOptions, id: \.self) { days in
-                            Text("\(days) days").tag(Optional(days))
-                        }
+        AppFilterChipBar {
+            AppDropdownChip(
+                label: selectedLevel?.displayName ?? "Level",
+                isActive: selectedLevel != nil
+            ) {
+                Picker("Level", selection: $selectedLevel) {
+                    Text("All").tag(ProgramTemplate.Level?.none)
+                    ForEach(ProgramTemplate.Level.allCases) { level in
+                        Text(level.displayName).tag(Optional(level))
                     }
                 }
             }
-            .padding(.vertical, AppSpacing.xxs)
+
+            AppDropdownChip(
+                label: selectedGoal?.displayName ?? "Goal",
+                isActive: selectedGoal != nil
+            ) {
+                Picker("Goal", selection: $selectedGoal) {
+                    Text("All").tag(ProgramTemplate.Goal?.none)
+                    ForEach(ProgramTemplate.Goal.allCases) { goal in
+                        Text(goal.displayName).tag(Optional(goal))
+                    }
+                }
+            }
+
+            AppDropdownChip(
+                label: selectedDays.map { "\($0) days" } ?? "Days/week",
+                isActive: selectedDays != nil
+            ) {
+                Picker("Days/week", selection: $selectedDays) {
+                    Text("All").tag(Int?.none)
+                    ForEach(daysOptions, id: \.self) { days in
+                        Text("\(days) days").tag(Optional(days))
+                    }
+                }
+            }
         }
     }
 

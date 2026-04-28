@@ -282,18 +282,41 @@ struct TodayView: View {
             }
 
         case .readyToday(let context):
-            ReadyTodayCard(
-                context: context,
-                onOpenPreview: {
-                    workoutDetailContext = context
-                },
-                onStart: {
+            EmptyStateCard(
+                eyebrow: "Up next",
+                title: context.templateName,
+                message: context.programName,
+                note: context.scheduleNote,
+                buttonLabel: AppCopy.Workout.startWorkout,
+                action: {
                     startWorkout(templateId: context.templateId)
                 }
-            )
+            ) {
+                if !context.previewTargets.isEmpty {
+                    Button {
+                        workoutDetailContext = context
+                    } label: {
+                        PreviewListContainer {
+                            ForEach(Array(context.previewTargets.enumerated()), id: \.offset) { _, target in
+                                PreviewListRow(
+                                    title: target.exerciseName,
+                                    subtitle: target.displayTarget,
+                                    isEmptyHint: target.isEmptyHint
+                                )
+                            }
+                        }
+                    }
+                    .buttonStyle(ScaleButtonStyle())
+                    .frame(maxWidth: .infinity)
+                }
+            }
 
         case .restDay(let context):
-            RestDayCard(context: context)
+            EmptyStateCard(
+                eyebrow: "Rest day",
+                title: "Enjoy your rest",
+                message: context.programName
+            )
         }
     }
 
@@ -349,100 +372,6 @@ extension ReadyTodayContext: Identifiable {
     var id: String { templateId.uuidString }
 }
 
-// MARK: - Ready Today Card
-
-private struct ReadyTodayCard: View {
-    let context: ReadyTodayContext
-    let onOpenPreview: () -> Void
-    let onStart: () -> Void
-
-    var body: some View {
-        AppCard {
-            VStack(alignment: .center, spacing: AppSpacing.md) {
-                AppTag(
-                    text: "Up next",
-                    style: .custom(fg: AppColor.textSecondary, bg: AppColor.controlBackground),
-                    layout: .compactCapsule
-                )
-
-                VStack(spacing: AppSpacing.xs) {
-                    Text(context.templateName)
-                        .font(AppFont.productHeading)
-                        .tracking(AppFont.productHeadingTracking)
-                        .foregroundStyle(AppColor.textPrimary)
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    Text(context.programName)
-                        .font(AppFont.productAction)
-                        .foregroundStyle(AppColor.textSecondary)
-                        .multilineTextAlignment(.center)
-
-                    if let note = context.scheduleNote {
-                        Text(note)
-                            .font(AppFont.caption.font)
-                            .foregroundStyle(AppColor.secondaryLabel)
-                            .multilineTextAlignment(.center)
-                    }
-                }
-                .frame(maxWidth: .infinity)
-
-                if !context.previewTargets.isEmpty {
-                    Button {
-                        onOpenPreview()
-                    } label: {
-                        PreviewListContainer {
-                            ForEach(Array(context.previewTargets.enumerated()), id: \.offset) { _, target in
-                                PreviewListRow(
-                                    title: target.exerciseName,
-                                    subtitle: target.displayTarget,
-                                    isEmptyHint: target.isEmptyHint
-                                )
-                            }
-                        }
-                    }
-                    .buttonStyle(ScaleButtonStyle())
-                    .frame(maxWidth: .infinity)
-                }
-
-                AppPrimaryButton(AppCopy.Workout.startWorkout, action: onStart)
-            }
-        }
-    }
-}
-
-// MARK: - Rest Day Card
-
-private struct RestDayCard: View {
-    let context: RestDayContext
-
-    var body: some View {
-        AppCard {
-            VStack(alignment: .center, spacing: AppSpacing.md) {
-                AppTag(
-                    text: "Rest day",
-                    style: .custom(fg: AppColor.textSecondary, bg: AppColor.controlBackground),
-                    layout: .compactCapsule
-                )
-
-                VStack(spacing: AppSpacing.xs) {
-                    Text("Enjoy your rest")
-                        .font(AppFont.productHeading)
-                        .tracking(AppFont.productHeadingTracking)
-                        .foregroundStyle(AppColor.textPrimary)
-                        .multilineTextAlignment(.center)
-
-                    Text(context.programName)
-                        .font(AppFont.productAction)
-                        .foregroundStyle(AppColor.textSecondary)
-                }
-                .frame(maxWidth: .infinity)
-            }
-            .frame(maxWidth: .infinity)
-        }
-    }
-}
-
 // MARK: - Workout Details Sheet
 
 private struct TodayWorkoutDetailsSheet: View {
@@ -453,65 +382,76 @@ private struct TodayWorkoutDetailsSheet: View {
 
     var body: some View {
         NavigationStack {
-            AppScreen(
-                title: nil,
-                customHeader: ProductTopBar(
-                    title: "Workout",
-                    trailingActions: [
-                        .text(AppCopy.Nav.close) {
-                            dismiss()
-                        }
-                    ]
-                ).eraseToAnyView()
-            ) {
-                AppCard {
-                    VStack(alignment: .leading, spacing: AppSpacing.lg) {
-                        VStack(alignment: .center, spacing: AppSpacing.sm) {
-                            Text(context.templateName)
-                                .font(AppFont.productHeading)
-                                .tracking(AppFont.productHeadingTracking)
-                                .foregroundStyle(AppColor.textPrimary)
-                                .multilineTextAlignment(.center)
-                                .fixedSize(horizontal: false, vertical: true)
+            ScrollView {
+                VStack(spacing: AppSpacing.lg) {
+                    VStack(alignment: .center, spacing: AppSpacing.sm) {
+                        Text(context.templateName)
+                            .font(AppFont.productHeading)
+                            .tracking(AppFont.productHeadingTracking)
+                            .foregroundStyle(AppColor.textPrimary)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
 
-                            Text(context.programName)
-                                .font(AppFont.productAction)
+                        Text(context.programName)
+                            .font(AppFont.productAction)
+                            .foregroundStyle(AppColor.textSecondary)
+                            .multilineTextAlignment(.center)
+
+                        if let note = context.scheduleNote {
+                            Text(note)
+                                .font(AppFont.caption.font)
+                                .foregroundStyle(AppColor.secondaryLabel)
+                                .multilineTextAlignment(.center)
+                        }
+
+                        if let lastLabel = context.lastPerformedLabel {
+                            Text(lastLabel)
+                                .font(AppFont.caption.font)
                                 .foregroundStyle(AppColor.textSecondary)
-                                .multilineTextAlignment(.center)
-
-                            if let note = context.scheduleNote {
-                                Text(note)
-                                    .font(AppFont.caption.font)
-                                    .foregroundStyle(AppColor.secondaryLabel)
-                                    .multilineTextAlignment(.center)
-                            }
-
-                            if let lastLabel = context.lastPerformedLabel {
-                                Text(lastLabel)
-                                    .font(AppFont.caption.font)
-                                    .foregroundStyle(AppColor.textSecondary)
-                            }
                         }
-                        .frame(maxWidth: .infinity)
-
-                        AppDividedList(context.previewTargets) { target in
-                            AppListRow(
-                                title: target.exerciseName,
-                                subtitle: target.lastPerformanceLabel
-                            ) {
-                                Text(target.displayTarget)
-                                    .font(AppFont.productAction)
-                                    .foregroundStyle(target.isEmptyHint ? AppColor.secondaryLabel : AppColor.textSecondary)
-                                    .monospacedDigit()
-                            }
-                        }
-                        .background(AppColor.controlBackground)
-                        .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
-
-                        AppPrimaryButton(AppCopy.Workout.startWorkout, action: onStart)
                     }
+                    .frame(maxWidth: .infinity)
+
+                    AppCardList(context.previewTargets) { target in
+                        HStack(alignment: .center, spacing: AppSpacing.md) {
+                            VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                                Text(target.exerciseName)
+                                    .font(AppFont.body.font)
+                                    .foregroundStyle(AppFont.body.color)
+
+                                if let subtitle = target.lastPerformanceLabel, !subtitle.isEmpty {
+                                    Text(subtitle)
+                                        .font(AppFont.muted.font)
+                                        .foregroundStyle(AppFont.muted.color)
+                                }
+                            }
+
+                            Spacer(minLength: 0)
+
+                            Text(target.displayTarget)
+                                .font(AppFont.productAction)
+                                .foregroundStyle(target.isEmptyHint ? AppColor.secondaryLabel : AppColor.textSecondary)
+                                .monospacedDigit()
+                        }
+                    }
+
+                    AppPrimaryButton(AppCopy.Workout.startWorkout, action: onStart)
+                }
+                .padding(.horizontal, AppSpacing.lg)
+                .padding(.vertical, AppSpacing.lg)
+            }
+            .navigationTitle("Workout")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(role: .cancel) { dismiss() } label: {
+                        Label(AppCopy.Nav.close, systemImage: AppIcon.close.systemName)
+                            .labelStyle(.iconOnly)
+                    }
+                    .accessibilityLabel(AppCopy.Nav.close)
                 }
             }
+            .appNavigationBarChrome()
         }
     }
 }
@@ -750,6 +690,26 @@ final class TodayDashboardViewModel {
         exercises: [Exercise]
     ) -> [ExerciseTarget] {
         let hasAnyCompleted = sessions.contains(where: \.isCompleted)
+
+        func emptyTarget(for exercise: Exercise) -> ExerciseTarget {
+            if let plannedTarget = plannedTargetText(template: template, exerciseID: exercise.id) {
+                return ExerciseTarget(
+                    exerciseName: exercise.displayName,
+                    displayTarget: plannedTarget,
+                    lastPerformanceLabel: nil,
+                    isEmptyHint: false
+                )
+            }
+            return ExerciseTarget(
+                exerciseName: exercise.displayName,
+                displayTarget: hasAnyCompleted
+                    ? AppCopy.EmptyState.noPriorSets
+                    : AppCopy.EmptyState.noHistoryYet,
+                lastPerformanceLabel: nil,
+                isEmptyHint: true
+            )
+        }
+
         // Ghost values: last completed working sets per exercise from any session (newest first).
         // Matches TemplateDetailView / ActiveWorkout prefill — not limited to this template.
         return template.orderedExerciseIds.compactMap { exerciseID in
@@ -757,21 +717,14 @@ final class TodayDashboardViewModel {
                 return nil
             }
 
-            // Cold-start: explicit copy instead of a dash — distinguish app-wide vs first time for this lift.
+            // Cold-start: planned target if onboarding set one, else explicit empty copy.
             guard let ghostSession = sessions.first(where: { session in
                 session.isCompleted &&
                 session.setEntries.contains(where: {
                     $0.exerciseId == exerciseID && $0.isCompleted && !$0.isWarmup
                 })
             }) else {
-                return ExerciseTarget(
-                    exerciseName: exercise.displayName,
-                    displayTarget: hasAnyCompleted
-                        ? AppCopy.EmptyState.noPriorSets
-                        : AppCopy.EmptyState.noHistoryYet,
-                    lastPerformanceLabel: nil,
-                    isEmptyHint: true
-                )
+                return emptyTarget(for: exercise)
             }
 
             let lastSets = ghostSession.setEntries
@@ -779,25 +732,11 @@ final class TodayDashboardViewModel {
                 .sorted { $0.setIndex < $1.setIndex }
 
             guard let representative = lastSets.last, representative.reps > 0 else {
-                return ExerciseTarget(
-                    exerciseName: exercise.displayName,
-                    displayTarget: hasAnyCompleted
-                        ? AppCopy.EmptyState.noPriorSets
-                        : AppCopy.EmptyState.noHistoryYet,
-                    lastPerformanceLabel: nil,
-                    isEmptyHint: true
-                )
+                return emptyTarget(for: exercise)
             }
 
             if !exercise.isBodyweight, representative.weight <= 0 {
-                return ExerciseTarget(
-                    exerciseName: exercise.displayName,
-                    displayTarget: hasAnyCompleted
-                        ? AppCopy.EmptyState.noPriorSets
-                        : AppCopy.EmptyState.noHistoryYet,
-                    lastPerformanceLabel: nil,
-                    isEmptyHint: true
-                )
+                return emptyTarget(for: exercise)
             }
 
             let setCount = max(lastSets.count, 1)
@@ -822,6 +761,14 @@ final class TodayDashboardViewModel {
 
     private func lastCompletedDate(for templateID: UUID, sessions: [WorkoutSession]) -> Date? {
         sessions.first { $0.isCompleted && $0.templateId == templateID }?.date
+    }
+
+    private func plannedTargetText(template: DayTemplate, exerciseID: UUID) -> String? {
+        guard let sets = template.plannedSets(for: exerciseID), sets > 0,
+              let reps = template.plannedReps(for: exerciseID), reps > 0 else {
+            return nil
+        }
+        return WorkoutTargetFormatter.setRepCompact(setCount: sets, reps: reps)
     }
 }
 
@@ -860,7 +807,7 @@ private struct TodayRoutinePickSheet: View {
                                 Spacer(minLength: AppSpacing.sm)
                                 if hasWeeklySchedule, template.scheduledWeekday == todayWeekday {
                                     Text("Plan")
-                                        .font(AppFont.caption.font.weight(.medium))
+                                        .font(AppFont.caption.font)
                                         .foregroundStyle(AppColor.secondaryLabel)
                                 }
                             }

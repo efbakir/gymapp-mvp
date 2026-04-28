@@ -73,6 +73,22 @@ if grep -qE 'Text\("0[[:space:]]*kg"\)' <<< "$new_content"; then
   violations+=('Text("0 kg") for bodyweight — show "BW" or "No history yet"')
 fi
 
+# AppCard(contentInset: 0) outside DesignSystem.swift — proximate cause of broken
+# list-in-card padding (8 + 16 = 24pt is canonical; 0 + 16 reads as 16pt-from-edge
+# AND collapses vertical inset to 0). The docstring on AppCard reserves 0 for
+# full-bleed media, which is rare. Use AppCardList for any "list inside its own
+# card" surface — it bakes the recipe.
+if grep -qE 'AppCard[[:space:]]*\([^)]*contentInset:[[:space:]]*0\b' <<< "$new_content"; then
+  violations+=('AppCard(contentInset: 0) — banned in feature code. Use AppCardList for list-in-card; if you genuinely need full-bleed media, ask the user before bypassing.')
+fi
+
+# Composing AppCard + AppDividedList by hand — this is exactly what AppCardList
+# replaces. Heuristic: AppCard followed within the diff by AppDividedList.
+if grep -q 'AppCard[[:space:]]*[({]' <<< "$new_content" \
+   && grep -q 'AppDividedList[[:space:]]*[({]' <<< "$new_content"; then
+  violations+=('AppCard wrapping AppDividedList — use AppCardList instead. The molecule bakes the canonical 8/16 inset recipe so dividers and rows compose to the documented 24pt offset.')
+fi
+
 # Parallel-implementation ban — flag new struct ... : View declarations in feature code
 if grep -qE '^[[:space:]]*(public[[:space:]]+|private[[:space:]]+|internal[[:space:]]+|fileprivate[[:space:]]+)?struct[[:space:]]+[A-Z][A-Za-z0-9_]*[[:space:]]*:[[:space:]]*View' <<< "$new_content"; then
   # Allow inside Features/**/*View.swift top-level — but flag for review.

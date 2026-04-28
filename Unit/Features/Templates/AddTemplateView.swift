@@ -22,22 +22,22 @@ struct AddTemplateView: View {
     var body: some View {
         NavigationStack {
             AppScreen(
-                title: "New Day",
-                leadingAction: NavAction(icon: .close, action: { dismiss() }),
-                primaryButton: PrimaryButtonConfig(label: "Create Day", isEnabled: canSave, action: save)
+                primaryButton: PrimaryButtonConfig(label: "Create Day", isEnabled: canSave, action: save),
+                customHeader: ProductTopBar(
+                    title: "New Day",
+                    trailingActions: [
+                        .text(AppCopy.Nav.close) { dismiss() }
+                    ]
+                ).eraseToAnyView()
             ) {
-                AppCard {
-                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                        Text("Day name")
-                            .font(AppFont.sectionHeader.font)
-                            .foregroundStyle(AppColor.textPrimary)
+                VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                    AppSectionHeader("Day name")
 
-                        TextField("e.g. Push", text: $name)
-                            .font(AppFont.body.font)
-                            .foregroundStyle(AppColor.textPrimary)
-                            .textInputAutocapitalization(.words)
-                            .appInputFieldStyle(height: 52)
-                    }
+                    TextField("e.g. Push", text: $name)
+                        .font(AppFont.body.font)
+                        .foregroundStyle(AppColor.textPrimary)
+                        .textInputAutocapitalization(.words)
+                        .appInputFieldStyle(height: 52)
                 }
             }
         }

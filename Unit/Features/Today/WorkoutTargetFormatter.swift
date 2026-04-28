@@ -107,13 +107,4 @@ enum WorkoutTargetFormatter {
     static func lastText(weightKg: Double, setCount: Int, reps: Int, isBodyweight: Bool) -> String {
         "Last \(actualText(weightKg: weightKg, setCount: setCount, reps: reps, isBodyweight: isBodyweight))"
     }
-
-    /// Parsed import row: `weightKg == nil` with reps or sets implies bodyweight-style line.
-    static func importedProgramExerciseSummary(sets: Int?, reps: Int?, weightKg: Double?) -> String {
-        let inferredBodyweight = (weightKg == nil) && (reps != nil || sets != nil)
-        if let line = compactLoadText(sets: sets, reps: reps, weightKg: weightKg, isBodyweight: inferredBodyweight) {
-            return line
-        }
-        return "Exercise only"
-    }
 }

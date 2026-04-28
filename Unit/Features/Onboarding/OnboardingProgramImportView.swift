@@ -2,7 +2,8 @@
 //  OnboardingProgramImportView.swift
 //  Unit
 //
-//  Screen 4 — Parse a pasted plan into structured day data, then review.
+//  Screen 4 — Parse a pasted plan into structured day data, then continue
+//  straight to the exercises step where editing and reordering live.
 //
 
 import SwiftUI
@@ -10,12 +11,10 @@ import Vision
 
 /// Single source of truth for paste-mode placeholder copy.
 private enum ProgramPasteFormatGuide {
-    /// Short, in-screen subtitle. Long format rules live in `formatExamplesSheet`.
+    /// Combined intro (replaces separate subtitle + footer under the editor). Full rules stay in the format sheet.
     static let subtitle =
-        "Paste your split from Notes, chat, or a document. Unit will turn it into days and exercises."
-
-    /// Helper line under the editor that explains the disabled CTA.
-    static let helper = "Paste at least one day and one exercise. Use kg, lb, or BW."
+        "Paste from Notes, chat, or a document. One day per line, then exercises (kg, lb, or BW). "
+        + "Include at least one day and one exercise. Lines starting with // are skipped."
 
     /// Placeholder is examples only — short, by design (long rules live in the format examples sheet).
     static let placeholderExamples = [
@@ -37,7 +36,6 @@ struct OnboardingProgramImportView: View {
     var onContinue: () -> Void
 
     @State private var pastedText = ""
-    @State private var parsedDays: [ImportedProgramDay] = []
     @State private var isParsing = false
     @State private var errorMessage: String?
     @State private var showingFormatExamples = false
@@ -48,21 +46,34 @@ struct OnboardingProgramImportView: View {
 
     var body: some View {
         OnboardingShell(
-            title: parsedDays.isEmpty ? "Paste your program" : "Review program",
-            subtitle: parsedDays.isEmpty
-                ? ProgramPasteFormatGuide.subtitle
-                : "Check this before you continue. You can edit it next.",
-            ctaLabel: parsedDays.isEmpty ? parseLabel : "Looks right",
-            ctaEnabled: parsedDays.isEmpty ? canParse && !isParsing : !parsedDays.isEmpty,
+            title: "Paste your program",
+            subtitle: ProgramPasteFormatGuide.subtitle,
+            ctaLabel: parseLabel,
+            ctaEnabled: canParse && !isParsing,
             progressStep: progressStep,
             progressTotal: progressTotal,
-            onContinue: handlePrimaryAction
+            onContinue: { Task { await parseProgram() } }
         ) {
             VStack(alignment: .leading, spacing: AppSpacing.md) {
-                if parsedDays.isEmpty {
-                    inputSection
-                } else {
-                    reviewSection
+                AppTextEditor(
+                    text: $pastedText,
+                    placeholder: ProgramPasteFormatGuide.placeholderExamples
+                )
+                .textInputAutocapitalization(.words)
+                .autocorrectionDisabled()
+
+                AppGhostButton("Show format examples") {
+                    showingFormatExamples = true
+                }
+
+                if isParsing {
+                    HStack(spacing: AppSpacing.sm) {
+                        ProgressView()
+                            .controlSize(.small)
+                        Text("Reading exercises, reps, and weights.")
+                            .font(AppFont.body.font)
+                            .foregroundStyle(AppColor.textSecondary)
+                    }
                 }
             }
         }
@@ -85,90 +96,6 @@ struct OnboardingProgramImportView: View {
         isParsing ? "Reading…" : "Read program"
     }
 
-    @ViewBuilder
-    private var inputSection: some View {
-        AppTextEditor(
-            text: $pastedText,
-            placeholder: ProgramPasteFormatGuide.placeholderExamples
-        )
-        .textInputAutocapitalization(.words)
-        .autocorrectionDisabled()
-
-        Text(ProgramPasteFormatGuide.helper)
-            .font(AppFont.caption.font)
-            .foregroundStyle(AppColor.textSecondary)
-            .frame(maxWidth: .infinity, alignment: .leading)
-
-        AppGhostButton("Show format examples") {
-            showingFormatExamples = true
-        }
-
-        if isParsing {
-            HStack(spacing: AppSpacing.sm) {
-                ProgressView()
-                    .controlSize(.small)
-                Text("Reading exercises, reps, and weights.")
-                    .font(AppFont.body.font)
-                    .foregroundStyle(AppColor.textSecondary)
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var reviewSection: some View {
-        VStack(spacing: AppSpacing.sm) {
-            ForEach(parsedDays) { day in
-                VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                    Text(day.name)
-                        .font(AppFont.sectionHeader.font)
-                        .foregroundStyle(AppColor.textPrimary)
-
-                    VStack(spacing: AppSpacing.xs) {
-                        ForEach(day.exercises) { exercise in
-                            HStack(alignment: .center, spacing: AppSpacing.sm) {
-                                Text(exercise.name)
-                                    .font(AppFont.body.font)
-                                    .foregroundStyle(AppColor.textPrimary)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                                Text(
-                                    WorkoutTargetFormatter.importedProgramExerciseSummary(
-                                        sets: exercise.sets,
-                                        reps: exercise.reps,
-                                        weightKg: exercise.weightKg
-                                    )
-                                )
-                                    .font(AppFont.caption.font)
-                                    .foregroundStyle(AppColor.textSecondary)
-                                    .multilineTextAlignment(.trailing)
-                                    .lineLimit(1)
-                                    .minimumScaleFactor(0.85)
-                            }
-                            .padding(.horizontal, AppSpacing.sm)
-                            .padding(.vertical, AppSpacing.sm)
-                            .background(AppColor.background)
-                            .clipShape(RoundedRectangle(cornerRadius: AppRadius.sm, style: .continuous))
-                        }
-                    }
-                }
-                .appCardStyle()
-            }
-        }
-
-        AppGhostButton("Try again") {
-            parsedDays = []
-        }
-    }
-
-    private func handlePrimaryAction() {
-        if parsedDays.isEmpty {
-            Task { await parseProgram() }
-        } else {
-            vm.applyImportedProgram(parsedDays)
-            onContinue()
-        }
-    }
-
     @MainActor
     private func parseProgram() async {
         guard !isParsing else { return }
@@ -180,7 +107,8 @@ struct OnboardingProgramImportView: View {
             errorMessage = "Couldn't find exercises. Put each day on its own line, then list each exercise below it."
             return
         }
-        parsedDays = parsed
+        vm.applyImportedProgram(parsed)
+        onContinue()
     }
 }
 

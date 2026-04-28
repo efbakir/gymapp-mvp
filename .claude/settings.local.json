@@ -51,7 +51,13 @@
       "WebFetch(domain:randallb.com)",
       "Bash(defaults read *)",
       "Bash(gh auth *)",
-      "Bash(ssh -T git@github.com)"
+      "Bash(ssh -T git@github.com)",
+      "Bash(git check-ignore *)",
+      "mcp__d48a2c3d-ee36-472d-9f50-482b0d94b8e9__use_figma",
+      "mcp__d48a2c3d-ee36-472d-9f50-482b0d94b8e9__get_design_context",
+      "Bash(cp -R /tmp/design-for-ai/skills/design-for-ai /Users/efbakir/gymapp-mvp/.claude/skills/)",
+      "Bash(mkdir -p /Users/efbakir/gymapp-mvp/.claude/commands)",
+      "Bash(cp /tmp/design-for-ai/commands/*.md /Users/efbakir/gymapp-mvp/.claude/commands/)"
     ]
   }
 }

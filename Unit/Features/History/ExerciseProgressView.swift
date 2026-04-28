@@ -25,6 +25,18 @@ struct ExerciseProgressView: View {
         let templateId: UUID
     }
 
+    private struct SessionRowItem: Identifiable {
+        let point: SessionPoint
+        let prev: SessionPoint?
+        var id: UUID { point.id }
+    }
+
+    private static let sessionDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .medium
+        return f
+    }()
+
     // Best set per completed session (highest weight, then reps)
     private var sessionPoints: [SessionPoint] {
         sessions
@@ -64,16 +76,10 @@ struct ExerciseProgressView: View {
             if !sessionPoints.isEmpty {
                 sessionListCard
             } else {
-                VStack(spacing: AppSpacing.sm) {
-                    AppIcon.chart.image(size: 32, weight: .medium)
-                        .foregroundStyle(AppColor.textSecondary)
-                    Text("No data yet for \(exerciseName).")
-                        .font(AppFont.body.font)
-                        .foregroundStyle(AppColor.textSecondary)
-                        .multilineTextAlignment(.center)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, AppSpacing.xl)
+                EmptyStateCard(
+                    title: "No data yet",
+                    message: "Sets logged for \(exerciseName) will appear here as a chart and session history."
+                )
             }
         }
         .navigationBarTitleTruncated(exerciseName)
@@ -84,7 +90,7 @@ struct ExerciseProgressView: View {
     // MARK: - PR Card
 
     private func prCard(pr: SessionPoint, e1rm: Double) -> some View {
-        HStack(spacing: AppSpacing.xl) {
+        HStack(alignment: .firstTextBaseline, spacing: AppSpacing.md) {
             VStack(alignment: .leading, spacing: AppSpacing.xs) {
                 Text("Best Set")
                     .font(AppFont.caption.font)
@@ -93,16 +99,15 @@ struct ExerciseProgressView: View {
                     .font(AppFont.title.font)
                     .monospacedDigit()
             }
-            VStack(alignment: .leading, spacing: AppSpacing.xs) {
+            Spacer(minLength: 0)
+            VStack(alignment: .trailing, spacing: AppSpacing.xs) {
                 Text("Est. 1RM")
                     .font(AppFont.caption.font)
                     .foregroundStyle(AppColor.textSecondary)
                 Text(WorkoutTargetFormatter.weightDisplay(e1rm))
                     .font(AppFont.title.font)
-                    .foregroundStyle(AppColor.accent)
                     .monospacedDigit()
             }
-            Spacer(minLength: 0)
         }
         .appCardStyle()
     }
@@ -110,10 +115,7 @@ struct ExerciseProgressView: View {
     // MARK: - Chart
 
     private var chartCard: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.sm) {
-            Text("Weight Over Time")
-                .font(AppFont.sectionHeader.font)
-
+        SettingsSection(title: "Weight Over Time") {
             Chart(sessionPoints) { point in
                 LineMark(
                     x: .value("Date", point.date),
@@ -149,35 +151,29 @@ struct ExerciseProgressView: View {
             .frame(height: 160)
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.4), value: exerciseName)
         }
-        .appCardStyle()
     }
 
     // MARK: - Session list
 
+    private var sessionRowItems: [SessionRowItem] {
+        let reversed = Array(sessionPoints.reversed())
+        return reversed.enumerated().map { idx, point in
+            let prev = reversed.dropFirst(idx + 1).first { $0.templateId == point.templateId }
+            return SessionRowItem(point: point, prev: prev)
+        }
+    }
+
     private var sessionListCard: some View {
         VStack(alignment: .leading, spacing: AppSpacing.sm) {
-            Text("Sessions")
-                .font(AppFont.sectionHeader.font)
-
-            let reversed = sessionPoints.reversed() as [SessionPoint]
-            VStack(spacing: AppSpacing.sm) {
-                ForEach(Array(reversed.enumerated()), id: \.element.id) { idx, point in
-                    // Find the previous session for the same template
-                    let prevPoint: SessionPoint? = reversed.dropFirst(idx + 1).first { $0.templateId == point.templateId }
-                    sessionRow(point: point, prev: prevPoint)
-                    if idx < reversed.count - 1 {
-                        AppDivider()
-                    }
-                }
+            AppSectionHeader("Sessions")
+            AppCardList(sessionRowItems) { item in
+                sessionRow(point: item.point, prev: item.prev)
             }
         }
-        .appCardStyle()
     }
 
     private func sessionRow(point: SessionPoint, prev: SessionPoint?) -> some View {
         let templateName = templates.first(where: { $0.id == point.templateId })?.name ?? "Session"
-        let fmt = DateFormatter()
-        fmt.dateStyle = .medium
         let delta = prev.map { point.weight - $0.weight }
 
         return HStack {
@@ -185,7 +181,7 @@ struct ExerciseProgressView: View {
                 Text(templateName)
                     .font(AppFont.body.font)
                     .lineLimit(1)
-                Text(fmt.string(from: point.date))
+                Text(Self.sessionDateFormatter.string(from: point.date))
                     .font(AppFont.caption.font)
                     .foregroundStyle(AppColor.textSecondary)
             }
@@ -196,24 +192,23 @@ struct ExerciseProgressView: View {
                     .monospacedDigit()
                 if let d = delta {
                     if d > 0 {
-                        Text("+\(WorkoutTargetFormatter.weightDisplay(d)) vs. last \(templateName)")
+                        Text("+\(WorkoutTargetFormatter.weightDisplay(d))")
                             .font(AppFont.caption.font)
                             .foregroundStyle(AppColor.success)
                             .monospacedDigit()
                     } else if d < 0 {
-                        Text("-\(WorkoutTargetFormatter.weightDisplay(abs(d))) vs. last \(templateName)")
+                        Text("-\(WorkoutTargetFormatter.weightDisplay(abs(d)))")
                             .font(AppFont.caption.font)
                             .foregroundStyle(AppColor.error)
                             .monospacedDigit()
                     } else {
-                        Text("= last \(templateName)")
+                        Text("No change")
                             .font(AppFont.caption.font)
                             .foregroundStyle(AppColor.textSecondary)
                     }
                 }
             }
         }
-        .frame(minHeight: 44)
         .accessibilityElement(children: .combine)
     }
 }

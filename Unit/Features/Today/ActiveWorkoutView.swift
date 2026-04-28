@@ -66,7 +66,8 @@ struct ActiveWorkoutView: View {
             let prefill = viewModel.prefillSet(
                 for: exercise.id,
                 currentSession: session,
-                sessions: sessions
+                sessions: sessions,
+                plannedReps: template?.plannedReps(for: exercise.id)
             )
 
             return WorkoutExerciseSectionModel(
@@ -440,54 +441,39 @@ struct ActiveWorkoutView: View {
                     ForEach(exerciseLineupFragments) { fragment in
                         switch fragment {
                         case .grouped(let pairs):
-                            AppCard(contentInset: 0) {
-                                VStack(spacing: 0) {
-                                    ForEach(Array(pairs.enumerated()), id: \.element.section.id) { offset, pair in
-                                        if offset > 0 {
-                                            Rectangle()
-                                                .fill(AppColor.border.opacity(0.55))
-                                                .frame(maxWidth: .infinity)
-                                                .frame(height: 1)
-                                        }
-                                        Button {
-                                            selectedExerciseIndex = pair.index
-                                            showLineup = false
-                                        } label: {
-                                            exerciseLineupRowContent(
-                                                index: pair.index,
-                                                section: pair.section
-                                            )
-                                            .padding(.horizontal, AppSpacing.md)
-                                        }
-                                        .buttonStyle(ScaleButtonStyle())
-                                        .accessibilityLabel(
-                                            exerciseLineupAccessibilityLabel(
-                                                name: pair.section.exercise.displayName,
-                                                isCurrent: pair.index == selectedExerciseIndex,
-                                                isDone: pair.section.hasReachedPlannedSetGoal
-                                            )
-                                        )
-                                    }
+                            AppCardList(data: pairs.map { LineupRowItem(index: $0.index, section: $0.section) }, id: \.id) { item in
+                                Button {
+                                    selectedExerciseIndex = item.index
+                                    showLineup = false
+                                } label: {
+                                    exerciseLineupRowContent(index: item.index, section: item.section)
                                 }
+                                .buttonStyle(ScaleButtonStyle())
+                                .accessibilityLabel(
+                                    exerciseLineupAccessibilityLabel(
+                                        name: item.section.exercise.displayName,
+                                        isCurrent: item.index == selectedExerciseIndex,
+                                        isDone: item.section.hasReachedPlannedSetGoal
+                                    )
+                                )
                             }
                         case .rich(let index, let section):
-                            Button {
-                                selectedExerciseIndex = index
-                                showLineup = false
-                            } label: {
-                                AppCard(contentInset: 0) {
-                                    exerciseLineupRowContent(index: index, section: section)
-                                        .padding(.horizontal, AppSpacing.md)
+                            AppCardList(data: [LineupRowItem(index: index, section: section)], id: \.id) { item in
+                                Button {
+                                    selectedExerciseIndex = item.index
+                                    showLineup = false
+                                } label: {
+                                    exerciseLineupRowContent(index: item.index, section: item.section)
                                 }
-                            }
-                            .buttonStyle(ScaleButtonStyle())
-                            .accessibilityLabel(
-                                exerciseLineupAccessibilityLabel(
-                                    name: section.exercise.displayName,
-                                    isCurrent: index == selectedExerciseIndex,
-                                    isDone: section.hasReachedPlannedSetGoal
+                                .buttonStyle(ScaleButtonStyle())
+                                .accessibilityLabel(
+                                    exerciseLineupAccessibilityLabel(
+                                        name: item.section.exercise.displayName,
+                                        isCurrent: item.index == selectedExerciseIndex,
+                                        isDone: item.section.hasReachedPlannedSetGoal
+                                    )
                                 )
-                            )
+                            }
                         }
                     }
                 }
@@ -508,6 +494,12 @@ struct ActiveWorkoutView: View {
             .appNavigationBarChrome()
         }
         .background(AppColor.background.ignoresSafeArea())
+    }
+
+    private struct LineupRowItem {
+        let index: Int
+        let section: WorkoutExerciseSectionModel
+        var id: UUID { section.id }
     }
 
     private enum ExerciseLineupFragment: Identifiable {
@@ -602,30 +594,9 @@ struct ActiveWorkoutView: View {
             Group {
                 if let currentSection {
                     ScrollView {
-                        VStack(spacing: 0) {
-                            ForEach(0..<currentSection.plannedSetCount, id: \.self) { index in
-                                let isLast = index == currentSection.plannedSetCount - 1
-                                let entry = index < currentSection.entries.count ? currentSection.entries[index] : nil
-                                let isCurrent = !currentSection.hasReachedPlannedSetGoal && index == currentSection.entries.count
-
-                                SheetListRow(
-                                    title: "Set \(index + 1)",
-                                    subtitle: entry.map { logEntrySubtitle(for: $0, exercise: currentSection.exercise) },
-                                    titleStyle: entry != nil ? .muted : .primary,
-                                    showsBorder: !isLast
-                                ) {
-                                    if entry != nil {
-                                        AppIconCircle(diameter: 32) {
-                                            AppIcon.checkmark.image(size: 14, weight: .semibold)
-                                                .foregroundStyle(AppColor.textPrimary)
-                                        }
-                                    } else if isCurrent {
-                                        AppTag(text: "Current", style: .accent)
-                                    }
-                                }
-                            }
+                        AppCardList(data: Array(0..<currentSection.plannedSetCount), id: \.self) { index in
+                            logsSheetRow(index: index, section: currentSection)
                         }
-                        .appCardStyle()
                     }
                     .appScrollEdgeSoft()
                 }
@@ -644,6 +615,41 @@ struct ActiveWorkoutView: View {
             }
             .appNavigationBarChrome()
         }
+    }
+
+    @ViewBuilder
+    private func logsSheetRow(index: Int, section: WorkoutExerciseSectionModel) -> some View {
+        let entry = index < section.entries.count ? section.entries[index] : nil
+        let isCurrent = !section.hasReachedPlannedSetGoal && index == section.entries.count
+        let isDone = entry != nil
+
+        HStack {
+            VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                Text("Set \(index + 1)")
+                    .font(AppFont.productAction)
+                    .foregroundStyle(isDone ? AppColor.textSecondary : AppColor.textPrimary)
+
+                if let entry {
+                    Text(logEntrySubtitle(for: entry, exercise: section.exercise))
+                        .font(AppFont.productAction)
+                        .foregroundStyle(AppColor.mutedFill)
+                }
+            }
+
+            Spacer(minLength: 0)
+
+            if isDone {
+                AppIconCircle(diameter: 32) {
+                    AppIcon.checkmark.image(size: 14, weight: .semibold)
+                        .foregroundStyle(AppColor.textPrimary)
+                }
+            } else if isCurrent {
+                AppTag(text: "Current", style: .accent)
+            }
+        }
+        .padding(.vertical, AppSpacing.sm)
+        .frame(minHeight: 72)
+        .contentShape(Rectangle())
     }
 
     private func logEntrySubtitle(for entry: SetEntry, exercise: Exercise) -> String {
@@ -937,6 +943,9 @@ struct ActiveWorkoutView: View {
         if let latestAnyCount = latestCompletedSetCount(for: exerciseID, matchingTemplate: false) {
             return latestAnyCount
         }
+        if let templatePlan = template?.plannedSets(for: exerciseID), templatePlan > 0 {
+            return templatePlan
+        }
         return 3
     }
 
@@ -1034,10 +1043,10 @@ private struct AdjustResultSheet: View {
                         )
                     }
 
-                    VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
                         Text(AppCopy.Workout.adjustSetNoteLabel)
-                            .font(AppFont.caption.font)
-                            .foregroundStyle(AppColor.textSecondary)
+                            .font(AppFont.sectionHeader.font)
+                            .foregroundStyle(AppColor.textPrimary)
 
                         TextField(
                             AppCopy.Workout.adjustSetNotePlaceholder,
@@ -1054,6 +1063,7 @@ private struct AdjustResultSheet: View {
                             elevated: true
                         )
                     }
+                    .padding(.top, AppSpacing.md)
 
                     AppPrimaryButton(AppCopy.Workout.completeSet, isEnabled: canSave) {
                         onSave(effectiveIsBodyweight ? 0 : parsedWeight, parsedReps, noteText)
@@ -1081,7 +1091,7 @@ private struct AdjustResultSheet: View {
             guard !seeded else { return }
             seeded = true
             guard let prefill else { return }
-            if !isBodyweight {
+            if !isBodyweight, prefill.weight > 0 {
                 weightText = prefill.weight.weightString
             }
             repsText = "\(prefill.reps)"
@@ -1095,10 +1105,10 @@ private struct AdjustResultSheet: View {
         keyboardType: UIKeyboardType,
         suffix: String? = nil
     ) -> some View {
-        VStack(alignment: .leading, spacing: AppSpacing.xs) {
+        VStack(alignment: .leading, spacing: AppSpacing.sm) {
             Text(title)
-                .font(AppFont.caption.font)
-                .foregroundStyle(AppColor.textSecondary)
+                .font(AppFont.sectionHeader.font)
+                .foregroundStyle(AppColor.textPrimary)
 
             HStack(spacing: AppSpacing.xs) {
                 TextField("0", text: text)
@@ -1183,6 +1193,7 @@ private struct AddExerciseSheet: View {
     let onSelect: (Exercise) -> Void
 
     @State private var query = ""
+    @FocusState private var isSearchFocused: Bool
 
     private var filteredExercises: [Exercise] {
         let available = exercises.filter { !existingIds.contains($0.id) }
@@ -1249,9 +1260,17 @@ private struct AddExerciseSheet: View {
             }
             .scrollContentBackground(.hidden)
             .background(AppColor.sheetBackground.ignoresSafeArea())
+            .scrollDismissesKeyboard(.immediately)
             .navigationTitle("Add Exercise")
             .navigationBarTitleDisplayMode(.inline)
             .searchable(text: $query, prompt: "Search or create new")
+            .searchFocused($isSearchFocused)
+            .textInputAutocapitalization(.words)
+            .autocorrectionDisabled()
+            .onSubmit(of: .search) {
+                guard canCreateNew else { return }
+                createAndSelect(name: query.trimmingCharacters(in: .whitespacesAndNewlines))
+            }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }
@@ -1259,6 +1278,8 @@ private struct AddExerciseSheet: View {
                 }
             }
             .appNavigationBarChrome()
+            .tint(AppColor.systemTint)
+            .onAppear { isSearchFocused = true }
         }
     }
 
@@ -1282,7 +1303,8 @@ final class ActiveWorkoutViewModel {
     func prefillSet(
         for exerciseID: UUID,
         currentSession: WorkoutSession,
-        sessions: [WorkoutSession]
+        sessions: [WorkoutSession],
+        plannedReps: Int? = nil
     ) -> SetPrefill? {
         let currentEntries = currentSession.setEntries
             .filter { $0.exerciseId == exerciseID }
@@ -1292,15 +1314,19 @@ final class ActiveWorkoutViewModel {
             return SetPrefill(weight: currentLast.weight, reps: currentLast.reps)
         }
 
-        guard let reference = latestSessionSet(
+        if let reference = latestSessionSet(
             for: exerciseID,
             currentSession: currentSession,
             sessions: sessions
-        ) else {
-            return nil
+        ) {
+            return SetPrefill(weight: reference.weight, reps: reference.reps)
         }
 
-        return SetPrefill(weight: reference.weight, reps: reference.reps)
+        if let plannedReps, plannedReps > 0 {
+            return SetPrefill(weight: 0, reps: plannedReps)
+        }
+
+        return nil
     }
 
     private func latestSessionSet(
@@ -1557,7 +1583,7 @@ private struct WarmupRow: View {
             } label: {
                 HStack(spacing: AppSpacing.sm) {
                     Text("Warmup")
-                        .font(AppFont.caption.font.weight(.semibold))
+                        .font(AppFont.caption.font)
                         .foregroundStyle(AppColor.textSecondary)
                     Text("· \(warmups.count) set\(warmups.count == 1 ? "" : "s")")
                         .font(AppFont.caption.font)

@@ -24,6 +24,10 @@ enum AppColor {
     static let background = Color(uiColor: uicolorAdaptive(light: 0xF5F5F5, dark: 0x0E0F12))
     static let barBackground = Color(uiColor: uicolorAdaptive(light: 0xF5F5F5, dark: 0x13151A))
     static let cardBackground = Color(uiColor: uicolorAdaptive(light: 0xFFFFFF, dark: 0x1D2026))
+    /// Soft inset fill for elements nested inside `AppCard` (exercise rows, chips, inline cells).
+    /// Matches page background so rows read as quiet recesses on white. Use with `AppRadius.sm` (10) +
+    /// `AppSpacing.sm` (8) padding per the Figma source of truth. Do not use for top-level controls.
+    static let cardRowFill = Color(uiColor: uicolorAdaptive(light: 0xF5F5F5, dark: 0x2C313A))
     static let sheetBackground = Color(uiColor: uicolorAdaptive(light: 0xFFFFFF, dark: 0x21252D))
     static let controlBackground = Color(uiColor: uicolorAdaptive(light: 0xE8E8E8, dark: 0x2C313A))
     static let mutedFill = Color(uiColor: uicolorAdaptive(light: 0xE8E8E8, dark: 0x313640))
@@ -232,41 +236,18 @@ enum AppProgressChipMetrics {
     static var compactHorizontalPadding: CGFloat { AppSpacing.sm }
 }
 
-/// Canonical row/section separator. Renders as vertical whitespace — items are
-/// separated by breathing room, not hairlines, per the light/quiet visual language.
-/// Use `spacing: .sm` between list rows inside a shared card (tighter contexts
-/// still default to `xs`). Pre-refinement: this was a 1px line in `AppColor.border`.
+/// Canonical row separator. 1pt hairline at `AppColor.border.opacity(0.55)` —
+/// the same value the active-workout lineup hand-rolled before consolidation.
+/// Used by `AppDividedList` (and a handful of card-row contexts that compose
+/// rows by hand). Spans the full width of its container; constrain via
+/// surrounding `.padding(.leading/.trailing, ...)` if a non-full-width inset is
+/// needed.
 struct AppDivider: View {
-    var spacing: CGFloat = AppSpacing.xs
-
     var body: some View {
-        Color.clear
-            .frame(height: spacing)
+        Rectangle()
+            .fill(AppColor.border.opacity(0.55))
             .frame(maxWidth: .infinity)
-    }
-}
-
-/// Unit brand mark — three ascending rounded bars mirroring the app-icon glyph.
-/// Rendered in `AppColor.textPrimary` so it reads black in-app (the orange
-/// backdrop is reserved for the home-screen icon only, per §banned-in-view-code).
-struct AppBrandMark: View {
-    var size: CGFloat = 56
-
-    var body: some View {
-        let barWidth = size * 0.2
-        let gap = size * 0.08
-        let radius = barWidth * 0.4
-
-        HStack(alignment: .bottom, spacing: gap) {
-            RoundedRectangle(cornerRadius: radius, style: .continuous)
-                .frame(width: barWidth, height: size * 0.42)
-            RoundedRectangle(cornerRadius: radius, style: .continuous)
-                .frame(width: barWidth, height: size * 0.68)
-            RoundedRectangle(cornerRadius: radius, style: .continuous)
-                .frame(width: barWidth, height: size * 0.94)
-        }
-        .frame(width: size, height: size, alignment: .bottom)
-        .foregroundStyle(AppColor.textPrimary)
+            .frame(height: 1)
     }
 }
 
@@ -363,6 +344,7 @@ enum AppIcon: String {
     case circle = "circle"
     case moveUp = "arrow.up"
     case moveDown = "arrow.down"
+    case more = "ellipsis.circle"
 
     var systemName: String { rawValue }
 
@@ -379,94 +361,6 @@ extension Double {
 }
 
 // MARK: - Molecules
-
-/// Icon-based nav bar action descriptor. Used by `AppNavBar` + `AppScreen`.
-struct NavAction {
-    let icon: AppIcon
-    let action: () -> Void
-}
-
-/// Text-label nav bar action descriptor. Used by `AppNavBar` + `AppScreen`.
-struct NavTextAction {
-    let label: String
-    let action: () -> Void
-}
-
-/// 44pt-tall fixed navigation bar with centered title and optional leading/trailing
-/// icon or text actions. Used for detail-flow screens driven by `AppScreen`'s
-/// legacy nav path. Root/product screens should prefer `ProductTopBar` instead.
-struct AppNavBar: View {
-    let title: String?
-    let leadingAction: NavAction?
-    let trailingAction: NavAction?
-    let trailingText: NavTextAction?
-
-    var body: some View {
-        ZStack {
-            if let title, !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                Text(title)
-                    .font(AppFont.sectionHeader.font)
-                    .foregroundStyle(AppFont.sectionHeader.color)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                    .minimumScaleFactor(0.85)
-            }
-
-            HStack {
-                if let leadingAction {
-                    iconButton(leadingAction)
-                } else {
-                    Spacer().frame(width: 44)
-                }
-
-                Spacer()
-
-                trailingSlot
-            }
-        }
-        .frame(height: 44)
-        .padding(.horizontal, AppSpacing.sm)
-    }
-
-    /// Trailing slot: icon + text if both, else text, else icon, else a 44pt spacer
-    /// so the title stays centered in the `ZStack`.
-    @ViewBuilder
-    private var trailingSlot: some View {
-        switch (trailingAction, trailingText) {
-        case (let icon?, let text?):
-            HStack(spacing: AppSpacing.xs) {
-                iconButton(icon)
-                textButton(text)
-            }
-        case (nil, let text?):
-            textButton(text)
-        case (let icon?, nil):
-            iconButton(icon)
-        case (nil, nil):
-            Spacer().frame(width: 44)
-        }
-    }
-
-    private func iconButton(_ navAction: NavAction) -> some View {
-        Button(action: navAction.action) {
-            navAction.icon.image(size: 17, weight: .semibold)
-                .foregroundStyle(AppColor.textPrimary)
-                .frame(width: 44, height: 44)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-    }
-
-    private func textButton(_ navText: NavTextAction) -> some View {
-        Button(action: navText.action) {
-            Text(navText.label)
-                .font(AppFont.label.font)
-                .foregroundStyle(AppColor.textPrimary)
-                .frame(minWidth: 44, minHeight: 44)
-        }
-        .buttonStyle(.plain)
-    }
-}
 
 /// Standard list row — optional leading icon, title, secondary subtitle, and a
 /// trailing slot. **Chevron-free by design**: never add `.forward` as a disclosure
@@ -609,7 +503,7 @@ struct AppTextEditor: View {
             if text.isEmpty {
                 Text(placeholder)
                     .font(AppFont.body.font)
-                    .foregroundStyle(AppColor.textSecondary)
+                    .foregroundStyle(AppColor.secondaryLabel)
                     // TextEditor's internal NSTextContainer inset is ~5pt horizontal,
                     // ~8pt vertical — offset the placeholder so it sits on the cursor.
                     .padding(.horizontal, AppSpacing.md + 5)
@@ -653,27 +547,22 @@ struct AppPrimaryButton: View {
     }
 }
 
-/// Filled secondary action — e.g. `Add Day`, `Next exercise`, `Delete Program`.
-/// Supports an optional leading icon and an optional detail line (stacked or
-/// inline). Use `tone: .accentSoft` for neutral in-card actions, `.destructive`
-/// for delete. Never use as the primary action where `AppPrimaryButton` applies.
+/// Filled secondary action used **only** by active-workout organisms — the
+/// `metricHero` "Log" pill in `WorkoutCommandCard` and the inline "Next exercise"
+/// row in `SessionStateBar`. Not exposed as a general button: feature code uses
+/// `AppPrimaryButton` (sticky CTA) or `AppGhostButton` (quiet action) instead.
 struct AppSecondaryButton: View {
     enum Tone {
-        /// Neutral control surface, primary text (default — `Add Day`, `Add Exercise`, `Not now`).
         case `default`
-        /// Accent-tinted background with accent foreground.
         case accentSoft
-        /// No fill, error foreground (`Delete Program`).
         case destructive
     }
 
-    /// How the optional two-line `detail` label is laid out (single-line buttons ignore this).
     enum DetailAlignment {
         case leading
         case center
     }
 
-    /// When `detail` is set: stack title + subtitle vertically, or show **one line** (title + detail side by side).
     enum DetailLayout {
         case stacked
         case inline
@@ -682,12 +571,10 @@ struct AppSecondaryButton: View {
     let label: String
     var isEnabled: Bool = true
     var icon: AppIcon? = nil
-    /// Trailing segment (e.g. next exercise name). Omit for single-line buttons.
     var detail: String? = nil
     var detailAlignment: DetailAlignment = .leading
     var detailLayout: DetailLayout = .stacked
     var tone: Tone = .default
-    /// When `false`, sizes to content with standard horizontal/vertical padding (e.g. compact “Log” on `WorkoutCommandCard`). When `true` (default), stretches to the container width.
     var fillsAvailableWidth: Bool = true
     let action: () -> Void
 
@@ -794,7 +681,6 @@ struct AppSecondaryButton: View {
         return trimmedDetail == nil ? 0 : AppSpacing.md
     }
 
-    /// One line: title + detail (e.g. next exercise), centered when `detailAlignment == .center`.
     @ViewBuilder
     private func inlineDetailRow(trimmedDetail: String) -> some View {
         let detailColor = isEnabled ? AppColor.textSecondary : AppColor.textDisabled
@@ -894,7 +780,7 @@ struct AppGhostButton: View {
 struct AppTag: View {
     let text: String
     var style: Style = .default
-    /// `.compactCapsule` matches Paper today “Day n of m” (node 2P1-0) and `WeeklyProgressStepper` chip height.
+    /// `.compactCapsule` matches Paper today “Day n of m” (node 2P1-0) — short status pills inside cards.
     var layout: Layout = .regular
     /// Optional leading glyph rendered inline with the text (same foreground color).
     var icon: AppIcon? = nil
@@ -1006,12 +892,16 @@ struct AppDropdownChip<Content: View>: View {
     }
 }
 
-/// Toggleable capsule chip for filter bars (Exercises list, Program library, History).
+/// Toggleable capsule chip for filter bars (Exercises list, Program library, History)
+/// and segmented pickers (onboarding day strip). Selected state inverts to
+/// `textPrimary` fill with `background` foreground — the canonical "active pill"
+/// recipe for Unit. Not for status labels — use `AppTag` there.
 ///
-/// Use when a page needs a horizontal row of mutually-toggleable filter pills.
-/// Not for status labels — use `AppTag` there. Selected state inverts to
-/// `textPrimary` fill; a trailing `×` glyph (when `showsClearGlyphWhenSelected`
-/// is true) signals "tap again to clear" without requiring an explicit reset row.
+/// Two optional trailing affordances:
+/// - `showsClearGlyphWhenSelected`: trailing `×` when selected, signals "tap to clear".
+/// - `showsTrailingDot`: small status dot regardless of selection — used by the
+///   onboarding day picker to flag days that still need exercises. Dot inverts
+///   color in the selected state so it stays visible against the dark fill.
 struct AppFilterChip: View {
     let label: String
     let isSelected: Bool
@@ -1019,6 +909,9 @@ struct AppFilterChip: View {
     /// tapping a selected chip clears the filter. Filter bars that reset via a
     /// dedicated "All" pill should leave this false.
     var showsClearGlyphWhenSelected: Bool = false
+    /// Show a small status dot at the trailing edge regardless of selection state.
+    /// Used by the onboarding day picker to flag days with no exercises yet.
+    var showsTrailingDot: Bool = false
     let action: () -> Void
 
     var body: some View {
@@ -1028,6 +921,11 @@ struct AppFilterChip: View {
                     .font(AppFont.caption.font)
                 if isSelected && showsClearGlyphWhenSelected {
                     AppIcon.close.image(size: 10, weight: .bold)
+                }
+                if showsTrailingDot {
+                    Circle()
+                        .fill(isSelected ? AppColor.background : AppColor.warning)
+                        .frame(width: 6, height: 6)
                 }
             }
             .foregroundStyle(isSelected ? AppColor.background : AppColor.textPrimary)
@@ -1047,10 +945,39 @@ struct AppFilterChip: View {
     }
 }
 
+/// Canonical horizontal filter-chip strip — one `ScrollView(.horizontal)` with
+/// `AppSpacing.xs` between chips and `appScrollEdgeSoft()` at the leading/trailing
+/// edges so chips fade rather than sharp-cut. Use anywhere a row of
+/// `AppFilterChip` toggles or `AppDropdownChip` menus needs to scroll
+/// horizontally (Program library, Exercises list, History). Single source of
+/// truth for chip-bar chrome — never re-roll a `ScrollView { HStack { chips } }`
+/// inline in a feature view.
+///
+/// `contentInset` only adds horizontal padding to the chip strip itself.
+/// Default `0` for bars hosted inside `AppScreen` (which already provides 16pt
+/// outer padding via `paddedMainContent`). Pass `AppSpacing.md` (16pt) for bars
+/// hosted in containers without outer padding (e.g. a `List` row with
+/// `listRowInsets(EdgeInsets())`).
+struct AppFilterChipBar<Content: View>: View {
+    var contentInset: CGFloat = 0
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: AppSpacing.xs) {
+                content()
+            }
+            .padding(.horizontal, contentInset)
+            .padding(.vertical, AppSpacing.xxs)
+        }
+        .appScrollEdgeSoft()
+    }
+}
+
 /// Pill-shaped header action (48pt icon square or 60pt-min text label) used
 /// inside `ProductTopBar`. The visible tap area replaces floating text headers
 /// so every header action has a clear hit target.
-struct ProductTopBarAction: View {
+private struct ProductTopBarAction: View {
     enum Content {
         case text(String)
         case icon(AppIcon)
@@ -1083,8 +1010,9 @@ struct ProductTopBarAction: View {
 }
 
 /// Root/product-screen top bar — title + optional leading/trailing actions on a
-/// 64pt surface. Compose via `AppScreen(customHeader:)`. Detail flows should stay
-/// on `AppNavBar` / native nav bar; this replaces large-title chrome on root tabs.
+/// 64pt surface. Compose via `AppScreen(customHeader:)`. Detail flows use the
+/// system `NavigationStack` chrome (`showsNativeNavigationBar: true`); this
+/// replaces large-title chrome on root tabs and modal sheets.
 struct ProductTopBar: View {
     enum Size {
         case md
@@ -1151,101 +1079,6 @@ struct ProductTopBar: View {
             return .text(label)
         case .icon(let icon):
             return .icon(icon)
-        }
-    }
-}
-
-/// Compact multi-step progress chip strip — used for "Week N of M" / "Day N of M"
-/// lockups on Today and program cards. Current step renders as a filled black
-/// capsule; completed/missed steps become small circles with check/minus glyphs.
-struct WeeklyProgressStepper: View {
-    struct Step: Identifiable {
-        enum State {
-            case completed
-            case missed
-            case current
-            case upcoming
-        }
-
-        let id: Int
-        let label: String
-        let state: State
-    }
-
-    let steps: [Step]
-    /// e.g. `"Week"` on Today hero, `"Day"` on Programs active card (Paper reference).
-    var labelPrefix: String = "Week"
-    var verticalPadding: CGFloat = AppSpacing.sm
-
-    var body: some View {
-        HStack(spacing: AppSpacing.xs) {
-            ForEach(steps) { step in
-                Group {
-                    if step.state == .current {
-                        Text("\(labelPrefix) \(step.label)")
-                            .font(AppFont.stepIndicator)
-                            .foregroundStyle(AppColor.accentForeground)
-                            .padding(.horizontal, AppProgressChipMetrics.compactHorizontalPadding)
-                            .frame(height: AppProgressChipMetrics.rowHeight)
-                            .background(Capsule().fill(AppColor.accent))
-                    } else {
-                        ZStack {
-                            Circle()
-                                .fill(backgroundColor(for: step.state))
-                                .frame(width: AppProgressChipMetrics.rowHeight, height: AppProgressChipMetrics.rowHeight)
-
-                            switch step.state {
-                            case .completed:
-                                AppIcon.checkmark.image(size: 10, weight: .bold)
-                                    .foregroundStyle(AppColor.textPrimary)
-                            case .missed:
-                                AppIcon.remove.image(size: 10, weight: .bold)
-                                    .foregroundStyle(AppColor.textPrimary)
-                            default:
-                                Text(step.label)
-                                    .font(AppFont.stepIndicator)
-                                    .foregroundStyle(foregroundColor(for: step.state))
-                            }
-                        }
-                    }
-                }
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel(accessibilityLabel(for: step))
-            }
-        }
-        .padding(.vertical, verticalPadding)
-    }
-
-    private func backgroundColor(for state: Step.State) -> Color {
-        switch state {
-        case .current:
-            return AppColor.accent
-        case .completed, .missed, .upcoming:
-            return AppColor.mutedFill
-        }
-    }
-
-    private func foregroundColor(for state: Step.State) -> Color {
-        switch state {
-        case .current:
-            return AppColor.accentForeground
-        case .upcoming:
-            return AppColor.textSecondary
-        case .completed, .missed:
-            return AppColor.textPrimary
-        }
-    }
-
-    private func accessibilityLabel(for step: Step) -> String {
-        switch step.state {
-        case .completed:
-            return "\(labelPrefix) \(step.label), completed"
-        case .missed:
-            return "\(labelPrefix) \(step.label), missed"
-        case .current:
-            return "\(labelPrefix) \(step.label), current"
-        case .upcoming:
-            return "\(labelPrefix) \(step.label), upcoming"
         }
     }
 }
@@ -1617,74 +1450,6 @@ private struct PreviewListContentHeightKey: PreferenceKey {
     }
 }
 
-/// Tall (72pt-min) row optimized for bottom-sheet pickers — "Set 1", "Set 2",
-/// with per-row trailing slot for a status badge / current tag. Uses
-/// `AppFont.productAction` throughout so sheet copy reads heavier than flat list
-/// rows. `showsBorder` injects spacing between rows; set false on the last.
-struct SheetListRow<Trailing: View>: View {
-    let title: String
-    var subtitle: String? = nil
-    var titleStyle: TitleStyle = .primary
-    var showsBorder: Bool = true
-    @ViewBuilder let trailing: () -> Trailing
-
-    enum TitleStyle {
-        case primary
-        case muted
-    }
-
-    var body: some View {
-        VStack(spacing: 0) {
-            HStack {
-                VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                    Text(title)
-                        .font(AppFont.productAction)
-                        .foregroundStyle(titleColor)
-
-                    if let subtitle, !subtitle.isEmpty {
-                        Text(subtitle)
-                            .font(AppFont.productAction)
-                            .foregroundStyle(subtitleColor)
-                    }
-                }
-
-                Spacer(minLength: 0)
-
-                trailing()
-            }
-            .padding(.horizontal, AppSpacing.md)
-            .padding(.vertical, AppSpacing.sm)
-            .frame(minHeight: 72)
-
-            if showsBorder {
-                AppDivider(spacing: AppSpacing.sm)
-            }
-        }
-    }
-
-    private var titleColor: Color {
-        switch titleStyle {
-        case .primary: return AppColor.textPrimary
-        case .muted: return AppColor.textSecondary
-        }
-    }
-
-    private var subtitleColor: Color {
-        switch titleStyle {
-        case .primary: return AppColor.textSecondary
-        case .muted: return AppColor.mutedFill
-        }
-    }
-}
-
-extension SheetListRow where Trailing == EmptyView {
-    init(title: String, subtitle: String? = nil, titleStyle: TitleStyle = .primary, showsBorder: Bool = true) {
-        self.init(title: title, subtitle: subtitle, titleStyle: titleStyle, showsBorder: showsBorder) {
-            EmptyView()
-        }
-    }
-}
-
 // MARK: - Organisms
 
 /// Canonical card surface — white fill, continuous corners, thin stroke,
@@ -1693,9 +1458,21 @@ extension SheetListRow where Trailing == EmptyView {
 /// without re-nesting). Never invent inline `.background(...).clipShape(...)` chrome.
 struct AppCard<Content: View>: View {
     /// Outer inset for card chrome. System default is `AppSpacing.lg` (24pt) so every
-    /// card has consistent breathing room. Compact contexts (list rows, PR rows) can
-    /// pass a smaller inset explicitly.
+    /// card has 24pt visual breathing room from card edge to content. Use the default
+    /// when the body owns no horizontal padding of its own (text, buttons, custom
+    /// layouts). For list content where the inner row already pads itself by
+    /// `AppSpacing.md` (16pt) — `AppListRow`, or any row with explicit
+    /// `.padding(.horizontal, .md)` — pass `AppSpacing.sm` (8pt) so 8 + 16 composes
+    /// to the same 24pt offset. Use `0` only for full-bleed content (dividers
+    /// running card-edge to card-edge, media). Anything else is the wrong inset.
     var contentInset: CGFloat = AppSpacing.lg
+    /// Optional vertical override. When the card's content is a list whose rows
+    /// already own vertical padding (e.g. `AppDividedList` of `AppListRow` /
+    /// `PreviewListRow`), pass a smaller value here so the card chrome doesn't
+    /// compound with the row padding and create asymmetric edge-vs-between
+    /// spacing. `nil` (default) uses `contentInset` on all four sides — current
+    /// behavior for non-list cards.
+    var verticalInset: CGFloat? = nil
     /// Corner radius for clip + stroke; default matches `AppRadius.lg` cards app-wide.
     var cornerRadius: CGFloat = AppRadius.lg
     @ViewBuilder let content: () -> Content
@@ -1704,7 +1481,8 @@ struct AppCard<Content: View>: View {
         VStack(alignment: .leading, spacing: 0) {
             content()
         }
-        .padding(contentInset)
+        .padding(.horizontal, contentInset)
+        .padding(.vertical, verticalInset ?? contentInset)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(AppColor.cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
@@ -1712,38 +1490,89 @@ struct AppCard<Content: View>: View {
     }
 }
 
-/// Session list row: eyebrow (date), title (template name), optional caption, trailing status (e.g. history badge).
-struct AppSessionHighlightCard<Trailing: View>: View {
+/// Session header row: eyebrow (date), title (template name), optional caption,
+/// trailing status. No card chrome — use directly as a row inside `AppCardList`
+/// (history list of sessions) or compose into `AppSessionHighlightCard` when a
+/// single session needs its own elevated surface (missed-day card, earlier-week
+/// catch-up). Single source of truth for the session header layout.
+struct AppSessionHighlightRow<Trailing: View>: View {
     let eyebrow: String
     let title: String
     let caption: String?
     @ViewBuilder let trailing: () -> Trailing
 
     var body: some View {
-        AppCard(contentInset: AppSpacing.lg) {
-            HStack(alignment: .center, spacing: AppSpacing.md) {
-                VStack(alignment: .leading, spacing: AppSpacing.xxs) {
-                    Text(eyebrow)
-                        .font(AppFont.label.font)
+        HStack(alignment: .center, spacing: AppSpacing.md) {
+            VStack(alignment: .leading, spacing: AppSpacing.xxs) {
+                Text(eyebrow)
+                    .font(AppFont.label.font)
+                    .foregroundStyle(AppColor.textSecondary)
+
+                Text(title)
+                    .font(AppFont.title.font)
+                    .foregroundStyle(AppColor.textPrimary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                if let caption, !caption.isEmpty {
+                    Text(caption)
+                        .font(AppFont.caption.font)
                         .foregroundStyle(AppColor.textSecondary)
-
-                    Text(title)
-                        .font(AppFont.title.font)
-                        .foregroundStyle(AppColor.textPrimary)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    if let caption, !caption.isEmpty {
-                        Text(caption)
-                            .font(AppFont.caption.font)
-                            .foregroundStyle(AppColor.textSecondary)
-                    }
                 }
+            }
 
-                Spacer(minLength: 0)
+            Spacer(minLength: 0)
 
-                trailing()
+            trailing()
+        }
+    }
+}
+
+/// Session highlight as a single elevated card. Wraps `AppSessionHighlightRow`
+/// in `AppCard` chrome and optionally appends extra detail beneath the header
+/// (separated by an `AppDivider`) — used by the calendar summary sheet where
+/// the session header is followed by a context note + per-exercise breakdown.
+/// For lists of multiple sessions on a single surface, use
+/// `AppSessionHighlightRow` inside `AppCardList` instead — never stack
+/// per-row `AppSessionHighlightCard`s in a list (CLAUDE.md §5: no per-row
+/// shadowed cards in lists).
+struct AppSessionHighlightCard<Trailing: View, BelowContent: View>: View {
+    let eyebrow: String
+    let title: String
+    let caption: String?
+    @ViewBuilder let trailing: () -> Trailing
+    @ViewBuilder let belowContent: () -> BelowContent
+
+    var body: some View {
+        AppCard(contentInset: AppSpacing.lg) {
+            VStack(alignment: .leading, spacing: AppSpacing.md) {
+                AppSessionHighlightRow(
+                    eyebrow: eyebrow,
+                    title: title,
+                    caption: caption,
+                    trailing: trailing
+                )
+
+                if BelowContent.self != EmptyView.self {
+                    AppDivider()
+                    belowContent()
+                }
             }
         }
+    }
+}
+
+extension AppSessionHighlightCard where BelowContent == EmptyView {
+    init(
+        eyebrow: String,
+        title: String,
+        caption: String?,
+        @ViewBuilder trailing: @escaping () -> Trailing
+    ) {
+        self.eyebrow = eyebrow
+        self.title = title
+        self.caption = caption
+        self.trailing = trailing
+        self.belowContent = { EmptyView() }
     }
 }
 
@@ -1787,22 +1616,32 @@ extension View {
     }
 }
 
-/// Empty-state card with eyebrow, title, message, and primary action. Used when
-/// a feature has no data yet (no program, no sessions). Compose inside `AppScreen`;
-/// don't rebuild an eyebrow+title+CTA layout in-place when this fits the shape.
-struct EmptyStateCard: View {
-    let eyebrow: String
+/// Empty-state card. Two shapes share one molecule:
+/// 1. **CTA-bearing** (`eyebrow` + `title` + `message` + `buttonLabel` + `action`) — for
+///    features the user *can* fix from this screen (no program → "Create program").
+/// 2. **Quiet** (`title` + `message`) — for screens where the missing data is created
+///    elsewhere (History → "No sessions yet").
+///
+/// Compose inside `AppScreen`; don't rebuild a title+message card in-place when this
+/// covers the shape. Per CLAUDE.md §5 (extend > create), variants live behind one
+/// struct so list screens converge instead of forking.
+struct EmptyStateCard<Content: View>: View {
+    let eyebrow: String?
     let title: String
     let message: String
-    let buttonLabel: String
-    let action: () -> Void
+    let note: String?
+    let buttonLabel: String?
+    let action: (() -> Void)?
+    let content: () -> Content
 
     var body: some View {
         AppCard {
             VStack(alignment: .center, spacing: AppSpacing.md) {
-                Text(eyebrow)
-                    .font(AppFont.caption.font)
-                    .foregroundStyle(AppColor.textSecondary)
+                if let eyebrow {
+                    Text(eyebrow)
+                        .font(AppFont.caption.font)
+                        .foregroundStyle(AppColor.textSecondary)
+                }
 
                 VStack(alignment: .center, spacing: AppSpacing.xs) {
                     Text(title)
@@ -1810,66 +1649,144 @@ struct EmptyStateCard: View {
                         .tracking(AppFont.productHeadingTracking)
                         .foregroundStyle(AppColor.textPrimary)
                         .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
 
                     Text(message)
                         .font(AppFont.productAction)
                         .foregroundStyle(AppColor.textSecondary)
                         .multilineTextAlignment(.center)
+
+                    if let note {
+                        Text(note)
+                            .font(AppFont.caption.font)
+                            .foregroundStyle(AppColor.secondaryLabel)
+                            .multilineTextAlignment(.center)
+                    }
                 }
 
-                AppPrimaryButton(buttonLabel, action: action)
+                if Content.self != EmptyView.self {
+                    content()
+                }
+
+                if let buttonLabel, let action {
+                    AppPrimaryButton(buttonLabel, action: action)
+                }
             }
             .frame(maxWidth: .infinity)
         }
     }
 }
 
-/// Canonical row-list primitive. Two styles:
-/// - `.divided` (default): flat list with `AppDivider` between rows — use inside a
-///   single shared `AppCard` when rows share a subject (e.g. exercise sets in a
-///   session summary).
-/// - `.stacked`: each row gets its own `AppCard` with spacing between — use when
-///   rows are independently tappable items (e.g. routine list, programs).
-///
-/// Replaces the former `AppStackedCardList` parallel-implementation. Never add a
-/// new list container; extend this style enum if a new variant is genuinely needed.
+extension EmptyStateCard where Content == EmptyView {
+    /// CTA-bearing empty state (primary use — feature can be initiated here).
+    init(eyebrow: String, title: String, message: String, buttonLabel: String, action: @escaping () -> Void) {
+        self.eyebrow = eyebrow
+        self.title = title
+        self.message = message
+        self.note = nil
+        self.buttonLabel = buttonLabel
+        self.action = action
+        self.content = { EmptyView() }
+    }
+
+    /// Quiet empty state — title + message only, for screens where missing data is
+    /// created elsewhere. Replaces hand-rolled `AppCard { VStack { Text + Text } }`.
+    init(title: String, message: String) {
+        self.eyebrow = nil
+        self.title = title
+        self.message = message
+        self.note = nil
+        self.buttonLabel = nil
+        self.action = nil
+        self.content = { EmptyView() }
+    }
+
+    /// Hero variant without inline content or CTA — used by Today's rest-day card
+    /// (eyebrow + title + subtitle, nothing else).
+    init(eyebrow: String, title: String, message: String) {
+        self.eyebrow = eyebrow
+        self.title = title
+        self.message = message
+        self.note = nil
+        self.buttonLabel = nil
+        self.action = nil
+        self.content = { EmptyView() }
+    }
+}
+
+extension EmptyStateCard {
+    /// Hero variant with an inline content slot above the CTA — used by Today's
+    /// "Up next" card to embed a tappable preview list. Optional `note:` renders
+    /// a caption beneath the subtitle (e.g. "Different routine for today").
+    init(
+        eyebrow: String,
+        title: String,
+        message: String,
+        note: String? = nil,
+        buttonLabel: String,
+        action: @escaping () -> Void,
+        @ViewBuilder content: @escaping () -> Content
+    ) {
+        self.eyebrow = eyebrow
+        self.title = title
+        self.message = message
+        self.note = note
+        self.buttonLabel = buttonLabel
+        self.action = action
+        self.content = content
+    }
+}
+
+/// Lightweight transient empty state — caption-sized message centered in a
+/// card-chromed surface. Use when a filter or search has returned no results
+/// (Program library "No programs match these filters", Exercises list search
+/// empty, History filter empty). Distinct from `EmptyStateCard`, which is the
+/// heavy cold-start treatment for "no data yet" with eyebrow + title + message
+/// + CTA. `AppEmptyHint` carries no eyebrow, no title, no action — just a
+/// quiet hint that the current filter/search produced nothing.
+struct AppEmptyHint: View {
+    private let message: String
+
+    init(_ message: String) {
+        self.message = message
+    }
+
+    var body: some View {
+        Text(message)
+            .font(AppFont.caption.font)
+            .foregroundStyle(AppColor.textSecondary)
+            .multilineTextAlignment(.center)
+            .frame(maxWidth: .infinity)
+            .frame(minHeight: 120)
+            .appCardStyle()
+    }
+}
+
+/// Canonical row-list primitive. Renders rows separated by a 1pt `AppDivider`
+/// hairline. Use inside a shared `AppCard` (or `SettingsSection`) when rows
+/// share a subject; for a list that owns its own card chrome, use the
+/// `AppCardList` molecule instead. Dividers default to full container width
+/// (leading/trailing 0); pass `dividerLeading:` / `dividerTrailing:` only when
+/// a non-full-width inset is genuinely required.
 struct AppDividedList<Data, ID, RowContent>: View
     where Data: RandomAccessCollection, ID: Hashable, RowContent: View
 {
-    enum Style {
-        case divided
-        case stacked
-    }
-
     let data: Data
     let id: KeyPath<Data.Element, ID>
-    var style: Style = .divided
     var dividerLeading: CGFloat = 0
     var dividerTrailing: CGFloat = 0
-    var stackedSpacing: CGFloat = AppSpacing.sm
     @ViewBuilder let content: (Data.Element) -> RowContent
 
     var body: some View {
         let items = Array(data)
-        switch style {
-        case .divided:
-            VStack(alignment: .leading, spacing: 0) {
-                ForEach(items.indices, id: \.self) { index in
-                    if index > 0 {
-                        AppDivider()
-                            .padding(.leading, dividerLeading)
-                            .padding(.trailing, dividerTrailing)
-                    }
-                    content(items[index])
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(items.indices, id: \.self) { index in
+                if index > 0 {
+                    AppDivider()
+                        .padding(.leading, dividerLeading)
+                        .padding(.trailing, dividerTrailing)
                 }
-            }
-        case .stacked:
-            VStack(alignment: .leading, spacing: stackedSpacing) {
-                ForEach(items.indices, id: \.self) { index in
-                    AppCard {
-                        content(items[index])
-                    }
-                }
+                content(items[index])
             }
         }
     }
@@ -1884,22 +1801,135 @@ extension AppDividedList where Data.Element: Identifiable, ID == Data.Element.ID
     ) {
         self.data = data
         self.id = \.id
-        self.style = .divided
         self.dividerLeading = dividerLeading
         self.dividerTrailing = dividerTrailing
         self.content = content
     }
+}
 
+/// Canonical "list inside its own card" molecule. The card runs full-bleed
+/// horizontally (`contentInset: 0`) so the 1pt `AppDivider` hairlines extend
+/// card-edge to card-edge — the documented full-width-of-container rule. Rows
+/// pad themselves by `AppSpacing.lg` (24pt) to land at the canonical 24pt
+/// text-from-edge offset, and the molecule enforces a 52pt minimum row height
+/// (matching `PreviewListRow` / `AppCardListAddRow`) so single-line text rows
+/// never collapse to a 44pt tap-target floor and read tight against the
+/// dividers. Use this anywhere you'd otherwise compose `AppCard` +
+/// `AppDividedList` by hand — that combination is banned in feature code
+/// (see CLAUDE.md §5 + `.claude/hooks/ui-banned-list.sh`).
+///
+/// Optional `trailing:` slot renders one extra divided row after the data
+/// rows — typically an `AppCardListAddRow("Add X")` affordance, matching the
+/// in-card add convention used elsewhere. The trailing row is preceded by an
+/// `AppDivider` only when there is at least one data row, so the empty state
+/// (just the add affordance) reads as one clean row.
+///
+/// For list content nested inside a `SettingsSection` or another `AppCard`
+/// (which already provides card chrome), use `AppDividedList` directly — the
+/// hairline divider is shared.
+struct AppCardList<Data, ID, RowContent, Trailing>: View
+    where Data: RandomAccessCollection, ID: Hashable, RowContent: View, Trailing: View
+{
+    private let data: Data
+    private let id: KeyPath<Data.Element, ID>
+    private let row: (Data.Element) -> RowContent
+    private let trailing: () -> Trailing
+
+    var body: some View {
+        // verticalInset matches the row's internal `.padding(.vertical, .sm)` so
+        // edge breathing (8 + 8 = 16pt) reads symmetrically against between-rows
+        // breathing (8 + 1pt divider + 8 = 17pt). Anything smaller pinches the
+        // first/last row against the card edge.
+        //
+        // Row min-height of 52pt matches `PreviewListRow` and `AppCardListAddRow`
+        // so single-line rows (`OnboardingSplitBuilderView`) get the canonical
+        // breathing room for free instead of collapsing to a 44pt tap-target floor.
+        AppCard(contentInset: 0, verticalInset: AppSpacing.sm) {
+            VStack(alignment: .leading, spacing: 0) {
+                AppDividedList(data: data, id: id) { item in
+                    row(item)
+                        .padding(.horizontal, AppSpacing.lg)
+                        .frame(maxWidth: .infinity, minHeight: 52, alignment: .leading)
+                }
+                if Trailing.self != EmptyView.self {
+                    if !data.isEmpty {
+                        AppDivider()
+                    }
+                    trailing()
+                        .padding(.horizontal, AppSpacing.lg)
+                        .frame(maxWidth: .infinity, minHeight: 52, alignment: .leading)
+                }
+            }
+        }
+    }
+}
+
+extension AppCardList where Trailing == EmptyView {
     init(
-        stacked data: Data,
-        spacing: CGFloat = AppSpacing.sm,
-        @ViewBuilder content: @escaping (Data.Element) -> RowContent
+        data: Data,
+        id: KeyPath<Data.Element, ID>,
+        @ViewBuilder row: @escaping (Data.Element) -> RowContent
+    ) {
+        self.data = data
+        self.id = id
+        self.row = row
+        self.trailing = { EmptyView() }
+    }
+}
+
+extension AppCardList where Data.Element: Identifiable, ID == Data.Element.ID, Trailing == EmptyView {
+    init(_ data: Data, @ViewBuilder row: @escaping (Data.Element) -> RowContent) {
+        self.data = data
+        self.id = \.id
+        self.row = row
+        self.trailing = { EmptyView() }
+    }
+}
+
+extension AppCardList where Data.Element: Identifiable, ID == Data.Element.ID {
+    init(
+        _ data: Data,
+        @ViewBuilder row: @escaping (Data.Element) -> RowContent,
+        @ViewBuilder trailing: @escaping () -> Trailing
     ) {
         self.data = data
         self.id = \.id
-        self.style = .stacked
-        self.stackedSpacing = spacing
-        self.content = content
+        self.row = row
+        self.trailing = trailing
+    }
+}
+
+/// Trailing affordance for an `AppCardList` — a "+ Add X" row that sits as
+/// the final divided row of the list. Renders an accent-colored title beside
+/// `addCircle`, matching the in-card add convention used in
+/// `TemplateDetailView`. 52pt min-height aligns with `PreviewListRow` so the
+/// rhythm reads uniform whether the list is empty or full. Place inside
+/// `AppCardList(_:row:trailing:)`'s `trailing:` closure — never as a free
+/// floating button below the card.
+struct AppCardListAddRow: View {
+    private let title: String
+    private let icon: AppIcon
+    private let action: () -> Void
+
+    init(_ title: String, icon: AppIcon = .addCircle, action: @escaping () -> Void) {
+        self.title = title
+        self.icon = icon
+        self.action = action
+    }
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: AppSpacing.sm) {
+                icon.image()
+                Text(title)
+                    .font(AppFont.body.font)
+                Spacer(minLength: 0)
+            }
+            .foregroundStyle(AppColor.accent)
+            .frame(maxWidth: .infinity, minHeight: 52, alignment: .leading)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(ScaleButtonStyle())
     }
 }
 
@@ -2157,95 +2187,85 @@ struct SessionStateBar: View {
     }
 }
 
-/// Titled group inside an `AppCard` — used in `SettingsView` for "Preferences",
-/// "App", etc. For generic grouped content outside settings, compose `AppCard`
-/// directly; this wrapper exists only to keep settings copy consistent.
-struct SettingsSection<Content: View>: View {
-    let title: String
-    @ViewBuilder let content: () -> Content
+/// Section header line — title text plus an optional trailing accessory
+/// (e.g. "Reorder", "Edit", "See all"). Use as the heading of any titled
+/// group whose body is a standalone surface (`AppCardList`, an
+/// `appInputFieldStyle()` field, custom card content). For groups whose
+/// body needs its own card chrome around free-form content, use
+/// `SettingsSection` — which composes this header internally.
+struct AppSectionHeader<Trailing: View>: View {
+    private let title: String
+    private let trailing: () -> Trailing
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.sm) {
+        HStack(alignment: .firstTextBaseline, spacing: AppSpacing.sm) {
             Text(title)
                 .font(AppFont.sectionHeader.font)
                 .foregroundStyle(AppFont.sectionHeader.color)
+            Spacer(minLength: 0)
+            trailing()
+        }
+    }
+}
 
-            AppCard {
-                VStack(alignment: .leading, spacing: AppSpacing.sm) {
+extension AppSectionHeader {
+    init(_ title: String, @ViewBuilder trailing: @escaping () -> Trailing) {
+        self.title = title
+        self.trailing = trailing
+    }
+}
+
+extension AppSectionHeader where Trailing == EmptyView {
+    init(_ title: String) {
+        self.init(title) { EmptyView() }
+    }
+}
+
+/// Titled group: section-header text above an `AppCard` body. Default
+/// `contentInset: AppSpacing.lg` (24pt) matches `AppCard`'s default chrome and is
+/// right for plain content (single buttons, free-form copy, custom layouts) where
+/// the body owns no horizontal padding of its own. For list content where the
+/// inner row already pads itself by `AppSpacing.md` (16pt) — `AppListRow`,
+/// `AppDividedList`, or any row with explicit `.padding(.horizontal, .md)` — pass
+/// `contentInset: AppSpacing.sm` (8pt) so the outer 8 + inner 16 composes to the
+/// canonical 24pt visual offset from card edge to row content. Passing
+/// `contentInset: 0` is reserved for surfaces where rows must run card-edge to
+/// card-edge (e.g. dividers spanning the full card width, full-bleed media).
+struct SettingsSection<Content: View>: View {
+    let title: String
+    var contentInset: CGFloat = AppSpacing.lg
+    @ViewBuilder let content: () -> Content
+
+    init(
+        title: String,
+        contentInset: CGFloat = AppSpacing.lg,
+        @ViewBuilder content: @escaping () -> Content
+    ) {
+        self.title = title
+        self.contentInset = contentInset
+        self.content = content
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.sm) {
+            AppSectionHeader(title)
+
+            AppCard(contentInset: contentInset, verticalInset: resolvedVerticalInset) {
+                VStack(alignment: .leading, spacing: contentInset == 0 ? 0 : AppSpacing.sm) {
                     content()
                 }
             }
         }
     }
-}
 
-struct UnitTabItem: View {
-    let title: String
-    let icon: AppIcon
-    let isActive: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: AppSpacing.sm) {
-                icon.image(size: 24, weight: .semibold)
-                    .foregroundStyle(iconColor)
-
-                Text(title)
-                    .font(AppFont.stepIndicator)
-                    .foregroundStyle(textColor)
-                    .lineLimit(1)
-            }
-            .frame(width: 128, height: 56)
-            .background(backgroundColor)
-            .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
-        }
-        .buttonStyle(ScaleButtonStyle())
-    }
-
-    private var backgroundColor: Color {
-        isActive ? AppColor.mutedFill : .clear
-    }
-
-    private var iconColor: Color {
-        isActive ? AppColor.textPrimary : AppColor.textSecondary
-    }
-
-    private var textColor: Color {
-        isActive ? AppColor.textPrimary : AppColor.textSecondary
-    }
-}
-
-/// Root-shell custom tab bar — replaces native UITabBar visuals so the active
-/// tab reads with a muted filled pill. `TabView` still owns state and navigation;
-/// this view only provides appearance via `.safeAreaInset(edge: .bottom)`.
-struct UnitTabBar: View {
-    struct Item: Identifiable {
-        let id: String
-        let title: String
-        let icon: AppIcon
-    }
-
-    let items: [Item]
-    let selectedID: String
-    let onSelect: (String) -> Void
-
-    var body: some View {
-        HStack(spacing: 0) {
-            ForEach(items) { item in
-                UnitTabItem(
-                    title: item.title,
-                    icon: item.icon,
-                    isActive: item.id == selectedID
-                ) {
-                    onSelect(item.id)
-                }
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.top, AppSpacing.sm)
-        .padding(.bottom, AppSpacing.smd)
-        .background(AppColor.background)
+    /// In documented "list mode" (`contentInset == .sm`), the inner row already
+    /// pads itself vertically. Compounding the card's 8pt vertical inset on top
+    /// produces asymmetric edge-vs-between spacing (12pt edges, 9pt between for
+    /// `.display` rows). Drop the card's vertical to `xs` (4pt) so 4 + 4 = 8pt
+    /// edges align with 4 + divider + 4 = 9pt between rows. For non-list modes,
+    /// keep symmetric padding (`nil` → uses `contentInset`).
+    private var resolvedVerticalInset: CGFloat? {
+        contentInset == AppSpacing.sm ? AppSpacing.xs : nil
     }
 }
 
@@ -2272,62 +2292,45 @@ struct SecondaryButtonConfig {
     let action: () -> Void
 }
 
-/// Page-level template: horizontal padding, optional custom header (`ProductTopBar`)
-/// or legacy `AppNavBar`, scrollable body, optional sticky primary CTA. **Every
-/// full screen in the app composes through `AppScreen`** — don't rebuild a
-/// ScrollView/VStack/nav-bar shell in a feature view. Set `usesOuterScroll: false`
-/// for fixed dashboards where inner controls own scrolling.
+/// Page-level template: horizontal padding, optional `customHeader` (typically
+/// `ProductTopBar` for root tabs) or system `NavigationStack` chrome, scrollable
+/// body, optional sticky primary CTA. **Every full screen in the app composes
+/// through `AppScreen`** — don't rebuild a ScrollView/VStack/nav-bar shell in a
+/// feature view. Set `usesOuterScroll: false` for fixed dashboards where inner
+/// controls own scrolling.
 struct AppScreen<Content: View>: View {
-    let title: String?
-    let leadingAction: NavAction?
-    let trailingAction: NavAction?
-    let trailingText: NavTextAction?
     let primaryButton: PrimaryButtonConfig?
     let secondaryButton: SecondaryButtonConfig?
     let customHeader: AnyView?
-    var usesCircularTrailingButton: Bool = false
-    var navigationBarTitleDisplayMode: NavigationBarItem.TitleDisplayMode? = nil
     var hidesNavigationBar: Bool = false
     var showsNativeNavigationBar: Bool = false
     /// When `false`, the screen does not wrap content in `ScrollView` — use for fixed dashboards where an inner control (e.g. `PreviewListContainer`) owns vertical scrolling.
     var usesOuterScroll: Bool = true
+    /// When `true`, adds a trailing **Done** on the keyboard accessory bar to dismiss first responder. Turn **off** for flows that use the standard keyboard (Return / Next / Done) so the accessory does not appear without a visible keyboard.
+    var showsKeyboardDismissToolbar: Bool = true
     @ViewBuilder let content: () -> Content
 
     init(
-        title: String? = nil,
-        leadingAction: NavAction? = nil,
-        trailingAction: NavAction? = nil,
-        trailingText: NavTextAction? = nil,
         primaryButton: PrimaryButtonConfig? = nil,
         secondaryButton: SecondaryButtonConfig? = nil,
         customHeader: AnyView? = nil,
-        usesCircularTrailingButton: Bool = false,
-        navigationBarTitleDisplayMode: NavigationBarItem.TitleDisplayMode? = nil,
         hidesNavigationBar: Bool = false,
         showsNativeNavigationBar: Bool = false,
         usesOuterScroll: Bool = true,
+        showsKeyboardDismissToolbar: Bool = true,
         @ViewBuilder content: @escaping () -> Content
     ) {
-        self.title = title
-        self.leadingAction = leadingAction
-        self.trailingAction = trailingAction
-        self.trailingText = trailingText
         self.primaryButton = primaryButton
         self.secondaryButton = secondaryButton
         self.customHeader = customHeader
-        self.usesCircularTrailingButton = usesCircularTrailingButton
-        self.navigationBarTitleDisplayMode = navigationBarTitleDisplayMode
         self.hidesNavigationBar = hidesNavigationBar
         self.showsNativeNavigationBar = showsNativeNavigationBar
         self.usesOuterScroll = usesOuterScroll
+        self.showsKeyboardDismissToolbar = showsKeyboardDismissToolbar
         self.content = content
     }
 
     private var hasBottomBar: Bool { primaryButton != nil || secondaryButton != nil }
-
-    private var shouldShowNavBar: Bool {
-        !hidesNavigationBar && (title != nil || leadingAction != nil || trailingAction != nil || trailingText != nil)
-    }
 
     /// Max content width — keeps the mobile layout on iPad / Mac.
     private var maxContentWidth: CGFloat { 430 }
@@ -2351,7 +2354,7 @@ struct AppScreen<Content: View>: View {
                 }
                 .scrollDismissesKeyboard(.interactively)
                 .appScrollEdgeSoft(
-                    top: !hidesNavigationBar || showsNativeNavigationBar,
+                    top: customHeader != nil || !hidesNavigationBar || showsNativeNavigationBar,
                     bottom: hasBottomBar
                 )
             } else {
@@ -2360,24 +2363,12 @@ struct AppScreen<Content: View>: View {
             }
         }
         .safeAreaInset(edge: .top, spacing: 0) {
-            if !showsNativeNavigationBar {
-                if let customHeader {
-                    customHeader
-                        .padding(.horizontal, AppSpacing.md)
-                        .padding(.top, AppSpacing.sm)
-                        .padding(.bottom, AppSpacing.md)
-                        .background(AppColor.background)
-                } else if shouldShowNavBar {
-                    AppNavBar(
-                        title: title,
-                        leadingAction: leadingAction,
-                        trailingAction: trailingAction,
-                        trailingText: trailingText
-                    )
-                    .background(AppColor.barBackground)
-                    .padding(.top, AppSpacing.xs)
-                    .padding(.bottom, AppSpacing.xs)
-                }
+            if !showsNativeNavigationBar, let customHeader {
+                customHeader
+                    .padding(.horizontal, AppSpacing.md)
+                    .padding(.top, AppSpacing.sm)
+                    .padding(.bottom, AppSpacing.md)
+                    .background(AppColor.background)
             }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -2400,7 +2391,7 @@ struct AppScreen<Content: View>: View {
                 }
                 .frame(maxWidth: maxContentWidth - AppSpacing.md * 2)
                 .padding(.horizontal, AppSpacing.md)
-                .padding(.bottom, AppSpacing.lg)
+                .padding(.bottom, AppSpacing.sm)
                 .frame(maxWidth: .infinity)
                 .background(AppColor.barBackground)
             }
@@ -2408,18 +2399,20 @@ struct AppScreen<Content: View>: View {
         .background(AppColor.background.ignoresSafeArea())
         .toolbar(showsNativeNavigationBar ? .automatic : .hidden, for: .navigationBar)
         .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                Spacer()
-                Button("Done") {
-                    UIApplication.shared.sendAction(
-                        #selector(UIResponder.resignFirstResponder),
-                        to: nil,
-                        from: nil,
-                        for: nil
-                    )
+            if showsKeyboardDismissToolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") {
+                        UIApplication.shared.sendAction(
+                            #selector(UIResponder.resignFirstResponder),
+                            to: nil,
+                            from: nil,
+                            for: nil
+                        )
+                    }
+                    .font(AppFont.label.font)
+                    .foregroundStyle(AppColor.accent)
                 }
-                .font(AppFont.label.font)
-                .foregroundStyle(AppColor.accent)
             }
         }
     }
@@ -2472,8 +2465,9 @@ extension View {
     }
 
     /// Canonical card chrome applied as a modifier — matches `AppCard`'s defaults
-    /// so both entry points are a single source of truth. Pass `contentInset` to
-    /// override the 24pt standard (e.g. `AppSpacing.md` for compact contexts).
+    /// so both entry points are a single source of truth. Pass `AppSpacing.sm`
+    /// when the wrapped content already owns 16pt horizontal padding (e.g.
+    /// `AppListRow`) so 8 + 16 composes to the canonical 24pt visual offset.
     func appCardStyle(contentInset: CGFloat = AppSpacing.lg) -> some View {
         self
             .padding(contentInset)
@@ -2504,9 +2498,20 @@ extension View {
 
     func appNavigationBarChrome() -> some View {
         self
-            // Opaque bar surface so the system back button + title stay visible (`.hidden` can suppress them with UIAppearance).
-            .toolbarBackground(AppColor.barBackground, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
+            // Defer bar chrome to the global `UINavigationBar.appearance()` proxy configured in
+            // `ContentView.configureNavigationBarAppearance()` — standard appearance has
+            // `shadowColor = .clear` (no hairline) and scroll-edge appearance is transparent.
+            // SwiftUI's `.toolbarBackground(Material.bar, .visible)` would generate its own
+            // appearance with a default separator, overriding the proxy and producing the
+            // visible hairline beneath the bar. The soft scroll-edge fade is the only piece
+            // that still belongs here.
+            .appScrollEdgeSoft()
+            // Keep nav title + toolbar buttons (e.g. "Add Exercise" / "Done") visible when
+            // a `.searchable` field becomes focused. Default behavior collapses them to make
+            // room for search, which made auto-focused exercise pickers look like the title
+            // and Done were fading out a second after the sheet opened. No-op on screens
+            // without `.searchable`.
+            .searchPresentationToolbarBehavior(.avoidHidingContent)
     }
 
     /// Canonical style for text-label toolbar buttons (e.g. "History", "Browse").
@@ -2515,10 +2520,13 @@ extension View {
         self.font(AppFont.body.font.weight(.semibold))
     }
 
-    /// iOS-native soft gradient fade at the ScrollView edges where fixed bars
-    /// (nav bar, CTA button, tab bar) sit above content. Prevents the sharp-cut
-    /// appearance of scrolled content meeting an opaque bar. Both edges default
-    /// on — opt out per edge only when no bar exists on that side.
+    /// iOS-native soft gradient fade at the ScrollView edges. Prevents the
+    /// sharp-cut appearance of scrolled content meeting an opaque bar (nav bar,
+    /// CTA, tab bar) on vertical scrolls, and the same sharp-cut at the
+    /// leading/trailing inset on horizontal chip/filter strips. The OS only
+    /// renders the fade where scrolling actually clips content, so calling this
+    /// on a horizontal ScrollView fades leading/trailing automatically without
+    /// extra parameters.
     ///
     /// This is the single canonical modifier for scroll-edge fade. Never add a
     /// parallel LinearGradient/mask-based fade; extend this instead.

@@ -9,7 +9,7 @@
 
 import SwiftUI
 
-struct OnboardingShell<Content: View>: View {
+struct OnboardingShell<Content: View, StickyAccessory: View>: View {
     @Environment(\.dismiss) private var dismiss
 
     let title: String
@@ -21,6 +21,50 @@ struct OnboardingShell<Content: View>: View {
     var onContinue: (() -> Void)? = nil
     var onBack: (() -> Void)? = nil
     @ViewBuilder var content: () -> Content
+    /// Optional sticky accessory rendered below the title in the top safe-area inset
+    /// (e.g. a horizontal day-chip strip). The title always pins so the entire
+    /// header stack remains visible while the body scrolls beneath via `appScrollEdgeSoft`.
+    @ViewBuilder var stickyAccessory: () -> StickyAccessory
+
+    private var hasProgressBar: Bool { progressStep != nil && progressTotal != nil }
+    private var hasStickyHeader: Bool { StickyAccessory.self != EmptyView.self }
+
+    private var headerStack: AnyView {
+        AnyView(
+            VStack(alignment: .leading, spacing: AppSpacing.md) {
+                if hasProgressBar {
+                    OnboardingProgressBar(
+                        step: progressStep ?? 0,
+                        total: progressTotal ?? 0
+                    )
+                }
+                titleBlock
+                if hasStickyHeader {
+                    stickyAccessory()
+                }
+            }
+        )
+    }
+
+    @ViewBuilder
+    private var titleBlock: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.xs) {
+            Text(title)
+                .appFont(.largeTitle)
+                .foregroundStyle(AppColor.textPrimary)
+                .contentTransition(.opacity)
+                .animation(.easeInOut(duration: 0.25), value: title)
+
+            if let subtitle {
+                Text(subtitle)
+                    .appFont(.caption)
+                    .foregroundStyle(AppColor.secondaryLabel)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .contentTransition(.opacity)
+                    .animation(.easeInOut(duration: 0.25), value: subtitle)
+            }
+        }
+    }
 
     var body: some View {
         AppScreen(
@@ -35,36 +79,37 @@ struct OnboardingShell<Content: View>: View {
                 label: "Back",
                 action: { (onBack ?? { dismiss() })() }
             ),
-            customHeader: (progressStep != nil && progressTotal != nil)
-                ? AnyView(
-                    OnboardingProgressBar(
-                        step: progressStep ?? 0,
-                        total: progressTotal ?? 0
-                    )
-                )
-                : nil,
-            hidesNavigationBar: true
+            customHeader: headerStack,
+            hidesNavigationBar: true,
+            showsKeyboardDismissToolbar: false
         ) {
-            VStack(alignment: .leading, spacing: AppSpacing.lg) {
-                VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                    Text(title)
-                        .appFont(.largeTitle)
-                        .foregroundStyle(AppColor.textPrimary)
-                        .contentTransition(.opacity)
-                        .animation(.easeInOut(duration: 0.25), value: title)
-
-                    if let subtitle {
-                        Text(subtitle)
-                            .font(AppFont.body.font)
-                            .foregroundStyle(AppColor.textSecondary)
-                            .contentTransition(.opacity)
-                            .animation(.easeInOut(duration: 0.25), value: subtitle)
-                    }
-                }
-
-                content()
-            }
+            content()
         }
+    }
+}
+
+extension OnboardingShell where StickyAccessory == EmptyView {
+    init(
+        title: String,
+        subtitle: String? = nil,
+        ctaLabel: String = "Continue",
+        ctaEnabled: Bool = true,
+        progressStep: Int? = nil,
+        progressTotal: Int? = nil,
+        onContinue: (() -> Void)? = nil,
+        onBack: (() -> Void)? = nil,
+        @ViewBuilder content: @escaping () -> Content
+    ) {
+        self.title = title
+        self.subtitle = subtitle
+        self.ctaLabel = ctaLabel
+        self.ctaEnabled = ctaEnabled
+        self.progressStep = progressStep
+        self.progressTotal = progressTotal
+        self.onContinue = onContinue
+        self.onBack = onBack
+        self.content = content
+        self.stickyAccessory = { EmptyView() }
     }
 }
 
@@ -86,69 +131,5 @@ struct OnboardingProgressBar: View {
         }
         .frame(maxWidth: .infinity, alignment: .center)
         .padding(.top, AppSpacing.md)
-    }
-}
-
-struct OnboardingOptionCard: View {
-    let icon: AppIcon
-    let title: String
-    var badge: String? = nil
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(alignment: .center, spacing: AppSpacing.md) {
-                icon.image(size: 18, weight: .semibold)
-                    .foregroundStyle(AppColor.accent)
-                    .frame(width: 40, height: 40)
-                    .background(AppColor.accentSoft)
-                    .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
-
-                Text(title)
-                    .font(AppFont.sectionHeader.font)
-                    .foregroundStyle(AppColor.textPrimary)
-
-                Spacer(minLength: 0)
-
-                if let badge {
-                    AppTag(text: badge, style: .accent, layout: .compactCapsule)
-                }
-            }
-            .appCardStyle()
-        }
-        .buttonStyle(ScaleButtonStyle())
-    }
-}
-
-struct OnboardingDayChip: View {
-    let name: String
-    let isSelected: Bool
-    let showsDot: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: AppSpacing.xs) {
-                Text(name)
-                    .font(isSelected ? AppFont.label.font : AppFont.body.font)
-                    .foregroundStyle(isSelected ? AppColor.textPrimary : AppColor.textSecondary)
-                    .lineLimit(1)
-
-                if showsDot {
-                    Circle()
-                        .fill(AppColor.accent)
-                        .frame(width: 7, height: 7)
-                }
-            }
-            .padding(.horizontal, AppSpacing.md)
-            .frame(minHeight: 40)
-            .background(AppColor.cardBackground)
-            .overlay {
-                Capsule()
-                    .stroke(isSelected ? AppColor.border.opacity(0.6) : Color.clear, lineWidth: 1)
-            }
-            .clipShape(Capsule())
-        }
-        .buttonStyle(ScaleButtonStyle())
     }
 }

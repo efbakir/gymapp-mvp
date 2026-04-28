@@ -13,9 +13,15 @@ import SwiftData
 // MARK: - Supporting Types
 
 struct OnboardingExercise: Identifiable, Equatable, Hashable {
+    static let defaultPlannedSets: Int = 3
+    static let defaultPlannedReps: Int = 8
+    static let plannedSetsRange: ClosedRange<Int> = 1...10
+    static let plannedRepsRange: ClosedRange<Int> = 1...30
+
     var id = UUID()
     var name: String
-    var targetSets: Int?
+    var plannedSets: Int = OnboardingExercise.defaultPlannedSets
+    var plannedReps: Int = OnboardingExercise.defaultPlannedReps
 }
 
 struct OnboardingBaseline {
@@ -105,6 +111,28 @@ final class OnboardingViewModel {
 
     // MARK: - Day Management
 
+    func clampPlannedSets(_ value: Int) -> Int {
+        min(OnboardingExercise.plannedSetsRange.upperBound,
+            max(OnboardingExercise.plannedSetsRange.lowerBound, value))
+    }
+
+    func clampPlannedReps(_ value: Int) -> Int {
+        min(OnboardingExercise.plannedRepsRange.upperBound,
+            max(OnboardingExercise.plannedRepsRange.lowerBound, value))
+    }
+
+    func adjustPlannedSets(dayIndex: Int, exerciseId: UUID, delta: Int) {
+        guard dayExercises.indices.contains(dayIndex),
+              let i = dayExercises[dayIndex].firstIndex(where: { $0.id == exerciseId }) else { return }
+        dayExercises[dayIndex][i].plannedSets = clampPlannedSets(dayExercises[dayIndex][i].plannedSets + delta)
+    }
+
+    func adjustPlannedReps(dayIndex: Int, exerciseId: UUID, delta: Int) {
+        guard dayExercises.indices.contains(dayIndex),
+              let i = dayExercises[dayIndex].firstIndex(where: { $0.id == exerciseId }) else { return }
+        dayExercises[dayIndex][i].plannedReps = clampPlannedReps(dayExercises[dayIndex][i].plannedReps + delta)
+    }
+
     func updateDayCount(_ newCount: Int) {
         let count = max(2, min(6, newCount))
         dayCount = count
@@ -121,19 +149,19 @@ final class OnboardingViewModel {
         dayNames = ["Push", "Pull", "Legs"]
 
         let pushExs: [OnboardingExercise] = [
-            OnboardingExercise(name: "Bench Press", targetSets: 3),
-            OnboardingExercise(name: "Overhead Press", targetSets: 3),
-            OnboardingExercise(name: "Tricep Pushdown", targetSets: 3)
+            OnboardingExercise(name: "Bench Press", plannedSets: 3, plannedReps: 8),
+            OnboardingExercise(name: "Overhead Press", plannedSets: 3, plannedReps: 8),
+            OnboardingExercise(name: "Tricep Pushdown", plannedSets: 3, plannedReps: 12)
         ]
         let pullExs: [OnboardingExercise] = [
-            OnboardingExercise(name: "Barbell Row", targetSets: 3),
-            OnboardingExercise(name: "Lat Pulldown", targetSets: 3),
-            OnboardingExercise(name: "Pull-up", targetSets: 3)
+            OnboardingExercise(name: "Barbell Row", plannedSets: 3, plannedReps: 8),
+            OnboardingExercise(name: "Lat Pulldown", plannedSets: 3, plannedReps: 10),
+            OnboardingExercise(name: "Pull-up", plannedSets: 3, plannedReps: 8)
         ]
         let legsExs: [OnboardingExercise] = [
-            OnboardingExercise(name: "Back Squat", targetSets: 3),
-            OnboardingExercise(name: "Romanian Deadlift", targetSets: 3),
-            OnboardingExercise(name: "Leg Press", targetSets: 3)
+            OnboardingExercise(name: "Back Squat", plannedSets: 3, plannedReps: 5),
+            OnboardingExercise(name: "Romanian Deadlift", plannedSets: 3, plannedReps: 8),
+            OnboardingExercise(name: "Leg Press", plannedSets: 3, plannedReps: 10)
         ]
         dayExercises = [pushExs, pullExs, legsExs]
 
@@ -224,8 +252,22 @@ final class OnboardingViewModel {
         // 3. Create DayTemplates
         var templateIds: [UUID] = []
         for (i, name) in dayNames.enumerated() {
-            let exerciseIds = dayExercises[i].compactMap { exerciseMap[$0.id]?.id }
-            let tmpl = DayTemplate(name: name, splitId: split.id, orderedExerciseIds: exerciseIds)
+            let dayOnbExs = dayExercises[i]
+            let exerciseIds = dayOnbExs.compactMap { exerciseMap[$0.id]?.id }
+            var setsPlan: [UUID: Int] = [:]
+            var repsPlan: [UUID: Int] = [:]
+            for onbEx in dayOnbExs {
+                guard let resolvedId = exerciseMap[onbEx.id]?.id else { continue }
+                setsPlan[resolvedId] = onbEx.plannedSets
+                repsPlan[resolvedId] = onbEx.plannedReps
+            }
+            let tmpl = DayTemplate(
+                name: name,
+                splitId: split.id,
+                orderedExerciseIds: exerciseIds,
+                plannedSetsByExerciseId: setsPlan,
+                plannedRepsByExerciseId: repsPlan
+            )
             modelContext.insert(tmpl)
             templateIds.append(tmpl.id)
         }
@@ -263,7 +305,11 @@ extension OnboardingViewModel {
 
         dayExercises = Array(sanitizedDays.prefix(dayCount).map { day in
             day.exercises.map { exercise in
-                OnboardingExercise(name: exercise.name, targetSets: exercise.sets)
+                OnboardingExercise(
+                    name: exercise.name,
+                    plannedSets: clampPlannedSets(exercise.sets ?? OnboardingExercise.defaultPlannedSets),
+                    plannedReps: clampPlannedReps(exercise.reps ?? OnboardingExercise.defaultPlannedReps)
+                )
             }
         })
 

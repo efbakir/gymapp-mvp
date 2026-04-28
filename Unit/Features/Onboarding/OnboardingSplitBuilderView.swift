@@ -42,7 +42,6 @@ struct OnboardingSplitBuilderView: View {
         ) {
             VStack(alignment: .leading, spacing: AppSpacing.lg) {
 
-                // Day count stepper — default AppCard inset (lg) matches list card below
                 AppCard {
                     HStack {
                         Text("Days per week")
@@ -57,31 +56,21 @@ struct OnboardingSplitBuilderView: View {
                     }
                 }
 
-                // Day name fields — same card inset as stepper; divided rows (SessionDetailView pattern)
-                AppCard {
-                    AppDividedList(data: Array(0..<vm.dayCount), id: \.self) { i in
-                        HStack(spacing: AppSpacing.sm) {
-                            Text("\(i + 1)")
-                                .font(AppFont.caption.font)
-                                .foregroundStyle(AppColor.textSecondary)
-                                .frame(width: 28, alignment: .leading)
-
-                            TextField("Name", text: dayNameBinding(for: i))
-                                .font(AppFont.body.font)
-                                .foregroundStyle(AppColor.textPrimary)
-                                .focused($focusedDay, equals: i)
-                                .textInputAutocapitalization(.words)
-                                .autocorrectionDisabled()
-                                .submitLabel(i < vm.dayCount - 1 ? .next : .done)
-                                .onSubmit {
-                                    if i < vm.dayCount - 1 { focusedDay = i + 1 }
-                                    else { focusedDay = nil }
-                                }
+                AppCardList(data: Array(0..<vm.dayCount), id: \.self) { i in
+                    TextField("Day name", text: dayNameBinding(for: i))
+                        .font(AppFont.body.font)
+                        .foregroundStyle(AppColor.textPrimary)
+                        .focused($focusedDay, equals: i)
+                        .textInputAutocapitalization(.words)
+                        .autocorrectionDisabled()
+                        .submitLabel(i < vm.dayCount - 1 ? .next : .done)
+                        .onSubmit {
+                            if i < vm.dayCount - 1 { focusedDay = i + 1 }
+                            else { focusedDay = nil }
                         }
-                        .padding(.vertical, AppSpacing.md)
+                        .frame(height: 44)
                         .contentShape(Rectangle())
                         .onTapGesture { focusedDay = i }
-                    }
                 }
             }
         }
