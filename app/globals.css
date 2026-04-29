@@ -28,6 +28,8 @@ html {
 body {
   background: var(--unit-background);
   color: var(--unit-text-primary);
+  /* Medium-Floor Rule (iOS DESIGN.md): minimum body weight is 500. */
+  font-weight: 500;
 }
 
 ::selection {
@@ -45,43 +47,38 @@ body {
 }
 
 @layer components {
-  .prose-legal {
+  .prose-page {
     @apply max-w-3xl mx-auto;
   }
-  .prose-legal h1 {
+  .prose-page h1 {
     @apply text-3xl font-bold tracking-tight mb-2;
     color: var(--unit-text-primary);
   }
-  .prose-legal h2 {
+  .prose-page h2 {
     @apply text-xl font-semibold mt-12 mb-4;
     color: var(--unit-text-primary);
   }
-  .prose-legal h3 {
+  .prose-page h3 {
     @apply text-base font-semibold mt-8 mb-3;
     color: var(--unit-text-primary);
   }
-  .prose-legal p {
+  .prose-page p {
     @apply text-[15px] leading-relaxed mb-4;
     color: var(--unit-text-secondary);
   }
-  .prose-legal ul {
+  .prose-page ul {
     @apply list-disc pl-6 mb-4 space-y-1;
     color: var(--unit-text-secondary);
   }
-  .prose-legal li {
+  .prose-page li {
     @apply text-[15px] leading-relaxed;
   }
-  .prose-legal a {
+  .prose-page a {
     @apply underline underline-offset-2;
     color: var(--unit-text-primary);
   }
-  .prose-legal .last-updated {
+  .prose-page .last-updated {
     @apply text-sm mb-12;
     color: var(--unit-text-secondary);
-  }
-  .prose-legal .placeholder {
-    @apply px-1 rounded text-sm font-mono;
-    background: rgba(10, 10, 10, 0.06);
-    color: var(--unit-text-primary);
   }
 }

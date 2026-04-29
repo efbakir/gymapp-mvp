@@ -13,18 +13,19 @@ export default function LandingPage() {
       {/* ── Hero ── */}
       <section className="pt-40 pb-unit-xxl md:pt-48 md:pb-[96px]">
         <div className="max-w-3xl mx-auto px-unit-md md:px-unit-lg text-center">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.08] mb-unit-lg">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.08] mb-unit-md">
             Your tracker is slower than paper.
-            <br />
-            <span className="text-unit-text-secondary">Unit isn't.</span>
           </h1>
+          <p className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.08] mb-unit-lg text-unit-text-secondary">
+            Unit isn't.
+          </p>
           <p className="text-lg md:text-xl leading-relaxed mb-unit-xl max-w-xl mx-auto text-unit-text-secondary">
             Log a set in one tap. Ghost values pre-fill from your last session.
             No typing. No menus. Under 3 seconds.
           </p>
           <a
             href="#download"
-            className="inline-flex items-center justify-center px-8 py-3.5 rounded-xl text-base font-semibold transition-all hover:opacity-80 active:scale-[0.96] bg-unit-accent text-unit-accent-foreground"
+            className="inline-flex items-center justify-center px-8 py-3.5 rounded-xl text-base font-bold font-mono transition-all hover:opacity-80 active:scale-[0.96] bg-unit-accent text-unit-accent-foreground"
           >
             Coming soon to iOS
           </a>

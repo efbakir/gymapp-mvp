@@ -11,7 +11,7 @@ export default function PrivacyPage() {
   return (
     <section className="pt-32 pb-unit-xxl md:pb-[96px]">
       <div className="max-w-3xl mx-auto px-unit-md md:px-unit-lg">
-        <article className="prose-legal">
+        <article className="prose-page">
           <h1>Privacy Policy</h1>
           <p className="last-updated">Last updated: April 13, 2026</p>
 

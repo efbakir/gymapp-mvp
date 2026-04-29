@@ -36,7 +36,7 @@ export default function Header() {
           </Link>
           <a
             href="#download"
-            className="text-sm font-semibold px-4 py-2 rounded-lg transition-opacity hover:opacity-80 bg-unit-accent text-unit-accent-foreground"
+            className="text-sm font-bold font-mono px-4 py-2 rounded-lg transition-opacity hover:opacity-80 bg-unit-accent text-unit-accent-foreground"
           >
             Coming soon
           </a>
@@ -79,7 +79,7 @@ export default function Header() {
             </Link>
             <a
               href="#download"
-              className="text-base font-semibold px-4 py-3 rounded-lg text-center mt-2 bg-unit-accent text-unit-accent-foreground"
+              className="text-base font-bold font-mono px-4 py-3 rounded-lg text-center mt-2 bg-unit-accent text-unit-accent-foreground"
             >
               Coming soon
             </a>
