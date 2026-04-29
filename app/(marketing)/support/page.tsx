@@ -63,7 +63,24 @@ export default function SupportPage() {
           />
           <FAQItem
             question="How do I request a refund?"
-            answer="Purchases are processed by Apple. To request a refund, visit reportaproblem.apple.com and select the Unit purchase."
+            answer={
+              <>
+                Purchases are processed by Apple. To request a refund, visit{" "}
+                <a
+                  href="https://reportaproblem.apple.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline underline-offset-2"
+                >
+                  reportaproblem.apple.com
+                </a>{" "}
+                and select the Unit purchase.
+              </>
+            }
+          />
+          <FAQItem
+            question="How do I delete my data?"
+            answer="Unit stores all data on-device. Deleting the app removes every workout, program, and setting. Unit has no account and no server-side data to delete."
           />
           <FAQItem
             question="I found a bug. How do I report it?"

@@ -16,10 +16,9 @@ export default function PrivacyPage() {
           <p className="last-updated">Last updated: April 13, 2026</p>
 
           <p>
-            Unit (&quot;the App&quot;) is developed and operated by{" "}
-            Efe Bakir. This
-            Privacy Policy explains how we handle your information when you use
-            Unit.
+            Unit (&quot;the App&quot;) is developed and operated by Efe Bakir.
+            This Privacy Policy explains how we handle your information when
+            you use Unit.
           </p>
 
           <h2>Summary</h2>
@@ -85,8 +84,7 @@ export default function PrivacyPage() {
           </p>
           <p>
             If you have questions about your data or wish to make a
-            privacy-related request, contact us at{" "}
-            efeec.bakir@gmail.com.
+            privacy-related request, contact us at efeec.bakir@gmail.com.
           </p>
 
           <h2>Changes to This Policy</h2>
@@ -102,13 +100,8 @@ export default function PrivacyPage() {
             If you have questions about this Privacy Policy, contact us at:
           </p>
           <ul>
-            <li>
-              Email: efeec.bakir@gmail.com
-            </li>
-            <li>
-              Developer:{" "}
-              Efe Bakir
-            </li>
+            <li>Email: efeec.bakir@gmail.com</li>
+            <li>Developer: Efe Bakir</li>
           </ul>
 
           <div className="mt-12">

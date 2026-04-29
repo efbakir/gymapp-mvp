@@ -16,10 +16,9 @@ export default function TermsPage() {
 
           <p>
             These Terms of Use (&quot;Terms&quot;) govern your use of the Unit
-            mobile application (&quot;the App&quot;) developed by{" "}
-            Efe Bakir{" "}
-            (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;). By downloading
-            or using Unit, you agree to these Terms.
+            mobile application (&quot;the App&quot;) developed by Efe Bakir
+            (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;). By
+            downloading or using Unit, you agree to these Terms.
           </p>
 
           <h2>License</h2>
@@ -65,9 +64,8 @@ export default function TermsPage() {
           <h2>Intellectual Property</h2>
           <p>
             Unit, including its design, code, visual identity, and content, is
-            the intellectual property of{" "}
-            Efe Bakir and is
-            protected by applicable copyright and intellectual property laws.
+            the intellectual property of Efe Bakir and is protected by
+            applicable copyright and intellectual property laws.
           </p>
 
           <h2>Your Data</h2>
@@ -93,8 +91,7 @@ export default function TermsPage() {
 
           <h2>Limitation of Liability</h2>
           <p>
-            To the maximum extent permitted by applicable law,{" "}
-            Efe Bakir shall
+            To the maximum extent permitted by applicable law, Efe Bakir shall
             not be liable for any indirect, incidental, special, consequential,
             or punitive damages, or any loss of data, use, or profits, arising
             out of or related to your use of the App.
@@ -118,9 +115,8 @@ export default function TermsPage() {
           <h2>Governing Law</h2>
           <p>
             These Terms shall be governed by and construed in accordance with
-            the laws of{" "}
-            the Netherlands, without
-            regard to conflict of law principles.
+            the laws of the Netherlands, without regard to conflict of law
+            principles.
           </p>
 
           <h2>Contact</h2>
@@ -128,13 +124,8 @@ export default function TermsPage() {
             If you have questions about these Terms, contact us at:
           </p>
           <ul>
-            <li>
-              Email: efeec.bakir@gmail.com
-            </li>
-            <li>
-              Developer:{" "}
-              Efe Bakir
-            </li>
+            <li>Email: efeec.bakir@gmail.com</li>
+            <li>Developer: Efe Bakir</li>
           </ul>
 
           <div className="mt-12">

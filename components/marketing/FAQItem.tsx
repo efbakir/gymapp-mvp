@@ -1,13 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, type ReactNode } from "react"
 
 export default function FAQItem({
   question,
   answer,
 }: {
   question: string
-  answer: string
+  answer: ReactNode
 }) {
   const [open, setOpen] = useState(false)
 

@@ -38,7 +38,7 @@ export default function Header() {
             href="#download"
             className="text-sm font-semibold px-4 py-2 rounded-lg transition-opacity hover:opacity-80 bg-unit-accent text-unit-accent-foreground"
           >
-            Download
+            Coming soon
           </a>
         </div>
 
@@ -81,7 +81,7 @@ export default function Header() {
               href="#download"
               className="text-base font-semibold px-4 py-3 rounded-lg text-center mt-2 bg-unit-accent text-unit-accent-foreground"
             >
-              Download
+              Coming soon
             </a>
           </div>
         </div>

@@ -26,7 +26,7 @@ export default function LandingPage() {
             href="#download"
             className="inline-flex items-center justify-center px-8 py-3.5 rounded-xl text-base font-semibold transition-all hover:opacity-80 active:scale-[0.96] bg-unit-accent text-unit-accent-foreground"
           >
-            Download for iOS
+            Coming soon to iOS
           </a>
         </div>
       </section>
@@ -68,10 +68,6 @@ export default function LandingPage() {
         <div className="max-w-2xl mx-auto px-unit-md md:px-unit-lg text-center">
           <p className="text-xl md:text-2xl font-semibold leading-relaxed">
             Built for lifters who already know their program.
-            <br />
-            <span className="text-unit-text-secondary">
-              No AI coach. No social feed. No subscription on logging.
-            </span>
             <br />
             <span className="text-unit-text-secondary">
               Your data stays on your device. Always works offline.
