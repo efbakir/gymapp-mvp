@@ -11,7 +11,7 @@ export default function LandingPage() {
   return (
     <>
       {/* ── Hero ── */}
-      <section className="pt-40 pb-unit-xxl md:pt-48 md:pb-[96px]">
+      <section className="pt-40 pb-unit-xxl md:pt-48 md:pb-unit-xxxxl">
         <div className="max-w-3xl mx-auto px-unit-md md:px-unit-lg text-center">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.08] mb-unit-md">
             Your tracker is slower than paper.
@@ -25,7 +25,7 @@ export default function LandingPage() {
           </p>
           <a
             href="#download"
-            className="inline-flex items-center justify-center px-8 py-3.5 rounded-xl text-base font-bold font-mono transition-all hover:opacity-80 active:scale-[0.96] bg-unit-accent text-unit-accent-foreground"
+            className="inline-flex items-center justify-center h-[60px] px-unit-lg rounded-[14px] text-base font-bold font-mono transition-transform active:scale-[0.96] bg-unit-accent text-unit-accent-foreground"
           >
             Coming soon to iOS
           </a>
@@ -33,7 +33,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── How it works ── */}
-      <section id="how-it-works" className="py-unit-xxl md:py-[96px]">
+      <section id="how-it-works" className="py-unit-xl md:py-unit-xxl">
         <div className="max-w-3xl mx-auto px-unit-md md:px-unit-lg">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-unit-xl md:gap-unit-xxl">
             <div>
@@ -65,7 +65,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── Positioning ── */}
-      <section className="py-unit-xxl md:py-[96px]">
+      <section className="py-unit-xxl md:py-unit-xxxl">
         <div className="max-w-2xl mx-auto px-unit-md md:px-unit-lg text-center">
           <p className="text-xl md:text-2xl font-semibold leading-relaxed">
             Built for lifters who already know their program.
@@ -78,7 +78,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── What Unit is not ── */}
-      <section className="py-unit-xxl md:py-[96px]">
+      <section className="py-unit-xl md:py-unit-xxl">
         <div className="max-w-2xl mx-auto px-unit-md md:px-unit-lg">
           <h2 className="text-2xl font-bold tracking-tight mb-unit-xl">
             What Unit is not
@@ -113,7 +113,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── FAQ ── */}
-      <section id="faq" className="py-unit-xxl md:py-[96px]">
+      <section id="faq" className="py-unit-xxl md:py-unit-xxxxl">
         <div className="max-w-2xl mx-auto px-unit-md md:px-unit-lg">
           <h2 className="text-2xl font-bold tracking-tight mb-unit-xl">
             FAQ

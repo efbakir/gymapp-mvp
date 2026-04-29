@@ -81,4 +81,21 @@ body {
     @apply text-sm mb-12;
     color: var(--unit-text-secondary);
   }
+  .page-toc {
+    @apply mb-12 pb-unit-md border-b;
+    border-color: var(--unit-border);
+  }
+  .page-toc ul {
+    @apply list-none flex flex-wrap gap-x-unit-md gap-y-unit-xs pl-0 mb-0;
+  }
+  .page-toc li {
+    @apply text-[13px] leading-snug;
+  }
+  .page-toc a {
+    @apply font-mono no-underline;
+    color: var(--unit-text-secondary);
+  }
+  .page-toc a:hover {
+    color: var(--unit-text-primary);
+  }
 }

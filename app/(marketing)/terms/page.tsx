@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <section className="pt-32 pb-unit-xxl md:pb-[96px]">
+    <section className="pt-32 pb-unit-xxl md:pb-unit-xxxxl">
       <div className="max-w-3xl mx-auto px-unit-md md:px-unit-lg">
         <article className="prose-page">
           <h1>Terms of Use</h1>
@@ -21,7 +21,23 @@ export default function TermsPage() {
             downloading or using Unit, you agree to these Terms.
           </p>
 
-          <h2>License</h2>
+          <nav aria-label="On this page" className="page-toc">
+            <ul>
+              <li><a href="#license">License</a></li>
+              <li><a href="#purchase">Purchase and payment</a></li>
+              <li><a href="#use">Acceptable use</a></li>
+              <li><a href="#ip">Intellectual property</a></li>
+              <li><a href="#data">Your data</a></li>
+              <li><a href="#warranties">Disclaimer of warranties</a></li>
+              <li><a href="#liability">Limitation of liability</a></li>
+              <li><a href="#service-changes">Changes to the app and service</a></li>
+              <li><a href="#terms-changes">Changes to these terms</a></li>
+              <li><a href="#law">Governing law</a></li>
+              <li><a href="#contact">Contact</a></li>
+            </ul>
+          </nav>
+
+          <h2 id="license">License</h2>
           <p>
             We grant you a limited, non-exclusive, non-transferable, revocable
             license to use Unit for your personal, non-commercial fitness
@@ -29,7 +45,7 @@ export default function TermsPage() {
             Services Terms and Conditions.
           </p>
 
-          <h2>Purchase and Payment</h2>
+          <h2 id="purchase">Purchase and Payment</h2>
           <p>
             Unit offers in-app purchases through the Apple App Store. All
             payment processing is handled by Apple. We do not handle your
@@ -44,7 +60,7 @@ export default function TermsPage() {
             </li>
           </ul>
 
-          <h2>Acceptable Use</h2>
+          <h2 id="use">Acceptable Use</h2>
           <p>You agree not to:</p>
           <ul>
             <li>Reverse engineer, decompile, or disassemble the App</li>
@@ -61,14 +77,14 @@ export default function TermsPage() {
             </li>
           </ul>
 
-          <h2>Intellectual Property</h2>
+          <h2 id="ip">Intellectual Property</h2>
           <p>
             Unit, including its design, code, visual identity, and content, is
             the intellectual property of Efe Bakir and is protected by
             applicable copyright and intellectual property laws.
           </p>
 
-          <h2>Your Data</h2>
+          <h2 id="data">Your Data</h2>
           <p>
             All workout data you create in Unit is stored locally on your
             device. You are responsible for maintaining backups of your device.
@@ -76,7 +92,7 @@ export default function TermsPage() {
             loss, or App deletion.
           </p>
 
-          <h2>Disclaimer of Warranties</h2>
+          <h2 id="warranties">Disclaimer of Warranties</h2>
           <p>
             Unit is provided &quot;as is&quot; and &quot;as available&quot;
             without warranties of any kind, either express or implied, including
@@ -89,7 +105,7 @@ export default function TermsPage() {
             a qualified professional before beginning any exercise program.
           </p>
 
-          <h2>Limitation of Liability</h2>
+          <h2 id="liability">Limitation of Liability</h2>
           <p>
             To the maximum extent permitted by applicable law, Efe Bakir shall
             not be liable for any indirect, incidental, special, consequential,
@@ -97,14 +113,14 @@ export default function TermsPage() {
             out of or related to your use of the App.
           </p>
 
-          <h2>Changes to the App and Service</h2>
+          <h2 id="service-changes">Changes to the App and Service</h2>
           <p>
             We reserve the right to modify, update, or discontinue the App at
             any time without prior notice. We are not obligated to provide
             updates, enhancements, or support indefinitely.
           </p>
 
-          <h2>Changes to These Terms</h2>
+          <h2 id="terms-changes">Changes to These Terms</h2>
           <p>
             We may update these Terms from time to time. Changes will be posted
             on this page with an updated &quot;Last updated&quot; date.
@@ -112,14 +128,14 @@ export default function TermsPage() {
             revised Terms.
           </p>
 
-          <h2>Governing Law</h2>
+          <h2 id="law">Governing Law</h2>
           <p>
             These Terms shall be governed by and construed in accordance with
             the laws of the Netherlands, without regard to conflict of law
             principles.
           </p>
 
-          <h2>Contact</h2>
+          <h2 id="contact">Contact</h2>
           <p>
             If you have questions about these Terms, contact us at:
           </p>

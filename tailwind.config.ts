@@ -42,6 +42,7 @@ const config: Config = {
         "unit-xl": "32px",
         "unit-xxl": "48px",
         "unit-xxxl": "64px",
+        "unit-xxxxl": "96px",
       },
     },
   },
