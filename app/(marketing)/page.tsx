@@ -83,34 +83,34 @@ export default function LandingPage() {
       {/* ── What Unit is not ── */}
       <section className="py-unit-xxl md:py-[96px]">
         <div className="max-w-2xl mx-auto px-unit-md md:px-unit-lg">
-          <h2 className="text-2xl font-bold tracking-tight mb-unit-xl text-center">
+          <h2 className="text-2xl font-bold tracking-tight mb-unit-xl">
             What Unit is not
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-unit-lg">
-            <div className="rounded-xl p-unit-lg border border-unit-border bg-unit-card">
-              <p className="font-semibold mb-unit-xxs">Not an AI coach</p>
-              <p className="text-sm text-unit-text-secondary leading-relaxed">
+          <div className="space-y-unit-lg">
+            <p className="text-base leading-relaxed">
+              <span className="font-semibold">Not an AI coach.</span>{" "}
+              <span className="text-unit-text-secondary">
                 We don't tell you what to lift. You bring the program, we make logging instant.
-              </p>
-            </div>
-            <div className="rounded-xl p-unit-lg border border-unit-border bg-unit-card">
-              <p className="font-semibold mb-unit-xxs">Not a social platform</p>
-              <p className="text-sm text-unit-text-secondary leading-relaxed">
+              </span>
+            </p>
+            <p className="text-base leading-relaxed">
+              <span className="font-semibold">Not a social platform.</span>{" "}
+              <span className="text-unit-text-secondary">
                 No feed. No followers. No likes. Training is personal.
-              </p>
-            </div>
-            <div className="rounded-xl p-unit-lg border border-unit-border bg-unit-card">
-              <p className="font-semibold mb-unit-xxs">Not for beginners</p>
-              <p className="text-sm text-unit-text-secondary leading-relaxed">
+              </span>
+            </p>
+            <p className="text-base leading-relaxed">
+              <span className="font-semibold">Not for beginners.</span>{" "}
+              <span className="text-unit-text-secondary">
                 We assume you know your way around a barbell. That's a feature, not a limitation.
-              </p>
-            </div>
-            <div className="rounded-xl p-unit-lg border border-unit-border bg-unit-card">
-              <p className="font-semibold mb-unit-xxs">Not subscription-locked</p>
-              <p className="text-sm text-unit-text-secondary leading-relaxed">
+              </span>
+            </p>
+            <p className="text-base leading-relaxed">
+              <span className="font-semibold">Not subscription-locked.</span>{" "}
+              <span className="text-unit-text-secondary">
                 Core logging is free. Your workout data is never held hostage.
-              </p>
-            </div>
+              </span>
+            </p>
           </div>
         </div>
       </section>
@@ -146,20 +146,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Bottom CTA ── */}
-      <section className="py-unit-xxl md:py-[96px]">
-        <div className="max-w-3xl mx-auto px-unit-md md:px-unit-lg text-center">
-          <p className="text-xl md:text-2xl font-semibold mb-unit-lg">
-            Faster than paper. Smarter than Notes.
-          </p>
-          <a
-            href="#download"
-            className="inline-flex items-center justify-center px-8 py-3.5 rounded-xl text-base font-semibold transition-all hover:opacity-80 active:scale-[0.96] bg-unit-accent text-unit-accent-foreground"
-          >
-            Download for iOS
-          </a>
-        </div>
-      </section>
     </>
   )
 }
