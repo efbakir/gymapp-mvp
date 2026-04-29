@@ -15,9 +15,9 @@ export default function Header() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-200 ${
         scrolled || menuOpen
-          ? "bg-unit-background/80 backdrop-blur-xl border-b border-unit-border"
+          ? "bg-unit-background border-b border-unit-border"
           : "bg-transparent"
       }`}
     >
@@ -68,7 +68,7 @@ export default function Header() {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div className="md:hidden border-t border-unit-border bg-unit-background/95 backdrop-blur-xl">
+        <div className="md:hidden border-t border-unit-border bg-unit-background">
           <div className="max-w-3xl mx-auto px-unit-md py-unit-lg flex flex-col gap-unit-md">
             <Link
               href="/support"
