@@ -16,7 +16,6 @@
 		PIMP100000000000000000001 /* ProgramImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = PIMP200000000000000000001 /* ProgramImporter.swift */; };
 		PLIB100000000000000000001 /* ProgramLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PLIB200000000000000000001 /* ProgramLibraryView.swift */; };
 		PLDT100000000000000000001 /* ProgramLibraryDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PLDT200000000000000000001 /* ProgramLibraryDetailView.swift */; };
-		WRMP100000000000000000001 /* WarmupGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = WRMP200000000000000000001 /* WarmupGenerator.swift */; };
 		A10000000000000000000004 /* DayTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* DayTemplate.swift */; };
 		A10000000000000000000005 /* WorkoutSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000005 /* WorkoutSession.swift */; };
 		A10000000000000000000006 /* SetEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000006 /* SetEntry.swift */; };
@@ -99,7 +98,6 @@
 		PIMP200000000000000000001 /* ProgramImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramImporter.swift; sourceTree = "<group>"; };
 		PLIB200000000000000000001 /* ProgramLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramLibraryView.swift; sourceTree = "<group>"; };
 		PLDT200000000000000000001 /* ProgramLibraryDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramLibraryDetailView.swift; sourceTree = "<group>"; };
-		WRMP200000000000000000001 /* WarmupGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WarmupGenerator.swift; sourceTree = "<group>"; };
 		A20000000000000000000004 /* DayTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayTemplate.swift; sourceTree = "<group>"; };
 		A20000000000000000000005 /* WorkoutSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutSession.swift; sourceTree = "<group>"; };
 		A20000000000000000000006 /* SetEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetEntry.swift; sourceTree = "<group>"; };
@@ -168,7 +166,6 @@
 		541C84E52F5B815D00D0DB57 /* Engine */ = {
 			isa = PBXGroup;
 			children = (
-				WRMP200000000000000000001 /* WarmupGenerator.swift */,
 			);
 			path = Engine;
 			sourceTree = "<group>";
@@ -462,7 +459,6 @@
 				PIMP100000000000000000001 /* ProgramImporter.swift in Sources */,
 				PLIB100000000000000000001 /* ProgramLibraryView.swift in Sources */,
 				PLDT100000000000000000001 /* ProgramLibraryDetailView.swift in Sources */,
-				WRMP100000000000000000001 /* WarmupGenerator.swift in Sources */,
 				A10000000000000000000004 /* DayTemplate.swift in Sources */,
 				A10000000000000000000005 /* WorkoutSession.swift in Sources */,
 				A10000000000000000000006 /* SetEntry.swift in Sources */,

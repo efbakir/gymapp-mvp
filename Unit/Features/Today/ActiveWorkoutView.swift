@@ -35,7 +35,7 @@ struct ActiveWorkoutView: View {
     @State private var showsAddExercise = false
     @State private var pendingExerciseForSetup: Exercise?
     @State private var customSetCounts: [UUID: Int] = [:]
-    @State private var warmupExpanded: Bool = false
+    @State private var showsWarmupGuidance = false
     /// Bumped on every successful `completeSet`. Drives the
     /// `.sensoryFeedback(.success, trigger:)` on `WorkoutCommandCard`, so the
     /// haptic lives at the atom layer instead of being fired imperatively
@@ -46,9 +46,6 @@ struct ActiveWorkoutView: View {
     /// `setLoggedPhase` bump, double rest-timer start. Flipped true on entry,
     /// reset on the next runloop tick so legitimate next-set logging works.
     @State private var isLoggingSet: Bool = false
-    /// Bumped when a warmup set lands. Lighter haptic than working sets so the
-    /// lifter can tell warmup from work without looking.
-    @State private var warmupLoggedPhase: Int = 0
     /// Bumped exactly once when the lifter finishes the workout. Drives the
     /// session-finish success notification haptic.
     @State private var workoutFinishedPhase: Int = 0
@@ -187,20 +184,25 @@ struct ActiveWorkoutView: View {
     @ViewBuilder
     private func workoutMainColumn(for section: WorkoutExerciseSectionModel) -> some View {
         VStack(spacing: AppSpacing.lg) {
-            if let warmups = warmupSets(for: section),
-               !hasLoggedWorkingSet(for: section.exercise.id) {
-                WarmupRow(
-                    warmups: warmups,
-                    completedIndices: completedWarmupIndices(for: section.exercise.id),
-                    isBodyweight: section.exercise.isBodyweight,
-                    isExpanded: $warmupExpanded,
-                    onLog: { warmup in
-                        completeWarmup(
-                            exercise: section.exercise,
-                            warmup: warmup
-                        )
+            if !hasLoggedWorkingSet(for: section.exercise.id) {
+                Button {
+                    showsWarmupGuidance = true
+                } label: {
+                    HStack(spacing: AppSpacing.xs) {
+                        Text("Warm up before working sets")
+                            .font(AppFont.caption.font)
+                            .foregroundStyle(AppColor.textSecondary)
+                        Image(systemName: "info.circle")
+                            .font(AppFont.caption.font)
+                            .foregroundStyle(AppColor.textSecondary)
+                        Spacer(minLength: 0)
                     }
-                )
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .frame(minHeight: 44)
+                    .padding(.horizontal, AppSpacing.md)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(ScaleButtonStyle())
             }
 
             WorkoutCommandCard(
@@ -385,11 +387,6 @@ struct ActiveWorkoutView: View {
         .sensoryFeedback(.success, trigger: showsReadyState) { old, new in
             !old && new
         }
-        // Warmup logged → light impact (replaces the previous imperative
-        // `UIImpactFeedbackGenerator(style: .light)` call). Lighter than the
-        // working-set success so the lifter can tell warmup from work without
-        // looking at the screen.
-        .sensoryFeedback(.impact(weight: .light), trigger: warmupLoggedPhase)
         // Workout finished → notification-style success haptic (replaces the
         // imperative `UINotificationFeedbackGenerator` in `finishWorkout`).
         .sensoryFeedback(.success, trigger: workoutFinishedPhase)
@@ -434,6 +431,11 @@ struct ActiveWorkoutView: View {
             }
             .presentationDetents([.height(320)])
             .appBottomSheetChrome()
+        }
+        .sheet(isPresented: $showsWarmupGuidance) {
+            WarmupGuidanceSheet()
+                .presentationDetents([.height(360)])
+                .appBottomSheetChrome()
         }
         .alert("Cancel Workout", isPresented: $showsCancelConfirmation) {
             Button("Cancel Workout", role: .destructive) {
@@ -983,56 +985,12 @@ struct ActiveWorkoutView: View {
         }
     }
 
-    private func completeWarmup(
-        exercise: Exercise,
-        warmup: WarmupGenerator.WarmupSet
-    ) {
-        let setIndex = session.setEntries
-            .filter { $0.exerciseId == exercise.id }
-            .count
-
-        let entry = SetEntry(
-            sessionId: session.id,
-            exerciseId: exercise.id,
-            weight: warmup.weightKg,
-            reps: warmup.reps,
-            rpe: 0,
-            rir: -1,
-            isWarmup: true,
-            isCompleted: true,
-            setIndex: setIndex,
-            note: ""
-        )
-        entry.session = session
-        modelContext.insert(entry)
-        try? modelContext.save()
-        warmupLoggedPhase &+= 1
-    }
-
-    private func warmupSets(
-        for section: WorkoutExerciseSectionModel
-    ) -> [WarmupGenerator.WarmupSet]? {
-        guard let prefill = section.prefill else { return nil }
-        return WarmupGenerator.warmups(
-            forWorkingKg: prefill.weight,
-            isBodyweight: section.exercise.isBodyweight
-        )
-    }
-
     private func hasLoggedWorkingSet(for exerciseID: UUID) -> Bool {
         session.setEntries.contains { entry in
             entry.exerciseId == exerciseID
                 && entry.isCompleted
                 && !entry.isWarmup
         }
-    }
-
-    private func completedWarmupIndices(for exerciseID: UUID) -> Set<Int> {
-        let warmups = session.setEntries
-            .filter { $0.exerciseId == exerciseID && $0.isWarmup && $0.isCompleted }
-            .sorted { $0.setIndex < $1.setIndex }
-        // Map in order: the first completed warmup corresponds to index 0, etc.
-        return Set(warmups.indices)
     }
 
     private func finishWorkout() {
@@ -1706,97 +1664,45 @@ final class RestTimerManager {
     }
 }
 
-// MARK: - Warmup row
+// MARK: - Warmup guidance sheet
 
-private struct WarmupRow: View {
-    let warmups: [WarmupGenerator.WarmupSet]
-    let completedIndices: Set<Int>
-    let isBodyweight: Bool
-    @Binding var isExpanded: Bool
-    let onLog: (WarmupGenerator.WarmupSet) -> Void
-
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+/// One-off content sheet behind the "Warm up before working sets" reminder.
+/// Owns its own dismiss + nav-bar plumbing so the call site stays a single
+/// `.sheet { WarmupGuidanceSheet() }`. Static copy — no canonical guidance-sheet
+/// primitive to extend.
+private struct WarmupGuidanceSheet: View {
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        VStack(spacing: 0) {
-            Button {
-                withAnimation(reduceMotion ? nil : .appState) {
-                    isExpanded.toggle()
-                }
-            } label: {
-                HStack(spacing: AppSpacing.sm) {
-                    Text("Warmup")
-                        .font(AppFont.caption.font)
-                        .foregroundStyle(AppColor.textSecondary)
-                    Text("· \(warmups.count) set\(warmups.count == 1 ? "" : "s")")
-                        .font(AppFont.caption.font)
-                        .foregroundStyle(AppColor.textSecondary)
-                    Spacer(minLength: 0)
-                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                        .font(AppFont.caption.font)
-                        .foregroundStyle(AppColor.textSecondary)
-                }
-                .padding(.horizontal, AppSpacing.md)
-                .padding(.vertical, AppSpacing.sm)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(ScaleButtonStyle())
+        NavigationStack {
+            VStack(alignment: .leading, spacing: AppSpacing.lg) {
+                Text("Ramp up to your working weight before logging your first working set.")
+                    .font(AppFont.body.font)
+                    .foregroundStyle(AppColor.textSecondary)
 
-            if isExpanded {
-                VStack(spacing: 0) {
-                    ForEach(warmups) { warmup in
-                        WarmupSetButton(
-                            warmup: warmup,
-                            isDone: completedIndices.contains(warmup.index),
-                            onTap: { onLog(warmup) }
-                        )
-                        if warmup.id != warmups.last?.id {
-                            Rectangle()
-                                .fill(AppColor.border)
-                                .frame(height: 1)
-                                .padding(.leading, AppSpacing.md)
-                        }
+                VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                    Text("• 50% × 5 reps")
+                    Text("• 70% × 3 reps")
+                    Text("• 85% × 2 reps")
+                }
+                .font(AppFont.body.font)
+                .foregroundStyle(AppColor.textPrimary)
+
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, AppSpacing.md)
+            .padding(.top, AppSpacing.md)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .navigationTitle("Warmup")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Done", role: .cancel) {
+                        dismiss()
                     }
                 }
             }
+            .appNavigationBarChrome()
         }
-        .background(
-            RoundedRectangle(cornerRadius: AppRadius.md)
-                .fill(AppColor.cardBackground)
-        )
-    }
-}
-
-private struct WarmupSetButton: View {
-    let warmup: WarmupGenerator.WarmupSet
-    let isDone: Bool
-    let onTap: () -> Void
-
-    var body: some View {
-        Button(action: onTap) {
-            HStack(spacing: AppSpacing.sm) {
-                Image(systemName: isDone ? "checkmark.circle.fill" : "circle")
-                    .font(AppFont.caption.font)
-                    .foregroundStyle(isDone ? AppColor.textPrimary : AppColor.textSecondary)
-                Text(
-                    WorkoutTargetFormatter.setMetricText(
-                        weightKg: warmup.weightKg,
-                        reps: warmup.reps,
-                        isBodyweight: false
-                    ) ?? "\(warmup.reps)"
-                )
-                    .font(AppFont.caption.font)
-                    .foregroundStyle(AppColor.textPrimary)
-                Spacer(minLength: 0)
-                Text("Set \(warmup.index + 1)")
-                    .font(AppFont.caption.font)
-                    .foregroundStyle(AppColor.textSecondary)
-            }
-            .padding(.horizontal, AppSpacing.md)
-            .padding(.vertical, AppSpacing.sm)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(ScaleButtonStyle())
-        .disabled(isDone)
     }
 }
