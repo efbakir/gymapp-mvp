@@ -25,9 +25,12 @@ const config: Config = {
         },
       },
       borderRadius: {
+        // Mirrors iOS AppRadius (DESIGN.md): sm 10, md 14, lg 22.
+        // --radius is 14px = AppRadius.md (button); xl extends to 22px = AppRadius.lg (cards).
+        sm: "calc(var(--radius) - 4px)",
+        md: "var(--radius)",
         lg: "var(--radius)",
-        md: "calc(var(--radius) - 4px)",
-        sm: "calc(var(--radius) - 6px)",
+        xl: "calc(var(--radius) + 8px)",
       },
       fontFamily: {
         sans: ["var(--font-sans)", "-apple-system", "system-ui", "sans-serif"],

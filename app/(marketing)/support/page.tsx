@@ -11,8 +11,8 @@ export const metadata: Metadata = {
 
 export default function SupportPage() {
   return (
-    <section className="pt-32 pb-unit-xxl md:pb-[96px]">
-      <div className="max-w-2xl mx-auto px-unit-md md:px-unit-lg">
+    <section className="pt-32 pb-unit-xxl md:pb-unit-xxxxl">
+      <div className="max-w-3xl mx-auto px-unit-md md:px-unit-lg">
         <h1 className="text-3xl font-bold tracking-tight mb-unit-sm">
           Support
         </h1>
