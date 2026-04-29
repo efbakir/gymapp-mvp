@@ -12,7 +12,7 @@ export default function LandingPage() {
     <>
       {/* ── Hero ── */}
       <section className="pt-40 pb-unit-xxl md:pt-48 md:pb-unit-xxxxl">
-        <div className="max-w-3xl mx-auto px-unit-md md:px-unit-lg text-center">
+        <div className="max-w-3xl mx-auto px-unit-md md:px-unit-lg">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.08] mb-unit-md">
             Your tracker is slower than paper.
           </h1>
@@ -66,10 +66,9 @@ export default function LandingPage() {
 
       {/* ── Positioning ── */}
       <section className="py-unit-xxl md:py-unit-xxxl">
-        <div className="max-w-2xl mx-auto px-unit-md md:px-unit-lg text-center">
-          <p className="text-xl md:text-2xl font-semibold leading-relaxed">
-            Built for lifters who already know their program.
-            <br />
+        <div className="max-w-3xl mx-auto px-unit-md md:px-unit-lg">
+          <p className="text-xl md:text-2xl font-semibold leading-relaxed max-w-2xl">
+            Built for lifters who already know their program.{" "}
             <span className="text-unit-text-secondary">
               Your data stays on your device. Always works offline.
             </span>
@@ -79,7 +78,7 @@ export default function LandingPage() {
 
       {/* ── What Unit is not ── */}
       <section className="py-unit-xl md:py-unit-xxl">
-        <div className="max-w-2xl mx-auto px-unit-md md:px-unit-lg">
+        <div className="max-w-3xl mx-auto px-unit-md md:px-unit-lg">
           <h2 className="text-2xl font-bold tracking-tight mb-unit-xl">
             What Unit is not
           </h2>
@@ -114,7 +113,7 @@ export default function LandingPage() {
 
       {/* ── FAQ ── */}
       <section id="faq" className="py-unit-xxl md:py-unit-xxxxl">
-        <div className="max-w-2xl mx-auto px-unit-md md:px-unit-lg">
+        <div className="max-w-3xl mx-auto px-unit-md md:px-unit-lg">
           <h2 className="text-2xl font-bold tracking-tight mb-unit-xl">
             FAQ
           </h2>
