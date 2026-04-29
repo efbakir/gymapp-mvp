@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import FAQItem from "@/components/marketing/FAQItem"
+import { SUPPORT_EMAIL } from "@/lib/contact"
 
 export const metadata: Metadata = {
   title: "Support",
@@ -21,18 +22,18 @@ export default function SupportPage() {
         </p>
 
         {/* Contact */}
-        <div className="rounded-xl p-unit-lg border border-unit-border bg-unit-card mb-unit-xxl">
+        <address className="not-italic block rounded-xl p-unit-lg border border-unit-border bg-unit-card mb-unit-xxl">
           <h2 className="text-lg font-semibold mb-unit-xs">Contact us</h2>
           <p className="text-[15px] mb-unit-md text-unit-text-secondary">
             We typically respond within 24 hours.
           </p>
           <a
-            href="mailto:support@unitgym.app"
-            className="text-base font-semibold transition-opacity hover:opacity-70"
+            href={`mailto:${SUPPORT_EMAIL}?subject=Unit%20support%20request`}
+            className="text-base font-bold font-mono"
           >
-            support@unitgym.app
+            {SUPPORT_EMAIL}
           </a>
-        </div>
+        </address>
 
         {/* FAQ */}
         <h2 className="text-xl font-semibold mb-unit-lg">Common questions</h2>
@@ -84,7 +85,19 @@ export default function SupportPage() {
           />
           <FAQItem
             question="I found a bug. How do I report it?"
-            answer="Email us at support@unitgym.app with a description of the issue, your iOS version, and your device model. Screenshots help."
+            answer={
+              <>
+                Email us at{" "}
+                <a
+                  href={`mailto:${SUPPORT_EMAIL}?subject=Unit%20bug%20report`}
+                  className="underline underline-offset-2"
+                >
+                  {SUPPORT_EMAIL}
+                </a>{" "}
+                with a description of the issue, your iOS version, and your
+                device model. Screenshots help.
+              </>
+            }
           />
         </div>
 

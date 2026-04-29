@@ -45,13 +45,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body className="font-sans antialiased">
-        {children}
-        <script
-          src="https://mcp.figma.com/mcp/html-to-design/capture.js"
-          async
-        />
-      </body>
+      <body className="font-sans antialiased">{children}</body>
     </html>
   )
 }

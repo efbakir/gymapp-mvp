@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
+import { SUPPORT_EMAIL, DEVELOPER_NAME, LEGAL_LAST_UPDATED } from "@/lib/contact"
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
@@ -13,12 +14,12 @@ export default function PrivacyPage() {
       <div className="max-w-3xl mx-auto px-unit-md md:px-unit-lg">
         <article className="prose-page">
           <h1>Privacy Policy</h1>
-          <p className="last-updated">Last updated: April 13, 2026</p>
+          <p className="last-updated">Last updated: {LEGAL_LAST_UPDATED}</p>
 
           <p>
-            Unit (&quot;the App&quot;) is developed and operated by Efe Bakir.
-            This Privacy Policy explains how we handle your information when
-            you use Unit.
+            Unit (&quot;the App&quot;) is developed and operated by{" "}
+            {DEVELOPER_NAME}. This Privacy Policy explains how we handle your
+            information when you use Unit.
           </p>
 
           <nav aria-label="On this page" className="page-toc">
@@ -99,7 +100,7 @@ export default function PrivacyPage() {
           </p>
           <p>
             If you have questions about your data or wish to make a
-            privacy-related request, contact us at efeec.bakir@gmail.com.
+            privacy-related request, contact us at {SUPPORT_EMAIL}.
           </p>
 
           <h2 id="changes">Changes to This Policy</h2>
@@ -115,8 +116,8 @@ export default function PrivacyPage() {
             If you have questions about this Privacy Policy, contact us at:
           </p>
           <ul>
-            <li>Email: efeec.bakir@gmail.com</li>
-            <li>Developer: Efe Bakir</li>
+            <li>Email: {SUPPORT_EMAIL}</li>
+            <li>Developer: {DEVELOPER_NAME}</li>
           </ul>
 
           <div className="mt-12">

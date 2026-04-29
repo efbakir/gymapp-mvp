@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
+import { SUPPORT_EMAIL, DEVELOPER_NAME, LEGAL_LAST_UPDATED } from "@/lib/contact"
 
 export const metadata: Metadata = {
   title: "Terms of Use",
@@ -12,13 +13,14 @@ export default function TermsPage() {
       <div className="max-w-3xl mx-auto px-unit-md md:px-unit-lg">
         <article className="prose-page">
           <h1>Terms of Use</h1>
-          <p className="last-updated">Last updated: April 13, 2026</p>
+          <p className="last-updated">Last updated: {LEGAL_LAST_UPDATED}</p>
 
           <p>
             These Terms of Use (&quot;Terms&quot;) govern your use of the Unit
-            mobile application (&quot;the App&quot;) developed by Efe Bakir
-            (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;). By
-            downloading or using Unit, you agree to these Terms.
+            mobile application (&quot;the App&quot;) developed by{" "}
+            {DEVELOPER_NAME} (&quot;we,&quot; &quot;us,&quot; or
+            &quot;our&quot;). By downloading or using Unit, you agree to these
+            Terms.
           </p>
 
           <nav aria-label="On this page" className="page-toc">
@@ -80,7 +82,7 @@ export default function TermsPage() {
           <h2 id="ip">Intellectual Property</h2>
           <p>
             Unit, including its design, code, visual identity, and content, is
-            the intellectual property of Efe Bakir and is protected by
+            the intellectual property of {DEVELOPER_NAME} and is protected by
             applicable copyright and intellectual property laws.
           </p>
 
@@ -107,10 +109,10 @@ export default function TermsPage() {
 
           <h2 id="liability">Limitation of Liability</h2>
           <p>
-            To the maximum extent permitted by applicable law, Efe Bakir shall
-            not be liable for any indirect, incidental, special, consequential,
-            or punitive damages, or any loss of data, use, or profits, arising
-            out of or related to your use of the App.
+            To the maximum extent permitted by applicable law,{" "}
+            {DEVELOPER_NAME} shall not be liable for any indirect, incidental,
+            special, consequential, or punitive damages, or any loss of data,
+            use, or profits, arising out of or related to your use of the App.
           </p>
 
           <h2 id="service-changes">Changes to the App and Service</h2>
@@ -140,8 +142,8 @@ export default function TermsPage() {
             If you have questions about these Terms, contact us at:
           </p>
           <ul>
-            <li>Email: efeec.bakir@gmail.com</li>
-            <li>Developer: Efe Bakir</li>
+            <li>Email: {SUPPORT_EMAIL}</li>
+            <li>Developer: {DEVELOPER_NAME}</li>
           </ul>
 
           <div className="mt-12">
