@@ -29,7 +29,7 @@ export default function SupportPage() {
           </p>
           <a
             href={`mailto:${SUPPORT_EMAIL}?subject=Unit%20support%20request`}
-            className="text-base font-bold font-mono"
+            className="text-[17px] font-bold"
           >
             {SUPPORT_EMAIL}
           </a>

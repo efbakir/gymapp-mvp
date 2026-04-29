@@ -16,16 +16,16 @@ export default function LandingPage() {
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.08] mb-unit-md">
             Your tracker is slower than paper.
           </h1>
-          <p className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.08] mb-unit-lg text-unit-text-secondary">
+          <p className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.08] mb-unit-lg">
             Unit isn't.
           </p>
-          <p className="text-lg md:text-xl leading-relaxed mb-unit-xl max-w-xl mx-auto text-unit-text-secondary">
+          <p className="text-lg md:text-xl leading-relaxed mb-unit-xl max-w-xl text-unit-text-secondary">
             Log a set in one tap. Ghost values pre-fill from your last session.
             No typing. No menus. Under 3 seconds.
           </p>
           <a
             href="#download"
-            className="inline-flex items-center justify-center h-[60px] px-unit-lg rounded-lg text-base font-bold font-mono transition-transform active:scale-[0.96] bg-unit-accent text-unit-accent-foreground"
+            className="inline-flex items-center justify-center h-[60px] px-unit-lg rounded-lg text-[17px] font-bold transition-transform active:scale-[0.96] bg-unit-accent text-unit-accent-foreground"
           >
             Coming soon to iOS
           </a>
@@ -37,7 +37,7 @@ export default function LandingPage() {
         <div className="max-w-3xl mx-auto px-unit-md md:px-unit-lg">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-unit-xl md:gap-unit-xxl">
             <div>
-              <p className="text-sm font-semibold text-unit-text-secondary mb-unit-xxs tracking-wide uppercase">
+              <p className="text-[13px] font-medium font-mono text-unit-text-secondary mb-unit-xs uppercase tracking-[0.6px]">
                 One tap per set
               </p>
               <p className="text-base leading-relaxed">
@@ -45,7 +45,7 @@ export default function LandingPage() {
               </p>
             </div>
             <div>
-              <p className="text-sm font-semibold text-unit-text-secondary mb-unit-xxs tracking-wide uppercase">
+              <p className="text-[13px] font-medium font-mono text-unit-text-secondary mb-unit-xs uppercase tracking-[0.6px]">
                 Your program, your way
               </p>
               <p className="text-base leading-relaxed">
@@ -53,7 +53,7 @@ export default function LandingPage() {
               </p>
             </div>
             <div>
-              <p className="text-sm font-semibold text-unit-text-secondary mb-unit-xxs tracking-wide uppercase">
+              <p className="text-[13px] font-medium font-mono text-unit-text-secondary mb-unit-xs uppercase tracking-[0.6px]">
                 Rest timer follows you
               </p>
               <p className="text-base leading-relaxed">
