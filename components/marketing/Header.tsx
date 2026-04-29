@@ -45,8 +45,9 @@ export default function Header() {
         {/* Mobile hamburger */}
         <button
           onClick={() => setMenuOpen(!menuOpen)}
-          className="md:hidden flex flex-col gap-[5px] p-2"
+          className="md:hidden flex flex-col gap-[5px] p-3 -mr-3"
           aria-label="Toggle menu"
+          aria-expanded={menuOpen}
         >
           <span
             className={`block w-5 h-[1.5px] bg-unit-text-primary transition-transform duration-200 ${
@@ -69,17 +70,17 @@ export default function Header() {
       {/* Mobile menu */}
       {menuOpen && (
         <div className="md:hidden border-t border-unit-border bg-unit-background">
-          <div className="max-w-3xl mx-auto px-unit-md py-unit-lg flex flex-col gap-unit-md">
+          <div className="max-w-3xl mx-auto px-unit-md py-unit-lg flex flex-col gap-unit-sm">
             <Link
               href="/support"
               onClick={() => setMenuOpen(false)}
-              className="text-base py-1 text-unit-text-secondary"
+              className="text-base py-3 text-unit-text-secondary"
             >
               Support
             </Link>
             <a
               href="#download"
-              className="text-base font-bold font-mono px-4 py-3 rounded-lg text-center mt-2 bg-unit-accent text-unit-accent-foreground"
+              className="inline-flex items-center justify-center h-[60px] rounded-[14px] text-base font-bold font-mono mt-2 bg-unit-accent text-unit-accent-foreground transition-transform active:scale-[0.96]"
             >
               Coming soon
             </a>
