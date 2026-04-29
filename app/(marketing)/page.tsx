@@ -25,7 +25,7 @@ export default function LandingPage() {
           </p>
           <a
             href="#download"
-            className="inline-flex items-center justify-center h-[60px] px-unit-lg rounded-[14px] text-base font-bold font-mono transition-transform active:scale-[0.96] bg-unit-accent text-unit-accent-foreground"
+            className="inline-flex items-center justify-center h-[60px] px-unit-lg rounded-lg text-base font-bold font-mono transition-transform active:scale-[0.96] bg-unit-accent text-unit-accent-foreground"
           >
             Coming soon to iOS
           </a>

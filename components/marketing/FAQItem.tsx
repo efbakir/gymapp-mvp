@@ -16,6 +16,7 @@ export default function FAQItem({
       <button
         onClick={() => setOpen(!open)}
         className="w-full flex items-center justify-between text-left gap-unit-md"
+        aria-expanded={open}
       >
         <span className="text-base font-semibold">{question}</span>
         <svg
@@ -23,6 +24,7 @@ export default function FAQItem({
           height="16"
           viewBox="0 0 16 16"
           fill="none"
+          aria-hidden="true"
           className={`shrink-0 transition-transform duration-200 text-unit-text-secondary ${
             open ? "rotate-180" : ""
           }`}
@@ -30,20 +32,22 @@ export default function FAQItem({
           <path
             d="M4 6L8 10L12 6"
             stroke="currentColor"
-            strokeWidth="1.5"
+            strokeWidth="1.25"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
         </svg>
       </button>
       <div
-        className={`overflow-hidden transition-all duration-200 ${
-          open ? "max-h-96 mt-unit-sm" : "max-h-0"
+        className={`grid transition-[grid-template-rows] duration-200 ease-out ${
+          open ? "grid-rows-[1fr] mt-unit-sm" : "grid-rows-[0fr]"
         }`}
       >
-        <p className="text-[15px] leading-relaxed text-unit-text-secondary">
-          {answer}
-        </p>
+        <div className="overflow-hidden">
+          <p className="text-[15px] leading-relaxed text-unit-text-secondary">
+            {answer}
+          </p>
+        </div>
       </div>
     </div>
   )
