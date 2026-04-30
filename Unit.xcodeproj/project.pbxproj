@@ -57,6 +57,7 @@
 		FT100000000000000000004 /* GeistMono-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FT000000000000000000004 /* GeistMono-Medium.ttf */; };
 		FT100000000000000000010 /* GeistMono-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FT000000000000000000010 /* GeistMono-SemiBold.ttf */; };
 		FT100000000000000000011 /* GeistMono-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FT000000000000000000011 /* GeistMono-Bold.ttf */; };
+		PRV100000000000000000001 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = PRV000000000000000000001 /* PrivacyInfo.xcprivacy */; };
 		WE100000000000000000001 /* RestTimerLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000001 /* RestTimerLiveActivity.swift */; };
 		WE100000000000000000002 /* UnitWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000002 /* UnitWidgetBundle.swift */; };
 		WE100000000000000000003 /* RestTimerAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000010 /* RestTimerAttributes.swift */; };
@@ -144,6 +145,7 @@
 		FT000000000000000000010 /* GeistMono-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "GeistMono-SemiBold.ttf"; sourceTree = "<group>"; };
 		FT000000000000000000011 /* GeistMono-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "GeistMono-Bold.ttf"; sourceTree = "<group>"; };
 		FT000000000000000000005 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		PRV000000000000000000001 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		WE000000000000000000001 /* UnitWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = UnitWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -186,6 +188,7 @@
 			isa = PBXGroup;
 			children = (
 				FT000000000000000000005 /* Info.plist */,
+				PRV000000000000000000001 /* PrivacyInfo.xcprivacy */,
 				544D8D052F5F58C100E4C17E /* Unit.entitlements */,
 				A20000000000000000000001 /* UnitApp.swift */,
 				A20000000000000000000002 /* ContentView.swift */,
@@ -430,6 +433,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A1000000000000000000000F /* Assets.xcassets in Resources */,
+				PRV100000000000000000001 /* PrivacyInfo.xcprivacy in Resources */,
 				FT100000000000000000001 /* Geist-Medium.ttf in Resources */,
 				FT100000000000000000002 /* Geist-SemiBold.ttf in Resources */,
 				FT100000000000000000003 /* Geist-Bold.ttf in Resources */,
@@ -646,8 +650,8 @@
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -686,8 +690,8 @@
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
