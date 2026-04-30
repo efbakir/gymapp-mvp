@@ -5,7 +5,7 @@ export default function TrustBand({ count }: { count?: number }) {
     typeof count === "number" && count >= COUNTER_VISIBILITY_THRESHOLD
 
   return (
-    <div className="flex flex-wrap items-center justify-center gap-x-unit-sm gap-y-unit-xxs">
+    <div className="flex flex-wrap items-center gap-x-unit-sm gap-y-unit-xxs">
       <span className="inline-flex items-center gap-unit-xxs">
         <span className="block h-[6px] w-[6px] rounded-full bg-unit-success" aria-hidden="true" />
         <span className="eyebrow">Built by one lifter</span>
