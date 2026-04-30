@@ -13,7 +13,12 @@ struct OnboardingExercisesView: View {
     @Environment(OnboardingViewModel.self) private var vm
     var progressStep: Int
     var progressTotal: Int
+    /// True while the parent is writing the program to SwiftData. Disables the
+    /// CTA and swaps the label to a saving copy so the user gets a clear
+    /// in-flight signal and a re-entrancy guard against double-tap.
+    var isCommitting: Bool = false
     var onContinue: () -> Void
+    var onBack: () -> Void
 
     @State private var selectedDayIndex: Int = 0
     @State private var showingAddSheet: Bool = false
@@ -45,11 +50,12 @@ struct OnboardingExercisesView: View {
 
         OnboardingShell(
             title: "Add exercises",
-            ctaLabel: "Create my program",
-            ctaEnabled: vm.exercisesAreValid,
+            ctaLabel: isCommitting ? "Saving…" : "Create my program",
+            ctaEnabled: vm.exercisesAreValid && !isCommitting,
             progressStep: progressStep,
             progressTotal: progressTotal,
             onContinue: onContinue,
+            onBack: onBack,
             content: {
                 let dayExs = vm.dayExercises.indices.contains(selectedDayIndex) ? vm.dayExercises[selectedDayIndex] : []
 
@@ -60,12 +66,8 @@ struct OnboardingExercisesView: View {
                                 HStack(spacing: AppSpacing.sm) {
                                     AppIcon.reorder.image(size: 15, weight: .semibold)
                                         .foregroundStyle(AppColor.textSecondary)
-                                        .frame(minWidth: 44, minHeight: 44)
-                                        .contentShape(Rectangle())
-                                        .onDrag {
-                                            draggedExerciseID = ex.id
-                                            return NSItemProvider(object: ex.id.uuidString as NSString)
-                                        }
+                                        .frame(width: 44, height: 44)
+                                        .accessibilityHidden(true)
 
                                     TextField("Exercise name", text: exerciseNameBinding(dayIndex: selectedDayIndex, exerciseID: ex.id))
                                         .font(AppFont.body.font)
@@ -74,7 +76,8 @@ struct OnboardingExercisesView: View {
                                         .textInputAutocapitalization(.words)
                                         .autocorrectionDisabled()
                                         .submitLabel(.done)
-                                    Spacer(minLength: 0)
+                                        .frame(minWidth: 0, maxWidth: .infinity)
+
                                     Button {
                                         vm.dayExercises[selectedDayIndex].removeAll { $0.id == ex.id }
                                         vm.baselines.removeValue(forKey: ex.id)
@@ -84,13 +87,13 @@ struct OnboardingExercisesView: View {
                                     } label: {
                                         AppIcon.close.image(size: 15, weight: .semibold)
                                             .foregroundStyle(AppColor.textSecondary)
-                                            .frame(minWidth: 44, minHeight: 44)
+                                            .frame(width: 44, height: 44)
                                             .contentShape(Rectangle())
                                     }
                                 }
-                                .frame(height: 48)
+                                .frame(minHeight: 48)
 
-                                HStack(spacing: AppSpacing.md) {
+                                HStack(spacing: AppSpacing.sm) {
                                     plannedStepper(
                                         label: "Sets",
                                         value: ex.plannedSets,
@@ -103,13 +106,19 @@ struct OnboardingExercisesView: View {
                                         onDecrement: { vm.adjustPlannedReps(dayIndex: selectedDayIndex, exerciseId: ex.id, delta: -1) },
                                         onIncrement: { vm.adjustPlannedReps(dayIndex: selectedDayIndex, exerciseId: ex.id, delta: 1) }
                                     )
-                                    Spacer(minLength: 0)
                                 }
-                                .padding(.leading, AppSpacing.xxl)
                             }
+                            .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
                             .contentShape(Rectangle())
                             .onTapGesture {
                                 focusedExerciseID = ex.id
+                            }
+                            .appReorderable(
+                                id: ex.id,
+                                draggedID: $draggedExerciseID,
+                                reduceMotion: reduceMotion
+                            ) {
+                                onboardingExerciseDragPreview(for: ex)
                             }
                             .onDrop(
                                 of: [UTType.text],
@@ -122,37 +131,25 @@ struct OnboardingExercisesView: View {
                             )
                         }
                     }
-
-                    AppGhostButton("Add exercise") {
-                        showingAddSheet = true
-                    }
                 }
             },
             stickyAccessory: {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: AppSpacing.sm) {
-                        ForEach(0..<vm.dayCount, id: \.self) { i in
-                            AppFilterChip(
-                                label: vm.dayNames[i],
-                                isSelected: selectedDayIndex == i,
-                                showsTrailingDot: vm.dayExercises[i].isEmpty
-                            ) {
-                                selectedDayIndex = i
-                            }
+                AppFilterChipBar {
+                    ForEach(0..<vm.dayCount, id: \.self) { i in
+                        AppFilterChip(
+                            label: vm.dayNames[i],
+                            isSelected: selectedDayIndex == i,
+                            showsTrailingDot: vm.dayExercises[i].isEmpty
+                        ) {
+                            selectedDayIndex = i
                         }
                     }
-                    .padding(.horizontal, AppSpacing.xs / 2)
                 }
-                .appScrollEdgeSoft()
-                // iOS 18 horizontal ScrollView reports unbounded ideal width,
-                // which the parent VStack adopts and then propagates through
-                // AppScreen's `safeAreaInset(.top)` — silently cancelling the
-                // canonical 16pt screen padding for the whole screen
-                // (header + content body + bottom CTA). Anchor the trailing
-                // edge with a fixed-size hint so the ScrollView accepts the
-                // proposed width instead of demanding infinity.
-                .frame(maxWidth: .infinity)
-                .fixedSize(horizontal: false, vertical: true)
+            },
+            floatingAccessory: {
+                AppFloatingPillButton(AppCopy.Workout.addExercise, icon: .add) {
+                    showingAddSheet = true
+                }
             }
         )
         .sheet(isPresented: $showingAddSheet, onDismiss: {
@@ -183,16 +180,40 @@ struct OnboardingExercisesView: View {
         onDecrement: @escaping () -> Void,
         onIncrement: @escaping () -> Void
     ) -> some View {
-        HStack(spacing: AppSpacing.sm) {
+        VStack(alignment: .leading, spacing: AppSpacing.xs) {
             Text(label)
-                .font(AppFont.caption.font)
+                .appCapsLabel(.smallLabel)
                 .foregroundStyle(AppColor.textSecondary)
             AppStepper(
                 value: "\(value)",
+                minimumValueWidth: AppSpacing.md,
                 onDecrement: onDecrement,
                 onIncrement: onIncrement
             )
         }
+        .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+    }
+
+    @ViewBuilder
+    private func onboardingExerciseDragPreview(for ex: OnboardingExercise) -> some View {
+        HStack(spacing: AppSpacing.sm) {
+            AppIcon.reorder.image(size: 15, weight: .semibold)
+                .foregroundStyle(AppColor.textSecondary)
+                .frame(width: 44, alignment: .leading)
+
+            Text(ex.name.isEmpty ? "Exercise" : ex.name)
+                .font(AppFont.body.font)
+                .foregroundStyle(AppColor.textPrimary)
+                .lineLimit(1)
+
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, AppSpacing.lg)
+        .frame(maxWidth: .infinity, minHeight: 56)
+        .background(
+            RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous)
+                .fill(AppColor.cardBackground)
+        )
     }
 }
 
@@ -214,6 +235,7 @@ private struct ExerciseReorderDropDelegate: DropDelegate {
             let movedExercise = exercises.remove(at: fromIndex)
             exercises.insert(movedExercise, at: toIndex)
         }
+        AppReorderHaptic.swap()
     }
 
     func performDrop(info: DropInfo) -> Bool {
@@ -234,7 +256,6 @@ struct ExerciseSearchSheet: View {
     let dayIndex: Int
 
     @State private var query: String = ""
-    @FocusState private var isSearchFocused: Bool
 
     private var filteredSuggestions: [String] {
         let existing = vm.dayExercises[dayIndex].map { $0.name.lowercased() }
@@ -265,7 +286,7 @@ struct ExerciseSearchSheet: View {
                         }
                         .frame(minHeight: 44, alignment: .leading)
                     }
-                    .listRowBackground(AppColor.cardBackground)
+                    .appPlainListRowChrome()
                 }
 
                 ForEach(filteredSuggestions, id: \.self) { name in
@@ -277,19 +298,29 @@ struct ExerciseSearchSheet: View {
                             .foregroundStyle(AppColor.textPrimary)
                             .frame(minHeight: 44, alignment: .leading)
                     }
-                    .listRowBackground(AppColor.cardBackground)
+                    .appPlainListRowChrome()
+                }
+
+                // Empty-row hint when both the catalog and the create-affordance
+                // have nothing to show. Same pattern as the in-workout picker.
+                if filteredSuggestions.isEmpty && !showCustomOption {
+                    Text(query.trimmingCharacters(in: .whitespaces).isEmpty
+                         ? AppCopy.Search.noExercisesYet
+                         : AppCopy.Search.noMatchingExercises)
+                        .font(AppFont.caption.font)
+                        .foregroundStyle(AppColor.textSecondary)
+                        .frame(minHeight: 44, alignment: .leading)
+                        .appPlainListRowChrome(separator: .hidden)
                 }
             }
             .listSectionSpacing(0)
+            .listStyle(.plain)
             .scrollContentBackground(.hidden)
             .background(AppColor.sheetBackground.ignoresSafeArea())
             .scrollDismissesKeyboard(.immediately)
-            .navigationTitle("Add Exercise")
+            .navigationTitle(AppCopy.Workout.addExercise)
             .navigationBarTitleDisplayMode(.inline)
-            .searchable(text: $query, prompt: "Search")
-            .searchFocused($isSearchFocused)
-            .textInputAutocapitalization(.words)
-            .autocorrectionDisabled()
+            .appExerciseSearchable(text: $query)
             .onSubmit(of: .search) {
                 let trimmed = query.trimmingCharacters(in: .whitespaces)
                 guard !trimmed.isEmpty else { return }
@@ -297,13 +328,12 @@ struct ExerciseSearchSheet: View {
             }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
+                    Button(AppCopy.Nav.done) { dismiss() }
                         .appToolbarTextStyle()
                 }
             }
             .appNavigationBarChrome()
             .tint(AppColor.accent)
-            .onAppear { isSearchFocused = true }
         }
     }
 
@@ -316,13 +346,11 @@ struct ExerciseSearchSheet: View {
 }
 
 #Preview {
-    NavigationStack {
-        OnboardingExercisesView(progressStep: 4, progressTotal: 4) { }
-            .environment({
-                let vm = OnboardingViewModel()
-                vm.seedSampleData()
-                return vm
-            }())
-    }
-    .tint(AppColor.accent)
+    OnboardingExercisesView(progressStep: 4, progressTotal: 4, onContinue: {}, onBack: {})
+        .environment({
+            let vm = OnboardingViewModel()
+            vm.seedSampleData()
+            return vm
+        }())
+        .tint(AppColor.accent)
 }

@@ -1,7 +1,9 @@
-"use client"
+import type { ReactNode } from "react"
 
-import { useState, type ReactNode } from "react"
-
+// Native <details>/<summary> disclosure — server component, zero client JS.
+// `group-open:` rotates the chevron when the disclosure is expanded.
+// `list-none` + `::-webkit-details-marker` hide the default disclosure
+// triangle in Firefox and older Safari respectively.
 export default function FAQItem({
   question,
   answer,
@@ -9,15 +11,9 @@ export default function FAQItem({
   question: string
   answer: ReactNode
 }) {
-  const [open, setOpen] = useState(false)
-
   return (
-    <div className="border-b border-unit-border py-unit-lg">
-      <button
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between text-left gap-unit-md"
-        aria-expanded={open}
-      >
+    <details className="group border-b border-unit-border py-unit-lg">
+      <summary className="flex items-center justify-between gap-unit-md cursor-pointer list-none [&::-webkit-details-marker]:hidden">
         <span className="text-base font-semibold">{question}</span>
         <svg
           width="16"
@@ -25,9 +21,7 @@ export default function FAQItem({
           viewBox="0 0 16 16"
           fill="none"
           aria-hidden="true"
-          className={`shrink-0 transition-transform duration-200 text-unit-text-secondary ${
-            open ? "rotate-180" : ""
-          }`}
+          className="shrink-0 transition-transform duration-200 text-unit-text-secondary group-open:rotate-180"
         >
           <path
             d="M4 6L8 10L12 6"
@@ -37,18 +31,10 @@ export default function FAQItem({
             strokeLinejoin="round"
           />
         </svg>
-      </button>
-      <div
-        className={`grid transition-[grid-template-rows] duration-200 ease-out ${
-          open ? "grid-rows-[1fr] mt-unit-sm" : "grid-rows-[0fr]"
-        }`}
-      >
-        <div className="overflow-hidden">
-          <p className="text-[15px] leading-relaxed text-unit-text-secondary">
-            {answer}
-          </p>
-        </div>
-      </div>
-    </div>
+      </summary>
+      <p className="mt-unit-sm text-base leading-relaxed text-unit-text-secondary">
+        {answer}
+      </p>
+    </details>
   )
 }

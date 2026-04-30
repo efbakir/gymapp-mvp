@@ -107,4 +107,16 @@ enum WorkoutTargetFormatter {
     static func lastText(weightKg: Double, setCount: Int, reps: Int, isBodyweight: Bool) -> String {
         "Last \(actualText(weightKg: weightKg, setCount: setCount, reps: reps, isBodyweight: isBodyweight))"
     }
+
+    /// Sentence-friendly weight×rep token for the PR milestone caption (`145 kg × 8`, `BW × 12`).
+    /// Intentionally distinct from `compactLoadText` (`145kgx8`): readability over chip density,
+    /// since the milestone line gets one quiet beat of attention before fading.
+    static func milestoneText(weightKg: Double, reps: Int, isBodyweight: Bool) -> String? {
+        guard reps > 0 else { return nil }
+        if isBodyweight {
+            return "BW × \(reps)"
+        }
+        guard weightKg > 0 else { return nil }
+        return "\(weightDisplay(weightKg)) × \(reps)"
+    }
 }

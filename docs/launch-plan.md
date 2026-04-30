@@ -28,6 +28,8 @@ Then: Xcode archive → App Store Connect → submit. Expect 24–72h review. Wh
 
 ## 2. Pricing Experiment — Decided, But Researched in Parallel
 
+> **Resolved 2026-04-28.** Pricing for v1 is **$4.99 / $29.99 / $44.99** with $19.99/yr win-back, per `docs/pricing.md` (the authoritative source — see also `docs/product-compass.md` §Decision log). The $9/mo + $49/yr proposal below is preserved as the original aggressive thinking and as a Phase-3 target conditional on Week-8 conversion data; it is **not** what ships at the Week-5 paywall flip. Read the rest of this section as historical reasoning, not the current commitment.
+
 You want a subscription experiment: **$9/mo, $49/yr, $30/yr win-back.** Good instinct to experiment — but the numbers need validation. Here's the known market and a research protocol you'll run this Sunday night.
 
 ### Competitor pricing snapshot (App Store, early 2026 — verify live before you ship)
@@ -262,3 +264,23 @@ If Week 8 shows zero conversions, the answer is not "lower the price." It's eith
 ## The 80/20
 
 If you read nothing else: **submit in Week 1, ship free with a "Pro coming soon" banner, post 3 gym POV TikToks per week, open a Discord, flip the $9.99/$49.99 paywall in Week 5 with a 7-day trial and $29.99/yr win-back, run RevenueCat, keep the free tier sacred.** Everything else is detail.
+
+---
+
+## See also
+
+The strategic timeline above (WHEN) is paired with operational scaffolding (HOW) in [`docs/marketing/`](marketing/):
+
+- [`docs/marketing/README.md`](marketing/README.md) — folder index
+- [`docs/marketing/tools.md`](marketing/tools.md) — the $51/mo stack (Buffer, Submagic, Opus Clip, AppFigures, ElevenLabs)
+- [`docs/marketing/reddit.md`](marketing/reddit.md) — Reddit BIP playbook with frequency caps
+- [`docs/marketing/tiktok-ig.md`](marketing/tiktok-ig.md) — 5 TikTok/IG formats ranked by conversion
+- [`docs/marketing/content-engine.md`](marketing/content-engine.md) — monthly recording workflow (3 sources: DIY + UGC + ElevenLabs voiceover over screen recordings)
+- [`docs/marketing/ugc-brief.md`](marketing/ugc-brief.md) — Billo/Insense casting brief (real lifters, not models)
+- [`docs/marketing/cadence.md`](marketing/cadence.md) — weekly rhythm + Sunday checklist
+- [`docs/marketing/automation-map.md`](marketing/automation-map.md) — what's scheduled vs manual, with rationale
+- [`docs/marketing/anti-patterns.md`](marketing/anti-patterns.md) — codified won't-do list
+- [`docs/marketing/templates/`](marketing/templates/) — drafted starter posts for Reddit, TikTok/IG, X
+- [`docs/marketing/research/`](marketing/research/) — dated agent reports (2026-04-29)
+
+When playbooks in `docs/marketing/` conflict with this file, **this file wins.** Update launch-plan.md first, cascade to `docs/marketing/` second.

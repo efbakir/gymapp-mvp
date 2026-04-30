@@ -61,47 +61,38 @@ struct ExerciseProgressView: View {
         return pr.weight * (1.0 + Double(pr.reps) / 30.0)
     }
 
-    /// Drives the entrance animation on the Best Set card so it lands when
-    /// the screen appears, instead of materializing instantly. One-shot —
-    /// `.onAppear` guards re-runs on view-tree churn.
-    @State private var hasAppeared = false
-
     var body: some View {
         AppScreen(
             showsNativeNavigationBar: true
         ) {
-            if let pr = allTimePR, let e1rm = epley1RM {
-                prCard(pr: pr, e1rm: e1rm)
-                    .opacity(hasAppeared ? 1 : 0)
-                    .offset(y: hasAppeared || reduceMotion ? 0 : 6)
-                    .appAnimation(.appEnter, value: hasAppeared, reduceMotion: reduceMotion)
-                    // Identity-keyed numeric cross-fade — switching exercises
-                    // (or a new PR landing) re-runs the entrance instead of
-                    // popping in place.
-                    .id(pr.id)
-                    .transition(.opacity)
-            }
+            VStack(alignment: .leading, spacing: AppSpacing.md) {
+                if let pr = allTimePR, let e1rm = epley1RM {
+                    prCard(pr: pr, e1rm: e1rm)
+                        // Identity-keyed numeric cross-fade — switching exercises
+                        // (or a new PR landing) re-runs the entrance instead of
+                        // popping in place.
+                        .id(pr.id)
+                        .transition(.opacity)
+                }
 
-            if sessionPoints.count > 1 {
-                chartCard
-            }
+                if sessionPoints.count > 1 {
+                    chartCard
+                }
 
-            if !sessionPoints.isEmpty {
-                sessionListCard
-            } else {
-                EmptyStateCard(
-                    title: "No data yet",
-                    message: "Sets logged for \(exerciseName) will appear here as a chart and session history."
-                )
+                if !sessionPoints.isEmpty {
+                    sessionListCard
+                } else {
+                    EmptyStateCard(
+                        title: "No data yet",
+                        message: "Sets for \(exerciseName) show up here once you log them."
+                    )
+                }
             }
+            .appScreenEnter()
         }
         .navigationBarTitleTruncated(exerciseName)
         .navigationBarTitleDisplayMode(.inline)
         .appNavigationBarChrome()
-        .onAppear {
-            guard !hasAppeared else { return }
-            hasAppeared = true
-        }
     }
 
     // MARK: - PR Card
@@ -109,7 +100,7 @@ struct ExerciseProgressView: View {
     private func prCard(pr: SessionPoint, e1rm: Double) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: AppSpacing.md) {
             VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                Text("Best Set")
+                Text("Best set")
                     .font(AppFont.caption.font)
                     .foregroundStyle(AppColor.textSecondary)
                 Text(WorkoutTargetFormatter.actualText(weightKg: pr.weight, setCount: 1, reps: pr.reps, isBodyweight: isBodyweight))
@@ -145,7 +136,7 @@ struct ExerciseProgressView: View {
     }
 
     private var chartCard: some View {
-        SettingsSection(title: "Weight Over Time") {
+        SettingsSection(title: "Weight over time") {
             Chart(sessionPoints) { point in
                 LineMark(
                     x: .value("Date", point.date),
@@ -163,7 +154,12 @@ struct ExerciseProgressView: View {
                 .symbolSize(30)
             }
             .chartXAxis {
-                AxisMarks(values: .stride(by: .month)) { _ in
+                // `.automatic(desiredCount: 4)` lets Charts pick the stride based
+                // on available width and data range — months at iPhone-SE width
+                // with 6 months of data, quarters/years for multi-year history.
+                // Fixes the prior crowding when 12+ month labels collided on
+                // narrow widths under a hardcoded `.stride(by: .month)`.
+                AxisMarks(values: .automatic(desiredCount: 4)) { _ in
                     AxisValueLabel(format: .dateTime.month(.abbreviated))
                         .font(AppFont.caption.font)
                         .foregroundStyle(AppColor.textSecondary)
@@ -179,7 +175,7 @@ struct ExerciseProgressView: View {
                 }
             }
             .chartYScale(domain: chartYDomain)
-            .frame(height: 160)
+            .frame(minHeight: 160)
             .appAnimation(.appReveal, value: exerciseName, reduceMotion: reduceMotion)
         }
     }
@@ -211,7 +207,6 @@ struct ExerciseProgressView: View {
             VStack(alignment: .leading, spacing: AppSpacing.xxs) {
                 Text(templateName)
                     .font(AppFont.body.font)
-                    .lineLimit(1)
                 Text(Self.sessionDateFormatter.string(from: point.date))
                     .font(AppFont.caption.font)
                     .foregroundStyle(AppColor.textSecondary)
@@ -239,6 +234,8 @@ struct ExerciseProgressView: View {
                     }
                 }
             }
+            .layoutPriority(1)
+            .fixedSize(horizontal: true, vertical: false)
         }
         .accessibilityElement(children: .combine)
     }

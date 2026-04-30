@@ -1,0 +1,6 @@
+.env
+__pycache__/
+*.pyc
+../sample-output/audio/
+../sample-output/video/
+../raw-footage/

@@ -4,7 +4,9 @@ import { SUPPORT_EMAIL, DEVELOPER_NAME, LEGAL_LAST_UPDATED } from "@/lib/contact
 
 export const metadata: Metadata = {
   title: "Terms of Use",
-  description: "Terms of use for Unit, the adaptive gym logger for iOS.",
+  description:
+    "Terms of use for Unit, the local-first iOS gym tracker and workout log. License, refunds, and intellectual property.",
+  alternates: { canonical: "/terms" },
 }
 
 export default function TermsPage() {

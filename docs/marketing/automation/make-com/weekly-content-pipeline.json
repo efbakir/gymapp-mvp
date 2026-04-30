@@ -1,0 +1,171 @@
+{
+  "name": "Unit — weekly content pipeline",
+  "description": "Reads the next week's planned posts from Google Sheets, renders ElevenLabs voiceovers, stitches with screen recordings via an FFmpeg webhook, schedules to Buffer. Triggered every Sunday 6pm.",
+  "version": "0.1.0",
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us2.make.com"
+  },
+  "scheduling": {
+    "type": "cron",
+    "cron": "0 23 * * 0",
+    "tz": "UTC",
+    "comment": "Sundays 18:00 ET = 23:00 UTC. Adjust for daylight savings as needed."
+  },
+  "_blueprint_pseudostructure": {
+    "comment": "Make.com blueprints have a binary-ish format that's not human-friendly to author by hand. This file documents the WORKFLOW STRUCTURE which you should reproduce in the Make.com UI by adding modules in this order. After building it visually, export the real blueprint via Make.com's UI and commit it back to overwrite this file.",
+    "modules": [
+      {
+        "step": 1,
+        "module": "Schedule",
+        "type": "trigger",
+        "config": {
+          "scheduling": "Sundays 18:00 (founder local time)",
+          "active": true
+        },
+        "outputs": ["timestamp"]
+      },
+      {
+        "step": 2,
+        "module": "Google Sheets — Search Rows",
+        "config": {
+          "spreadsheet": "Unit content calendar",
+          "sheet": "Schedule",
+          "filter": "week_starting <= timestamp AND week_starting > timestamp - 7 days AND status != 'shipped'"
+        },
+        "outputs": ["rows[]"]
+      },
+      {
+        "step": 3,
+        "module": "Iterator",
+        "config": { "array": "rows" },
+        "outputs": ["row"]
+      },
+      {
+        "step": 4,
+        "module": "HTTP — Make a request (ElevenLabs TTS)",
+        "config": {
+          "method": "POST",
+          "url": "https://api.elevenlabs.io/v1/text-to-speech/{{ELEVENLABS_VOICE_ID}}",
+          "headers": [
+            { "name": "xi-api-key", "value": "{{ELEVENLABS_API_KEY}}" },
+            { "name": "Accept", "value": "audio/mpeg" },
+            { "name": "Content-Type", "value": "application/json" }
+          ],
+          "body": {
+            "text": "{{row.script_body}}",
+            "model_id": "eleven_multilingual_v2",
+            "voice_settings": {
+              "stability": 0.50,
+              "similarity_boost": 0.75,
+              "style": 0.0,
+              "use_speaker_boost": false
+            }
+          },
+          "responseType": "binary"
+        },
+        "outputs": ["audio_bytes"]
+      },
+      {
+        "step": 5,
+        "module": "Google Drive — Upload File",
+        "config": {
+          "folder": "Unit / weekly audio",
+          "name": "{{row.script_id}}.mp3",
+          "data": "{{audio_bytes}}"
+        },
+        "outputs": ["audio_url"]
+      },
+      {
+        "step": 6,
+        "module": "HTTP — Make a request (FFmpeg webhook)",
+        "_comment": "Replace {{FFMPEG_WEBHOOK_URL}} with your self-hosted FFmpeg endpoint, OR substitute Cloudinary's Video API, Apify's FFmpeg actor, or Bannerbear. The endpoint accepts a screen recording URL + audio URL and returns a final stitched MP4.",
+        "config": {
+          "method": "POST",
+          "url": "{{FFMPEG_WEBHOOK_URL}}",
+          "body": {
+            "video_url": "{{row.raw_footage_url}}",
+            "audio_url": "{{audio_url}}",
+            "title_overlay": "{{row.title_overlay}}",
+            "target_w": 1080,
+            "target_h": 1920
+          }
+        },
+        "outputs": ["final_video_url"]
+      },
+      {
+        "step": 7,
+        "module": "Buffer — Create Update",
+        "config": {
+          "profile_id": "{{row.channel == 'tiktok' ? BUFFER_TIKTOK_PROFILE_ID : row.channel == 'ig' ? BUFFER_IG_PROFILE_ID : row.channel == 'x' ? BUFFER_X_PROFILE_ID : BUFFER_YT_PROFILE_ID}}",
+          "text": "{{row.caption}}",
+          "media_link": "{{final_video_url}}",
+          "scheduled_at": "{{row.scheduled_at}}"
+        },
+        "outputs": ["update_id"]
+      },
+      {
+        "step": 8,
+        "module": "Google Sheets — Update Row",
+        "config": {
+          "row_id": "{{row.id}}",
+          "values": {
+            "status": "scheduled",
+            "buffer_update_id": "{{update_id}}",
+            "scheduled_timestamp": "{{now}}"
+          }
+        }
+      },
+      {
+        "step": 9,
+        "module": "Slack — Send Message",
+        "_comment": "Or Gmail — pick one notification channel.",
+        "config": {
+          "channel": "#unit-marketing",
+          "text": "Week {{rows[0].week}} content pipeline complete. {{rows.length}} posts scheduled to Buffer. Manual TODO: Reddit post per templates/reddit/, 6h reply window, Sunday metrics review."
+        }
+      }
+    ],
+    "errorHandlers": [
+      {
+        "module": "ElevenLabs HTTP",
+        "onFailure": "Resume after 60s, retry up to 3 times. If still failing, mark row.status = 'voice_render_failed' and continue."
+      },
+      {
+        "module": "FFmpeg webhook",
+        "onFailure": "Mark row.status = 'video_assembly_failed', skip to next row, post Slack alert."
+      },
+      {
+        "module": "Buffer Create Update",
+        "onFailure": "Retry once. If still failing, mark row.status = 'buffer_failed' and post Slack alert with row id."
+      }
+    ]
+  },
+  "_setup_instructions": [
+    "1. Build this scenario in the Make.com UI by adding modules in the order documented in the modules array",
+    "2. Replace {{ELEVENLABS_API_KEY}}, {{ELEVENLABS_VOICE_ID}}, BUFFER_*_PROFILE_ID, and FFMPEG_WEBHOOK_URL with your real values via Make.com's connection manager",
+    "3. Create the Google Sheet 'Unit content calendar' with columns matching what step 2 expects (week, day, format, channel, script_id, script_body, caption, raw_footage_url, scheduled_at, status)",
+    "4. Test with a single dummy row before activating the schedule",
+    "5. Once verified, export the real blueprint from Make.com (scenario menu → Export Blueprint) and commit it back here, replacing this file"
+  ],
+  "_known_limitations": [
+    "Make.com doesn't run FFmpeg natively. You need either a self-hosted FFmpeg endpoint (Cloud Run, Fly.io, Lambda) OR a paid service like Cloudinary's Video API, Bannerbear, or Apify's FFmpeg actor.",
+    "ElevenLabs returns binary audio. Make.com's HTTP module needs 'Parse response: No' and the binary is passed straight to Drive/Cloudinary as a binary upload.",
+    "Buffer's API is in v1 limbo. If create-update breaks, switch to v2 (different endpoint shape).",
+    "Reddit IS NOT in this workflow. Reddit posts stay manual per docs/marketing/automation-map.md and reddit.md (3rd-party schedulers cause new accounts to get filtered)."
+  ]
+}

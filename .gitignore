@@ -37,3 +37,9 @@ lerna-debug.log*
 
 # Misc
 *.log
+
+# Editor / personal
+.obsidian/
+
+# TS incremental build cache
+tsconfig.tsbuildinfo

@@ -6,7 +6,8 @@ import { SUPPORT_EMAIL } from "@/lib/contact"
 export const metadata: Metadata = {
   title: "Support",
   description:
-    "Get help with Unit. Contact us or find answers to common questions.",
+    "Unit support and FAQ. Restore purchases, troubleshoot the rest timer, import programs, and contact help. Local-first iOS gym tracker.",
+  alternates: { canonical: "/support" },
 }
 
 export default function SupportPage() {

@@ -60,6 +60,7 @@ Build the fastest, most trustworthy gym logging tool for intermediate-to-advance
 | 2026-03-26 | **Rest timer auto-starts on Done**, visible on Lock Screen / Dynamic Island | App is minimised between sets. Timer must follow the user outside the app. | — |
 | 2026-03-26 | **All three template import options ship in v1** | Text-paste, redo-from-history, manual builder. | — |
 | 2026-03-26 | **Ghost value cold start: empty + global lookup** | Never logged → empty fields with "No history yet". Logged anywhere (any template) → ghost fills globally by exercise. | — |
+| 2026-04-28 | **Paywall strategy: deferred presentation; gates power-user features only** | Phase 0 (TestFlight): no paywall surfaces, retention validation only. Phase 1 (App Store launch, Weeks 1–4): free for everything, one quiet "Unit Pro is coming" Settings card collecting founding-member intent locally. Phase 2 (Week 5+, conditional on ≥30 users at 3+ sessions/wk for 2 wks): paywall flips, gating off-Gym-Test features only — CSV + Markdown export, Apple Health sync, custom app icons, custom template accent colors, founding badge. Pricing locks at $4.99 / $29.99 / $44.99 (Liftosaur parity) with $19.99/yr win-back, per `docs/pricing.md`. Resolves the `pricing.md` ↔ `launch-plan.md §2` conflict. | $9.99/$49.99 proposal in `launch-plan.md §2`; the prior `pricing.md` Pro-gate list (template-count cap, 30-day history cap, PR detection, widgets) which would have violated `docs/claude/scope.md` line 77 |
 
 ---
 
@@ -67,7 +68,6 @@ Build the fastest, most trustworthy gym logging tool for intermediate-to-advance
 
 - **Progression Engine resurrection:** When does auto-adjustment return? Opt-in "Coach mode"? v2 headline? Permanently shelved?
 - **Data model migration:** Cycle → Week → Day schema needs to support unbound templates without breaking existing data.
-- **Monetization without the engine:** What justifies a paid tier if logging is core and engine is deferred? One-time purchase still viable?
 
 ---
 

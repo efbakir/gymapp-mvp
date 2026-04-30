@@ -8,11 +8,11 @@
 import SwiftUI
 import SwiftData
 
-enum SessionHistoryMode: String, CaseIterable, Identifiable {
+enum SessionHistoryMode: String, CaseIterable, Identifiable, Hashable {
     case list = "List"
     case calendar = "Calendar"
 
-    var id: Self { self }
+    var id: String { rawValue }
 }
 
 enum SessionHistoryFilter: String, CaseIterable, Identifiable {
@@ -127,6 +127,19 @@ struct SelectedSessionsPayload: Identifiable {
     let sessions: [SessionSnapshot]
 }
 
+struct MissedDayPlannedExercise: Identifiable {
+    let id: UUID
+    let name: String
+    let target: String?
+}
+
+struct MissedDayPayload: Identifiable {
+    let id = UUID()
+    let date: Date
+    let templateName: String
+    let plannedExercises: [MissedDayPlannedExercise]
+}
+
 private struct CalendarDayCellModel: Identifiable {
     let date: Date
     let dayNumber: Int
@@ -160,6 +173,7 @@ struct RecentSessionsView: View {
     @State private var displayMonth: Date = Calendar.current.startOfMonth(for: Date())
     @State private var selectedDate: Date?
     @State private var selectedPayload: SelectedSessionsPayload?
+    @State private var selectedMissedPayload: MissedDayPayload?
 
     private var historySessions: [WorkoutSession] {
         sessions.filter { session in
@@ -191,7 +205,7 @@ struct RecentSessionsView: View {
 
     private var selectedDaySessions: [SessionSnapshot] {
         guard let selectedDate else { return [] }
-        return sessionsByDay[selectedDate] ?? []
+        return (sessionsByDay[selectedDate] ?? []).sorted { $0.date > $1.date }
     }
 
     /// Routines scheduled earlier this week that are still available — neutral copy, not a home-screen “missed” nudge.
@@ -206,24 +220,27 @@ struct RecentSessionsView: View {
         AppScreen(
             showsNativeNavigationBar: true
         ) {
-            if sessionSnapshots.isEmpty, earlierWeekItems.isEmpty {
-                emptyState
-            } else {
-                VStack(alignment: .leading, spacing: AppSpacing.md) {
-                    modeToggle
+            Group {
+                if sessionSnapshots.isEmpty, earlierWeekItems.isEmpty {
+                    emptyState
+                } else {
+                    VStack(alignment: .leading, spacing: AppSpacing.md) {
+                        modeToggle
 
-                    Group {
-                        if mode == .list {
-                            listContent
-                        } else {
-                            calendarContent
+                        Group {
+                            if mode == .list {
+                                listContent
+                            } else {
+                                calendarContent
+                            }
                         }
+                        .transition(.opacity)
                     }
-                    .transition(.opacity)
+                    .appAnimation(.appState, value: mode, reduceMotion: reduceMotion)
+                    .appAnimation(.appState, value: filter, reduceMotion: reduceMotion)
                 }
-                .appAnimation(.appState, value: mode, reduceMotion: reduceMotion)
-                .appAnimation(.appState, value: filter, reduceMotion: reduceMotion)
             }
+            .appScreenEnter()
         }
         .navigationTitle("History")
         .navigationBarTitleDisplayMode(.inline)
@@ -231,6 +248,11 @@ struct RecentSessionsView: View {
         .toolbar(.hidden, for: .tabBar)
         .sheet(item: $selectedPayload) { payload in
             SessionSummarySheet(payload: payload)
+                .presentationDetents([.medium, .large])
+                .appBottomSheetChrome()
+        }
+        .sheet(item: $selectedMissedPayload) { payload in
+            MissedDaySummarySheet(payload: payload)
                 .presentationDetents([.medium, .large])
                 .appBottomSheetChrome()
         }
@@ -246,6 +268,7 @@ struct RecentSessionsView: View {
         AppSegmentedControl(
             selection: $mode,
             items: SessionHistoryMode.allCases,
+            size: .compact,
             title: { $0.rawValue }
         )
     }
@@ -253,7 +276,7 @@ struct RecentSessionsView: View {
     private var emptyState: some View {
         EmptyStateCard(
             title: "No sessions yet",
-            message: "Completed workouts will appear here so you can check the last session or browse by date."
+            message: "Completed workouts show up here."
         )
     }
 
@@ -305,7 +328,7 @@ struct RecentSessionsView: View {
     }
 
     private var listContent: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.md) {
+        VStack(alignment: .leading, spacing: AppSpacing.sm) {
             historyFilterChips
 
             if filteredSortedDays.isEmpty && !showsMissedInList {
@@ -366,11 +389,7 @@ struct RecentSessionsView: View {
     }
 
     private var filteredEmptyState: some View {
-        Text("Nothing to show")
-            .font(AppFont.body.font)
-            .foregroundStyle(AppColor.textDisabled)
-            .frame(maxWidth: .infinity)
-            .padding(.top, AppSpacing.xxl)
+        AppEmptyHint("Nothing to show")
     }
 
     private var calendarContent: some View {
@@ -388,11 +407,6 @@ struct RecentSessionsView: View {
                         onSelect: { day in
                             guard day.status.isTappable else { return }
                             selectedDate = day.date
-                            let dayKey = Calendar.current.startOfDay(for: day.date)
-                            let daySessions = sessionsByDay[dayKey] ?? []
-                            if !daySessions.isEmpty {
-                                selectedPayload = SelectedSessionsPayload(date: day.date, sessions: daySessions)
-                            }
                         }
                     )
                 }
@@ -404,12 +418,69 @@ struct RecentSessionsView: View {
 
     @ViewBuilder
     private var calendarDetailSection: some View {
-        if let selectedDate, selectedDaySessions.isEmpty, isMissedDay(selectedDate) {
-            HistoryMissedDayCard(
-                date: selectedDate,
-                workoutName: assignedWorkoutName(on: selectedDate)
-            )
+        if let selectedDate {
+            if !selectedDaySessions.isEmpty {
+                AppCardList(selectedDaySessions) { snapshot in
+                    Button {
+                        selectedPayload = SelectedSessionsPayload(
+                            date: snapshot.date,
+                            sessions: [snapshot]
+                        )
+                    } label: {
+                        AppSessionHighlightRow(
+                            eyebrow: snapshot.date.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day()),
+                            title: snapshot.templateName,
+                            caption: snapshot.compactExerciseHeadline
+                        ) {
+                            AppTag(text: snapshot.state.title, style: snapshot.state.tagStyle, layout: .compactCapsule)
+                        }
+                    }
+                    .buttonStyle(ScaleButtonStyle())
+                    .accessibilityLabel("View \(snapshot.templateName), \(snapshot.state.title)")
+                }
+            } else if isMissedDay(selectedDate) {
+                Button {
+                    selectedMissedPayload = makeMissedDayPayload(for: selectedDate)
+                } label: {
+                    AppSessionHighlightCard(
+                        eyebrow: selectedDate.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day()),
+                        title: assignedWorkoutName(on: selectedDate),
+                        caption: nil
+                    ) {
+                        AppTag(text: "Missed", style: .warning, layout: .compactCapsule)
+                    }
+                }
+                .buttonStyle(ScaleButtonStyle())
+                .accessibilityLabel("View missed \(assignedWorkoutName(on: selectedDate))")
+            }
         }
+    }
+
+    private func makeMissedDayPayload(for date: Date) -> MissedDayPayload {
+        let calendar = Calendar.current
+        let weekday = calendar.component(.weekday, from: date)
+        let templateByID = Dictionary(uniqueKeysWithValues: templates.map { ($0.id, $0) })
+        let split = ActiveSplitStore.resolve(from: splits)
+        let routineTemplates = split?.orderedTemplateIds.compactMap { templateByID[$0] } ?? []
+        let template = routineTemplates.first(where: { $0.scheduledWeekday == weekday })
+
+        let plannedExercises: [MissedDayPlannedExercise] = template?.orderedExerciseIds.compactMap { exerciseID in
+            guard let exercise = exercisesByID[exerciseID] else { return nil }
+            let target: String? = {
+                guard let sets = template?.plannedSets(for: exerciseID), sets > 0,
+                      let reps = template?.plannedReps(for: exerciseID), reps > 0 else {
+                    return nil
+                }
+                return WorkoutTargetFormatter.setRepCompact(setCount: sets, reps: reps)
+            }()
+            return MissedDayPlannedExercise(id: exerciseID, name: exercise.displayName, target: target)
+        } ?? []
+
+        return MissedDayPayload(
+            date: date,
+            templateName: template?.displayName ?? "Assigned workout",
+            plannedExercises: plannedExercises
+        )
     }
 
     private func isMissedDay(_ date: Date) -> Bool {
@@ -586,7 +657,7 @@ private struct CalendarMonthHeader: View {
             AppIconCircle {
                 icon
                     .image(size: AppIconCircleSize.icon, weight: AppIconCircleSize.weight)
-                    .foregroundStyle(isEnabled ? AppColor.textPrimary : AppColor.textSecondary.opacity(0.45))
+                    .foregroundStyle(isEnabled ? AppColor.textPrimary : AppColor.textDisabled)
             }
         }
         .buttonStyle(ScaleButtonStyle())
@@ -681,7 +752,7 @@ private struct CalendarGrid: View {
                         }
                     } else {
                         Color.clear
-                            .frame(height: 40)
+                            .frame(minHeight: 44)
                     }
                 }
             }
@@ -704,7 +775,7 @@ private struct CalendarDayCell: View {
                 cellBody
             }
         }
-        .frame(minWidth: 44, minHeight: 44)
+        .frame(minHeight: 44)
         .contentShape(Rectangle())
         .accessibilityLabel(accessibilityLabel)
         .accessibilityAddTraits(model.status.isTappable ? [.isButton] : [])
@@ -818,7 +889,7 @@ struct SessionSummarySheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
+                    Button(AppCopy.Nav.done) {
                         dismiss()
                     }
                     .appToolbarTextStyle()
@@ -842,14 +913,16 @@ private struct SessionSummaryCard: View {
                 AppTag(text: snapshot.state.title, style: snapshot.state.tagStyle, layout: .compactCapsule)
             }
         ) {
-            VStack(alignment: .leading, spacing: AppSpacing.md) {
+            VStack(alignment: .leading, spacing: 0) {
                 if let contextNote = snapshot.contextNote {
                     AppTag(text: contextNote, style: .muted)
+                        .padding(.horizontal, AppSpacing.lg)
+                        .padding(.vertical, AppSpacing.md)
                 }
 
                 AppDividedList(snapshot.exercises) { exercise in
                     SessionExerciseSummary(exercise: exercise)
-                        .padding(.vertical, AppSpacing.sm)
+                        .appCardRowChrome()
                 }
             }
         }
@@ -924,18 +997,74 @@ struct SessionExerciseSummary: View {
     }
 }
 
-/// Calendar detail shown when a past, missed assigned-workout day is selected.
-private struct HistoryMissedDayCard: View {
-    let date: Date
-    let workoutName: String
+struct MissedDaySummarySheet: View {
+    let payload: MissedDayPayload
+
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        AppSessionHighlightCard(
-            eyebrow: date.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day()),
-            title: workoutName,
-            caption: nil
-        ) {
-            AppTag(text: "Missed", style: .warning, layout: .compactCapsule)
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: AppSpacing.md) {
+                    AppSessionHighlightCard(
+                        eyebrow: payload.date.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day()),
+                        title: payload.templateName,
+                        caption: nil,
+                        trailing: {
+                            AppTag(text: "Missed", style: .warning, layout: .compactCapsule)
+                        }
+                    ) {
+                        if payload.plannedExercises.isEmpty {
+                            Text("No planned exercises for this routine.")
+                                .font(AppFont.body.font)
+                                .foregroundStyle(AppColor.textSecondary)
+                                .padding(.horizontal, AppSpacing.lg)
+                                .padding(.vertical, AppSpacing.md)
+                        } else {
+                            AppDividedList(payload.plannedExercises) { exercise in
+                                MissedDayPlannedRow(exercise: exercise)
+                                    .appCardRowChrome()
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal, AppSpacing.md)
+                .padding(.bottom, AppSpacing.lg)
+            }
+            .appScrollEdgeSoft()
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(AppCopy.Nav.done) {
+                        dismiss()
+                    }
+                    .appToolbarTextStyle()
+                }
+            }
+            .appNavigationBarChrome()
+        }
+        .background(AppColor.background.ignoresSafeArea())
+    }
+}
+
+private struct MissedDayPlannedRow: View {
+    let exercise: MissedDayPlannedExercise
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: AppSpacing.md) {
+            Text(exercise.name)
+                .font(AppFont.sectionHeader.font)
+                .foregroundStyle(AppColor.textPrimary)
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            if let target = exercise.target {
+                Text(target)
+                    .font(AppFont.performance.font)
+                    .foregroundStyle(AppColor.textPrimary)
+                    .monospacedDigit()
+            }
         }
     }
 }

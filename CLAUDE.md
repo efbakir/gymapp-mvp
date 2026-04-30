@@ -13,6 +13,7 @@ Other source-of-truth docs:
 - Product: `PRODUCT.md` (root — persona, voice, anti-references, principles), `docs/product-compass.md`, `docs/goals.md`, `docs/AGENTS.md`
 - Design: `DESIGN.md` (root — palette, type, components, do/don't) + `DESIGN.json` (machine-readable mirror), `docs/atomic-design-system.md`, `docs/visual-language.md`
 - References: `docs/references/` (ios-screens/, details/, notes/)
+- Marketing: `docs/launch-plan.md` (8-week strategic timeline) + `docs/marketing/` (operational infra: tools, playbooks, templates, anti-patterns, dated research). When marketing tactics in a request conflict with `docs/marketing/anti-patterns.md`, push back per §2.
 
 ---
 
@@ -143,15 +144,21 @@ Rule: after any visual fix, ask "would this bug appear on sibling screens if I o
 
 ---
 
-## §6. Verification gates — before saying "done"
+## §6. Verification — do not auto-trigger the simulator
 
-Do **not** declare a task done based on the code looking right. Until verified, say: *"edits applied, not yet verified."*
+**Default: do NOT run `xcodebuild`, `xcrun simctl`, or any simulator/screenshot command after UI edits.** The user runs multiple Claude agents in parallel; auto-triggering the simulator every cycle causes conflicts (boot races, screenshot collisions, install failures). The visual pass is the user's job, on their schedule.
 
-- **Code that compiles**: build succeeds (`xcodebuild`).
-- **UI/visual changes**: build + install + launch on iOS Simulator. Screenshot via `xcrun simctl io booted screenshot`. Visually confirm. Flag drift even if not asked.
-- **System-level (atoms/molecules)**: screenshot **at least 2 sibling screens** to confirm no regression.
+After any UI edit, label the work explicitly: *"edits applied, not yet verified — visual pass is yours."* Do not say "done", "shipped", "verified", or "looks right" based on the code. Code-looks-right is not verification, and you are not allowed to verify it yourself unless asked.
 
-If you cannot verify (tooling/build broken, lid closed, background run), say so plainly. Never fake it.
+**When to run the simulator anyway** — only on explicit user request:
+- "screenshot it", "verify", "build and check", "is it live?", "did it work?", "run the verify skill", or an explicit `/ui-visual-verify` invocation
+- A user-set scheduled/audit task that names simulator verification as part of its scope
+
+When the user does ask, the loop is: build → install → launch → screenshot → compare → iterate → confirming screenshot. That loop only runs in that one turn, scoped to that one request. It is **not** a standing rule for every edit.
+
+Compile checks (`xcodebuild build` only, no simulator boot, no screenshot) are also **not** required by default. Run them only if the user asks, or if the edit is large enough that you genuinely don't trust the diff. One agent compiling at a time is fine; a swarm of agents all racing `xcodebuild` is not.
+
+If the user has waived verification entirely (background/scheduled/lid-closed run, see `feedback_unit_background_verification_waiver.md`), just label work "edits applied, not yet verified — visual pass pending" and stop.
 
 ---
 
@@ -173,7 +180,7 @@ If a change grows the design system rather than tightening it, justify the growt
 Three layers of mechanical enforcement so Claude doesn't have to "remember". Full details in [`docs/claude/harness.md`](docs/claude/harness.md).
 
 - **PreToolUse hook** (`.claude/hooks/ui-banned-list.sh`): blocks Edit/Write/MultiEdit when banned patterns hit Swift files under `Unit/` (excluding `DesignSystem.swift`). If it blocks legitimate work → fix the canonical primitive, never the hook.
-- **Skills** (`.claude/skills/`): `/page-audit` (single-screen review), `/component-reuse-check` (before any new component), `/ui-visual-verify` (before saying "done"). **Trigger proactively** — don't wait for the slash command.
+- **Skills** (`.claude/skills/`): `/page-audit` (single-screen review), `/component-reuse-check` (before any new component), `/ui-visual-verify` (**user-invoked only** — never auto-trigger; per §6 simulator conflicts under parallel agents). Trigger `/page-audit` and `/component-reuse-check` proactively. `/ui-visual-verify` only when the user asks.
 - **Visual references** (`docs/references/`): aesthetic taste is not text-encodable. Name the closest anchor before any non-trivial UI edit. If no anchor fits, ask before inventing.
 
 ### Order of operations for any UI task
@@ -181,7 +188,7 @@ Three layers of mechanical enforcement so Claude doesn't have to "remember". Ful
 1. §1 session-start checklist (docs + references).
 2. New component? → `/component-reuse-check` first.
 3. Make the edit. Hook fires automatically — fix blocks at the canonical layer.
-4. `/ui-visual-verify` before saying done.
+4. Label result "edits applied, not yet verified — visual pass is yours" (per §6). Do **not** auto-run `/ui-visual-verify` or the simulator.
 5. Single-screen review/polish? → `/page-audit` at start or end.
 
 Audit mode (overnight cron) details: [`docs/claude/harness.md`](docs/claude/harness.md) §5.

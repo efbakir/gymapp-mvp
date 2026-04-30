@@ -116,4 +116,41 @@ The hook (`.claude/hooks/ui-banned-list.sh`) enforces a subset of these mechanic
 
 `Unit/UI/DesignSystem.swift` is the **only** place raw values live. Every other file uses tokens. No exceptions without the user's explicit override.
 
+---
+
+## Native vs custom — the line (do not re-debate)
+
+Two competing failure modes drift the codebase. **Both are equally bad.** This table closes the question.
+
+| Surface | Use | Why |
+|---|---|---|
+| **Top toolbar — text buttons / icon buttons / titles** | iOS-native (`.toolbar { ToolbarItem }`, `Button`, `Label(systemImage:)`, `.navigationTitle`) | Defers to system styling, weight, and Dynamic Type. `appToolbarTextStyle()` exists for trailing text actions, but the chrome stays native. **Never apply `.weight(...)` to ToolbarItem buttons.** |
+| **Sheet wrapper** | iOS-native (`.sheet(isPresented:)` / `.sheet(item:)`, `.presentationDetents`, `.appBottomSheetChrome()`) | The sheet shell is iOS. The *body* of the sheet is custom DS — wrap it in `AppSheetScreen`. **Never** put `ScrollView` or `AppCard` as the root child of `.sheet { }`. |
+| **Search bar** | iOS-native via `.appExerciseSearchable(text:)` | Wraps `.searchable` to bake the canonical placement and animation. Pickers using search must use the sanctioned `List + .listStyle(.plain) + .appPlainListRowChrome()` recipe so the native search interacts with native scroll. |
+| **Navigation chrome** | iOS-native (`NavigationStack`, `.navigationTitle`, `.navigationDestination`, `.appNavigationBarChrome()`) | Custom navigation has been deleted from the system. Don't reintroduce. |
+| **System dialogs** | iOS-native (`.alert`, `.confirmationDialog`) | These are HIG modal primitives — never replace with a custom sheet. |
+| **Inline option pickers (muscle group, equipment, etc.)** | iOS-native `Picker(...).pickerStyle(.menu)` **inside** a custom row (`AppListRow` or an `AppCardList` row) | The menu picker UI is iOS; the row chrome around it is DS. This is the row-on-card recipe: native control, custom container. |
+| **Toggle (boolean preference)** | iOS-native `Toggle("", isOn:).labelsHidden().tint(AppColor.accent)` inside a custom row | Same rule as Picker: native control, DS row chrome. |
+| **TextField (single-line)** | iOS-native `TextField(...)` styled with `.appInputFieldStyle()` | The text input itself is iOS; the surrounding fill / border / radius is DS. **Never** put a raw `TextField` in a `Form { Section }` — that pulls in iOS-native form chrome that fights the DS. |
+| **TextEditor (multi-line)** | DS `AppTextEditor` | iOS `TextEditor` lacks placeholder support; `AppTextEditor` is the canonical multi-line input. |
+| **Body content — buttons** | DS `AppPrimaryButton` / `AppSecondaryButton` / `AppGhostButton` only | Stress-screen CTAs must be Ink-on-Chalk; only the canonical primitives guarantee that. |
+| **Body content — cards** | DS `AppCard` / `appCardStyle()` only | Bond-on-Milk fill contrast, 22pt radius, no shadow. Never `.background(...).clipShape(RoundedRectangle(...))` for card chrome. |
+| **Body content — lists** | DS `AppCardList(data) { row }` (lists in card) or `AppDividedList` (lists outside card) | Hand-composed `AppCard { AppDividedList(...) }` is banned (hook blocks). |
+| **Body content — sectioned forms / preference rows** | DS `SettingsSection` (title + AppCard wrapper) + `AppListRow(title:) { trailing }` | **Form { Section } is banned in feature code.** It produces native iOS form chrome that is off-system. |
+| **Body content — segmented picker** | DS `AppSegmentedControl` only | The iOS `Picker(...).pickerStyle(.segmented)` is banned in feature code — visual style and animation diverge from `AppSegmentedControl` (which History / Settings / Today already use). |
+| **Body content — dropdown chip** | DS `AppDropdownChip { Picker { … } }` | The chip is custom; the menu the chip opens is iOS-native. Both layers are right where they are. |
+| **Body content — typography** | DS `AppFont.<case>.font` only | `.font(.system(...))`, `.font(.body)`, `.font(.title)`, `.fontWeight(...)`, `.bold()` are banned in feature code. |
+| **Body content — colors** | DS `AppColor.<token>` only | `Color.black/.white/.gray/.primary/.secondary/.tertiary`, hex literals, `Color(red:green:blue:)` are banned in feature code. |
+| **Body content — spacing / radii** | DS `AppSpacing.*` / `AppRadius.*` only | `.padding(<int>)`, `.cornerRadius(<int>)`, hardcoded `RoundedRectangle(cornerRadius: <int>)` are banned. `Spacer(minLength: 0)` is fine — zero is a valid escape, not a token. |
+| **Body content — divider** | DS `AppDivider` only | Raw `Divider()` is banned in feature code. |
+| **Body content — tab bar** | DS `UnitTabBar` only | Native `UITabBar` chrome is banned on root screens. |
+| **Body content — scroll-edge fade** | DS `appScrollEdgeSoft(top:bottom:)` only | Inline `LinearGradient` / `.mask` fades behind fixed bars are banned. |
+| **Body content — set count / weight tweaks** | DS `AppStepper` | Native `Stepper` is too small for the Gym Test (44pt floor). |
+
+**Read the table directionally:** the *control logic* is iOS-native (Picker, Toggle, TextField, sheet, toolbar, search). The *visual container* and the *chrome around the control* is custom DS (`AppListRow`, `AppCard`, `AppCardList`, `appInputFieldStyle`, `AppSheetScreen`, `appCardStyle`, `appNavigationBarChrome`). Drift happens when callers either reach for a native container (`Form`, `Section`, `Picker(.segmented)`) inside the DS world, or reinvent a control that iOS already provides.
+
+If a request implies introducing a *new control type* not on this table, push back per CLAUDE.md §2 and ask before adding either layer.
+
+---
+
 **Prefer iOS-native over custom**: bottom sheets, tab bar chrome, buttons, arrows, navigation. Custom chrome only when system primitives genuinely can't express the design.

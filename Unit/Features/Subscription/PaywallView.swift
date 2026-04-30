@@ -14,98 +14,69 @@ struct PaywallView: View {
     var onDismiss: () -> Void
 
     var body: some View {
-        ZStack {
-            AppColor.background.ignoresSafeArea()
+        AppScreen(
+            primaryButton: PrimaryButtonConfig(
+                label: ctaTitle,
+                isLoading: store.isLoading,
+                action: { Task { await store.purchase() } }
+            ),
+            secondaryButton: SecondaryButtonConfig(
+                label: "Not now",
+                action: onDismiss
+            ),
+            hidesNavigationBar: true
+        ) {
+            VStack(alignment: .leading, spacing: 0) {
 
-            ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 0) {
+                // MARK: - Top Area
 
-                    // MARK: - Top Area
-
-                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                        Text("Your plan is ready")
-                            .font(AppFont.stepIndicator.font)
-                            .foregroundStyle(AppColor.textSecondary)
-                            .textCase(.uppercase)
-                            .tracking(AppFont.smallLabel.tracking)
-
-                        Text("Unlock Unit")
-                            .font(AppFont.numericDisplay.font)
-                            .tracking(AppFont.numericDisplay.tracking)
-                            .foregroundStyle(AppColor.textPrimary)
-                    }
-                    .padding(.top, AppSpacing.xxl)
-
-                    Text("Log workouts fast, track your targets, and see exactly what you lifted last time.")
-                        .font(AppFont.body.font)
+                VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                    Text("Your plan is ready")
+                        .font(AppFont.stepIndicator.font)
                         .foregroundStyle(AppColor.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.top, AppSpacing.smd)
+                        .textCase(.uppercase)
+                        .tracking(AppFont.smallLabel.tracking)
 
-                    // MARK: - Benefits
-
-                    VStack(spacing: 0) {
-                        benefitRow(
-                            icon: .bolt,
-                            title: "Fast workout logging",
-                            body: "Log sets in seconds without breaking focus."
-                        )
-
-                        benefitRow(
-                            icon: .chart,
-                            title: "Ghost values",
-                            body: "Pre-filled weight and reps from your last session — no typing needed."
-                        )
-
-                        benefitRow(
-                            icon: .bolt,
-                            title: "Clear targets every session",
-                            body: "See exactly what to lift before each set."
-                        )
-
-                        benefitRow(
-                            icon: .calendarClock,
-                            title: "Session history",
-                            body: "Review past workouts and stay consistent."
-                        )
-                    }
-                    .padding(.top, AppSpacing.xl)
-
-                    // MARK: - Tiers
-
-                    tierSelector
-                        .padding(.top, AppSpacing.xl)
-
-                    // MARK: - CTA
-
-                    VStack(spacing: AppSpacing.smd) {
-                        AppPrimaryButton(
-                            ctaTitle,
-                            isLoading: store.isLoading
-                        ) {
-                            Task { await store.purchase() }
-                        }
-
-                        Button(action: onDismiss) {
-                            Text("Not now")
-                                .font(AppFont.sectionHeader.font)
-                                .foregroundStyle(AppColor.textSecondary)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 44)
-                                .contentShape(Rectangle())
-                        }
-                        .buttonStyle(ScaleButtonStyle())
-                    }
-                    .padding(.top, AppSpacing.xl)
-
-                    // MARK: - Footer
-
-                    footer
-                        .padding(.top, AppSpacing.xl)
-                        .padding(.bottom, AppSpacing.lg)
+                    Text("Unlock Unit")
+                        .font(AppFont.numericDisplay.font)
+                        .tracking(AppFont.numericDisplay.tracking)
+                        .foregroundStyle(AppColor.textPrimary)
                 }
-                .padding(.horizontal, AppSpacing.lg)
+                .padding(.top, AppSpacing.xl)
+
+                Text("Power-user extras for lifters who already log every session.")
+                    .font(AppFont.body.font)
+                    .foregroundStyle(AppColor.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, AppSpacing.smd)
+
+                // MARK: - Benefits
+                //
+                // Pro feature set per docs/pricing.md and the 2026-04-28 entry
+                // in docs/product-compass.md. None of these touch the Gym Test
+                // path (logging, ghost values, history, PR detection, widgets)
+                // — those stay free forever per docs/claude/scope.md.
+
+                VStack(spacing: 0) {
+                    benefitRow("CSV + Markdown export of your training data")
+                    benefitRow("Apple Health workout sync")
+                    benefitRow("Custom app icons")
+                    benefitRow("Custom template accent colors")
+                    benefitRow("Founding supporter badge")
+                }
+                .padding(.top, AppSpacing.xl)
+
+                // MARK: - Tiers
+
+                tierSelector
+                    .padding(.top, AppSpacing.xl)
+
+                // MARK: - Footer
+
+                footer
+                    .padding(.top, AppSpacing.xl)
             }
+            .appScreenEnter()
         }
         .task {
             await store.loadProducts()
@@ -128,37 +99,43 @@ struct PaywallView: View {
 
     // MARK: - Benefit Row
 
-    private func benefitRow(icon: AppIcon, title: String, body: String) -> some View {
-        HStack(alignment: .top, spacing: AppSpacing.md) {
-            icon.image(size: 16, weight: .semibold)
+    private func benefitRow(_ text: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: AppSpacing.md) {
+            AppIcon.checkmark.image(size: 14, weight: .semibold)
                 .foregroundStyle(AppColor.accent)
-                .frame(width: 36, height: 36)
-                .background(AppColor.accentSoft)
-                .clipShape(RoundedRectangle(cornerRadius: AppRadius.sm, style: .continuous))
+                .frame(width: 16, alignment: .leading)
 
-            VStack(alignment: .leading, spacing: AppSpacing.xxs) {
-                Text(title)
-                    .font(AppFont.sectionHeader.font)
-                    .foregroundStyle(AppColor.textPrimary)
-
-                Text(body)
-                    .font(AppFont.caption.font)
-                    .foregroundStyle(AppColor.textSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
+            Text(text)
+                .font(AppFont.body.font)
+                .foregroundStyle(AppColor.textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
 
             Spacer(minLength: 0)
         }
-        .padding(.vertical, AppSpacing.smd)
+        .padding(.vertical, AppSpacing.sm)
     }
 
     // MARK: - Tier Selector
 
     private var tierSelector: some View {
-        HStack(alignment: .top, spacing: AppSpacing.sm) {
-            ForEach(StoreManager.Tier.allCases) { tier in
-                tierCard(tier: tier)
+        // ViewThatFits falls back to a vertical stack at narrow widths or
+        // larger Dynamic Type sizes — on SE (375pt) with three equal-flex
+        // cards (~109pt each) labels like "Annually"/"Lifetime" + scaled
+        // price text otherwise overflow.
+        ViewThatFits {
+            HStack(alignment: .top, spacing: AppSpacing.sm) {
+                tierCards
             }
+            VStack(spacing: AppSpacing.sm) {
+                tierCards
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var tierCards: some View {
+        ForEach(StoreManager.Tier.allCases) { tier in
+            tierCard(tier: tier)
         }
     }
 
@@ -171,54 +148,41 @@ struct PaywallView: View {
                 store.selectedTier = tier
             }
         } label: {
-            ZStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                    Text(label(for: tier))
-                        .font(AppFont.caption.font)
-                        .foregroundStyle(AppColor.textSecondary)
-                        .textCase(.uppercase)
-                        .tracking(AppFont.smallLabel.tracking)
-
-                    Text(priceText(for: tier))
-                        .font(AppFont.productHeading.font)
-                        .tracking(AppFont.productHeading.tracking)
-                        .foregroundStyle(AppColor.textPrimary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
-
-                    Text(sublabel(for: tier))
-                        .font(AppFont.muted.font)
-                        .foregroundStyle(AppColor.textSecondary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.vertical, AppSpacing.md)
-                .padding(.horizontal, AppSpacing.smd)
-                .padding(.top, badge == nil ? 0 : AppSpacing.sm)
-                .background(AppColor.cardBackground)
-                .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous)
-                        .stroke(
-                            isSelected ? AppColor.accent : AppColor.border.opacity(0.6),
-                            lineWidth: isSelected ? 1.5 : 1
-                        )
-                }
-
+            VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                // Badge inside the card top — replaces the prior overflow trick
+                // (alignmentGuide straddling ZStack `.top`). Routes through the
+                // canonical `AppTag(.accent, .compactCapsule)` so chrome lives
+                // in the design system, not paywall-local code.
                 if let badge {
-                    Text(badge)
-                        .font(AppFont.smallLabel.font)
-                        .tracking(AppFont.smallLabel.tracking)
-                        .textCase(.uppercase)
-                        .foregroundStyle(AppColor.accentForeground)
-                        .padding(.horizontal, AppSpacing.sm)
-                        .padding(.vertical, AppSpacing.xs)
-                        .background(AppColor.accent)
-                        .clipShape(Capsule())
-                        .offset(y: -10)
+                    AppTag(text: badge, style: .accent, layout: .compactCapsule)
                 }
+
+                Text(label(for: tier))
+                    .font(AppFont.caption.font)
+                    .foregroundStyle(AppColor.textSecondary)
+                    .textCase(.uppercase)
+                    .tracking(AppFont.smallLabel.tracking)
+
+                Text(priceText(for: tier))
+                    .font(AppFont.productHeading.font)
+                    .tracking(AppFont.productHeading.tracking)
+                    .foregroundStyle(AppColor.textPrimary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+                    .allowsTightening(true)
+
+                Text(sublabel(for: tier))
+                    .font(AppFont.muted.font)
+                    .foregroundStyle(AppColor.textSecondary)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.65)
+                    .multilineTextAlignment(.leading)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.vertical, AppSpacing.md)
+            .padding(.horizontal, AppSpacing.smd)
+            .background(isSelected ? AppColor.accentSoft : AppColor.cardBackground)
+            .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
         }
         .buttonStyle(ScaleButtonStyle())
     }
@@ -263,23 +227,22 @@ struct PaywallView: View {
 
     private var footer: some View {
         VStack(spacing: AppSpacing.sm) {
-            HStack(spacing: AppSpacing.md) {
-                Button("Restore Purchases") {
-                    Task { await store.restore() }
+            // ViewThatFits falls back to vertical stacking on narrow widths
+            // / large Dynamic Type. The decorative "·" separators are dropped
+            // in the vertical fallback since they only frame the horizontal
+            // arrangement.
+            ViewThatFits {
+                HStack(spacing: AppSpacing.md) {
+                    restoreButton
+                    middot
+                    termsLink
+                    middot
+                    privacyLink
                 }
-
-                Text("·")
-                    .foregroundStyle(AppColor.textSecondary)
-
-                if let termsURL = URL(string: "https://unit.app/terms") {
-                    Link("Terms", destination: termsURL)
-                }
-
-                Text("·")
-                    .foregroundStyle(AppColor.textSecondary)
-
-                if let privacyURL = URL(string: "https://unit.app/privacy") {
-                    Link("Privacy", destination: privacyURL)
+                VStack(alignment: .center, spacing: AppSpacing.xs) {
+                    restoreButton
+                    termsLink
+                    privacyLink
                 }
             }
 
@@ -289,6 +252,31 @@ struct PaywallView: View {
         .font(AppFont.caption.font)
         .foregroundStyle(AppColor.textSecondary)
         .frame(maxWidth: .infinity)
+    }
+
+    private var restoreButton: some View {
+        Button("Restore purchases") {
+            Task { await store.restore() }
+        }
+    }
+
+    @ViewBuilder
+    private var termsLink: some View {
+        if let termsURL = URL(string: "https://unit.app/terms") {
+            Link("Terms", destination: termsURL)
+        }
+    }
+
+    @ViewBuilder
+    private var privacyLink: some View {
+        if let privacyURL = URL(string: "https://unit.app/privacy") {
+            Link("Privacy", destination: privacyURL)
+        }
+    }
+
+    private var middot: some View {
+        Text("·")
+            .foregroundStyle(AppColor.textSecondary)
     }
 }
 

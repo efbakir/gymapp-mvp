@@ -15,13 +15,13 @@ export default function Header() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-200 ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-[background-color,border-color] duration-200 ${
         scrolled || menuOpen
           ? "bg-unit-background border-b border-unit-border"
-          : "bg-transparent"
+          : "bg-transparent border-b border-transparent"
       }`}
     >
-      <nav className="max-w-3xl mx-auto px-unit-md md:px-unit-lg flex items-center justify-between h-16">
+      <nav className="max-w-6xl mx-auto px-unit-md md:px-unit-lg flex items-center justify-between h-16">
         <Link href="/" className="text-lg font-bold tracking-tight">
           Unit
         </Link>
@@ -36,9 +36,9 @@ export default function Header() {
           </Link>
           <a
             href="#download"
-            className="text-sm font-bold px-4 py-2 rounded-lg bg-unit-accent text-unit-accent-foreground transition-transform active:scale-[0.96]"
+            className="press-spring inline-flex items-center h-11 px-unit-md rounded-md text-sm font-semibold bg-unit-accent text-unit-accent-foreground"
           >
-            Coming soon
+            Join waitlist
           </a>
         </div>
 
@@ -80,9 +80,11 @@ export default function Header() {
             </Link>
             <a
               href="#download"
-              className="inline-flex items-center justify-center h-[60px] rounded-lg text-[17px] font-bold mt-2 bg-unit-accent text-unit-accent-foreground transition-transform active:scale-[0.96]"
+              onClick={() => setMenuOpen(false)}
+              className="press-spring inline-flex items-center justify-center rounded-md text-[17px] font-bold mt-2 bg-unit-accent text-unit-accent-foreground"
+              style={{ height: "var(--button-height-lg)" }}
             >
-              Coming soon
+              Join waitlist
             </a>
           </div>
         </div>

@@ -1,18 +1,19 @@
 ---
 name: ui-visual-verify
-description: Skeptic-first visual verification of a UI change in Unit. Run BEFORE declaring any UI/visual task done. Use whenever a turn has applied a SwiftUI edit and the user might believe the change is shipped — also use when the user asks "did it work?", "looks right?", "is the change live?", or before saying "done" / "shipped" / "complete" on any visual task. Default assumption: the modification has NOT been achieved until proven by a screenshot. Ignores code hints — only visual evidence counts. If verification is waived (background run, lid closed, no simulator), this skill says so explicitly and skips, instead of faking success.
+description: Skeptic-first visual verification of a UI change in Unit. USER-INVOKED ONLY — never auto-trigger after a UI edit. Run only when the user explicitly asks ("/ui-visual-verify", "screenshot it", "verify", "did it work?", "looks right?", "is the change live?", "build and check"). Per CLAUDE.md §6, the user runs multiple Claude agents in parallel and auto-triggering the simulator causes boot/install/screenshot conflicts. When invoked, the default assumption is that the modification has NOT been achieved until proven by a screenshot. If verification is waived (background run, lid closed, no simulator), this skill says so explicitly and skips, instead of faking success.
 ---
 
 # /ui-visual-verify
 
-Default to disbelief. Until a screenshot proves the change, the change has not happened. Code that looks right is not evidence; the simulator output is. CLAUDE.md §7 verification gates are non-negotiable for visual work — this skill enforces them.
+**This skill is user-invoked only.** Do not run it automatically after a UI edit. Per `CLAUDE.md` §6, simulator/screenshot commands conflict when multiple agents run in parallel — the user controls when to verify. If you reach for this skill on your own, you are violating the rule.
 
-## Trigger
+When the user does invoke it: default to disbelief. Until a screenshot proves the change, the change has not happened. Code that looks right is not evidence; the simulator output is.
 
-- After any Edit/Write that touched `Unit/Features/**/*.swift`, `Unit/UI/DesignSystem.swift`, or `Unit/Assets.xcassets/`
-- Before any "done" / "shipped" / "complete" / "verified" claim
-- When the user asks "did it work?", "looks right?"
-- When a screenshot is part of the deliverable
+## Trigger (user-initiated only)
+
+- The user explicitly invokes `/ui-visual-verify`
+- The user asks "did it work?", "looks right?", "is the change live?", "screenshot it", "verify", "build and check"
+- A screenshot is part of the deliverable the user named
 
 ## Verification waiver
 

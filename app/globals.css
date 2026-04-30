@@ -19,6 +19,14 @@
 
   --radius: 0.875rem;
   --header-height: 64px; /* h-16 on Header */
+  --button-height-lg: 60px;
+  --button-height-md: 52px;
+
+  /* Single source of truth for the marketing site's motion curves.
+     ease-out-quart for press feedback (fast settle), ease-out-expo for
+     hover lift / view transitions (calm settle). */
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 html {
@@ -108,5 +116,126 @@ body {
   }
   .page-toc a:hover {
     color: var(--unit-text-primary);
+  }
+
+  /* ── Marketing-site shared utilities ─────────────────────────────── */
+
+  /* The 13px Geist Mono uppercase eyebrow used in hero label, bento
+     eyebrows, founder section header, trust band, "What Unit is not"
+     header. Single canonical recipe — never inline-duplicate. */
+  .eyebrow {
+    @apply text-[13px] font-medium font-mono uppercase tracking-[0.6px] text-unit-text-secondary;
+  }
+
+  /* Marketing type scale — 13 mono / 16 body / 20 lead / 28 section / 44 hero.
+     Five steps total. Never extend with a sixth without removing one first. */
+  .h-display {
+    @apply text-[44px] md:text-[60px] font-bold tracking-tight leading-[1.04] text-unit-text-primary;
+  }
+  .h-section {
+    @apply text-[28px] md:text-[36px] font-bold tracking-tight leading-[1.1] text-unit-text-primary;
+  }
+
+  /* Underscore-flanked keyword accent (KW component). Underscores render
+     as decorative brackets at reduced opacity; the keyword keeps the
+     surrounding heading's color and weight. */
+  .kw-mark {
+    @apply opacity-40;
+  }
+
+  /* The Ink radial-gradient ambient blur used behind hero mockup and
+     bento accent cards. Sized + positioned by the consumer; the recipe
+     is shared so we never fork the gradient stop list. */
+  .accent-glow {
+    @apply pointer-events-none absolute rounded-full opacity-[0.07] blur-3xl;
+    background: radial-gradient(circle at center, var(--unit-text-primary) 0%, transparent 70%);
+  }
+
+  /* Calibrated press feedback for primary CTAs and pressable nav
+     elements. Fast in, slow settle — feels mechanical, not laggy. */
+  .press-spring {
+    transition: transform 240ms var(--ease-out-quart);
+  }
+  .press-spring:active {
+    transform: scale(0.97);
+    transition-duration: 80ms;
+  }
+
+  /* Subtle hover lift for bento cards and other elevation-affording
+     surfaces. -2px Y on hover-capable devices, with a border-color
+     darken as the reduced-motion fallback. */
+  .lift-hover {
+    transition: transform 240ms var(--ease-out-expo),
+      border-color 240ms var(--ease-out-expo);
+  }
+  @media (hover: hover) {
+    .lift-hover:hover {
+      transform: translateY(-2px);
+      border-color: var(--unit-text-secondary);
+    }
+  }
+
+  /* Reduced-motion: kill transforms, keep border-darken so hover state
+     is still legible. */
+  @media (prefers-reduced-motion: reduce) {
+    .press-spring,
+    .press-spring:active,
+    .lift-hover,
+    .lift-hover:hover {
+      transform: none;
+      transition: border-color 240ms var(--ease-out-expo);
+    }
+  }
+}
+
+/* ── Hero stagger reveal (animate: first-paint cascade) ─────────────── */
+
+@layer components {
+  /* Hero copy column children fade up in sequence on page load:
+     H1 → subhead → CTA → trust band, 80ms gap, 480ms each. ease-out-expo.
+     `forwards` locks the end state; the global reduced-motion override
+     zeroes animation-duration so nothing is stuck hidden. */
+  .stagger-hero > * {
+    opacity: 0;
+    transform: translateY(8px);
+    animation: reveal-up 480ms var(--ease-out-expo) forwards;
+  }
+  .stagger-hero > *:nth-child(1) { animation-delay: 0ms; }
+  .stagger-hero > *:nth-child(2) { animation-delay: 80ms; }
+  .stagger-hero > *:nth-child(3) { animation-delay: 160ms; }
+  .stagger-hero > *:nth-child(4) { animation-delay: 240ms; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .stagger-hero > * {
+      opacity: 1;
+      transform: none;
+      animation: none;
+    }
+  }
+}
+
+@keyframes reveal-up {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ── View Transitions (Overdrive B: tactile micro-craft) ───────────── */
+
+/* The waitlist input + success confirmation share the
+   `view-transition-name: waitlist` so Chrome / Edge / Safari morph the
+   shape change instead of swapping the DOM. Firefox falls back to a
+   cross-fade automatically (no JS check needed once the name is set). */
+::view-transition-old(waitlist),
+::view-transition-new(waitlist) {
+  animation-duration: 320ms;
+  animation-timing-function: var(--ease-out-expo);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(waitlist),
+  ::view-transition-new(waitlist) {
+    animation-duration: 1ms;
   }
 }

@@ -113,7 +113,7 @@ final class StoreManager {
             }
         } catch {
             logger.error("Purchase failed: \(error.localizedDescription)")
-            purchaseError = "Something went wrong. Please try again."
+            purchaseError = "Purchase failed. Try again in a moment."
         }
     }
 

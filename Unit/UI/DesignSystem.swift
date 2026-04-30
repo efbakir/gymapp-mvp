@@ -29,6 +29,8 @@ enum AppColor {
     // Text
     static let textPrimary = Color(uiColor: uicolor(0x0A0A0A))
     static let textSecondary = Color(uiColor: uicolor(0x595959))
+    /// Low-emphasis contextual notes, lighter than `textSecondary` but still readable on Milk/Bond surfaces.
+    static let textTertiary = Color(uiColor: uicolor(0x707070))
     /// Disabled primary/secondary buttons — softer than `textSecondary` so inactive reads clearly.
     static let textDisabled = Color(uiColor: uicolor(0x949494))
     static let border = Color(uiColor: uicolor(0xE5E5E5))
@@ -85,12 +87,19 @@ extension Font {
         }
     }
 
-    static func geist(_ weight: AppWeight, size: CGFloat) -> Font {
-        .custom("Geist-\(weight.suffix)", size: size)
+    /// `relativeTo:` anchors the bundled custom face to a system text style so it
+    /// scales with Dynamic Type — without this, `Font.custom(_:size:)` returns a
+    /// fixed-size font that ignores the user's text-size preference. Default
+    /// `.body` keeps callers that don't care unaffected; the `AppFont` switch
+    /// below picks a tighter style per token (largeTitle for splash, title2 for
+    /// product heading, caption2 for tiny caps, etc.) so the type scale grows
+    /// proportionally at AX sizes instead of all flattening to body.
+    static func geist(_ weight: AppWeight, size: CGFloat, relativeTo textStyle: Font.TextStyle = .body) -> Font {
+        .custom("Geist-\(weight.suffix)", size: size, relativeTo: textStyle)
     }
 
-    static func geistMono(_ weight: AppWeight, size: CGFloat) -> Font {
-        .custom("GeistMono-\(weight.suffix)", size: size)
+    static func geistMono(_ weight: AppWeight, size: CGFloat, relativeTo textStyle: Font.TextStyle = .body) -> Font {
+        .custom("GeistMono-\(weight.suffix)", size: size, relativeTo: textStyle)
     }
 }
 
@@ -100,12 +109,19 @@ extension Font {
 /// type so the app never paints SF Pro by accident. Falls back to `systemFont`
 /// only if PostScript registration fails (defensive — not expected in shipping).
 extension UIFont {
-    static func geist(_ weight: Font.AppWeight, size: CGFloat) -> UIFont {
-        UIFont(name: "Geist-\(weight.suffix)", size: size) ?? systemFont(ofSize: size, weight: weight.uiKitWeight)
+    /// `relativeTo:` wraps the unscaled `UIFont` in `UIFontMetrics` so nav-bar
+    /// titles, segmented-control labels, and tab-bar labels respond to Dynamic
+    /// Type. Default `.body`; pass a tighter style (`.largeTitle`, `.headline`,
+    /// `.caption2`) at the call site so each chrome surface grows at the rate
+    /// its text style expects.
+    static func geist(_ weight: Font.AppWeight, size: CGFloat, relativeTo textStyle: UIFont.TextStyle = .body) -> UIFont {
+        let base = UIFont(name: "Geist-\(weight.suffix)", size: size) ?? systemFont(ofSize: size, weight: weight.uiKitWeight)
+        return UIFontMetrics(forTextStyle: textStyle).scaledFont(for: base)
     }
 
-    static func geistMono(_ weight: Font.AppWeight, size: CGFloat) -> UIFont {
-        UIFont(name: "GeistMono-\(weight.suffix)", size: size) ?? .monospacedSystemFont(ofSize: size, weight: weight.uiKitWeight)
+    static func geistMono(_ weight: Font.AppWeight, size: CGFloat, relativeTo textStyle: UIFont.TextStyle = .body) -> UIFont {
+        let base = UIFont(name: "GeistMono-\(weight.suffix)", size: size) ?? .monospacedSystemFont(ofSize: size, weight: weight.uiKitWeight)
+        return UIFontMetrics(forTextStyle: textStyle).scaledFont(for: base)
     }
 }
 
@@ -122,9 +138,19 @@ extension Font.AppWeight {
 /// Typography tokens. Every font lives as an enum case so its associated
 /// tracking is bundled with it — call sites apply both at once via
 /// `.appFont(.X)` (Text) or `.font(AppFont.X.font)` + `.tracking(AppFont.X.tracking)`
-/// (other views). Sans is **Geist**; numeric/CTA cases use **Geist Mono** for
-/// fixed-width digits under fatigue. Minimum weight across the app is **medium**
-/// (500) — never `.regular`. PostScript names match the bundled .ttf filenames.
+/// (other views).
+///
+/// **Mono doctrine.** Sans is **Geist**. **Geist Mono is reserved for two roles
+/// only**: (1) numerics under fatigue (hero counts, set results, step counters)
+/// — weight per role; (2) caps micro-labels (`overline`, `smallLabel`,
+/// `overlineStrong`) for footers, footnotes, very-small text, card eyebrows, and
+/// chips. Caps tokens render via `Text.appCapsLabel(_:)` which bakes
+/// `.textCase(.uppercase)`. **Buttons and CTAs are always sans, never mono.**
+///
+/// **Weight floor.** Geist is bundled as Medium / SemiBold / Bold only — no
+/// Regular .ttf. So `.medium` IS the design-system "regular" baseline for caps
+/// tokens; selected/emphasized state escalates to `.bold` (see `overlineStrong`).
+/// PostScript names match the bundled .ttf filenames.
 enum AppFont {
     // Body hierarchy
     case largeTitle
@@ -135,42 +161,58 @@ enum AppFont {
     case muted
 
     // Display / specialized — previously loose `static let`s, now first-class cases
-    /// 10pt semibold — top-of-card overline labels.
+    /// 13pt mono medium UPPERCASE (+0.6 tracking) — card eyebrow, status/filter
+    /// chip default state, footer/footnote micro-label. Apply via
+    /// `Text.appCapsLabel(.overline)` so uppercase is baked.
     case overline
-    /// 11pt medium with +1.0 tracking — tiny uppercase "WAS" / "MOST POPULAR" style labels.
+    /// 11pt mono medium UPPERCASE (+1.0 tracking) — tiny "WAS" / "MOST POPULAR"
+    /// style caps. Apply via `Text.appCapsLabel(.smallLabel)`.
     case smallLabel
+    /// 13pt mono BOLD UPPERCASE (+0.6 tracking) — selected/active chip state
+    /// (filled background) and emphasized eyebrows. Sibling of `overline`.
+    /// Apply via `Text.appCapsLabel(.overlineStrong)`.
+    case overlineStrong
     /// 56pt bold — splash welcome title only.
     case splashTitle
     /// 16pt medium — splash welcome eyebrow / tagline pair.
     case splashWelcome
     /// 36pt mono bold — workout metric hero, big numerics.
     case numericDisplay
-    /// 14pt mono semibold — set step counters in `SetProgressIndicator`.
+    /// 36pt sans bold + tabular digits — numeric input fields (`AdjustResultSheet`
+    /// weight / reps). Same scale and weight as `numericDisplay`, but proportional
+    /// glyphs so a decimal like `82.5` doesn't show a wide gap around the period
+    /// (mono cells inflate punctuation). `.monospacedDigit()` keeps digits tabular
+    /// so values still align if rendered in a column.
+    case numericInput
+    /// 14pt mono semibold — set step counters in `SetProgressIndicator` (numeric).
     case stepIndicator
     /// 24pt bold — product-screen heading on `ProductTopBar`, hero copy on empty states.
     case productHeading
-    /// 17pt mono bold — primary CTA labels, top-bar text actions.
+    /// 17pt sans bold — primary CTA labels, top-bar text actions. **Never mono**
+    /// (mono is reserved for numerics and caps micro-labels).
     case productAction
-    /// 15pt mono semibold — set-result / PR rows in History.
+    /// 15pt mono semibold — set-result / PR rows in History (numeric).
     case performance
 
     var font: Font {
         switch self {
-        case .largeTitle:     return .geist(.bold,     size: 22)
-        case .title:          return .geist(.bold,     size: 20)
-        case .sectionHeader:  return .geist(.bold,     size: 17)
-        case .body:           return .geist(.medium,   size: 17)
-        case .caption:        return .geist(.medium,   size: 15)
-        case .muted:          return .geist(.medium,   size: 13)
-        case .overline:       return .geist(.semibold, size: 10)
-        case .smallLabel:     return .geist(.medium,   size: 11)
-        case .splashTitle:    return .geist(.bold,     size: 56)
-        case .splashWelcome:  return .geist(.medium,   size: 16)
-        case .productHeading: return .geist(.bold,     size: 24)
-        case .numericDisplay: return .geistMono(.bold,     size: 36)
-        case .stepIndicator:  return .geistMono(.semibold, size: 14)
-        case .productAction:  return .geistMono(.bold,     size: 17)
-        case .performance:    return .geistMono(.semibold, size: 15)
+        case .largeTitle:     return .geist(.bold,     size: 22, relativeTo: .title2)
+        case .title:          return .geist(.bold,     size: 20, relativeTo: .title3)
+        case .sectionHeader:  return .geist(.semibold, size: 17, relativeTo: .body)
+        case .body:           return .geist(.medium,   size: 17, relativeTo: .body)
+        case .caption:        return .geist(.medium,   size: 15, relativeTo: .subheadline)
+        case .muted:          return .geist(.medium,   size: 13, relativeTo: .footnote)
+        case .overline:       return .geistMono(.medium,   size: 13, relativeTo: .footnote)
+        case .smallLabel:     return .geistMono(.medium,   size: 11, relativeTo: .caption2)
+        case .overlineStrong: return .geistMono(.bold,     size: 13, relativeTo: .footnote)
+        case .splashTitle:    return .geist(.bold,     size: 56, relativeTo: .largeTitle)
+        case .splashWelcome:  return .geist(.medium,   size: 16, relativeTo: .callout)
+        case .productHeading: return .geist(.bold,     size: 24, relativeTo: .title2)
+        case .numericDisplay: return .geistMono(.bold,     size: 36, relativeTo: .title)
+        case .numericInput:   return .geist(.bold,         size: 36, relativeTo: .title).monospacedDigit()
+        case .stepIndicator:  return .geistMono(.semibold, size: 14, relativeTo: .footnote)
+        case .productAction:  return .geist(.bold,         size: 17, relativeTo: .body)
+        case .performance:    return .geistMono(.semibold, size: 15, relativeTo: .subheadline)
         }
     }
 
@@ -189,7 +231,10 @@ enum AppFont {
         case .splashTitle:    return -1.2
         case .productHeading: return -0.4
         case .numericDisplay: return -0.6
-        case .smallLabel:     return 1.0    // uppercase-caps spacing
+        case .numericInput:   return -0.6   // mirrors numericDisplay so the bumped value reads at the same spacing weight
+        case .overline:       return 0.6    // mono caps spacing
+        case .overlineStrong: return 0.6    // mono caps spacing (sibling of .overline)
+        case .smallLabel:     return 1.0    // tighter, smaller caps need wider tracking
         default:              return 0
         }
     }
@@ -199,6 +244,20 @@ extension Text {
     /// Applies an AppFont style with its associated tracking.
     func appFont(_ style: AppFont) -> Text {
         self.font(style.font).tracking(style.tracking)
+    }
+
+    /// Applies a caps `AppFont` style (overline, smallLabel, overlineStrong) with
+    /// its tracking AND `.textCase(.uppercase)`. Single canonical recipe for any
+    /// mono-caps micro-label — card eyebrow, footer/footnote, status chip,
+    /// filter chip, dropdown chip. Returns `some View` because `.textCase` is
+    /// environment-scoped, not Text-only — so chain non-Text modifiers after it.
+    /// Use this instead of `Text.appFont(.overline)` for the caps tokens; using
+    /// `appFont` on a caps token produces the right mono weight but skips the
+    /// uppercase rendering, which would silently violate the doctrine.
+    func appCapsLabel(_ style: AppFont) -> some View {
+        self.font(style.font)
+            .tracking(style.tracking)
+            .textCase(.uppercase)
     }
 }
 
@@ -334,6 +393,44 @@ extension View {
     }
 }
 
+/// Canonical screen-entrance animation. Subtle fade + 6pt upward slide using
+/// the existing `.appEnter` curve (320 ms ease-out-quint). Runs once on first
+/// `.onAppear`, then becomes a no-op for the lifetime of the view — so
+/// scrolling, state changes, and re-renders never re-trigger it.
+///
+/// Reduce Motion: opacity-only, animation skipped (instant appearance). Per
+/// the call-site contract in `AppMotion`, reduceMotion users get no motion.
+///
+/// Apply at the screen-content layer (typically the root `ScrollView` or
+/// the content `VStack` inside `AppScreen`), not per-element. Single
+/// canonical implementation — never hand-roll a parallel `.opacity` /
+/// `.offset` entrance, never extend with stagger or per-row variants.
+private struct AppScreenEnter: ViewModifier {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var hasAppeared = false
+
+    func body(content: Content) -> some View {
+        content
+            .opacity(hasAppeared ? 1 : 0)
+            .offset(y: (hasAppeared || reduceMotion) ? 0 : 6)
+            .onAppear {
+                guard !hasAppeared else { return }
+                withAnimation(reduceMotion ? nil : .appEnter) {
+                    hasAppeared = true
+                }
+            }
+    }
+}
+
+extension View {
+    /// Apply the canonical screen-entrance animation. See `AppScreenEnter` for
+    /// doctrine. Apply at the screen-content layer (root `ScrollView` / content
+    /// `VStack`), not per-element.
+    func appScreenEnter() -> some View {
+        modifier(AppScreenEnter())
+    }
+}
+
 /// Canonical row separator. 1pt hairline at `AppColor.border.opacity(0.55)` —
 /// the same value the active-workout lineup hand-rolled before consolidation.
 /// Used by `AppDividedList` (and a handful of card-row contexts that compose
@@ -396,6 +493,7 @@ enum AppIcon: String {
     case back = "chevron.left"
     case forward = "chevron.right"
     case chevronDown = "chevron.down"
+    case chevronUp = "chevron.up"
     case close = "xmark"
     case add = "plus"
     case remove = "minus"
@@ -435,8 +533,12 @@ enum AppIcon: String {
     var systemName: String { rawValue }
 
     func image(size: CGFloat = 17, weight: Font.Weight = .semibold) -> some View {
-        Image(systemName: systemName)
-            .font(.system(size: size, weight: weight))
+        // Scale the SF Symbol point size via UIFontMetrics so glyphs grow under
+        // Dynamic Type the same way text does. Anchor to `.body` since icons
+        // sit alongside body-scale labels in rows, chips, and toolbar buttons.
+        let scaled = UIFontMetrics(forTextStyle: .body).scaledValue(for: size)
+        return Image(systemName: systemName)
+            .font(.system(size: scaled, weight: weight))
     }
 }
 
@@ -453,8 +555,8 @@ extension Double {
 /// glyph; let context + tap target convey navigation (HIG).
 /// Use `.tappable` (default) for interactive rows — gets 44pt minHeight and a
 /// hit-testable content shape. Use `.display` for read-only catalog rows inside
-/// a shared card — drops the 44pt floor and tightens vertical padding so dense
-/// lists don't feel airy.
+/// a shared card — same 8pt vertical breathing as `.tappable`, but drops the
+/// 44pt floor so multi-row catalog blocks pack tighter without going cramped.
 enum AppListRowStyle {
     case tappable
     case display
@@ -506,7 +608,7 @@ struct AppListRow<Trailing: View>: View {
             trailing()
         }
         .padding(.horizontal, AppSpacing.md)
-        .padding(.vertical, style == .display ? AppSpacing.xs : AppSpacing.sm)
+        .padding(.vertical, AppSpacing.sm)
         .frame(minHeight: style == .display ? nil : 44, alignment: .leading)
         .contentShape(Rectangle())
     }
@@ -645,10 +747,11 @@ struct AppPrimaryButton: View {
                 Text(label)
                     .font(AppFont.productAction.font)
                     .foregroundStyle(isEnabled ? AppColor.accentForeground : AppColor.textDisabled)
-                    .lineLimit(1)
+                    .multilineTextAlignment(.center)
                     .truncationMode(.tail)
-                    .minimumScaleFactor(0.9)
+                    .minimumScaleFactor(0.7)
                     .padding(.horizontal, AppSpacing.md)
+                    .padding(.vertical, AppSpacing.sm)
                     .opacity(isLoading ? 0 : 1)
                 if isLoading {
                     ProgressView()
@@ -656,7 +759,7 @@ struct AppPrimaryButton: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 60)
+            .frame(minHeight: 60)
             .background(isEnabled ? AppColor.accent : AppColor.controlBackground)
             .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
         }
@@ -671,7 +774,7 @@ struct AppPrimaryButton: View {
 /// `metricHero` "Log" pill in `WorkoutCommandCard` and the inline "Next exercise"
 /// row in `SessionStateBar`. `fileprivate` so feature code cannot compose it:
 /// page files use `AppPrimaryButton` (sticky CTA) or `AppGhostButton` (quiet action).
-fileprivate struct AppSecondaryButton: View {
+struct AppSecondaryButton: View {
     enum Tone {
         case `default`
         case accentSoft
@@ -784,8 +887,9 @@ fileprivate struct AppSecondaryButton: View {
                 }
             }
             .padding(.horizontal, secondaryHorizontalPadding)
+            .padding(.vertical, AppSpacing.sm)
             .frame(maxWidth: fillsAvailableWidth ? .infinity : nil)
-            .frame(height: 60)
+            .frame(minHeight: 60)
             .background(backgroundColor)
             .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
             .contentShape(Rectangle())
@@ -886,10 +990,52 @@ struct AppGhostButton: View {
     var body: some View {
         Button(action: action) {
             AppGhostButtonLabel(title: label, isEnabled: isEnabled)
-                .frame(height: 60)
+                .frame(minHeight: 60)
         }
         .buttonStyle(ScaleButtonStyle())
         .disabled(!isEnabled)
+    }
+}
+
+/// Capsule-shaped floating action — secondary, scroll-aware affordance that
+/// hovers above the page surface (e.g. "Add exercise" above the program-create
+/// CTA in onboarding). Ink fill on Milk page provides the lift; per the
+/// flat-card doctrine no shadow is added — color contrast carries elevation.
+/// Pair with `AppScreen(floatingAccessory:)` so the screen owns scroll-direction
+/// show/hide; the atom itself stays stateless.
+struct AppFloatingPillButton: View {
+    let label: String
+    var icon: AppIcon? = nil
+    var isEnabled: Bool = true
+    let action: () -> Void
+
+    init(_ label: String, icon: AppIcon? = nil, isEnabled: Bool = true, action: @escaping () -> Void) {
+        self.label = label
+        self.icon = icon
+        self.isEnabled = isEnabled
+        self.action = action
+    }
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: AppSpacing.sm) {
+                if let icon {
+                    icon.image(size: 14, weight: .semibold)
+                        .foregroundStyle(AppColor.accentForeground)
+                }
+                Text(label)
+                    .font(AppFont.productAction.font)
+                    .foregroundStyle(AppColor.accentForeground)
+            }
+            .padding(.horizontal, AppSpacing.lg)
+            .padding(.vertical, AppSpacing.smd)
+            .frame(minHeight: 48)
+            .background(AppColor.accent)
+            .clipShape(Capsule(style: .continuous))
+        }
+        .buttonStyle(ScaleButtonStyle())
+        .disabled(!isEnabled)
+        .accessibilityLabel(label)
     }
 }
 
@@ -897,6 +1043,11 @@ struct AppGhostButton: View {
 /// Use `.success` / `.warning` / `.error` for status; `.muted` / `.default` for
 /// neutral labels; `.accent` to emphasize. For toggle-able filter pills, use
 /// `AppFilterChip` — not this component.
+///
+/// Pass `onTap` to turn the tag into a tap-to-accept affordance (e.g. the
+/// progressive-overload "+ 1 rep" suggestion) without forking a new chip
+/// primitive. The visible capsule keeps its compact size; the hit area
+/// expands invisibly to the 44pt Gym Test floor.
 struct AppTag: View {
     let text: String
     var style: Style = .default
@@ -904,6 +1055,9 @@ struct AppTag: View {
     var layout: Layout = .regular
     /// Optional leading glyph rendered inline with the text (same foreground color).
     var icon: AppIcon? = nil
+    /// When non-nil, the tag wraps in a Button with ScaleButtonStyle and a 44pt
+    /// invisible hit floor. Visible chrome is unchanged.
+    var onTap: (() -> Void)? = nil
 
     enum Layout {
         case regular
@@ -921,21 +1075,33 @@ struct AppTag: View {
     }
 
     var body: some View {
-        Group {
-            switch layout {
-            case .regular:
-                content
-                    .padding(.horizontal, AppSpacing.smd)
-                    .padding(.vertical, AppSpacing.sm)
-                    .background(backgroundColor)
-                    .clipShape(Capsule())
-            case .compactCapsule:
-                content
-                    .padding(.horizontal, AppProgressChipMetrics.compactHorizontalPadding)
-                    .frame(height: AppProgressChipMetrics.rowHeight)
-                    .background(backgroundColor)
-                    .clipShape(Capsule())
+        if let onTap {
+            Button(action: onTap) {
+                tagShape
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
             }
+            .buttonStyle(ScaleButtonStyle())
+        } else {
+            tagShape
+        }
+    }
+
+    @ViewBuilder
+    private var tagShape: some View {
+        switch layout {
+        case .regular:
+            content
+                .padding(.horizontal, AppSpacing.smd)
+                .padding(.vertical, AppSpacing.sm)
+                .background(backgroundColor)
+                .clipShape(Capsule())
+        case .compactCapsule:
+            content
+                .padding(.horizontal, AppProgressChipMetrics.compactHorizontalPadding)
+                .frame(minHeight: AppProgressChipMetrics.rowHeight)
+                .background(backgroundColor)
+                .clipShape(Capsule())
         }
     }
 
@@ -945,9 +1111,19 @@ struct AppTag: View {
                 icon.image(size: 12, weight: .semibold)
             }
             Text(text)
-                .font(AppFont.stepIndicator.font)
+                .appCapsLabel(isEmphasized ? .overlineStrong : .overline)
         }
         .foregroundStyle(foregroundColor)
+    }
+
+    /// Filled / colored-background styles render the label in mono BOLD caps;
+    /// neutral styles use mono medium caps. This mirrors the chip-state rule —
+    /// a colored background IS the "selected" affordance for status pills.
+    private var isEmphasized: Bool {
+        switch style {
+        case .default, .muted, .custom: return false
+        case .accent, .success, .warning, .error: return true
+        }
     }
 
     private var foregroundColor: Color {
@@ -996,7 +1172,7 @@ struct AppDropdownChip<Content: View>: View {
         } label: {
             HStack(spacing: AppSpacing.xs) {
                 Text(label)
-                    .font(AppFont.caption.font)
+                    .appCapsLabel(isActive ? .overlineStrong : .overline)
                 AppIcon.chevronDown.image(size: 10, weight: .bold)
             }
             .foregroundStyle(isActive ? AppColor.background : AppColor.textPrimary)
@@ -1042,7 +1218,7 @@ struct AppFilterChip: View {
         Button(action: action) {
             HStack(spacing: AppSpacing.xs) {
                 Text(label)
-                    .font(AppFont.caption.font)
+                    .appCapsLabel(isSelected ? .overlineStrong : .overline)
                 if isSelected && showsClearGlyphWhenSelected {
                     AppIcon.close.image(size: 10, weight: .bold)
                 }
@@ -1099,6 +1275,23 @@ struct AppFilterChipBar<Content: View>: View {
             .padding(.vertical, AppSpacing.xxs)
         }
         .appScrollEdgeSoft()
+        // iOS 18+ horizontal `ScrollView` (made worse by `.scrollEdgeEffectStyle`)
+        // reports an *unbounded* ideal width. When this molecule is hosted inside
+        // `.safeAreaInset(.top)` (e.g. `OnboardingShell`'s sticky day picker), the
+        // unbounded measurement leaks through the parent VStack and silently
+        // cancels `AppScreen`'s canonical 16pt horizontal padding for the entire
+        // screen — header, body, and bottom CTA all snap to x=0 / x=screen-width.
+        //
+        // `.frame(maxWidth: .infinity)` alone does NOT fix it: it only constrains
+        // the actual proposed size, never the ideal that propagates upward.
+        // `.fixedSize(horizontal: false, vertical: true)` alone does NOT fix it
+        // either: it selects which axis uses the ideal, but the unbounded ideal
+        // is still what gets reported when a parent consults it.
+        // `idealWidth: 0` is the load-bearing piece — it pins this view's
+        // reported ideal width to 0pt, so any ancestor measuring the bar sees a
+        // finite value and the leak stops at this molecule. `maxWidth: .infinity`
+        // keeps the bar free to fill its parent's actual proposal.
+        .frame(idealWidth: 0, maxWidth: .infinity)
     }
 }
 
@@ -1138,9 +1331,9 @@ private struct ProductTopBarAction: View {
 }
 
 /// Root/product-screen top bar — title + optional leading/trailing actions on a
-/// 64pt surface. Compose via `AppScreen(customHeader:)`. Detail flows use the
-/// system `NavigationStack` chrome (`showsNativeNavigationBar: true`); this
-/// replaces large-title chrome on root tabs and modal sheets.
+/// 64pt surface. Compose via `AppScreen(customHeader:)`. Detail flows use system
+/// `NavigationStack` chrome. Use `AppSheetScreen` when a modal should match iOS
+/// native sheet title/action behavior.
 struct ProductTopBar: View {
     enum Size {
         case md
@@ -1191,7 +1384,7 @@ struct ProductTopBar: View {
                 }
             }
         }
-        .frame(height: 64)
+        .frame(minHeight: 64)
     }
 
     private var titleFont: Font {
@@ -1234,6 +1427,11 @@ struct SetProgressIndicator: View {
         /// chrome so the milestone persists for the rest of the session — pairs with
         /// the heavy-impact haptic that fires once at log time.
         var isPR: Bool = false
+        /// Tap handler for completed/failed chips — opens the edit sheet for that set
+        /// in `ActiveWorkoutView`. Honored only when state is `completed` or `failed`;
+        /// upcoming/current/disabled chips are never interactive (no values to edit).
+        /// Pass `nil` for read-only contexts (previews, history).
+        var onTap: (() -> Void)? = nil
 
         var chipText: String? {
             guard let reps, let weightText, !weightText.isEmpty else { return nil }
@@ -1251,54 +1449,77 @@ struct SetProgressIndicator: View {
     var body: some View {
         HStack(spacing: AppSpacing.sm) {
             ForEach(steps) { step in
-                Group {
-                    if step.state == .current {
-                        Text("Set \(step.label)")
-                            .font(AppFont.stepIndicator.font)
-                            .foregroundStyle(AppColor.accentForeground)
-                            .padding(.horizontal, AppSpacing.smd)
-                            .frame(height: 24)
-                            .background(Capsule().fill(AppColor.accent))
-                    } else if (step.state == .completed || step.state == .failed),
-                              let chipText = step.chipText {
-                        HStack(spacing: AppSpacing.xxs) {
-                            if step.state == .completed {
-                                AppIcon.checkmark.image(size: 10, weight: .bold)
-                                    .symbolEffect(.bounce, options: .nonRepeating, value: setLoggedSignal ?? 0)
-                            } else {
-                                AppIcon.remove.image(size: 10, weight: .bold)
-                            }
-                            Text(chipText)
-                                .font(.geistMono(.semibold, size: 12))
-                                .lineLimit(1)
-                        }
-                        .foregroundStyle(step.isPR ? AppColor.accentForeground : AppColor.textSecondary)
-                        .padding(.horizontal, AppSpacing.sm)
-                        .frame(height: 24)
-                        .background(Capsule().fill(step.isPR ? AppColor.accent : AppColor.controlBackground))
-                    } else {
-                        ZStack {
-                            Circle()
-                                .fill(backgroundColor(for: step.state))
-                                .frame(width: 24, height: 24)
+                renderStep(step)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(accessibilityLabel(for: step))
+            }
+        }
+    }
 
-                            switch step.state {
-                            case .completed:
-                                AppIcon.checkmark.image(size: 10, weight: .bold)
-                                    .foregroundStyle(AppColor.textPrimary)
-                            case .failed:
-                                AppIcon.remove.image(size: 10, weight: .bold)
-                                    .foregroundStyle(AppColor.textPrimary)
-                            default:
-                                Text(step.label)
-                                    .font(AppFont.stepIndicator.font)
-                                    .foregroundStyle(foregroundColor(for: step.state))
-                            }
-                        }
-                    }
+    /// Tap-edit on a logged chip is the only interaction in the strip — wrap it in a
+    /// `Button` (which auto-applies the `isButton` trait) and inflate the hit area
+    /// to 44pt to meet the gym-test touch-target floor. The visible capsule stays
+    /// 24pt; the extra 20pt is invisible padding so the HStack grows from 24pt to
+    /// 44pt only when chips are interactive.
+    @ViewBuilder
+    private func renderStep(_ step: Step) -> some View {
+        if (step.state == .completed || step.state == .failed), let onTap = step.onTap {
+            Button(action: onTap) {
+                stepContent(step)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(ScaleButtonStyle())
+        } else {
+            stepContent(step)
+        }
+    }
+
+    @ViewBuilder
+    private func stepContent(_ step: Step) -> some View {
+        if step.state == .current {
+            Text("Set \(step.label)")
+                .font(AppFont.stepIndicator.font)
+                .textCase(.uppercase)
+                .foregroundStyle(AppColor.accentForeground)
+                .padding(.horizontal, AppSpacing.smd)
+                .frame(height: 24)
+                .background(Capsule().fill(AppColor.accent))
+        } else if (step.state == .completed || step.state == .failed),
+                  let chipText = step.chipText {
+            HStack(spacing: AppSpacing.xxs) {
+                if step.state == .completed {
+                    AppIcon.checkmark.image(size: 10, weight: .bold)
+                        .symbolEffect(.bounce, options: .nonRepeating, value: setLoggedSignal ?? 0)
+                } else {
+                    AppIcon.remove.image(size: 10, weight: .bold)
                 }
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel(accessibilityLabel(for: step))
+                Text(chipText)
+                    .font(.geistMono(.semibold, size: 12, relativeTo: .caption))
+                    .lineLimit(1)
+            }
+            .foregroundStyle(step.isPR ? AppColor.accentForeground : AppColor.textSecondary)
+            .padding(.horizontal, AppSpacing.sm)
+            .frame(height: 24)
+            .background(Capsule().fill(step.isPR ? AppColor.accent : AppColor.controlBackground))
+        } else {
+            ZStack {
+                Circle()
+                    .fill(backgroundColor(for: step.state))
+                    .frame(width: 24, height: 24)
+
+                switch step.state {
+                case .completed:
+                    AppIcon.checkmark.image(size: 10, weight: .bold)
+                        .foregroundStyle(AppColor.textPrimary)
+                case .failed:
+                    AppIcon.remove.image(size: 10, weight: .bold)
+                        .foregroundStyle(AppColor.textPrimary)
+                default:
+                    Text(step.label)
+                        .font(AppFont.stepIndicator.font)
+                        .foregroundStyle(foregroundColor(for: step.state))
+                }
             }
         }
     }
@@ -1490,52 +1711,26 @@ struct RestTimerControl: View {
 
 // MARK: - PreviewListRow + PreviewListContainer
 
-/// Two-line row for preview lists inside cards.
-///
-/// Two styles, picked by the caller's read intent:
-/// - `.nameFirst` (default): title (program / template / routine name) leads in
-///   `sectionHeader`, subtitle follows in quiet `body`. Right for browsing
-///   lists where the user identifies the row by name (Programs, Templates,
-///   day lists).
-/// - `.metricFirst`: subtitle leads in monospaced bold, title follows in quiet
-///   `caption`. Honors DESIGN.md §3 Numerics-First Rule for workout-adjacent
-///   previews where the lifter already knows the workout and is glancing for
-///   data (Today's exercise preview).
+/// Two-line row for preview lists inside cards. The title leads in
+/// `sectionHeader`; the subtitle follows in quiet `body`, matching Programs,
+/// Templates, day lists, and Today's exercise preview.
 ///
 /// `isEmptyHint = true` softens the data line (caption font + secondary color)
 /// for cold-start rows like "No prior sets".
 struct PreviewListRow: View {
-    enum Style {
-        case nameFirst
-        case metricFirst
-    }
-
     let title: String
     let subtitle: String
-    var style: Style = .nameFirst
     var isEmptyHint: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.xs) {
-            switch style {
-            case .nameFirst:
-                Text(title)
-                    .font(AppFont.sectionHeader.font)
-                    .foregroundStyle(AppColor.textPrimary)
+            Text(title)
+                .font(AppFont.sectionHeader.font)
+                .foregroundStyle(AppColor.textPrimary)
 
-                Text(subtitle)
-                    .font(nameFirstSubtitleFont)
-                    .foregroundStyle(AppColor.textSecondary)
-
-            case .metricFirst:
-                Text(subtitle)
-                    .font(metricFont)
-                    .foregroundStyle(metricColor)
-
-                Text(title)
-                    .font(AppFont.caption.font)
-                    .foregroundStyle(AppColor.textSecondary)
-            }
+            Text(subtitle)
+                .font(subtitleFont)
+                .foregroundStyle(AppColor.textSecondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, AppSpacing.sm)
@@ -1543,16 +1738,8 @@ struct PreviewListRow: View {
         .contentShape(Rectangle())
     }
 
-    private var nameFirstSubtitleFont: Font {
+    private var subtitleFont: Font {
         isEmptyHint ? AppFont.caption.font : AppFont.body.font
-    }
-
-    private var metricFont: Font {
-        isEmptyHint ? AppFont.caption.font : AppFont.productAction.font
-    }
-
-    private var metricColor: Color {
-        isEmptyHint ? AppColor.textSecondary : AppColor.textPrimary
     }
 }
 
@@ -1562,7 +1749,10 @@ struct PreviewListRow: View {
 /// only renders the fade where scrolling actually clips, so short content
 /// stays flat without measuring height by hand.
 struct PreviewListContainer<Content: View>: View {
-    var maxHeight: CGFloat = 228
+    /// Capped scroll height — declared as `@ScaledMetric` so the cap grows
+    /// proportionally under Dynamic Type. Without this, AX users see rows
+    /// clipped at the same 228pt as default text size, halving how many fit.
+    @ScaledMetric(relativeTo: .body) private var maxHeight: CGFloat = 228
     /// Vertical gap between rows. Tight by default so the container padding can breathe around the group.
     var rowSpacing: CGFloat = AppSpacing.xs
     /// Inner padding between the container edge and its rows.
@@ -1623,7 +1813,7 @@ struct AppCard<Content: View>: View {
         }
         .padding(.horizontal, contentInset)
         .padding(.vertical, verticalInset ?? contentInset)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
         .background(AppColor.cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
         .modifier(AppCardElevation(cornerRadius: cornerRadius))
@@ -1645,7 +1835,7 @@ struct AppSessionHighlightRow<Trailing: View>: View {
         HStack(alignment: .center, spacing: AppSpacing.md) {
             VStack(alignment: .leading, spacing: AppSpacing.xs) {
                 Text(eyebrow)
-                    .font(AppFont.caption.font)
+                    .appCapsLabel(.overline)
                     .foregroundStyle(AppColor.textSecondary)
 
                 Text(title)
@@ -1678,6 +1868,22 @@ struct AppSessionHighlightRow<Trailing: View>: View {
 /// `AppSessionHighlightRow` inside `AppCardList` instead — never stack
 /// per-row `AppSessionHighlightCard`s in a list (CLAUDE.md §5: no per-row
 /// shadowed cards in lists).
+///
+/// Card chrome owns no padding (`contentInset: 0`, `verticalInset: 0`) so
+/// every `AppDivider` — the header→body hairline AND any list dividers inside
+/// `belowContent` — runs card-edge to card-edge, matching the full-bleed rule
+/// shared with `AppCardList`.
+///
+/// **Caller contract for `belowContent`** (the slot is rendered full-bleed,
+/// no horizontal or vertical wrapper padding):
+/// - Floating chrome (notes, empty-state text) → wrap in
+///   `.padding(.horizontal, .lg).padding(.vertical, .md)`.
+/// - List rows inside an `AppDividedList` → apply `.appCardRowChrome()` to
+///   each row. Dividers will then run full-width with uniform 16pt breathing
+///   above and below every row.
+///
+/// Header rhythm: 24pt above the row, 16pt below it (collapses to 24pt when
+/// `BelowContent == EmptyView`).
 struct AppSessionHighlightCard<Trailing: View, BelowContent: View>: View {
     let eyebrow: String
     let title: String
@@ -1685,17 +1891,24 @@ struct AppSessionHighlightCard<Trailing: View, BelowContent: View>: View {
     @ViewBuilder let trailing: () -> Trailing
     @ViewBuilder let belowContent: () -> BelowContent
 
+    private var hasBelowContent: Bool {
+        BelowContent.self != EmptyView.self
+    }
+
     var body: some View {
-        AppCard(contentInset: AppSpacing.lg) {
-            VStack(alignment: .leading, spacing: AppSpacing.md) {
+        AppCard(contentInset: 0, verticalInset: 0) {
+            VStack(alignment: .leading, spacing: 0) {
                 AppSessionHighlightRow(
                     eyebrow: eyebrow,
                     title: title,
                     caption: caption,
                     trailing: trailing
                 )
+                .padding(.horizontal, AppSpacing.lg)
+                .padding(.top, AppSpacing.lg)
+                .padding(.bottom, hasBelowContent ? AppSpacing.md : AppSpacing.lg)
 
-                if BelowContent.self != EmptyView.self {
+                if hasBelowContent {
                     AppDivider()
                     belowContent()
                 }
@@ -1782,7 +1995,7 @@ struct EmptyStateCard<Content: View>: View {
             VStack(alignment: .center, spacing: AppSpacing.md) {
                 if let eyebrow {
                     Text(eyebrow)
-                        .font(AppFont.caption.font)
+                        .appCapsLabel(.overline)
                         .foregroundStyle(AppColor.textSecondary)
                 }
 
@@ -1795,14 +2008,14 @@ struct EmptyStateCard<Content: View>: View {
                         .fixedSize(horizontal: false, vertical: true)
 
                     Text(message)
-                        .font(AppFont.productAction.font)
+                        .font(AppFont.body.font)
                         .foregroundStyle(AppColor.textSecondary)
                         .multilineTextAlignment(.center)
 
                     if let note {
                         Text(note)
                             .font(AppFont.caption.font)
-                            .foregroundStyle(AppColor.textSecondary)
+                            .foregroundStyle(AppColor.textTertiary)
                             .multilineTextAlignment(.center)
                     }
                 }
@@ -1951,13 +2164,14 @@ extension AppDividedList where Data.Element: Identifiable, ID == Data.Element.ID
 }
 
 /// Canonical "list inside its own card" molecule. The card runs full-bleed
-/// horizontally (`contentInset: 0`) so the 1pt `AppDivider` hairlines extend
-/// card-edge to card-edge — the documented full-width-of-container rule. Rows
-/// pad themselves by `AppSpacing.lg` (24pt) to land at the canonical 24pt
-/// text-from-edge offset, and the molecule enforces a 52pt minimum row height
-/// (matching `PreviewListRow` / `AppCardListAddRow`) so single-line text rows
-/// never collapse to a 44pt tap-target floor and read tight against the
-/// dividers. Use this anywhere you'd otherwise compose `AppCard` +
+/// (`contentInset: 0`, `verticalInset: 0`) so the rows fully own their own
+/// inset and the 1pt `AppDivider` hairlines extend card-edge to card-edge —
+/// the documented full-width-of-container rule. Rows use the canonical 8/24
+/// recipe: `AppSpacing.sm` (8pt) vertically and `AppSpacing.lg` (24pt)
+/// horizontally. The molecule also enforces a 52pt minimum row height (matching
+/// `PreviewListRow` / `AppCardListAddRow`) so single-line text rows never
+/// collapse to a 44pt tap-target floor. Use this anywhere you'd otherwise
+/// compose `AppCard` +
 /// `AppDividedList` by hand — that combination is banned in feature code
 /// (see CLAUDE.md §5 + `.claude/hooks/ui-banned-list.sh`).
 ///
@@ -1979,31 +2193,65 @@ struct AppCardList<Data, ID, RowContent, Trailing>: View
     private let trailing: () -> Trailing
 
     var body: some View {
-        // verticalInset matches the row's internal `.padding(.vertical, .sm)` so
-        // edge breathing (8 + 8 = 16pt) reads symmetrically against between-rows
-        // breathing (8 + 1pt divider + 8 = 17pt). Anything smaller pinches the
-        // first/last row against the card edge.
-        //
-        // Row min-height of 52pt matches `PreviewListRow` and `AppCardListAddRow`
-        // so single-line rows (`OnboardingSplitBuilderView`) get the canonical
-        // breathing room for free instead of collapsing to a 44pt tap-target floor.
-        AppCard(contentInset: 0, verticalInset: AppSpacing.sm) {
+        // Card chrome owns no padding (`contentInset: 0`, `verticalInset: 0`)
+        // so `AppDivider` hairlines run card-edge to card-edge. Each row's
+        // padding/frame recipe is applied via the canonical
+        // `.appCardRowChrome()` modifier so any other card-hosted list (e.g.
+        // `AppSessionHighlightCard.belowContent`) gets the same rhythm without
+        // forking the recipe.
+        AppCard(contentInset: 0, verticalInset: 0) {
             VStack(alignment: .leading, spacing: 0) {
                 AppDividedList(data: data, id: id) { item in
-                    row(item)
-                        .padding(.horizontal, AppSpacing.lg)
-                        .frame(maxWidth: .infinity, minHeight: 52, alignment: .leading)
+                    row(item).appCardRowChrome()
                 }
                 if Trailing.self != EmptyView.self {
                     if !data.isEmpty {
                         AppDivider()
                     }
-                    trailing()
-                        .padding(.horizontal, AppSpacing.lg)
-                        .frame(maxWidth: .infinity, minHeight: 52, alignment: .leading)
+                    trailing().appCardRowChrome()
                 }
             }
         }
+        .frame(minWidth: 0, idealWidth: 0, maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+/// Canonical row chrome for content that sits as a row inside a card's
+/// full-bleed `AppDividedList`. Layered as **frame-first, padding-second** so
+/// caller content is reliably centered before outer breathing is added:
+///
+///   1. `fixedSize(vertical: true)` lets the inner take its natural vertical
+///      size (not stretch).
+///   2. Horizontal pad (24pt each side) for column inset.
+///   3. `frame(minHeight: 52, alignment: .leading)` enforces the canonical
+///      tap-target floor and *vertically centers* row content within it —
+///      single-line `Text` / `TextField` get a guaranteed center.
+///   4. Outer 8pt vertical padding adds the documented list-in-card breathing.
+///
+/// Net visible spacing for any single-line row is identical above and below
+/// the content — first / last rows match mid rows whether the boundary is a
+/// card edge or an `AppDivider` hairline. Rows with taller content flow past
+/// the 52pt floor; the wrapper never clamps them.
+///
+/// Use directly on row content inside an `AppDividedList` that runs full-bleed
+/// inside a card (e.g. `AppCardList`, `AppSessionHighlightCard.belowContent`).
+/// Never compose hand-rolled `.padding(.horizontal, .lg).padding(.vertical, .sm)`
+/// stacks instead — this is the single source of truth.
+private struct AppCardRowChrome: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.horizontal, AppSpacing.lg)
+            .frame(minWidth: 0, maxWidth: .infinity, minHeight: 52, alignment: .leading)
+            .padding(.vertical, AppSpacing.sm)
+    }
+}
+
+extension View {
+    /// Apply the canonical card-row recipe (24pt horizontal, 8pt vertical,
+    /// 52pt min-height). See `AppCardRowChrome` for layering rationale.
+    func appCardRowChrome() -> some View {
+        modifier(AppCardRowChrome())
     }
 }
 
@@ -2076,6 +2324,132 @@ struct AppCardListAddRow: View {
     }
 }
 
+// MARK: - Reorderable rows
+
+/// Canonical drag-to-reorder row recipe. Apply to a row inside `AppCardList`
+/// to make the **entire row** the drag affordance (not just a 44pt icon),
+/// dim the source row in place while it floats, fire a medium-impact haptic
+/// on lift, and render a custom Bond-fill pill as the floating preview so the
+/// row reads as a single card plucked from the list.
+///
+/// One canonical recipe — never hand-roll `.onDrag` on a sub-element of a
+/// reorderable row. The "only the hamburger highlights, hard to grab" failure
+/// mode is what this molecule exists to prevent.
+///
+/// Reduce Motion: opacity dim cross-fades instantly; drag-and-drop is
+/// unchanged. Pair the call-site `DropDelegate` with
+/// `withAnimation(reduceMotion ? nil : .appConfirm) { ... }` for the swap.
+///
+/// Usage:
+/// ```swift
+/// rowContent
+///     .appReorderable(
+///         id: exercise.id,
+///         draggedID: $draggedExerciseID,
+///         reduceMotion: reduceMotion
+///     ) {
+///         ExerciseRowDragPreview(exercise: exercise)
+///     }
+/// ```
+extension View {
+    func appReorderable<Preview: View>(
+        id: UUID,
+        draggedID: Binding<UUID?>,
+        reduceMotion: Bool,
+        @ViewBuilder preview: @escaping () -> Preview
+    ) -> some View {
+        modifier(
+            AppReorderableRow(
+                id: id,
+                draggedID: draggedID,
+                reduceMotion: reduceMotion,
+                preview: preview
+            )
+        )
+    }
+}
+
+private struct AppReorderableRow<Preview: View>: ViewModifier {
+    let id: UUID
+    @Binding var draggedID: UUID?
+    let reduceMotion: Bool
+    let preview: () -> Preview
+
+    func body(content: Content) -> some View {
+        let isDragged = draggedID == id
+        return content
+            .opacity(isDragged ? 0.25 : 1.0)
+            .appAnimation(.appConfirm, value: isDragged, reduceMotion: reduceMotion)
+            .onDrag {
+                draggedID = id
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                return NSItemProvider(object: id.uuidString as NSString)
+            } preview: {
+                preview()
+            }
+    }
+}
+
+/// Tick-haptic for a successful reorder swap. Call from a `DropDelegate`'s
+/// `dropEntered` after the indices change — pairs with `appReorderable`'s
+/// lift haptic so the user feels a confident "pluck → tick → settle" sequence
+/// as rows reflow under the floating preview. Lighter than the lift on
+/// purpose: the tick is a confirmation, not a reannouncement of the gesture.
+enum AppReorderHaptic {
+    static func swap() {
+        UISelectionFeedbackGenerator().selectionChanged()
+    }
+}
+
+/// Expand/collapse card — chevron-toggled header above an optional body.
+/// Default chrome is `AppCard`-style fill with a smaller `AppRadius.md` corner
+/// so it nests cleanly inside other cards (`WorkoutCommandCard` neighbour, etc.).
+/// Pass `cornerRadius: AppRadius.lg` for a top-level disclosure card; default
+/// `md` is right for nested usage. Header content lays out to the leading edge;
+/// the chevron is appended automatically and rotates 180° on expand.
+///
+/// Animation is owned here — call sites do not need to wrap `isExpanded.toggle()`
+/// in `withAnimation`. Reduce Motion is honored via `appAnimation`.
+struct AppDisclosureCard<Header: View, Content: View>: View {
+    @Binding var isExpanded: Bool
+    var cornerRadius: CGFloat = AppRadius.md
+    @ViewBuilder let header: () -> Header
+    @ViewBuilder let content: () -> Content
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Button {
+                withAnimation(reduceMotion ? nil : .appState) {
+                    isExpanded.toggle()
+                }
+            } label: {
+                HStack(spacing: AppSpacing.sm) {
+                    header()
+                    Spacer(minLength: 0)
+                    AppIcon.chevronDown.image(size: 13, weight: .semibold)
+                        .foregroundStyle(AppColor.textSecondary)
+                        .rotationEffect(.degrees(isExpanded ? 180 : 0))
+                        .appAnimation(.appState, value: isExpanded, reduceMotion: reduceMotion)
+                }
+                .padding(.horizontal, AppSpacing.md)
+                .padding(.vertical, AppSpacing.sm)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(ScaleButtonStyle())
+
+            if isExpanded {
+                content()
+            }
+        }
+        .background(
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .fill(AppColor.cardBackground)
+        )
+    }
+}
+
 /// Active-workout hero — set progress strip + exercise name + metric hero +
 /// primary "Log set" CTA, with an optional rest-timer strip at the bottom.
 /// This is the central surface of `ActiveWorkoutView`; never build a page-local
@@ -2085,6 +2459,17 @@ struct WorkoutCommandCard: View {
         case active
         case completed
         case disabled
+    }
+
+    /// One progressive-overload nudge rendered as a flat caps text-button in
+    /// `metricSupportingSlot`. The label reads "+ 1 rep" / "+ 2.5 kg" /
+    /// "+ 5 lb"; the tap handler opens the AdjustResultSheet pre-filled to
+    /// the bumped target. Visual style mirrors the in-hero "Adjust" caps
+    /// label so both affordances read as siblings — same component vocabulary,
+    /// just different prefills.
+    struct SuggestionAction {
+        let label: String
+        let onTap: () -> Void
     }
 
     let progressSteps: [SetProgressIndicator.Step]
@@ -2112,18 +2497,31 @@ struct WorkoutCommandCard: View {
     /// — same atom layer, distinct moment. The `setLoggedSignal` haptic still fires; this
     /// stacks for the milestone feel.
     var setPRSignal: Int? = nil
+    /// Sentence-case description of the prior best the just-logged set beat — e.g.
+    /// "Beat 145 kg × 8". Rendered as a quiet caption beneath the "Personal record"
+    /// badge so the lifter knows *what* they beat, not just *that* they beat something.
+    /// Visible only while `prBadgeVisible` is true (~3s dwell). Optional: legacy callers
+    /// can omit it and the badge stays single-line.
+    var priorBestText: String? = nil
     var timerValue: String? = nil
     var timerState: RestTimerControl.State = .idle
     var onTimerDecrease: (() -> Void)? = nil
     var onTimerToggle: (() -> Void)? = nil
     var onTimerIncrease: (() -> Void)? = nil
+    /// Progressive-overload nudges rendered in `metricSupportingSlot` as a row of
+    /// flat caps text-buttons matching the in-hero "Adjust" affordance. Each entry
+    /// is a label + tap handler; the card iterates and renders one button per
+    /// entry. Empty array → slot falls back to `metricSupportingText` (or empty).
+    /// Source-of-truth logic for *what* to suggest lives in `SetSuggestion`
+    /// (Features/Today/ActiveWorkoutView.swift) — this card is presentation only.
+    var suggestionActions: [SuggestionAction] = []
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// Toggles for ~800ms each time `setPRSignal` increments — replaces the quiet
     /// `metricSupportingText` line ("Last session …") with a Verde "Personal record"
     /// chip so the peak emotional moment of a session is held visibly long enough
     /// to register before the metric prefill cross-fades to the next set.
-    @State private var prBadgeVisible: Bool = false
+    @SwiftUI.State private var prBadgeVisible: Bool = false
 
     var body: some View {
         VStack(alignment: .center, spacing: 0) {
@@ -2142,9 +2540,10 @@ struct WorkoutCommandCard: View {
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
 
-                metricHero
-
-                metricSupportingSlot
+                VStack(alignment: .center, spacing: AppSpacing.sm) {
+                    metricHero
+                    metricSupportingSlot
+                }
 
                 if state != .completed {
                     AppPrimaryButton(
@@ -2183,10 +2582,15 @@ struct WorkoutCommandCard: View {
         }
     }
 
+    /// Dwell on the PR badge — 3.0 s gives the lifter time to read "Personal record"
+    /// + the prior-best delta under fatigue, without holding the slot long enough to
+    /// stall the next-set prefill cross-fade. The previous 0.8 s flashed before the
+    /// glance landed; the heavy haptic was firing alone.
+    private static let prBadgeDwellSeconds: UInt64 = 3
     private func showPRBadge() {
         prBadgeVisible = true
         Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 800_000_000)
+            try? await Task.sleep(nanoseconds: Self.prBadgeDwellSeconds * 1_000_000_000)
             prBadgeVisible = false
         }
     }
@@ -2195,18 +2599,54 @@ struct WorkoutCommandCard: View {
     private var metricSupportingSlot: some View {
         Group {
             if prBadgeVisible {
-                HStack(spacing: AppSpacing.xs) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(AppFont.body.font)
-                        .foregroundStyle(AppColor.success)
-                    Text("Personal record")
-                        .font(AppFont.label.font)
-                        .foregroundStyle(AppColor.textPrimary)
+                VStack(spacing: AppSpacing.xs) {
+                    HStack(spacing: AppSpacing.xs) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(AppFont.body.font)
+                            .foregroundStyle(AppColor.success)
+                        Text(AppCopy.Workout.personalRecord)
+                            .font(AppFont.caption.font)
+                            .foregroundStyle(AppColor.textPrimary)
+                    }
+                    .padding(.horizontal, AppSpacing.smd)
+                    .padding(.vertical, AppSpacing.xs)
+                    .background(AppColor.successSoft, in: Capsule())
+
+                    if let priorBestText, !priorBestText.isEmpty {
+                        Text(priorBestText)
+                            .font(AppFont.caption.font)
+                            .foregroundStyle(AppColor.textSecondary)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .monospacedDigit()
+                    }
                 }
-                .padding(.horizontal, AppSpacing.smd)
-                .padding(.vertical, AppSpacing.xs)
-                .background(AppColor.successSoft, in: Capsule())
-                .accessibilityLabel("Personal record")
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(
+                    priorBestText.map { "\(AppCopy.Workout.personalRecord). \($0)." }
+                        ?? AppCopy.Workout.personalRecord
+                )
+            } else if !suggestionActions.isEmpty {
+                HStack(spacing: AppSpacing.sm) {
+                    ForEach(Array(suggestionActions.enumerated()), id: \.offset) { _, action in
+                        Button(action: action.onTap) {
+                            Text(action.label)
+                                .appCapsLabel(.smallLabel)
+                                .foregroundStyle(AppColor.textPrimary)
+                                .padding(.horizontal, AppSpacing.md)
+                                .padding(.vertical, AppSpacing.smd)
+                                .frame(minHeight: 44)
+                                .background(
+                                    AppColor.controlBackground,
+                                    in: RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous)
+                                )
+                                .contentShape(
+                                    RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous)
+                                )
+                        }
+                        .buttonStyle(ScaleButtonStyle())
+                    }
+                }
             } else if let metricSupportingText, !metricSupportingText.isEmpty {
                 Text(metricSupportingText)
                     .font(AppFont.caption.font)
@@ -2235,7 +2675,7 @@ struct WorkoutCommandCard: View {
                         metricValueText
 
                         Text("Adjust")
-                            .font(AppFont.smallLabel.font)
+                            .appCapsLabel(.smallLabel)
                             .foregroundStyle(AppColor.textSecondary)
                     }
                     .frame(maxWidth: .infinity)
@@ -2354,15 +2794,25 @@ struct SessionStateBar: View {
     private var nextExerciseButton: some View {
         Group {
             if case .nextExercise(let subtitle) = state {
-                AppSecondaryButton(
-                    AppCopy.Workout.nextExercise,
-                    isEnabled: onAdvance != nil,
-                    icon: nil,
-                    detail: subtitle,
-                    detailAlignment: .center,
-                    detailLayout: .inline,
-                    action: { onAdvance?() }
-                )
+                Button(action: { onAdvance?() }) {
+                    HStack(spacing: AppSpacing.xs) {
+                        Text(AppCopy.Workout.nextExercise)
+                            .foregroundStyle(AppColor.textSecondary)
+                        Text(subtitle)
+                            .foregroundStyle(AppColor.textPrimary)
+                    }
+                    .font(AppFont.caption.font)
+                    .frame(maxWidth: .infinity, minHeight: 60)
+                    .background(
+                        AppColor.controlBackground,
+                        in: RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous)
+                    )
+                    .contentShape(
+                        RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous)
+                    )
+                }
+                .buttonStyle(ScaleButtonStyle())
+                .disabled(onAdvance == nil)
                 .padding(.horizontal, AppSpacing.md)
                 .padding(.top, AppSpacing.sm)
                 .padding(.bottom, AppSpacing.lg)
@@ -2474,13 +2924,13 @@ struct SettingsSection<Content: View>: View {
     }
 
     /// In documented "list mode" (`contentInset == .sm`), the inner row already
-    /// pads itself vertically. Compounding the card's 8pt vertical inset on top
-    /// produces asymmetric edge-vs-between spacing (12pt edges, 9pt between for
-    /// `.display` rows). Drop the card's vertical to `xs` (4pt) so 4 + 4 = 8pt
-    /// edges align with 4 + divider + 4 = 9pt between rows. For non-list modes,
-    /// keep symmetric padding (`nil` → uses `contentInset`).
+    /// pads itself vertically by `AppSpacing.sm` (8pt — both `.tappable` and
+    /// `.display` `AppListRow` styles). Match the card's vertical inset to that
+    /// same 8pt so 8 + 8 = 16pt edges align with 8 + divider + 8 = 17pt between
+    /// rows — the divider hairline absorbs the 1pt asymmetry. For non-list
+    /// modes, keep symmetric padding (`nil` → uses `contentInset`).
     private var resolvedVerticalInset: CGFloat? {
-        contentInset == AppSpacing.sm ? AppSpacing.xs : nil
+        contentInset == AppSpacing.sm ? AppSpacing.sm : nil
     }
 }
 
@@ -2508,6 +2958,90 @@ struct SecondaryButtonConfig {
     let action: () -> Void
 }
 
+/// Native bottom-sheet shell: centered `NavigationStack` title, top-right native
+/// text action, and `AppScreen` content/CTA layout. Matches sheets like
+/// Today's routine; reserve `ProductTopBar` for product/root surfaces.
+struct AppSheetScreen<Content: View>: View {
+    enum DismissActionPlacement {
+        case cancellation
+        case confirmation
+
+        var toolbarPlacement: ToolbarItemPlacement {
+            switch self {
+            case .cancellation: return .cancellationAction
+            case .confirmation: return .confirmationAction
+            }
+        }
+
+        var role: ButtonRole? {
+            switch self {
+            case .cancellation: return .cancel
+            case .confirmation: return nil
+            }
+        }
+    }
+
+    let title: String
+    let primaryButton: PrimaryButtonConfig?
+    let secondaryButton: SecondaryButtonConfig?
+    let dismissLabel: String
+    let dismissActionPlacement: DismissActionPlacement
+    let onDismissAction: (() -> Void)?
+    var usesOuterScroll: Bool
+    var showsKeyboardDismissToolbar: Bool
+    @ViewBuilder let content: () -> Content
+
+    init(
+        title: String,
+        primaryButton: PrimaryButtonConfig? = nil,
+        secondaryButton: SecondaryButtonConfig? = nil,
+        dismissLabel: String = AppCopy.Nav.cancel,
+        dismissActionPlacement: DismissActionPlacement = .confirmation,
+        onDismissAction: (() -> Void)? = nil,
+        usesOuterScroll: Bool = true,
+        showsKeyboardDismissToolbar: Bool = true,
+        @ViewBuilder content: @escaping () -> Content
+    ) {
+        self.title = title
+        self.primaryButton = primaryButton
+        self.secondaryButton = secondaryButton
+        self.dismissLabel = dismissLabel
+        self.dismissActionPlacement = dismissActionPlacement
+        self.onDismissAction = onDismissAction
+        self.usesOuterScroll = usesOuterScroll
+        self.showsKeyboardDismissToolbar = showsKeyboardDismissToolbar
+        self.content = content
+    }
+
+    var body: some View {
+        NavigationStack {
+            AppScreen(
+                primaryButton: primaryButton,
+                secondaryButton: secondaryButton,
+                showsNativeNavigationBar: true,
+                usesOuterScroll: usesOuterScroll,
+                showsKeyboardDismissToolbar: showsKeyboardDismissToolbar
+            ) {
+                content()
+            }
+            .navigationBarTitleTruncated(title)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                if let onDismissAction {
+                    ToolbarItem(placement: dismissActionPlacement.toolbarPlacement) {
+                        Button(role: dismissActionPlacement.role, action: onDismissAction) {
+                            Text(dismissLabel)
+                        }
+                        .appToolbarTextStyle()
+                    }
+                }
+            }
+            .appNavigationBarChrome()
+        }
+        .tint(AppColor.accent)
+    }
+}
+
 /// Page-level template: horizontal padding, optional `customHeader` (typically
 /// `ProductTopBar` for root tabs) or system `NavigationStack` chrome, scrollable
 /// body, optional sticky primary CTA. **Every full screen in the app composes
@@ -2518,51 +3052,71 @@ struct AppScreen<Content: View>: View {
     let primaryButton: PrimaryButtonConfig?
     let secondaryButton: SecondaryButtonConfig?
     let customHeader: AnyView?
+    /// Optional capsule accessory that hovers above the primary CTA — typically
+    /// `AppFloatingPillButton`. Auto-hides on scroll-down, reveals on scroll-up,
+    /// always visible at the top of the scroll. Renders without chrome
+    /// background so scroll content fades behind it via `appScrollEdgeSoft`.
+    let floatingAccessory: AnyView?
     var hidesNavigationBar: Bool = false
     var showsNativeNavigationBar: Bool = false
     /// When `false`, the screen does not wrap content in `ScrollView` — use for fixed dashboards where an inner control (e.g. `PreviewListContainer`) owns vertical scrolling.
     var usesOuterScroll: Bool = true
     /// When `true`, adds a trailing **Done** on the keyboard accessory bar to dismiss first responder. Turn **off** for flows that use the standard keyboard (Return / Next / Done) so the accessory does not appear without a visible keyboard.
     var showsKeyboardDismissToolbar: Bool = true
+    /// Page surface fill. Default `AppColor.background` (Milk) keeps every screen
+    /// rendering as an opaque page. Pass a `nil` to suppress the fill so a
+    /// parent container can own a single shared page surface (used by
+    /// `OnboardingFlow`, where the page must stay still while step content
+    /// slides in from the trailing edge).
+    var surface: Color? = AppColor.background
     @ViewBuilder let content: () -> Content
+
+    @State private var floatingAccessoryHidden: Bool = false
 
     init(
         primaryButton: PrimaryButtonConfig? = nil,
         secondaryButton: SecondaryButtonConfig? = nil,
         customHeader: AnyView? = nil,
+        floatingAccessory: AnyView? = nil,
         hidesNavigationBar: Bool = false,
         showsNativeNavigationBar: Bool = false,
         usesOuterScroll: Bool = true,
         showsKeyboardDismissToolbar: Bool = true,
+        surface: Color? = AppColor.background,
         @ViewBuilder content: @escaping () -> Content
     ) {
         self.primaryButton = primaryButton
         self.secondaryButton = secondaryButton
         self.customHeader = customHeader
+        self.floatingAccessory = floatingAccessory
         self.hidesNavigationBar = hidesNavigationBar
         self.showsNativeNavigationBar = showsNativeNavigationBar
         self.usesOuterScroll = usesOuterScroll
         self.showsKeyboardDismissToolbar = showsKeyboardDismissToolbar
+        self.surface = surface
         self.content = content
     }
 
     private var hasBottomBar: Bool { primaryButton != nil || secondaryButton != nil }
+    private var hasBottomChrome: Bool { hasBottomBar || floatingAccessory != nil }
 
     /// Max content width — keeps the mobile layout on iPad / Mac.
     private var maxContentWidth: CGFloat { 430 }
 
-    private var paddedMainContent: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.md) {
-            content()
-        }
-        .padding(.horizontal, AppSpacing.md)
-        .padding(.top, showsNativeNavigationBar ? AppSpacing.md : (customHeader == nil ? AppSpacing.md : AppSpacing.sm))
-        .padding(.bottom, hasBottomBar ? 100 : AppSpacing.md)
-        .frame(maxWidth: maxContentWidth)
-        .frame(maxWidth: .infinity)
-    }
+    /// Safe-area chrome always needs a real backdrop because scroll content can
+    /// pass underneath it. `surface == nil` only means the page fill is owned by
+    /// a parent (OnboardingFlow); the pinned header / CTA bar still resolve to
+    /// Milk so `appScrollEdgeSoft` has an opaque system-colored edge to fade into.
+    private var chromeSurface: Color { surface ?? AppColor.background }
 
-    var body: some View {
+    /// Amount fixed chrome overlaps the scroll view. This gives iOS'
+    /// `scrollEdgeEffectStyle(.soft)` real space to fade content behind pinned
+    /// bars; a zero-spacing safe-area inset clips content at the bar edge and
+    /// reads as a hard block.
+    private var scrollChromeOverlap: CGFloat { AppSpacing.lg }
+
+    @ViewBuilder
+    private var scrollContent: some View {
         Group {
             if usesOuterScroll {
                 ScrollView {
@@ -2571,49 +3125,136 @@ struct AppScreen<Content: View>: View {
                 .scrollDismissesKeyboard(.interactively)
                 .appScrollEdgeSoft(
                     top: customHeader != nil || !hidesNavigationBar || showsNativeNavigationBar,
-                    bottom: hasBottomBar
+                    bottom: hasBottomChrome
                 )
+                .onScrollGeometryChange(for: CGFloat.self) { geometry in
+                    geometry.contentOffset.y
+                } action: { oldOffset, newOffset in
+                    guard floatingAccessory != nil else { return }
+                    let delta = newOffset - oldOffset
+                    let threshold: CGFloat = 6
+                    if newOffset <= 4 {
+                        if floatingAccessoryHidden {
+                            withAnimation(.appState) { floatingAccessoryHidden = false }
+                        }
+                    } else if delta > threshold {
+                        if !floatingAccessoryHidden {
+                            withAnimation(.appState) { floatingAccessoryHidden = true }
+                        }
+                    } else if delta < -threshold {
+                        if floatingAccessoryHidden {
+                            withAnimation(.appState) { floatingAccessoryHidden = false }
+                        }
+                    }
+                }
             } else {
                 paddedMainContent
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
         }
-        .safeAreaInset(edge: .top, spacing: 0) {
-            if !showsNativeNavigationBar, let customHeader {
-                customHeader
-                    .padding(.horizontal, AppSpacing.md)
-                    .padding(.top, AppSpacing.sm)
-                    .padding(.bottom, AppSpacing.md)
-                    .background(AppColor.background)
-            }
+    }
+
+    private var paddedMainContent: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.md) {
+            content()
         }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            if hasBottomBar {
-                VStack(spacing: AppSpacing.xs) {
-                    if let primaryButton {
-                        AppPrimaryButton(
-                            primaryButton.label,
-                            isEnabled: primaryButton.isEnabled,
-                            isLoading: primaryButton.isLoading,
-                            action: primaryButton.action
+        .padding(.horizontal, AppSpacing.md)
+        .padding(.top, showsNativeNavigationBar ? AppSpacing.md : (customHeader == nil ? AppSpacing.md : AppSpacing.sm))
+        .padding(.bottom, AppSpacing.md)
+        .frame(maxWidth: maxContentWidth)
+        .frame(maxWidth: .infinity)
+    }
+
+    @ViewBuilder
+    private var topChrome: some View {
+        if !showsNativeNavigationBar, let customHeader {
+            customHeader
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, AppSpacing.md)
+                .padding(.top, AppSpacing.sm)
+                .padding(.bottom, AppSpacing.md)
+                .frame(maxWidth: maxContentWidth)
+                .frame(maxWidth: .infinity)
+                .background {
+                    AppScreenChromeBackground(surface: chromeSurface)
+                }
+        }
+    }
+
+    @ViewBuilder
+    private var bottomChrome: some View {
+        if hasBottomChrome {
+            VStack(spacing: 0) {
+                // Floating accessory hovers above the CTA: rendered without the
+                // chrome backdrop so scroll content fades behind it via
+                // `appScrollEdgeSoft`. Toggled via scroll direction in
+                // `scrollContent`'s `onScrollGeometryChange`.
+                if let floatingAccessory, !floatingAccessoryHidden {
+                    floatingAccessory
+                        .padding(.top, AppSpacing.sm)
+                        .padding(.bottom, hasBottomBar ? AppSpacing.sm : 0)
+                        .frame(maxWidth: maxContentWidth)
+                        .frame(maxWidth: .infinity)
+                        .transition(
+                            .opacity.combined(with: .offset(y: 12))
                         )
+                }
+
+                if hasBottomBar {
+                    VStack(spacing: AppSpacing.xs) {
+                        if let primaryButton {
+                            AppPrimaryButton(
+                                primaryButton.label,
+                                isEnabled: primaryButton.isEnabled,
+                                isLoading: primaryButton.isLoading,
+                                action: primaryButton.action
+                            )
+                        }
+                        if let secondaryButton {
+                            AppGhostButton(
+                                secondaryButton.label,
+                                isEnabled: secondaryButton.isEnabled,
+                                action: secondaryButton.action
+                            )
+                        }
                     }
-                    if let secondaryButton {
-                        AppGhostButton(
-                            secondaryButton.label,
-                            isEnabled: secondaryButton.isEnabled,
-                            action: secondaryButton.action
-                        )
+                    .padding(.top, AppSpacing.md)
+                    .padding(.horizontal, AppSpacing.md)
+                    .padding(.bottom, AppSpacing.sm)
+                    .frame(maxWidth: maxContentWidth)
+                    .frame(maxWidth: .infinity)
+                    .background {
+                        AppScreenChromeBackground(surface: chromeSurface)
                     }
                 }
-                .frame(maxWidth: maxContentWidth - AppSpacing.md * 2)
-                .padding(.horizontal, AppSpacing.md)
-                .padding(.bottom, AppSpacing.sm)
-                .frame(maxWidth: .infinity)
-                .background(AppColor.background)
             }
         }
-        .background(AppColor.background.ignoresSafeArea())
+    }
+
+    @ViewBuilder
+    private var contentWithChrome: some View {
+        if #available(iOS 26.0, *) {
+            scrollContent
+                .safeAreaBar(edge: .top, spacing: customHeader == nil ? 0 : -scrollChromeOverlap) {
+                    topChrome
+                }
+                .safeAreaBar(edge: .bottom, spacing: hasBottomChrome ? -scrollChromeOverlap : 0) {
+                    bottomChrome
+                }
+        } else {
+            scrollContent
+                .safeAreaInset(edge: .top, spacing: customHeader == nil ? 0 : -scrollChromeOverlap) {
+                    topChrome
+                }
+                .safeAreaInset(edge: .bottom, spacing: hasBottomChrome ? -scrollChromeOverlap : 0) {
+                    bottomChrome
+                }
+        }
+    }
+
+    var body: some View {
+        contentWithChrome
+        .background((surface ?? Color.clear).ignoresSafeArea())
         .toolbar(showsNativeNavigationBar ? .automatic : .hidden, for: .navigationBar)
         .toolbar {
             if showsKeyboardDismissToolbar {
@@ -2635,6 +3276,18 @@ struct AppScreen<Content: View>: View {
     }
 }
 
+private struct AppScreenChromeBackground: View {
+    let surface: Color
+
+    var body: some View {
+        if #available(iOS 26.0, *) {
+            surface.backgroundExtensionEffect()
+        } else {
+            surface
+        }
+    }
+}
+
 // MARK: - Shared modifiers
 
 extension View {
@@ -2648,8 +3301,9 @@ extension View {
     ) -> some View {
         self
             .padding(.horizontal, horizontalPadding)
+            // `height` is a hint for the minimum (≥44pt hit-area floor); the
+            // field grows when Dynamic Type or wrapped content needs it.
             .frame(minHeight: max(44, height))
-            .frame(height: height)
             .background(AppColor.cardBackground)
             .overlay {
                 RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous)
@@ -2694,6 +3348,29 @@ extension View {
             .modifier(AppCardElevation())
     }
 
+    /// Native `List` row chrome for plain searchable lists that still need
+    /// platform behavior (navigation, swipe actions, search). Keeps the same
+    /// 24pt horizontal content inset as `AppCardList` rows and suppresses the
+    /// stray top separator above the first visible row while preserving bottom
+    /// separators between rows by default.
+    func appPlainListRowChrome(
+        separator: Visibility = .visible,
+        background: Color = AppColor.cardBackground
+    ) -> some View {
+        self
+            .listRowInsets(
+                EdgeInsets(
+                    top: AppSpacing.sm,
+                    leading: AppSpacing.lg,
+                    bottom: AppSpacing.sm,
+                    trailing: AppSpacing.lg
+                )
+            )
+            .listRowSeparator(.hidden, edges: .top)
+            .listRowSeparator(separator, edges: .bottom)
+            .listRowBackground(background)
+    }
+
     /// Apply the canonical card chrome to a view that already provides its own
     /// background and clip shape (e.g. ad-hoc cards that can't use `AppCard` or
     /// `appCardStyle`). Renders flat — fill contrast carries separation.
@@ -2734,6 +3411,17 @@ extension View {
             .searchPresentationToolbarBehavior(.avoidHidingContent)
     }
 
+    /// Canonical exercise-picker `.searchable` wiring. Uses iOS 26's native
+    /// bottom-toolbar search placement so picker sheets keep search reachable
+    /// near the thumb while the exercise list stays directly under the header.
+    func appExerciseSearchable(text: Binding<String>) -> some View {
+        self
+            .searchable(text: text, placement: .toolbar, prompt: AppCopy.Search.exercises)
+            .searchToolbarBehavior(.minimize)
+            .textInputAutocapitalization(.words)
+            .autocorrectionDisabled()
+    }
+
     /// Canonical style for text-label toolbar buttons (e.g. "History", "Browse").
     /// Matches iOS-native bold top-bar actions so every screen reads the same weight.
     func appToolbarTextStyle() -> some View {
@@ -2771,10 +3459,18 @@ extension View {
 
 // MARK: - Icon circle (shared styling for chevron buttons + status badges)
 
-/// Canonical 36×36 circular surface for an icon. Used by both interactive
-/// nav chevrons and read-only status badges so the icon weight/size stays
-/// consistent across the product.
+/// Canonical 36×36 icon-on-soft-fill bubble. Defaults to a circle (used by
+/// nav chevrons + status badges); pass `shape: .roundedRect(radius:)` for
+/// the rounded-square variant used by paywall benefit rows + onboarding
+/// option cards. Single primitive across both shapes so the size/weight
+/// of the icon glyph stays consistent everywhere.
 struct AppIconCircle<Icon: View>: View {
+    enum Shape {
+        case circle
+        /// Rounded-square variant — pass the canonical radius (`AppRadius.sm` for 36pt tiles, `AppRadius.md` for 40pt).
+        case roundedRect(radius: CGFloat)
+    }
+
     enum Surface {
         case control                   // grey neutral
         case accentSoft                // `AppColor.accentSoft` (adaptive warm neutral / dim white)
@@ -2794,14 +3490,26 @@ struct AppIconCircle<Icon: View>: View {
     }
 
     var diameter: CGFloat = 36
+    var shape: Shape = .circle
     var surface: Surface = .control
     @ViewBuilder let icon: () -> Icon
 
     var body: some View {
-        icon()
-            .frame(width: diameter, height: diameter)
+        // Scale the bubble diameter with Dynamic Type so the chrome around the
+        // glyph grows in lockstep with `AppIcon.image`'s scaled point size —
+        // otherwise large-text users see a tiny icon floating in a fixed
+        // 36×36 well. Anchored to `.body` to match the icon scaling above.
+        let scaledDiameter = UIFontMetrics(forTextStyle: .body).scaledValue(for: diameter)
+        let glyph = icon()
+            .frame(width: scaledDiameter, height: scaledDiameter)
             .background(surface.backgroundColor)
-            .clipShape(Circle())
+
+        switch shape {
+        case .circle:
+            glyph.clipShape(Circle())
+        case .roundedRect(let radius):
+            glyph.clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
+        }
     }
 }
 
@@ -2819,16 +3527,46 @@ enum AppIconCircleSize {
 /// track via fill contrast (white on grey), not shadow — matches the
 /// flat-by-fill rule from visual-language.md §4.
 struct AppSegmentedControl<Item: Hashable & Identifiable>: View {
+    enum Size {
+        case compact
+        case tall
+
+        var verticalPadding: CGFloat {
+            switch self {
+            case .compact: return AppSpacing.smd
+            case .tall:    return AppSpacing.lg
+            }
+        }
+
+        var minHeight: CGFloat { 44 }
+    }
+
     @Binding var selection: Item
     let items: [Item]
+    var size: Size = .compact
     let title: (Item) -> String
 
-    private let height: CGFloat = 40
-    private let trackRadius: CGFloat = 14
-    private let pillRadius: CGFloat = 11
+    init(
+        selection: Binding<Item>,
+        items: [Item],
+        size: Size = .compact,
+        title: @escaping (Item) -> String
+    ) {
+        self._selection = selection
+        self.items = items
+        self.size = size
+        self.title = title
+    }
+
+    /// Vertical breathing room above and below each label. `.compact` keeps
+    /// mode toggles such as History List/Calendar tight; `.tall` preserves the
+    /// larger set-count picker in workout sheets.
+    private var verticalPadding: CGFloat { size.verticalPadding }
+    private let trackRadius: CGFloat = AppRadius.md
+    private let pillRadius: CGFloat = AppRadius.sm
     /// Uniform inset between the track edge and the pill (applied on all four sides).
     /// Using a single value keeps the pill visually centered inside the track.
-    private let trackPadding: CGFloat = 4
+    private let trackPadding: CGFloat = AppSpacing.xs
 
     private var pillFill: Color { AppColor.cardBackground }
 
@@ -2861,11 +3599,10 @@ struct AppSegmentedControl<Item: Hashable & Identifiable>: View {
             .clipShape(trackShape)
 
             // 3. Labels — drawn above the pill, never clipped so text stays crisp.
-            //    Segment buttons span the full track height (40pt) so each tap
-            //    target meets the 40pt hit-area floor; visual centering is
-            //    unchanged because the text glyph is centered in the frame.
-            //    Horizontal trackPadding still applies so first/last labels
-            //    don't kiss the track edge.
+            //    Segment buttons span the full track height so the tap target
+            //    matches the visual cell; visual centering is unchanged because
+            //    the text glyph is centered in the frame. Horizontal trackPadding
+            //    still applies so first/last labels don't kiss the track edge.
             HStack(spacing: 0) {
                 ForEach(items) { item in
                     let isSelected = item == selection
@@ -2875,10 +3612,10 @@ struct AppSegmentedControl<Item: Hashable & Identifiable>: View {
                         }
                     } label: {
                         Text(title(item))
-                            .font(.geist(.semibold, size: 16))
+                            .font(.geist(.semibold, size: 16, relativeTo: .body))
                             .foregroundStyle(isSelected ? AppColor.textPrimary : AppColor.textSecondary)
                             .frame(maxWidth: .infinity)
-                            .frame(height: height)
+                            .padding(.vertical, verticalPadding)
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
@@ -2886,7 +3623,30 @@ struct AppSegmentedControl<Item: Hashable & Identifiable>: View {
             }
             .padding(.horizontal, trackPadding)
         }
-        .frame(height: height)
+        // Lock to the intrinsic height so a greedy parent (e.g. a sheet's
+        // `.frame(maxHeight: .infinity)`) cannot stretch the GeometryReader
+        // and elongate the pill. The intrinsic height is glyph + verticalPadding.
+        .frame(minHeight: size.minHeight)
+        .fixedSize(horizontal: false, vertical: true)
+    }
+}
+
+extension AppSegmentedControl {
+    /// ID-binding overload for callers whose state tracks the selection by
+    /// `Item.ID` rather than the full `Item` (e.g. when the items carry
+    /// non-trivial collateral like nested arrays). Wraps the ID binding into an
+    /// `Item` proxy so the canonical implementation stays single.
+    init(
+        selection: Binding<Item.ID>,
+        items: [Item],
+        size: Size = .compact,
+        title: @escaping (Item) -> String
+    ) {
+        let proxy = Binding<Item>(
+            get: { items.first(where: { $0.id == selection.wrappedValue }) ?? items[0] },
+            set: { selection.wrappedValue = $0.id }
+        )
+        self.init(selection: proxy, items: items, size: size, title: title)
     }
 }
 

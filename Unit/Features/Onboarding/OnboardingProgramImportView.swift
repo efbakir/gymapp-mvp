@@ -33,6 +33,7 @@ struct OnboardingProgramImportView: View {
     var progressStep: Int
     var progressTotal: Int
     var onContinue: () -> Void
+    var onBack: () -> Void
 
     @State private var pastedText = ""
     @State private var isParsing = false
@@ -51,7 +52,8 @@ struct OnboardingProgramImportView: View {
             ctaEnabled: canParse && !isParsing,
             progressStep: progressStep,
             progressTotal: progressTotal,
-            onContinue: { Task { await parseProgram() } }
+            onContinue: { Task { await parseProgram() } },
+            onBack: onBack
         ) {
             VStack(alignment: .leading, spacing: AppSpacing.md) {
                 AppTextEditor(
@@ -85,7 +87,7 @@ struct OnboardingProgramImportView: View {
             get: { errorMessage != nil },
             set: { if !$0 { errorMessage = nil } }
         )) {
-            Button("OK", role: .cancel) { errorMessage = nil }
+            Button("Got it", role: .cancel) { errorMessage = nil }
         } message: {
             Text(errorMessage ?? "")
         }
@@ -132,29 +134,32 @@ private struct FormatExamplesSheet: View {
                         .contentShape(Rectangle())
                 }
             }
+            .padding(.horizontal, AppSpacing.md)
+            .padding(.top, AppSpacing.lg)
 
-            VStack(alignment: .leading, spacing: AppSpacing.md) {
-                ruleSection(
-                    title: "Day names",
-                    body: "One day name per line: Push, Pull, Legs, Upper, Lower, Full body, Arms, Chest, Back, Shoulders, Day 1–6, or a weekday."
-                )
+            ScrollView {
+                VStack(alignment: .leading, spacing: AppSpacing.md) {
+                    ruleSection(
+                        title: "Day names",
+                        body: "One day name per line: Push, Pull, Legs, Upper, Lower, Full body, Arms, Chest, Back, Shoulders, Day 1–6, or a weekday."
+                    )
 
-                ruleSection(
-                    title: "Exercises",
-                    body: "Below each day, one exercise per line: name, then setsxreps, then weight. Example: Bench press 4x8 60kg."
-                )
+                    ruleSection(
+                        title: "Exercises",
+                        body: "Below each day, one exercise per line: name, then setsxreps, then weight. Example: Bench press 4x8 60kg."
+                    )
 
-                ruleSection(
-                    title: "Weight units",
-                    body: "Use kg, lb, or BW for bodyweight. We convert to your app unit automatically."
-                )
+                    ruleSection(
+                        title: "Weight units",
+                        body: "Use kg, lb, or BW for bodyweight. We convert to your app unit automatically."
+                    )
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, AppSpacing.md)
+                .padding(.bottom, AppSpacing.xl)
             }
-
-            Spacer(minLength: 0)
+            .appScrollEdgeSoft()
         }
-        .padding(.horizontal, AppSpacing.md)
-        .padding(.top, AppSpacing.lg)
-        .padding(.bottom, AppSpacing.xl)
     }
 
     @ViewBuilder
@@ -355,8 +360,6 @@ enum ProgramImportParser {
 }
 
 #Preview {
-    NavigationStack {
-        OnboardingProgramImportView(progressStep: 3, progressTotal: 4) { }
-            .environment(OnboardingViewModel())
-    }
+    OnboardingProgramImportView(progressStep: 3, progressTotal: 4, onContinue: {}, onBack: {})
+        .environment(OnboardingViewModel())
 }

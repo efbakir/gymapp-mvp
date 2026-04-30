@@ -2,14 +2,20 @@
 //  OnboardingView.swift
 //  Unit
 //
-//  Root coordinator for the onboarding flow. Uses NavigationStack so the
-//  user can navigate back at any point without losing their data.
+//  Root coordinator for the onboarding flow.
 //
 //  Routing is state-driven: ContentView shows this view when there is no
 //  program data (new user) or when the user explicitly requests a restart
 //  from Settings. The view never sets a "hasCompletedOnboarding" boolean —
 //  instead, the commit writes real data (Split, DayTemplate, etc.) and
 //  ContentView derives the next screen from that data.
+//
+//  Step swapping uses `OnboardingFlow` (defined below) instead of
+//  `NavigationStack`. NavigationStack push slides the whole view as one
+//  opaque rect, so the Milk page appears to slide between steps even
+//  though every step shares the same surface. `OnboardingFlow` owns one
+//  fixed Milk surface and slides only the step content (header + body +
+//  sticky CTA) over it via the canonical `.appEnter` curve.
 //
 
 import SwiftUI
@@ -78,9 +84,10 @@ enum OnboardingPreferences {
     }
 }
 
-// MARK: - Route
+// MARK: - Step
 
-enum OnboardingRoute: Hashable {
+enum OnboardingStep: Hashable {
+    case splash
     case unitPicker
     case importMethod
     case programImport
@@ -101,46 +108,46 @@ struct OnboardingView: View {
     @AppStorage("unitSystem") private var storedUnitSystem: String = "kg"
     @AppStorage("showOnboardingRestart") private var showOnboardingRestart = false
 
-    @State private var vm = OnboardingViewModel()
-    @State private var path = NavigationPath()
+    @State private var vm: OnboardingViewModel = {
+        let vm = OnboardingViewModel()
+        vm.seedSampleData()
+        return vm
+    }()
+    @State private var step: OnboardingStep = .exercises
+    @State private var history: [OnboardingStep] = []
+    @State private var direction: OnboardingSlideDirection = .none
     @State private var commitError: Bool = false
     @State private var showReplaceConfirmation: Bool = false
     @State private var didLoadPreferences = false
+    @State private var isCommitting: Bool = false
 
     init(isRestart: Bool = false) {
         self.isRestart = isRestart
     }
 
     var body: some View {
-        NavigationStack(path: $path) {
-            OnboardingSplashView(
-                showsDismiss: isRestart,
-                onDismiss: dismissOnboarding
-            ) {
-                path.append(OnboardingRoute.unitPicker)
-            }
-            .navigationDestination(for: OnboardingRoute.self) { route in
-                destinationView(route)
-            }
+        OnboardingFlow(step: step, direction: direction) { current in
+            stepView(current)
         }
         .tint(AppColor.accent)
         .environment(vm)
-        .alert("Something went wrong", isPresented: $commitError) {
-            Button("Try Again", role: .cancel) { }
+        .alert("Save failed", isPresented: $commitError) {
+            Button(AppCopy.Nav.tryAgain, role: .cancel) { }
         } message: {
-            Text("Could not save your program. Please try again.")
+            Text("Try again in a moment.")
         }
         .confirmationDialog(
             "Replace current program?",
             isPresented: $showReplaceConfirmation,
             titleVisibility: .visible
         ) {
-            Button("Replace Program", role: .destructive) {
+            Button("Replace program", role: .destructive) {
+                guard !isCommitting else { return }
                 performCommit(replacingExisting: true)
             }
-            Button("Cancel", role: .cancel) { }
+            Button(AppCopy.Nav.cancel, role: .cancel) { }
         } message: {
-            Text("This will replace your existing program and routines. Your workout history will be kept.")
+            Text("Replaces your current program. Workout history is kept.")
         }
         .onAppear {
             guard !didLoadPreferences else { return }
@@ -150,50 +157,98 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - Route → View
+    // MARK: - Step → View
 
     @ViewBuilder
-    private func destinationView(_ route: OnboardingRoute) -> some View {
-        switch route {
-        case .unitPicker:
-            OnboardingUnitPickerView(progressStep: 1, progressTotal: totalRequiredSteps) { unit in
-                vm.unitSystem = unit
-                path.append(OnboardingRoute.importMethod)
+    private func stepView(_ step: OnboardingStep) -> some View {
+        switch step {
+        case .splash:
+            OnboardingSplashView(
+                showsDismiss: isRestart,
+                onDismiss: dismissOnboarding
+            ) {
+                push(.unitPicker)
             }
+
+        case .unitPicker:
+            OnboardingUnitPickerView(
+                progressStep: 1,
+                progressTotal: totalRequiredSteps,
+                onSelect: { unit in
+                    vm.unitSystem = unit
+                    push(.importMethod)
+                },
+                onBack: pop
+            )
 
         case .importMethod:
-            OnboardingImportMethodView(progressStep: 2, progressTotal: totalRequiredSteps) { method in
-                vm.importMethod = method
-                switch method {
-                case .manual:
-                    path.append(OnboardingRoute.splitBuilder)
-                case .photo, .paste:
-                    path.append(OnboardingRoute.programImport)
-                }
-            }
+            OnboardingImportMethodView(
+                progressStep: 2,
+                progressTotal: totalRequiredSteps,
+                onSelect: { method in
+                    vm.importMethod = method
+                    switch method {
+                    case .manual:
+                        push(.splitBuilder)
+                    case .photo, .paste:
+                        push(.programImport)
+                    }
+                },
+                onBack: pop
+            )
 
         case .programImport:
-            OnboardingProgramImportView(progressStep: 3, progressTotal: totalRequiredSteps) {
-                path.append(OnboardingRoute.exercises)
-            }
+            OnboardingProgramImportView(
+                progressStep: 3,
+                progressTotal: totalRequiredSteps,
+                onContinue: { push(.exercises) },
+                onBack: pop
+            )
 
         case .splitBuilder:
-            OnboardingSplitBuilderView(progressStep: 3, progressTotal: totalRequiredSteps) {
-                path.append(OnboardingRoute.exercises)
-            }
+            OnboardingSplitBuilderView(
+                progressStep: 3,
+                progressTotal: totalRequiredSteps,
+                onContinue: { push(.exercises) },
+                onBack: pop
+            )
 
         case .exercises:
-            OnboardingExercisesView(progressStep: 4, progressTotal: totalRequiredSteps) {
-                commitProgram()
-            }
+            OnboardingExercisesView(
+                progressStep: 4,
+                progressTotal: totalRequiredSteps,
+                isCommitting: isCommitting,
+                onContinue: commitProgram,
+                onBack: pop
+            )
         }
     }
 
     private var totalRequiredSteps: Int { 4 }
 
+    // MARK: - Step navigation
+
+    private func push(_ next: OnboardingStep) {
+        history.append(step)
+        direction = .forward
+        step = next
+    }
+
+    private func pop() {
+        // From the splash, "Back" dismisses the whole onboarding (only
+        // reachable on restart from Settings — first-run users see no Back).
+        guard let previous = history.popLast() else {
+            dismissOnboarding()
+            return
+        }
+        direction = .back
+        step = previous
+    }
+
     // MARK: - Commit
 
     private func commitProgram() {
+        guard !isCommitting else { return }
         if isRestart {
             // Check for existing programs — require explicit confirmation to replace
             let descriptor = FetchDescriptor<Split>()
@@ -207,6 +262,7 @@ struct OnboardingView: View {
     }
 
     private func performCommit(replacingExisting: Bool) {
+        isCommitting = true
         do {
             if replacingExisting {
                 try deleteExistingProgramData()
@@ -216,6 +272,7 @@ struct OnboardingView: View {
             OnboardingPreferences.save(from: vm)
             finishOnboarding()
         } catch {
+            isCommitting = false
             commitError = true
         }
     }
@@ -236,5 +293,73 @@ struct OnboardingView: View {
     private func dismissOnboarding() {
         showOnboardingRestart = false
         dismiss()
+    }
+}
+
+// MARK: - Flow container
+
+/// Direction of the most recent step swap. Drives the asymmetric slide so a
+/// forward push enters from the trailing edge and a back pop enters from the
+/// leading edge — matching the platform mental model the user already has
+/// from native push/pop.
+enum OnboardingSlideDirection {
+    /// First mount; no transition fires.
+    case none
+    /// `push` — new step enters from trailing, old leaves to leading.
+    case forward
+    /// `pop` — new step enters from leading, old leaves to trailing.
+    case back
+}
+
+/// Owns the single Milk page surface and animates step swaps in place.
+///
+/// Why not `NavigationStack`: a NavigationStack push slides both source and
+/// destination as opaque view-controller rects, which makes the shared Milk
+/// page appear to translate between steps even though it never actually
+/// changes. `OnboardingFlow` paints the page once at the root and slides only
+/// the step content layer — header, body, sticky CTA — over a still surface.
+///
+/// Reduce Motion: the slide collapses to a pure cross-fade. Per AppMotion
+/// doctrine, no horizontal translation when the user has the system
+/// preference on.
+struct OnboardingFlow<StepContent: View>: View {
+    let step: OnboardingStep
+    let direction: OnboardingSlideDirection
+    @ViewBuilder let stepContent: (OnboardingStep) -> StepContent
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        ZStack {
+            AppColor.background.ignoresSafeArea()
+
+            stepContent(step)
+                .id(step)
+                .transition(stepTransition)
+        }
+        .animation(reduceMotion ? .appReveal : .appEnter, value: step)
+        // Hide any ambient nav bar (e.g. when this whole flow is pushed onto
+        // TemplatesView's `NavigationStack` via "Start onboarding again").
+        .toolbar(.hidden, for: .navigationBar)
+    }
+
+    private var stepTransition: AnyTransition {
+        if reduceMotion {
+            return .opacity
+        }
+        switch direction {
+        case .forward:
+            return .asymmetric(
+                insertion: .move(edge: .trailing).combined(with: .opacity),
+                removal: .move(edge: .leading).combined(with: .opacity)
+            )
+        case .back:
+            return .asymmetric(
+                insertion: .move(edge: .leading).combined(with: .opacity),
+                removal: .move(edge: .trailing).combined(with: .opacity)
+            )
+        case .none:
+            return .opacity
+        }
     }
 }

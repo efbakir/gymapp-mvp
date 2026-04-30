@@ -1,0 +1,5 @@
+# Stdlib-first — only Pillow and requests are required external deps.
+# argparse, pathlib, subprocess, dataclasses, zoneinfo are all stdlib.
+# Tiny inline .env loader replaces python-dotenv.
+Pillow>=10.0.0
+requests>=2.31.0

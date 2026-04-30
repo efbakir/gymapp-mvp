@@ -33,7 +33,7 @@ struct ProgramLibraryView: View {
         AppScreen(
             showsNativeNavigationBar: true
         ) {
-            VStack(alignment: .leading, spacing: AppSpacing.md) {
+            VStack(alignment: .leading, spacing: AppSpacing.sm) {
                 filterBar
 
                 if filteredPrograms.isEmpty {
@@ -47,8 +47,9 @@ struct ProgramLibraryView: View {
                     }
                 }
             }
+            .appScreenEnter()
         }
-        .navigationTitle("Program Library")
+        .navigationTitle("Program library")
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(for: ProgramTemplate.self) { program in
             ProgramLibraryDetailView(program: program)

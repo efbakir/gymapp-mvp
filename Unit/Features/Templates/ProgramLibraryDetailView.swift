@@ -43,6 +43,7 @@ struct ProgramLibraryDetailView: View {
                     }
                 }
             }
+            .appScreenEnter()
         }
         .navigationTitle(program.name)
         .navigationBarTitleDisplayMode(.inline)
@@ -54,9 +55,9 @@ struct ProgramLibraryDetailView: View {
             titleVisibility: .visible
         ) {
             Button("Import") { importProgram() }
-            Button("Cancel", role: .cancel) {}
+            Button(AppCopy.Nav.cancel, role: .cancel) {}
         } message: {
-            Text("This adds the program to your list. Any missing exercises will be created automatically.")
+            Text("Adds the program to your list. Missing exercises are created automatically.")
         }
         .tint(AppColor.accent)
     }
@@ -73,7 +74,6 @@ struct ProgramLibraryDetailView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, AppSpacing.lg)
     }
 
     private func importProgram() {

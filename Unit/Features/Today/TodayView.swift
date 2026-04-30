@@ -51,9 +51,6 @@ struct ReadyTodayContext {
     let lastPerformedLabel: String?
     let previewTargets: [ExerciseTarget]
     let lastSessionDate: Date?
-    /// Position of the suggested routine in the program order (1-based).
-    let trainingDayOrdinal: Int
-    let trainingDayTotal: Int
 }
 
 struct SetupIncompleteContext {
@@ -67,7 +64,6 @@ struct SetupIncompleteContext {
 struct TodayView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.appTabSelection) private var appTabSelection
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @Query(sort: \DayTemplate.name) private var templates: [DayTemplate]
     @Query(sort: \Split.name) private var splits: [Split]
@@ -77,10 +73,8 @@ struct TodayView: View {
     @AppStorage(ActiveSplitStore.defaultsKey) private var activeSplitIdString: String = ""
 
     @State private var viewModel = TodayDashboardViewModel()
-    @State private var workoutDetailContext: ReadyTodayContext?
     @State private var showsHistory = false
     @State private var completedSessionDetail: WorkoutSession?
-    @State private var didAppearCard = false
     @State private var staleSessionPrompt: WorkoutSession?
     @State private var toastMessage: String?
     @State private var showsRoutinePickSheet = false
@@ -112,14 +106,6 @@ struct TodayView: View {
                     SessionDetailView(session: session, templateName: templateName)
                 }
             }
-            .sheet(item: $workoutDetailContext) { context in
-                TodayWorkoutDetailsSheet(context: context) {
-                    workoutDetailContext = nil
-                    startWorkout(templateId: context.templateId)
-                }
-                .presentationDetents([.medium, .large])
-                .appBottomSheetChrome()
-            }
             .tint(AppColor.accent)
             .onAppear {
                 checkStaleSession()
@@ -139,7 +125,7 @@ struct TodayView: View {
                 }
             }
             .alert(
-                "Workout from yesterday",
+                AppCopy.Session.staleSessionTitle,
                 isPresented: Binding(
                     get: { staleSessionPrompt != nil },
                     set: { if !$0 { staleSessionPrompt = nil } }
@@ -153,7 +139,7 @@ struct TodayView: View {
                     discardStaleSession(session)
                 }
             } message: { _ in
-                Text("It's still open. Save what you logged or discard it.")
+                Text(AppCopy.Session.staleSessionMessage)
             }
             .appToast(message: $toastMessage)
         }
@@ -175,18 +161,7 @@ struct TodayView: View {
             // Hero: Up Next / Rest Day / Empty state — always the first, most
             // prominent surface on screen (compass: Today → Start in ≤ 2 taps).
             stateCard(for: state)
-                .opacity(didAppearCard ? 1 : 0)
-                .offset(y: didAppearCard ? 0 : 10)
-        }
-        .onAppear {
-            guard !didAppearCard else { return }
-            if reduceMotion {
-                didAppearCard = true
-            } else {
-                withAnimation(.appEnter.delay(0.1)) {
-                    didAppearCard = true
-                }
-            }
+                .appScreenEnter()
         }
         .navigationTitle("Today")
         .navigationBarTitleDisplayMode(.inline)
@@ -196,7 +171,7 @@ struct TodayView: View {
                     Button {
                         showsRoutinePickSheet = true
                     } label: {
-                        Label("Choose today's routine", systemImage: "calendar")
+                        Label("Choose today's routine", systemImage: AppIcon.list.systemName)
                             .labelStyle(.iconOnly)
                     }
                 }
@@ -234,7 +209,6 @@ struct TodayView: View {
                 let hasSchedule = ordered.contains { $0.scheduledWeekday > 0 }
                 let hasOverride = TodayRoutineOverride.effectiveTemplateId(orderedTemplateIds: ordered.map(\.id)) != nil
                 TodayRoutinePickSheet(
-                    programName: split.name,
                     orderedTemplates: ordered,
                     hasWeeklySchedule: hasSchedule,
                     todayWeekday: Calendar.current.component(.weekday, from: Date()),
@@ -262,10 +236,10 @@ struct TodayView: View {
         switch state {
         case .noProgram:
             EmptyStateCard(
-                eyebrow: "Get started",
+                eyebrow: "No program",
                 title: "No program yet.",
                 message: "Add a routine to start logging.",
-                buttonLabel: "Create program"
+                buttonLabel: "Add program"
             ) {
                 appTabSelection(.program)
             }
@@ -292,21 +266,15 @@ struct TodayView: View {
                 }
             ) {
                 if !context.previewTargets.isEmpty {
-                    Button {
-                        workoutDetailContext = context
-                    } label: {
-                        PreviewListContainer {
-                            ForEach(Array(context.previewTargets.enumerated()), id: \.offset) { _, target in
-                                PreviewListRow(
-                                    title: target.exerciseName,
-                                    subtitle: target.displayTarget,
-                                    style: .metricFirst,
-                                    isEmptyHint: target.isEmptyHint
-                                )
-                            }
+                    PreviewListContainer {
+                        ForEach(Array(context.previewTargets.enumerated()), id: \.offset) { _, target in
+                            PreviewListRow(
+                                title: target.exerciseName,
+                                subtitle: target.displayTarget,
+                                isEmptyHint: target.isEmptyHint
+                            )
                         }
                     }
-                    .buttonStyle(ScaleButtonStyle())
                     .frame(maxWidth: .infinity)
                 }
             }
@@ -339,14 +307,26 @@ struct TodayView: View {
 
     private func checkStaleSession() {
         guard let session = activeSession else { return }
-        guard Date().timeIntervalSince(session.date) > 86400 else { return }
+
+        // Hybrid stale check: prompt only when the session is on a previous
+        // calendar day AND at least 4 hours have elapsed. Either signal alone
+        // misfires — a 24-hr threshold mid-session prompts a long Tuesday rest;
+        // a pure calendar-day check prompts at midnight on a session that just
+        // crossed over. Both together lets a workout that runs into the next
+        // morning finish naturally, while still catching yesterday's open
+        // session the moment the lifter returns.
+        let calendar = Calendar.current
+        let staleHourThreshold: TimeInterval = 4 * 60 * 60
+        let isPreviousDay = !calendar.isDateInToday(session.date)
+        let isOldEnough = Date().timeIntervalSince(session.date) > staleHourThreshold
+        guard isPreviousDay && isOldEnough else { return }
 
         // Auto-discard truly empty sessions; surface a toast so the user knows.
         let hasLoggedSets = session.setEntries.contains(where: { $0.isCompleted })
         if !hasLoggedSets {
             modelContext.delete(session)
             try? modelContext.save()
-            toastMessage = "Discarded empty session from yesterday"
+            toastMessage = AppCopy.Session.staleEmptyDiscardedToast
             return
         }
 
@@ -366,93 +346,6 @@ struct TodayView: View {
         try? modelContext.save()
     }
 
-}
-
-extension ReadyTodayContext: Identifiable {
-    var id: String { templateId.uuidString }
-}
-
-// MARK: - Workout Details Sheet
-
-private struct TodayWorkoutDetailsSheet: View {
-    let context: ReadyTodayContext
-    let onStart: () -> Void
-
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: AppSpacing.lg) {
-                    VStack(alignment: .center, spacing: AppSpacing.sm) {
-                        Text(context.templateName)
-                            .font(AppFont.productHeading.font)
-                            .tracking(AppFont.productHeading.tracking)
-                            .foregroundStyle(AppColor.textPrimary)
-                            .multilineTextAlignment(.center)
-                            .fixedSize(horizontal: false, vertical: true)
-
-                        Text(context.programName)
-                            .font(AppFont.productAction.font)
-                            .foregroundStyle(AppColor.textSecondary)
-                            .multilineTextAlignment(.center)
-
-                        if let note = context.scheduleNote {
-                            Text(note)
-                                .font(AppFont.caption.font)
-                                .foregroundStyle(AppColor.textSecondary)
-                                .multilineTextAlignment(.center)
-                        }
-
-                        if let lastLabel = context.lastPerformedLabel {
-                            Text(lastLabel)
-                                .font(AppFont.caption.font)
-                                .foregroundStyle(AppColor.textSecondary)
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-
-                    AppCardList(context.previewTargets) { target in
-                        HStack(alignment: .center, spacing: AppSpacing.md) {
-                            VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                                Text(target.exerciseName)
-                                    .font(AppFont.body.font)
-                                    .foregroundStyle(AppFont.body.color)
-
-                                if let subtitle = target.lastPerformanceLabel, !subtitle.isEmpty {
-                                    Text(subtitle)
-                                        .font(AppFont.muted.font)
-                                        .foregroundStyle(AppFont.muted.color)
-                                }
-                            }
-
-                            Spacer(minLength: 0)
-
-                            Text(target.displayTarget)
-                                .font(AppFont.productAction.font)
-                                .foregroundStyle(AppColor.textSecondary)
-                                .monospacedDigit()
-                        }
-                    }
-
-                    AppPrimaryButton(AppCopy.Workout.startWorkout, action: onStart)
-                }
-                .padding(.horizontal, AppSpacing.lg)
-                .padding(.vertical, AppSpacing.lg)
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(role: .cancel) { dismiss() } label: {
-                        Label(AppCopy.Nav.close, systemImage: AppIcon.close.systemName)
-                            .labelStyle(.iconOnly)
-                    }
-                    .accessibilityLabel(AppCopy.Nav.close)
-                }
-            }
-            .appNavigationBarChrome()
-        }
-    }
 }
 
 // MARK: - View Model
@@ -502,14 +395,7 @@ final class TodayDashboardViewModel {
 
         if let overrideId = todayOverrideTemplateId,
            let picked = orderedTemplates.first(where: { $0.id == overrideId }) {
-            let completedPicked = sessions.contains { session in
-                session.templateId == picked.id &&
-                session.isCompleted &&
-                calendar.isDateInToday(session.date)
-            }
-            if completedPicked {
-                return .restDay(RestDayContext(programName: split.name))
-            }
+            // Explicit user pick — honor it even if already completed today.
             return stateForTemplate(
                 picked,
                 split: split,
@@ -569,13 +455,18 @@ final class TodayDashboardViewModel {
             return .restDay(RestDayContext(programName: split.name))
         }
 
-        let completedToday = sessions.contains { session in
-            session.templateId == template.id &&
-            session.isCompleted &&
-            calendar.isDateInToday(session.date)
-        }
-        if completedToday {
-            return .restDay(RestDayContext(programName: split.name))
+        // Skip the completed-today guard when the user explicitly picked this
+        // routine — the override is a "yes I want to do this" signal.
+        let isExplicitOverride = todayOverrideTemplateId == template.id
+        if !isExplicitOverride {
+            let completedToday = sessions.contains { session in
+                session.templateId == template.id &&
+                session.isCompleted &&
+                calendar.isDateInToday(session.date)
+            }
+            if completedToday {
+                return .restDay(RestDayContext(programName: split.name))
+            }
         }
 
         let note = scheduleOverrideNote(
@@ -638,7 +529,7 @@ final class TodayDashboardViewModel {
                 SetupIncompleteContext(
                     eyebrow: split.name,
                     title: template.displayName,
-                    message: "Add exercises so they show up here."
+                    message: "Add exercises to see targets here."
                 )
             )
         }
@@ -653,11 +544,6 @@ final class TodayDashboardViewModel {
             }
         }
 
-        let orderedRoutines = orderedTemplates(for: split, templates: templates)
-        let templateIndex = orderedRoutines.firstIndex { $0.id == template.id }
-        let dayOrdinal = templateIndex.map { $0 + 1 } ?? 1
-        let dayTotal = max(orderedRoutines.count, 1)
-
         return .readyToday(
             ReadyTodayContext(
                 templateId: template.id,
@@ -666,9 +552,7 @@ final class TodayDashboardViewModel {
                 scheduleNote: scheduleNote,
                 lastPerformedLabel: lastLabel,
                 previewTargets: previewTargets,
-                lastSessionDate: lastDate,
-                trainingDayOrdinal: dayOrdinal,
-                trainingDayTotal: dayTotal
+                lastSessionDate: lastDate
             )
         )
     }
@@ -774,7 +658,6 @@ final class TodayDashboardViewModel {
 // MARK: - Today's routine picker
 
 private struct TodayRoutinePickSheet: View {
-    let programName: String
     let orderedTemplates: [DayTemplate]
     let hasWeeklySchedule: Bool
     let todayWeekday: Int
@@ -785,63 +668,61 @@ private struct TodayRoutinePickSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        NavigationStack {
-            List {
-                Section {
-                    ForEach(orderedTemplates, id: \.id) { template in
-                        Button {
-                            onSelect(template.id)
-                        } label: {
-                            HStack(alignment: .firstTextBaseline) {
-                                VStack(alignment: .leading, spacing: AppSpacing.xxs) {
-                                    Text(template.displayName)
-                                        .font(AppFont.body.font)
-                                        .foregroundStyle(AppColor.textPrimary)
-                                    if template.scheduledWeekday > 0, let w = weekdayShort(template.scheduledWeekday) {
-                                        Text(w)
-                                            .font(AppFont.caption.font)
-                                            .foregroundStyle(AppColor.textSecondary)
-                                    }
-                                }
-                                Spacer(minLength: AppSpacing.sm)
-                                if hasWeeklySchedule, template.scheduledWeekday == todayWeekday {
-                                    Text("Today")
-                                        .font(AppFont.caption.font)
-                                        .foregroundStyle(AppColor.textSecondary)
-                                }
-                            }
-                            .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
-                        }
-                    }
-                } header: {
-                    Text(programName)
+        AppSheetScreen(
+            title: "Today's routine",
+            primaryButton: hasActiveOverride
+                ? PrimaryButtonConfig(
+                    label: hasWeeklySchedule ? "Use scheduled day" : "Use the next routine",
+                    action: onUseDefault
+                )
+                : nil,
+            dismissLabel: AppCopy.Nav.done,
+            onDismissAction: { dismiss() }
+        ) {
+            AppCardList(data: orderedTemplates, id: \.id) { template in
+                Button {
+                    onSelect(template.id)
+                } label: {
+                    routineRow(for: template)
                 }
+                .buttonStyle(ScaleButtonStyle())
+                .accessibilityLabel(routineRowAccessibilityLabel(for: template))
             }
-            .navigationTitle("Today's routine")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(role: .cancel) { dismiss() } label: {
-                        Label(AppCopy.Nav.close, systemImage: AppIcon.close.systemName)
-                            .labelStyle(.iconOnly)
-                    }
-                    .accessibilityLabel(AppCopy.Nav.close)
-                }
-            }
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                if hasActiveOverride {
-                    AppPrimaryButton(hasWeeklySchedule ? "Use scheduled day" : "Use the next routine") {
-                        onUseDefault()
-                    }
-                    .padding(.horizontal, AppSpacing.lg)
-                    .padding(.top, AppSpacing.sm)
-                    .padding(.bottom, AppSpacing.sm)
-                    .background(AppColor.background)
-                }
-            }
-            .appNavigationBarChrome()
         }
-        .tint(AppColor.accent)
+    }
+
+    @ViewBuilder
+    private func routineRow(for template: DayTemplate) -> some View {
+        let isToday = hasWeeklySchedule && template.scheduledWeekday == todayWeekday
+
+        HStack(alignment: .center, spacing: AppSpacing.md) {
+            VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                Text(template.displayName)
+                    .font(AppFont.productAction.font)
+                    .foregroundStyle(AppColor.textPrimary)
+                    .multilineTextAlignment(.leading)
+
+                if template.scheduledWeekday > 0, let w = weekdayShort(template.scheduledWeekday) {
+                    Text(w)
+                        .font(AppFont.muted.font)
+                        .foregroundStyle(AppFont.muted.color)
+                }
+            }
+
+            Spacer(minLength: 0)
+
+            if isToday {
+                AppTag(text: "Today", style: .accent)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+    }
+
+    private func routineRowAccessibilityLabel(for template: DayTemplate) -> String {
+        let isToday = hasWeeklySchedule && template.scheduledWeekday == todayWeekday
+        if isToday { return "\(template.displayName), today" }
+        return template.displayName
     }
 
     private func weekdayShort(_ weekday: Int) -> String? {

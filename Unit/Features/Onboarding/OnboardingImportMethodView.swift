@@ -11,13 +11,15 @@ struct OnboardingImportMethodView: View {
     var progressStep: Int
     var progressTotal: Int
     var onSelect: (OnboardingViewModel.ImportMethod) -> Void
+    var onBack: () -> Void
 
     var body: some View {
         OnboardingShell(
             title: "Add your program",
             subtitle: "Choose how to create your template.",
             progressStep: progressStep,
-            progressTotal: progressTotal
+            progressTotal: progressTotal,
+            onBack: onBack
         ) {
             VStack(spacing: AppSpacing.sm) {
                 OnboardingOptionCard(
@@ -36,7 +38,8 @@ struct OnboardingImportMethodView: View {
 }
 
 struct OnboardingOptionCard: View {
-    let icon: AppIcon
+    var icon: AppIcon? = nil
+    var iconText: String? = nil
     let title: String
     var badge: String? = nil
     let action: () -> Void
@@ -44,11 +47,9 @@ struct OnboardingOptionCard: View {
     var body: some View {
         Button(action: action) {
             HStack(alignment: .center, spacing: AppSpacing.md) {
-                icon.image(size: 18, weight: .semibold)
-                    .foregroundStyle(AppColor.accent)
-                    .frame(width: 40, height: 40)
-                    .background(AppColor.accentSoft)
-                    .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
+                if icon != nil || iconText != nil {
+                    iconBubble
+                }
 
                 Text(title)
                     .font(AppFont.sectionHeader.font)
@@ -64,10 +65,27 @@ struct OnboardingOptionCard: View {
         }
         .buttonStyle(ScaleButtonStyle())
     }
+
+    @ViewBuilder
+    private var iconBubble: some View {
+        AppIconCircle(
+            diameter: 40,
+            shape: .roundedRect(radius: AppRadius.md),
+            surface: .accentSoft
+        ) {
+            Group {
+                if let icon {
+                    icon.image(size: 18, weight: .semibold)
+                } else if let iconText {
+                    Text(iconText)
+                        .font(AppFont.stepIndicator.font)
+                }
+            }
+            .foregroundStyle(AppColor.accent)
+        }
+    }
 }
 
 #Preview {
-    NavigationStack {
-        OnboardingImportMethodView(progressStep: 2, progressTotal: 4) { _ in }
-    }
+    OnboardingImportMethodView(progressStep: 2, progressTotal: 4, onSelect: { _ in }, onBack: {})
 }

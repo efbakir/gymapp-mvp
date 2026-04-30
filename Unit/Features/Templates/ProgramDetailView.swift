@@ -43,6 +43,7 @@ struct ProgramDetailView: View {
                     }
                 }
             }
+            .appScreenEnter()
         }
         .navigationTitle(displayName)
         .navigationBarTitleDisplayMode(.inline)
@@ -74,9 +75,9 @@ struct ProgramDetailView: View {
                 ActiveSplitStore.setCurrent(split.id)
                 activeSplitIdString = split.id.uuidString
             }
-            Button("Cancel", role: .cancel) {}
+            Button(AppCopy.Nav.cancel, role: .cancel) {}
         } message: {
-            Text("Today and your schedule will switch to this program's routines.")
+            Text("Switches Today and your schedule to this program.")
         }
         .tint(AppColor.accent)
     }

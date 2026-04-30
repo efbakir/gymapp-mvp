@@ -68,6 +68,10 @@ struct ContentView: View {
     }
 
     private var mainTabView: some View {
+        // Tab swaps are intentionally instant — iOS-native expectation
+        // (Mail, Messages, Settings, Calendar). The .selection haptic is the
+        // delight signal; visual content motion fights TabView's own swap and
+        // reads as buggy. CLAUDE.md §4 (Prefer iOS-native: tab bar).
         TabView(selection: $selectedTab) {
             TodayView()
                 .tabItem {
@@ -83,21 +87,18 @@ struct ContentView: View {
         }
         .tint(AppColor.accent)
         .toolbar(hasActiveSession ? .hidden : .visible, for: .tabBar)
-        // Programmatic tab switches (deep links, "Start workout" routing)
-        // animate via the token system; user-driven taps on the native tab
-        // bar bypass this code path and remain instant. The Reduce-Motion
-        // guard keeps the underlying state assignment intact.
+        .sensoryFeedback(.selection, trigger: selectedTab)
         .environment(\.appTabSelection, AppTabSelection { tab in
-            withAnimation(reduceMotion ? nil : .appState) {
-                selectedTab = tab
-            }
+            selectedTab = tab
         })
     }
 
     private func configureNavigationBarAppearance() {
         let titleColor = UIColor(AppColor.textPrimary)
-        let titleFont = UIFont.geist(.bold, size: 17)
-        let largeTitleFont = UIFont.geist(.bold, size: 34)
+        // Anchor inline title to `.headline` and large title to `.largeTitle` so
+        // each grows at the rate that text style expects under Dynamic Type.
+        let titleFont = UIFont.geist(.bold, size: 17, relativeTo: .headline)
+        let largeTitleFont = UIFont.geist(.bold, size: 34, relativeTo: .largeTitle)
 
         let appearance = UINavigationBarAppearance()
         appearance.configureWithDefaultBackground()
@@ -121,8 +122,8 @@ struct ContentView: View {
         let segmentedControl = UISegmentedControl.appearance()
         segmentedControl.backgroundColor = UIColor(AppColor.controlBackground)
         segmentedControl.selectedSegmentTintColor = UIColor(AppColor.cardBackground)
-        let normalFont = UIFont.geist(.medium, size: 14)
-        let selectedFont = UIFont.geist(.semibold, size: 14)
+        let normalFont = UIFont.geist(.medium, size: 14, relativeTo: .footnote)
+        let selectedFont = UIFont.geist(.semibold, size: 14, relativeTo: .footnote)
         segmentedControl.setTitleTextAttributes(
             [.foregroundColor: UIColor(AppColor.textSecondary), .font: normalFont],
             for: .normal
@@ -134,7 +135,7 @@ struct ContentView: View {
     }
 
     private func configureTabBarAppearance() {
-        let tabFont = UIFont.geist(.medium, size: 10)
+        let tabFont = UIFont.geist(.medium, size: 10, relativeTo: .caption2)
         let attributes: [NSAttributedString.Key: Any] = [.font: tabFont]
         UITabBarItem.appearance().setTitleTextAttributes(attributes, for: .normal)
         UITabBarItem.appearance().setTitleTextAttributes(attributes, for: .selected)

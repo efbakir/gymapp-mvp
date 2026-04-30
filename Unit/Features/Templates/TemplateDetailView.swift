@@ -34,21 +34,18 @@ struct TemplateDetailView: View {
         AppScreen(showsNativeNavigationBar: true) {
             VStack(alignment: .leading, spacing: AppSpacing.lg) {
                 if orderedExercises.isEmpty {
-                    Text("No exercises yet.")
-                        .font(AppFont.caption.font)
-                        .foregroundStyle(AppColor.textSecondary)
-                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                        .appCardStyle()
+                    AppEmptyHint(AppCopy.Search.noExercisesYet)
                 } else {
                     AppCardList(orderedExercises) { exercise in
                         exerciseRow(exercise)
                     }
                 }
 
-                AppGhostButton("Add Exercise") {
+                AppGhostButton(AppCopy.Workout.addExercise) {
                     showingAddExercise = true
                 }
             }
+            .appScreenEnter()
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
@@ -61,7 +58,6 @@ struct TemplateDetailView: View {
                     .lineLimit(1)
                     .truncationMode(.tail)
                     .minimumScaleFactor(0.82)
-                    .frame(maxWidth: 240)
             }
         }
         .toolbarBackground(.hidden, for: .navigationBar)
@@ -77,11 +73,7 @@ struct TemplateDetailView: View {
             AppIcon.reorder.image(size: 15, weight: .semibold)
                 .foregroundStyle(AppColor.textSecondary)
                 .frame(minWidth: 44, minHeight: 44, alignment: .leading)
-                .contentShape(Rectangle())
-                .onDrag {
-                    draggedExerciseID = exercise.id
-                    return NSItemProvider(object: exercise.id.uuidString as NSString)
-                }
+                .accessibilityHidden(true)
 
             Text(exercise.displayName)
                 .font(AppFont.body.font)
@@ -101,8 +93,14 @@ struct TemplateDetailView: View {
             }
             .accessibilityLabel("Remove \(exercise.displayName)")
         }
-        .frame(height: 48)
         .contentShape(Rectangle())
+        .appReorderable(
+            id: exercise.id,
+            draggedID: $draggedExerciseID,
+            reduceMotion: reduceMotion
+        ) {
+            exerciseDragPreview(for: exercise)
+        }
         .onDrop(
             of: [UTType.text],
             delegate: TemplateExerciseReorderDropDelegate(
@@ -112,6 +110,30 @@ struct TemplateDetailView: View {
                 draggedExerciseID: $draggedExerciseID,
                 reduceMotion: reduceMotion
             )
+        )
+    }
+
+    @ViewBuilder
+    private func exerciseDragPreview(for exercise: Exercise) -> some View {
+        HStack(spacing: AppSpacing.sm) {
+            AppIcon.reorder.image(size: 15, weight: .semibold)
+                .foregroundStyle(AppColor.textSecondary)
+                .frame(width: 44, alignment: .leading)
+
+            Text(exercise.displayName)
+                .font(AppFont.body.font)
+                .foregroundStyle(AppColor.textPrimary)
+                .lineLimit(1)
+
+            Spacer(minLength: AppSpacing.sm)
+
+            exerciseTargetSubtitle(for: exercise)
+        }
+        .padding(.horizontal, AppSpacing.lg)
+        .frame(maxWidth: 320, minHeight: 56)
+        .background(
+            RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous)
+                .fill(AppColor.cardBackground)
         )
     }
 
@@ -197,6 +219,7 @@ private struct TemplateExerciseReorderDropDelegate: DropDelegate {
             ids.insert(moved, at: toIndex)
             template.orderedExerciseIds = ids
         }
+        AppReorderHaptic.swap()
     }
 
     func performDrop(info: DropInfo) -> Bool {
@@ -218,7 +241,6 @@ struct AddExerciseToTemplateView: View {
     @Query(sort: \Exercise.displayName) private var exercises: [Exercise]
 
     @State private var query = ""
-    @FocusState private var isSearchFocused: Bool
 
     private var availableExercises: [Exercise] {
         let inTemplate = Set(template.orderedExerciseIds)
@@ -269,17 +291,17 @@ struct AddExerciseToTemplateView: View {
                         .frame(minHeight: 44)
                     }
                     .buttonStyle(ScaleButtonStyle())
-                    .listRowSeparator(.hidden)
-                    .listRowBackground(AppColor.cardBackground)
+                    .appPlainListRowChrome(separator: .hidden)
                 }
 
                 if filteredExercises.isEmpty {
-                    Text(trimmedQuery.isEmpty ? "No exercises yet" : "No matching exercises")
+                    Text(trimmedQuery.isEmpty
+                         ? AppCopy.Search.noExercisesYet
+                         : AppCopy.Search.noMatchingExercises)
                         .font(AppFont.caption.font)
                         .foregroundStyle(AppColor.textSecondary)
                         .frame(minHeight: 44, alignment: .leading)
-                        .listRowSeparator(.hidden)
-                        .listRowBackground(AppColor.cardBackground)
+                        .appPlainListRowChrome(separator: .hidden)
                 }
 
                 if !trimmedQuery.isEmpty && !hasExactNameMatch {
@@ -295,8 +317,7 @@ struct AddExerciseToTemplateView: View {
                         .frame(minHeight: 44, alignment: .leading)
                     }
                     .buttonStyle(ScaleButtonStyle())
-                    .listRowSeparator(.hidden)
-                    .listRowBackground(AppColor.cardBackground)
+                    .appPlainListRowChrome(separator: .hidden)
                 }
             }
             .listStyle(.plain)
@@ -304,24 +325,20 @@ struct AddExerciseToTemplateView: View {
             .background(AppColor.background.ignoresSafeArea())
             .appScrollEdgeSoft()
             .scrollDismissesKeyboard(.immediately)
-            .navigationTitle("Add Exercise")
+            .navigationTitle(AppCopy.Workout.addExercise)
             .navigationBarTitleDisplayMode(.inline)
-            .searchable(text: $query, prompt: "Search exercises")
-            .searchFocused($isSearchFocused)
-            .textInputAutocapitalization(.words)
-            .autocorrectionDisabled()
+            .appExerciseSearchable(text: $query)
             .onSubmit(of: .search) {
                 guard !trimmedQuery.isEmpty, !hasExactNameMatch else { return }
                 createAndAdd()
             }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Close", role: .cancel) { dismiss() }
+                    Button(AppCopy.Nav.close, role: .cancel) { dismiss() }
                 }
             }
             .appNavigationBarChrome()
             .tint(AppColor.accent)
-            .onAppear { isSearchFocused = true }
         }
     }
 

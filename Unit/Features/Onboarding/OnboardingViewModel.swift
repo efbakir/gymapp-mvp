@@ -274,6 +274,8 @@ final class OnboardingViewModel {
         split.orderedTemplateIds = templateIds
 
         try modelContext.save()
+
+        ActiveSplitStore.setCurrent(split.id)
     }
 }
 

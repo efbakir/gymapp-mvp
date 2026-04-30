@@ -43,9 +43,9 @@ Three skills enforce the rest of the gatekeeper checklist where a hook can't:
 |---|---|---|
 | `/page-audit` | Before any single-screen review or polish task. Loads `CLAUDE.md` §3–§6, `DesignSystem.swift`, the closest `docs/references/` anchor, and produces a severity-ranked report tied to atom/molecule/screen layers. | Asking "is this consistent with the system?" then guessing. |
 | `/component-reuse-check` | Before declaring any new `struct X: View` / `ViewModifier` / variant. Surveys existing primitives, runs the 80% match test, returns USE / EXTEND / NEW with one-sentence justification. | Inventing parallel components. |
-| `/ui-visual-verify` | After any UI Edit/Write, before saying "done". Build → screenshot → describe what is actually visible → certify VERIFIED / NOT VERIFIED / WAIVED. | Claiming success based on the code looking right. |
+| `/ui-visual-verify` | **User-invoked only.** Run when the user explicitly asks (`/ui-visual-verify`, "screenshot it", "verify", "did it work?"). Never auto-trigger after a UI edit. | Claiming success based on the code looking right. |
 
-These exist because the user has explicitly said: *"you should be better than me here — I should not repeat myself every prompt."* Trigger them proactively. Do not wait for the user to type the slash command.
+`/page-audit` and `/component-reuse-check` should be triggered proactively — don't wait for the slash command. `/ui-visual-verify` is the exception: per `CLAUDE.md` §6, the user runs multiple Claude agents in parallel and auto-triggering the simulator causes conflicts. Only invoke it when explicitly asked.
 
 ---
 
@@ -62,7 +62,7 @@ If `docs/references/` has no anchor for the screen type at hand, **say so before
 1. Run the `CLAUDE.md` §1 session-start checklist (docs + references).
 2. If proposing a new component: run `/component-reuse-check` first.
 3. Make the edit. Hook fires automatically — fix any blocked patterns at the canonical layer.
-4. Run `/ui-visual-verify` before saying done.
+4. Label the result "edits applied, not yet verified — visual pass is yours." Do **not** auto-run `/ui-visual-verify` or the simulator (§6, parallel-agent conflicts).
 5. If the task was a single-screen review/polish: run `/page-audit` either at start (to plan the change) or end (to confirm nothing else drifted).
 
 ---

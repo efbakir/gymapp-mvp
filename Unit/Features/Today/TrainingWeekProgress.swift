@@ -281,25 +281,24 @@ struct TrainingWeekStripView: View {
                 .padding(.vertical, AppSpacing.xs)
                 .background(AppColor.textPrimary)
                 .clipShape(Capsule())
+                .layoutPriority(1)
 
         case .circle(let glyph):
-            ZStack {
-                Circle()
-                    .fill(AppColor.controlBackground)
-                    .frame(width: 40, height: 40)
-
-                switch glyph {
-                case .check:
-                    AppIcon.checkmark.image(size: 15, weight: .semibold)
-                        .foregroundStyle(AppColor.success)
-                case .minus:
-                    AppIcon.remove.image(size: 16, weight: .semibold)
-                        .foregroundStyle(AppColor.textSecondary)
-                case .weekNumber(let n):
-                    Text("\(n)")
-                        .font(AppFont.stepIndicator.font)
-                        .foregroundStyle(AppColor.textPrimary)
-                        .monospacedDigit()
+            AppIconCircle(diameter: 40, surface: .control) {
+                Group {
+                    switch glyph {
+                    case .check:
+                        AppIcon.checkmark.image(size: 15, weight: .semibold)
+                            .foregroundStyle(AppColor.success)
+                    case .minus:
+                        AppIcon.remove.image(size: 16, weight: .semibold)
+                            .foregroundStyle(AppColor.textSecondary)
+                    case .weekNumber(let n):
+                        Text("\(n)")
+                            .font(AppFont.stepIndicator.font)
+                            .foregroundStyle(AppColor.textPrimary)
+                            .monospacedDigit()
+                    }
                 }
             }
             .accessibilityLabel(weekAccessibilityLabel(item, glyph: glyph))
@@ -319,7 +318,7 @@ struct TrainingWeekStripView: View {
 }
 
 struct TodayWeekOverviewSheet: View {
-    struct WeekOverviewTab: Identifiable {
+    struct WeekOverviewTab: Identifiable, Hashable {
         let id: String
         let segmentTitle: String
         let navigationTitle: String
@@ -347,42 +346,37 @@ struct TodayWeekOverviewSheet: View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 0) {
                 if tabs.count > 1 {
-                    Picker("Week", selection: $selectedTabID) {
-                        ForEach(tabs) { tab in
-                            Text(tab.segmentTitle).tag(tab.id)
-                        }
-                    }
-                    .pickerStyle(.segmented)
+                    AppSegmentedControl(
+                        selection: $selectedTabID,
+                        items: tabs,
+                        title: { $0.segmentTitle }
+                    )
                     .padding(.horizontal, AppSpacing.md)
                     .padding(.top, AppSpacing.sm)
                 }
 
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 0) {
-                        ForEach(Array(selectedDays.enumerated()), id: \.element.id) { index, day in
-                            HStack(alignment: .center) {
-                                VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                                    Text(day.title)
-                                        .font(AppFont.sectionHeader.font)
-                                        .foregroundStyle(AppColor.textPrimary)
+                    AppDividedList(
+                        selectedDays,
+                        dividerLeading: AppSpacing.md
+                    ) { day in
+                        HStack(alignment: .center) {
+                            VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                                Text(day.title)
+                                    .font(AppFont.sectionHeader.font)
+                                    .foregroundStyle(AppColor.textPrimary)
 
-                                    Text(day.subtitle)
-                                        .font(AppFont.caption.font)
-                                        .foregroundStyle(AppColor.textSecondary)
-                                }
-
-                                Spacer(minLength: 0)
-
-                                dayStatusIcon(day.state)
+                                Text(day.subtitle)
+                                    .font(AppFont.caption.font)
+                                    .foregroundStyle(AppColor.textSecondary)
                             }
-                            .padding(.horizontal, AppSpacing.md)
-                            .padding(.vertical, AppSpacing.smd)
 
-                            if index < selectedDays.count - 1 {
-                                AppDivider()
-                                    .padding(.leading, AppSpacing.md)
-                            }
+                            Spacer(minLength: 0)
+
+                            dayStatusIcon(day.state)
                         }
+                        .padding(.horizontal, AppSpacing.md)
+                        .padding(.vertical, AppSpacing.smd)
                     }
                     .padding(.vertical, AppSpacing.sm)
                 }
@@ -392,7 +386,7 @@ struct TodayWeekOverviewSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
+                    Button(AppCopy.Nav.done) {
                         dismiss()
                     }
                     .appToolbarTextStyle()
@@ -415,7 +409,7 @@ struct TodayWeekOverviewSheet: View {
                 .foregroundStyle(AppColor.textSecondary)
         case .upcoming:
             AppIcon.circle.image(size: 20, weight: .semibold)
-                .foregroundStyle(AppColor.controlBackground)
+                .foregroundStyle(AppColor.textDisabled)
         }
     }
 }

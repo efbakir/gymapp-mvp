@@ -44,25 +44,28 @@ struct SessionDetailView: View {
         AppScreen(
             showsNativeNavigationBar: true
         ) {
-            VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                Text(templateName)
-                    .font(AppFont.title.font)
-                    .foregroundStyle(AppColor.textPrimary)
-                    .lineLimit(2)
-                    .truncationMode(.tail)
+            VStack(alignment: .leading, spacing: AppSpacing.md) {
+                VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                    Text(templateName)
+                        .font(AppFont.title.font)
+                        .foregroundStyle(AppColor.textPrimary)
+                        .lineLimit(2)
+                        .truncationMode(.tail)
 
-                Text(session.date.formatted(.dateTime.month(.abbreviated).day().hour().minute()))
-                    .font(AppFont.caption.font)
-                    .foregroundStyle(AppColor.textSecondary)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
+                    Text(session.date.formatted(.dateTime.month(.abbreviated).day().hour().minute()))
+                        .font(AppFont.caption.font)
+                        .foregroundStyle(AppColor.textSecondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
 
-            if !exerciseSnapshots.isEmpty {
-                AppCardList(exerciseSnapshots) { exercise in
-                    SessionExerciseSummary(exercise: exercise)
-                        .padding(.vertical, AppSpacing.sm)
+                if !exerciseSnapshots.isEmpty {
+                    AppCardList(exerciseSnapshots) { exercise in
+                        SessionExerciseSummary(exercise: exercise)
+                            .padding(.vertical, AppSpacing.sm)
+                    }
                 }
             }
+            .appScreenEnter()
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)

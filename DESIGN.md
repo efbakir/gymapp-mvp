@@ -194,7 +194,7 @@ Both ship as bundled `.ttf` and are registered via `UIAppFonts` in `Info.plist`.
 - **Headline / large title** (Geist Bold 22, tracking -0.4): Screen-level titles. One per screen.
 - **Product heading** (Geist Bold 24, tracking -0.4): `ProductTopBar` headings, hero copy on empty states.
 - **Title** (Geist Bold 20): Section titles, exercise names on workout cards.
-- **Section header** (Geist Bold 17): 17pt bold section headings — also the canonical button-label style for sans buttons (no separate `label` case).
+- **Section header** (Geist SemiBold 17): 17pt semibold section headings, list-row titles (program / template / routine names), and the canonical button-label style for sans buttons (no separate `label` case). Semibold (not bold) so row titles don't out-shout numerics on workout-adjacent lists and density reads closer to iOS-native.
 - **Body** (Geist Medium 17, line-height 1.35): Default reading copy. List rows, descriptions, paragraph text.
 - **Caption** (Geist Medium 15): Secondary metadata, helper text, timer subtitles.
 - **Muted** (Geist Medium 13): Footnotes and very secondary copy.

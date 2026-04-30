@@ -5,7 +5,8 @@ import { SUPPORT_EMAIL, DEVELOPER_NAME, LEGAL_LAST_UPDATED } from "@/lib/contact
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description:
-    "Unit privacy policy. Your workout data stays on your device.",
+    "Unit privacy policy. Your workout data stays on your device. No account, no analytics, no tracking. Local-first iOS gym logger.",
+  alternates: { canonical: "/privacy" },
 }
 
 export default function PrivacyPage() {

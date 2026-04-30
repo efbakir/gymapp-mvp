@@ -44,6 +44,7 @@ struct TemplatesView: View {
                         emptyState
                     }
                 }
+                .appScreenEnter()
             }
             .navigationTitle("Programs")
             .navigationBarTitleDisplayMode(.inline)
@@ -53,7 +54,7 @@ struct TemplatesView: View {
                         Text("Browse")
                             .appToolbarTextStyle()
                     }
-                    .accessibilityLabel("Browse Program Library")
+                    .accessibilityLabel("Browse program library")
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
@@ -136,17 +137,17 @@ struct TemplatesView: View {
     private var emptyState: some View {
         VStack(alignment: .leading, spacing: AppSpacing.lg) {
             VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                Text("Build your first program")
+                Text("No active program")
                     .appFont(.largeTitle)
                     .foregroundStyle(AppColor.textPrimary)
 
-                Text("Add your training days, exercises, and starting weights so Unit can prepare the next target.")
+                Text("Add your training days and exercises so Unit can show your last session before every set.")
                     .font(AppFont.body.font)
                     .foregroundStyle(AppColor.textSecondary)
             }
 
             VStack(spacing: AppSpacing.xs) {
-                AppPrimaryButton("Create Program") {
+                AppPrimaryButton("Create program") {
                     showingOnboarding = true
                 }
 
@@ -167,10 +168,9 @@ struct TemplatesView: View {
         return AppCard {
             VStack(alignment: .leading, spacing: AppSpacing.md) {
                 NavigationLink(value: split) {
-                    HStack(alignment: .center, spacing: AppSpacing.sm) {
+                    HStack(alignment: .firstTextBaseline, spacing: AppSpacing.sm) {
                         Text(displayName)
-                            .font(AppFont.largeTitle.font)
-                            .tracking(AppFont.largeTitle.tracking)
+                            .appFont(.largeTitle)
                             .foregroundStyle(AppColor.textPrimary)
                             .multilineTextAlignment(.leading)
                             .fixedSize(horizontal: false, vertical: true)
@@ -248,6 +248,7 @@ struct EditProgramView: View {
                 programNameSection
                 routinesSection
             }
+            .appScreenEnter()
         }
         .onChange(of: split.name) { _, _ in
             try? modelContext.save()
@@ -255,7 +256,7 @@ struct EditProgramView: View {
         .onAppear {
             syncTemplateOrderIfNeeded()
         }
-        .navigationTitle("Edit Program")
+        .navigationTitle("Edit program")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -263,7 +264,7 @@ struct EditProgramView: View {
                     Button(role: .destructive) {
                         showDeleteConfirmation = true
                     } label: {
-                        Label("Delete Program", systemImage: AppIcon.trash.systemName)
+                        Label("Delete program", systemImage: AppIcon.trash.systemName)
                     }
                 } label: {
                     AppIcon.more.image()
@@ -271,7 +272,7 @@ struct EditProgramView: View {
                 .accessibilityLabel("More")
             }
             ToolbarItem(placement: .confirmationAction) {
-                Button("Done") { dismiss() }
+                Button(AppCopy.Nav.done) { dismiss() }
                     .appToolbarTextStyle()
             }
         }
@@ -283,17 +284,18 @@ struct EditProgramView: View {
         .sheet(isPresented: $showAddDay) {
             AddTemplateView(split: split)
                 .appBottomSheetChrome()
+                .presentationDetents([.medium])
         }
         .confirmationDialog(
-            "Delete Program",
+            "Delete program",
             isPresented: $showDeleteConfirmation,
             titleVisibility: .visible
         ) {
-            Button("Delete Program", role: .destructive) {
+            Button("Delete program", role: .destructive) {
                 deleteProgram()
             }
         } message: {
-            Text("This will permanently delete this program and all its routine days. This cannot be undone.")
+            Text("Deletes this program and its routine days. Can't be undone.")
         }
     }
 
@@ -370,7 +372,7 @@ struct EditProgramView: View {
                     moveTemplate(at: index, direction: .up)
                 } label: {
                     AppIcon.moveUp.image(size: 12, weight: .semibold)
-                        .foregroundStyle(index > 0 ? AppColor.textSecondary : AppColor.controlBackground)
+                        .foregroundStyle(AppColor.textSecondary)
                         .frame(width: 44, height: 44)
                         .contentShape(Rectangle())
                 }
@@ -381,7 +383,7 @@ struct EditProgramView: View {
                     moveTemplate(at: index, direction: .down)
                 } label: {
                     AppIcon.moveDown.image(size: 12, weight: .semibold)
-                        .foregroundStyle(index < orderedTemplates.count - 1 ? AppColor.textSecondary : AppColor.controlBackground)
+                        .foregroundStyle(AppColor.textSecondary)
                         .frame(width: 44, height: 44)
                         .contentShape(Rectangle())
                 }

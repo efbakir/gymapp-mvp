@@ -13,6 +13,7 @@ struct OnboardingSplitBuilderView: View {
     var progressStep: Int
     var progressTotal: Int
     var onContinue: () -> Void
+    var onBack: () -> Void
 
     @FocusState private var focusedDay: Int?
 
@@ -38,7 +39,8 @@ struct OnboardingSplitBuilderView: View {
             ctaEnabled: vm.splitIsValid,
             progressStep: progressStep,
             progressTotal: progressTotal,
-            onContinue: onContinue
+            onContinue: onContinue,
+            onBack: onBack
         ) {
             VStack(alignment: .leading, spacing: AppSpacing.lg) {
 
@@ -56,21 +58,22 @@ struct OnboardingSplitBuilderView: View {
                     }
                 }
 
-                AppCardList(data: Array(0..<vm.dayCount), id: \.self) { i in
-                    TextField("Day name", text: dayNameBinding(for: i))
-                        .font(AppFont.body.font)
-                        .foregroundStyle(AppColor.textPrimary)
-                        .focused($focusedDay, equals: i)
-                        .textInputAutocapitalization(.words)
-                        .autocorrectionDisabled()
-                        .submitLabel(i < vm.dayCount - 1 ? .next : .done)
-                        .onSubmit {
-                            if i < vm.dayCount - 1 { focusedDay = i + 1 }
-                            else { focusedDay = nil }
-                        }
-                        .frame(height: 44)
-                        .contentShape(Rectangle())
-                        .onTapGesture { focusedDay = i }
+                VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                    AppSectionHeader("Day names")
+
+                    AppCardList(data: Array(0..<vm.dayCount), id: \.self) { i in
+                        TextField("Day name", text: dayNameBinding(for: i))
+                            .font(AppFont.body.font)
+                            .foregroundStyle(AppColor.textPrimary)
+                            .focused($focusedDay, equals: i)
+                            .textInputAutocapitalization(.words)
+                            .autocorrectionDisabled()
+                            .submitLabel(i < vm.dayCount - 1 ? .next : .done)
+                            .onSubmit {
+                                if i < vm.dayCount - 1 { focusedDay = i + 1 }
+                                else { focusedDay = nil }
+                            }
+                    }
                 }
             }
         }
@@ -84,9 +87,7 @@ struct OnboardingSplitBuilderView: View {
 }
 
 #Preview {
-    NavigationStack {
-        OnboardingSplitBuilderView(progressStep: 3, progressTotal: 4) { }
-            .environment(OnboardingViewModel())
-    }
-    .tint(AppColor.accent)
+    OnboardingSplitBuilderView(progressStep: 3, progressTotal: 4, onContinue: {}, onBack: {})
+        .environment(OnboardingViewModel())
+        .tint(AppColor.accent)
 }

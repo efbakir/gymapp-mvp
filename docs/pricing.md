@@ -29,12 +29,17 @@ All subscription tiers include a **7-day free trial**. Lifetime has no trial —
 
 ## What is behind the paywall
 
-Per `docs/launch-plan.md` §2:
-- Unlimited template slots (free tier caps at 3)
-- Full history beyond the last 30 days
-- PR detection + notifications
-- Widgets / Lock Screen Live Activity for rest timer
-- Future Pro features (Watch companion, ProgressionEngine opt-in, cloud backup) — no second paywall
+Resolved 2026-04-28 (see `docs/product-compass.md` §Decision log). The earlier list (template-count cap, history time cap, PR detection, widgets) is rejected — every one of those gates sits on the Gym Test path and would violate `docs/claude/scope.md` line 77 (*"Subscription gate on core logging"* → banned).
+
+**Pro features (gated):**
+- CSV + Markdown export of all training data
+- Apple Health workout sync (bidirectional)
+- Custom app icons (4–6 variants)
+- Custom template accent colors
+- "Founding supporter" in-app badge
+- Future Pro features (Apple Watch companion, ProgressionEngine opt-in, cloud backup) — no second paywall ever
+
+**Free forever — promise sacred:** all set logging, ghost values, rest timer + Lock Screen / Live Activity, all templates (no count cap), full history (no time cap), PR detection + notifications, custom exercises. None of these may move behind the paywall.
 
 ## Trial + win-back
 

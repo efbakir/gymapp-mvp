@@ -9,6 +9,15 @@ import Charts
 import SwiftUI
 import SwiftData
 
+/// Captured deletion intent — held while the confirmation alert is on screen
+/// so the message can preview impact (`affectedTemplateCount`).
+private struct PendingExerciseDeletion: Identifiable {
+    let id = UUID()
+    let exerciseId: UUID
+    let exerciseName: String
+    let affectedTemplateCount: Int
+}
+
 struct ExercisesListView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Exercise.displayName) private var exercises: [Exercise]
@@ -16,6 +25,7 @@ struct ExercisesListView: View {
     @State private var query = ""
     @State private var selectedMuscle: MuscleGroup? = nil
     @State private var selectedEquipment: Equipment? = nil
+    @State private var pendingDeletion: PendingExerciseDeletion?
 
     private var filteredExercises: [Exercise] {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -40,6 +50,7 @@ struct ExercisesListView: View {
                 .listRowSeparator(.hidden)
                 .listRowBackground(Color.clear)
             }
+            .listSectionSeparator(.hidden, edges: .bottom)
 
             ForEach(filteredExercises, id: \.id) { exercise in
                 NavigationLink(value: exercise) {
@@ -48,7 +59,7 @@ struct ExercisesListView: View {
                             Text(exercise.displayName)
                                 .font(AppFont.body.font)
                             if exercise.isBodyweight {
-                                Text("BW")
+                                Text(AppCopy.Workout.bodyweightAbbrev)
                                     .font(AppFont.caption.font)
                                     .foregroundStyle(AppColor.textSecondary)
                             }
@@ -61,19 +72,29 @@ struct ExercisesListView: View {
                 }
             }
             .onDelete(perform: deleteExercises)
-            .listRowBackground(AppColor.cardBackground)
+            .appPlainListRowChrome()
+
+            // Empty-row hint covers cold start (no exercises seeded), full
+            // delete (user removed everything), and zero-match filters. Three
+            // states share one row recipe — disambiguated by message.
+            if filteredExercises.isEmpty {
+                Text(emptyHintMessage)
+                    .font(AppFont.caption.font)
+                    .foregroundStyle(AppColor.textSecondary)
+                    .frame(minHeight: 44, alignment: .leading)
+                    .appPlainListRowChrome(separator: .hidden)
+            }
         }
         .scrollContentBackground(.hidden)
         .background(AppColor.background.ignoresSafeArea())
         .appScrollEdgeSoft()
+        .appScreenEnter()
         .navigationTitle("Exercises")
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(for: Exercise.self) { exercise in
             ExerciseDetailView(exercise: exercise)
         }
-        .searchable(text: $query, prompt: "Search by name or alias")
-        .textInputAutocapitalization(.words)
-        .autocorrectionDisabled()
+        .appExerciseSearchable(text: $query)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
@@ -89,7 +110,39 @@ struct ExercisesListView: View {
         .sheet(isPresented: $showingAddExercise) {
             AddExerciseView()
                 .appBottomSheetChrome()
+                .presentationDetents([.large])
         }
+        .alert(
+            pendingDeletion.map { AppCopy.Exercises.deleteTitle($0.exerciseName) } ?? "",
+            isPresented: Binding(
+                get: { pendingDeletion != nil },
+                set: { if !$0 { pendingDeletion = nil } }
+            ),
+            presenting: pendingDeletion
+        ) { pending in
+            Button(AppCopy.Exercises.deleteAction, role: .destructive) {
+                confirmDelete(pending)
+            }
+            Button(AppCopy.Nav.cancel, role: .cancel) {}
+        } message: { pending in
+            if pending.affectedTemplateCount > 0 {
+                Text(AppCopy.Exercises.deleteImpactMessage(routineCount: pending.affectedTemplateCount))
+            } else {
+                Text(AppCopy.Exercises.deleteUnusedMessage)
+            }
+        }
+    }
+
+    private var emptyHintMessage: String {
+        let hasFilters = selectedMuscle != nil || selectedEquipment != nil
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmed.isEmpty {
+            return AppCopy.Search.noMatchingExercises
+        }
+        if hasFilters {
+            return AppCopy.Search.noExercisesMatchFilters
+        }
+        return AppCopy.Search.noExercisesYet
     }
 
     private func exerciseCaption(for exercise: Exercise) -> String {
@@ -100,14 +153,31 @@ struct ExercisesListView: View {
         return parts.joined(separator: " · ")
     }
 
+    /// Capture the swipe-to-delete intent and stage a confirmation alert. Swipe
+    /// only ever passes one offset (no EditMode is enabled here), so we present
+    /// per-exercise — a multi-select alert would be ambiguous about scope.
     private func deleteExercises(at offsets: IndexSet) {
-        let deletedIds = Set(offsets.map { filteredExercises[$0].id })
+        guard let firstOffset = offsets.first else { return }
+        let exercise = filteredExercises[firstOffset]
         let allTemplates = (try? modelContext.fetch(FetchDescriptor<DayTemplate>())) ?? []
-        for template in allTemplates where template.orderedExerciseIds.contains(where: deletedIds.contains) {
-            template.orderedExerciseIds.removeAll { deletedIds.contains($0) }
+        let affected = allTemplates.filter { $0.orderedExerciseIds.contains(exercise.id) }.count
+        pendingDeletion = PendingExerciseDeletion(
+            exerciseId: exercise.id,
+            exerciseName: exercise.displayName,
+            affectedTemplateCount: affected
+        )
+    }
+
+    /// Apply the staged deletion: cascade-remove the UUID from every referencing
+    /// template, then delete the exercise itself. The cascade is what the
+    /// confirmation alert preview (impact count) is warning about.
+    private func confirmDelete(_ pending: PendingExerciseDeletion) {
+        let allTemplates = (try? modelContext.fetch(FetchDescriptor<DayTemplate>())) ?? []
+        for template in allTemplates where template.orderedExerciseIds.contains(pending.exerciseId) {
+            template.orderedExerciseIds.removeAll { $0 == pending.exerciseId }
         }
-        for index in offsets {
-            modelContext.delete(filteredExercises[index])
+        if let exercise = exercises.first(where: { $0.id == pending.exerciseId }) {
+            modelContext.delete(exercise)
         }
         try? modelContext.save()
     }
@@ -156,6 +226,22 @@ private struct ExerciseFilterChips: View {
     }
 }
 
+private enum AddExerciseClassificationRow: String, Identifiable, CaseIterable {
+    case muscle
+    case equipment
+    case bodyweight
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .muscle: return "Muscle group"
+        case .equipment: return "Equipment"
+        case .bodyweight: return "Bodyweight"
+        }
+    }
+}
+
 struct AddExerciseView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -171,53 +257,81 @@ struct AddExerciseView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            Form {
-                Section("Exercise") {
+        AppSheetScreen(
+            title: "New exercise",
+            primaryButton: PrimaryButtonConfig(
+                label: AppCopy.Nav.save,
+                isEnabled: canSave,
+                action: save
+            ),
+            dismissLabel: AppCopy.Nav.cancel,
+            dismissActionPlacement: .cancellation,
+            onDismissAction: { dismiss() }
+        ) {
+            VStack(alignment: .leading, spacing: AppSpacing.lg) {
+                VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                    AppSectionHeader("Exercise")
+
                     TextField("Exercise name", text: $displayName)
+                        .font(AppFont.body.font)
+                        .foregroundStyle(AppColor.textPrimary)
                         .textInputAutocapitalization(.words)
-                        .frame(minHeight: 44)
+                        .appInputFieldStyle()
+
                     TextField("Aliases (comma separated)", text: $aliasesText)
+                        .font(AppFont.body.font)
+                        .foregroundStyle(AppColor.textPrimary)
                         .textInputAutocapitalization(.words)
-                        .frame(minHeight: 44)
+                        .appInputFieldStyle()
                 }
-                .listRowBackground(AppColor.cardBackground)
-                Section("Classification") {
-                    Picker("Muscle group", selection: $muscleGroup) {
-                        ForEach(MuscleGroup.allCases) { group in
-                            Text(group.displayName).tag(group)
+
+                VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                    AppSectionHeader("Classification")
+
+                    AppCardList(
+                        data: AddExerciseClassificationRow.allCases,
+                        id: \.id
+                    ) { row in
+                        HStack(spacing: AppSpacing.sm) {
+                            Text(row.title)
+                                .font(AppFont.body.font)
+                                .foregroundStyle(AppColor.textPrimary)
+
+                            Spacer(minLength: 0)
+
+                            classificationControl(for: row)
                         }
                     }
-                    .frame(minHeight: 44)
-                    Picker("Equipment", selection: $equipment) {
-                        ForEach(Equipment.allCases) { equipment in
-                            Text(equipment.displayName).tag(equipment)
-                        }
-                    }
-                    .frame(minHeight: 44)
-                }
-                .listRowBackground(AppColor.cardBackground)
-                Section("Options") {
-                    Toggle("Bodyweight", isOn: $isBodyweight)
-                        .frame(minHeight: 44)
-                }
-                .listRowBackground(AppColor.cardBackground)
-            }
-            .scrollContentBackground(.hidden)
-            .background(AppColor.background.ignoresSafeArea())
-            .appScrollEdgeSoft()
-            .navigationTitle("New Exercise")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", role: .cancel) { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") { save() }
-                        .disabled(!canSave)
                 }
             }
-            .appNavigationBarChrome()
+        }
+    }
+
+    @ViewBuilder
+    private func classificationControl(for row: AddExerciseClassificationRow) -> some View {
+        switch row {
+        case .muscle:
+            Picker("Muscle group", selection: $muscleGroup) {
+                ForEach(MuscleGroup.allCases) { group in
+                    Text(group.displayName).tag(group)
+                }
+            }
+            .pickerStyle(.menu)
+            .labelsHidden()
+            .tint(AppColor.textPrimary)
+        case .equipment:
+            Picker("Equipment", selection: $equipment) {
+                ForEach(Equipment.allCases) { eq in
+                    Text(eq.displayName).tag(eq)
+                }
+            }
+            .pickerStyle(.menu)
+            .labelsHidden()
+            .tint(AppColor.textPrimary)
+        case .bodyweight:
+            Toggle("", isOn: $isBodyweight)
+                .labelsHidden()
+                .tint(AppColor.accent)
         }
     }
 
@@ -299,88 +413,91 @@ struct ExerciseDetailView: View {
         AppScreen(
             showsNativeNavigationBar: true
         ) {
-            VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                Text(exercise.displayName)
-                    .appFont(.largeTitle)
-                Text("Brzycki 1RM and session volume")
-                    .font(AppFont.caption.font)
-                    .foregroundStyle(AppColor.textSecondary)
-            }
-            .appCardStyle()
-
-            if summaries.isEmpty {
-                EmptyStateCard(
-                    title: "No logged sessions yet",
-                    message: "Sessions logged for this exercise will appear here with their 1RM trend and volume."
-                )
-            } else {
-                VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                    Text("Estimated 1RM Trend")
-                        .font(AppFont.sectionHeader.font)
-                        .foregroundStyle(AppColor.textPrimary)
-                    Chart(trendAscending) { item in
-                        LineMark(
-                            x: .value("Date", item.sessionDate),
-                            y: .value("1RM", item.estimatedOneRM)
-                        )
-                        .foregroundStyle(AppColor.textPrimary)
-                        PointMark(
-                            x: .value("Date", item.sessionDate),
-                            y: .value("1RM", item.estimatedOneRM)
-                        )
-                        .foregroundStyle(AppColor.textPrimary)
-                    }
-                    .frame(height: 180)
+            VStack(alignment: .leading, spacing: AppSpacing.md) {
+                VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                    Text(exercise.displayName)
+                        .appFont(.largeTitle)
+                    Text("Brzycki 1RM and session volume")
+                        .font(AppFont.caption.font)
+                        .foregroundStyle(AppColor.textSecondary)
                 }
                 .appCardStyle()
 
-                VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                    Text("Session Volume")
-                        .font(AppFont.sectionHeader.font)
-                        .foregroundStyle(AppColor.textPrimary)
-                    Chart(trendAscending) { item in
-                        BarMark(
-                            x: .value("Date", item.sessionDate),
-                            y: .value("Volume", item.totalVolume)
-                        )
-                        .foregroundStyle(AppColor.accentSoft)
+                if summaries.isEmpty {
+                    EmptyStateCard(
+                        title: "No sessions yet",
+                        message: "Sessions for this exercise show up here once you log them."
+                    )
+                } else {
+                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                        Text("Estimated 1RM trend")
+                            .font(AppFont.sectionHeader.font)
+                            .foregroundStyle(AppColor.textPrimary)
+                        Chart(trendAscending) { item in
+                            LineMark(
+                                x: .value("Date", item.sessionDate),
+                                y: .value("1RM", item.estimatedOneRM)
+                            )
+                            .foregroundStyle(AppColor.textPrimary)
+                            PointMark(
+                                x: .value("Date", item.sessionDate),
+                                y: .value("1RM", item.estimatedOneRM)
+                            )
+                            .foregroundStyle(AppColor.textPrimary)
+                        }
+                        .frame(height: 180)
                     }
-                    .frame(height: 160)
-                }
-                .appCardStyle()
+                    .appCardStyle()
 
-                VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                    Text("Past Sessions")
-                        .font(AppFont.sectionHeader.font)
-                        .foregroundStyle(AppColor.textPrimary)
+                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                        Text("Session volume")
+                            .font(AppFont.sectionHeader.font)
+                            .foregroundStyle(AppColor.textPrimary)
+                        Chart(trendAscending) { item in
+                            BarMark(
+                                x: .value("Date", item.sessionDate),
+                                y: .value("Volume", item.totalVolume)
+                            )
+                            .foregroundStyle(AppColor.accentSoft)
+                        }
+                        .frame(height: 160)
+                    }
+                    .appCardStyle()
 
-                    ForEach(summaries) { summary in
-                        VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                            HStack {
-                                Text(summary.templateName)
-                                    .font(AppFont.body.font)
-                                Spacer(minLength: 0)
-                                Text(summary.sessionDate, style: .date)
+                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                        Text("Past sessions")
+                            .font(AppFont.sectionHeader.font)
+                            .foregroundStyle(AppColor.textPrimary)
+
+                        ForEach(summaries) { summary in
+                            VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                                HStack {
+                                    Text(summary.templateName)
+                                        .font(AppFont.body.font)
+                                    Spacer(minLength: 0)
+                                    Text(summary.sessionDate, style: .date)
+                                        .font(AppFont.caption.font)
+                                        .foregroundStyle(AppColor.textSecondary)
+                                }
+                                Text("Top set: \(summary.topSetText)")
+                                    .font(AppFont.caption.font)
+                                    .foregroundStyle(AppColor.textSecondary)
+                                Text("Est. 1RM: \(WorkoutTargetFormatter.weightDisplay(summary.estimatedOneRM)) • Volume: \(Int(summary.totalVolume))")
                                     .font(AppFont.caption.font)
                                     .foregroundStyle(AppColor.textSecondary)
                             }
-                            Text("Top set: \(summary.topSetText)")
-                                .font(AppFont.caption.font)
-                                .foregroundStyle(AppColor.textSecondary)
-                            Text("Est. 1RM: \(WorkoutTargetFormatter.weightDisplay(summary.estimatedOneRM)) • Volume: \(Int(summary.totalVolume))")
-                                .font(AppFont.caption.font)
-                                .foregroundStyle(AppColor.textSecondary)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.vertical, AppSpacing.sm)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.vertical, AppSpacing.sm)
 
-                        if summary.id != summaries.last?.id {
-                            AppDivider()
+                            if summary.id != summaries.last?.id {
+                                AppDivider()
+                            }
                         }
                     }
+                    .appCardStyle()
                 }
-                .appCardStyle()
             }
+            .appScreenEnter()
         }
         .navigationTitle("Exercise")
         .navigationBarTitleDisplayMode(.inline)

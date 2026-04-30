@@ -35,7 +35,10 @@ struct ActiveWorkoutView: View {
     @State private var showsAddExercise = false
     @State private var pendingExerciseForSetup: Exercise?
     @State private var customSetCounts: [UUID: Int] = [:]
-    @State private var warmupExpanded: Bool = false
+    /// Drives the warm-up guidance bottom sheet — opened from the inline reminder text
+    /// above the command card. The reminder itself only renders for an exercise's first
+    /// set; the sheet is informational and dismissible at any time.
+    @State private var showsWarmupGuide: Bool = false
     /// Bumped on every successful `completeSet`. Drives the
     /// `.sensoryFeedback(.success, trigger:)` on `WorkoutCommandCard`, so the
     /// haptic lives at the atom layer instead of being fired imperatively
@@ -46,9 +49,6 @@ struct ActiveWorkoutView: View {
     /// `setLoggedPhase` bump, double rest-timer start. Flipped true on entry,
     /// reset on the next runloop tick so legitimate next-set logging works.
     @State private var isLoggingSet: Bool = false
-    /// Bumped when a warmup set lands. Lighter haptic than working sets so the
-    /// lifter can tell warmup from work without looking.
-    @State private var warmupLoggedPhase: Int = 0
     /// Bumped exactly once when the lifter finishes the workout. Drives the
     /// session-finish success notification haptic.
     @State private var workoutFinishedPhase: Int = 0
@@ -61,6 +61,20 @@ struct ActiveWorkoutView: View {
     /// reads this to flip the chip to accent chrome, so the milestone persists visually
     /// for the rest of the workout (the haptic only fires once at log).
     @State private var prSetEntryIDs: Set<UUID> = []
+    /// Sentence-case description of the prior best the most recent PR-set beat — fed to
+    /// `WorkoutCommandCard.priorBestText`. Only the *most recent* PR's delta is shown,
+    /// since the badge auto-hides ~3s. Set on PR detection in `completeSet`; the badge
+    /// itself manages the dwell, so we never need to clear this — stale text is hidden
+    /// behind the `prBadgeVisible` flag.
+    @State private var lastPRPriorText: String? = nil
+    /// Set entry currently open in the edit sheet (tap a logged chip in
+    /// `SetProgressIndicator`). Drives `.sheet(item:)` for `AdjustResultSheet` in
+    /// edit mode — same atom as new-set logging, just seeded from the existing entry.
+    @State private var editingSetPayload: EditSetPayload? = nil
+    /// Active when the lifter has just tapped a "+ 1 rep" / "+ 2.5 kg" suggestion
+    /// chip — drives the metric-hero numeric cross-fade to the bumped target while
+    /// the AdjustResultSheet opens. Cleared on sheet dismiss; never persisted.
+    @State private var pendingSuggestionPreview: PendingSuggestionPreview? = nil
 
     /// Plus / minus on the rest timer adjust by this many seconds (minimum rest stays 30s).
     private static let restTimerAdjustStepSeconds = 30
@@ -100,9 +114,96 @@ struct ActiveWorkoutView: View {
                 lastActualText: lastActualText(for: exercise),
                 entries: entries,
                 prefill: prefill,
-                plannedSetCount: plannedSetCount
+                plannedSetCount: plannedSetCount,
+                suggestion: setSuggestion(from: prefill, isBodyweight: exercise.isBodyweight),
+                priorSessionSetCount: priorSessionSetCount(for: exercise)
             )
         }
+    }
+
+    /// Compute the progressive-overload nudge for this section, if any. Only
+    /// fires for prior-session prefills — once a set lands in the current
+    /// session, the supporting slot empties and the chips disappear with it.
+    private func setSuggestion(from prefill: SetPrefill?, isBodyweight: Bool) -> SetSuggestion? {
+        guard let prefill, prefill.source == .priorSession else { return nil }
+        let unitSystem = UserDefaults.standard.string(forKey: "unitSystem") ?? "kg"
+        return SetSuggestion.compute(
+            lastWeightKg: prefill.weight,
+            lastReps: prefill.reps,
+            isBodyweight: isBodyweight,
+            unitSystem: unitSystem
+        )
+    }
+
+    /// Number of working sets the lifter logged for this exercise in their most
+    /// recent completed session. Feeds the metric hero's "Last 3×8×80kg"
+    /// formatting so a chip-tap preview keeps the same set-count component
+    /// (only reps or weight changes) and the per-glyph cross-fade lands cleanly.
+    private func priorSessionSetCount(for exercise: Exercise) -> Int? {
+        guard let lastSession = sessions.first(where: {
+            $0.id != session.id &&
+            $0.isCompleted &&
+            $0.setEntries.contains(where: { $0.exerciseId == exercise.id && $0.isCompleted && !$0.isWarmup })
+        }) else { return nil }
+        let count = lastSession.setEntries.filter {
+            $0.exerciseId == exercise.id && $0.isCompleted && !$0.isWarmup
+        }.count
+        return count > 0 ? count : nil
+    }
+
+    /// Open the existing AdjustResultSheet pre-filled to the bumped target,
+    /// and stage the same target as a `pendingSuggestionPreview` so the metric
+    /// hero cross-fades to the new value while the sheet opens. The preview
+    /// is cleared by the sheet's `onDismiss`. Reuses the same surface as
+    /// `onSecondaryAction` ("Adjust") — the chip is just a smarter prefill,
+    /// not a new sheet.
+    private func presentSuggestionSheet(
+        for section: WorkoutExerciseSectionModel,
+        kind: SetSuggestionKind
+    ) {
+        guard let suggestion = section.suggestion else { return }
+        let bumped: SetPrefill
+        switch kind {
+        case .reps:
+            bumped = suggestion.repBumpedPrefill
+        case .weight:
+            guard let weightPrefill = suggestion.weightBumpedPrefill else { return }
+            bumped = weightPrefill
+        }
+        withAnimation(reduceMotion ? nil : .appReveal) {
+            pendingSuggestionPreview = PendingSuggestionPreview(
+                exerciseId: section.exercise.id,
+                bumpedWeight: bumped.weight,
+                bumpedReps: bumped.reps
+            )
+        }
+        adjustResultPayload = AdjustResultPayload(
+            exercise: section.exercise,
+            prefill: bumped
+        )
+    }
+
+    /// Build the chip row passed to `WorkoutCommandCard`. One entry for the
+    /// rep bump (always available when there's a prior-session anchor) and an
+    /// optional second entry for the weight bump (suppressed for bodyweight).
+    private func suggestionActions(
+        for section: WorkoutExerciseSectionModel
+    ) -> [WorkoutCommandCard.SuggestionAction] {
+        guard let suggestion = section.suggestion else { return [] }
+        var actions: [WorkoutCommandCard.SuggestionAction] = []
+        actions.append(
+            WorkoutCommandCard.SuggestionAction(label: suggestion.repChipLabel) {
+                presentSuggestionSheet(for: section, kind: .reps)
+            }
+        )
+        if suggestion.nextWeightKg != nil {
+            actions.append(
+                WorkoutCommandCard.SuggestionAction(label: suggestion.weightChipLabel) {
+                    presentSuggestionSheet(for: section, kind: .weight)
+                }
+            )
+        }
+        return actions
     }
 
     private var recommendedExerciseIndex: Int {
@@ -134,6 +235,15 @@ struct ActiveWorkoutView: View {
     private var nextExerciseBarState: SessionStateBar.State? {
         guard let nextSection, !isWorkoutComplete else { return nil }
         return .nextExercise(subtitle: nextSection.exercise.displayName)
+    }
+
+    /// Show the warmup reminder when the lifter hasn't logged a working set for
+    /// the *current* exercise yet. Lives in the bottom safe-area inset (above
+    /// the next-exercise CTA) so the page reads top-down: nav, card, warmup,
+    /// next-exercise.
+    private var showsWarmupReminder: Bool {
+        guard let section = currentSection else { return false }
+        return !hasLoggedWorkingSet(for: section.exercise.id)
     }
 
     private func emptyMetricPlaceholder() -> String {
@@ -184,30 +294,38 @@ struct ActiveWorkoutView: View {
         return .idle
     }
 
+    /// Inline reminder rendered above the command card before the lifter logs the
+    /// first working set for an exercise. Quiet caption-sized copy with an
+    /// accent-tinted "How?" link that opens `WarmupGuideSheet` — centered,
+    /// secondary tone so it never competes with the metric hero or "Complete
+    /// set" CTA. Disappears once a working set is logged.
+    private var warmupReminderText: some View {
+        Button {
+            showsWarmupGuide = true
+        } label: {
+            HStack(alignment: .firstTextBaseline, spacing: AppSpacing.xs) {
+                Text(AppCopy.Workout.warmupReminder)
+                    .foregroundStyle(AppColor.textSecondary)
+                Text(AppCopy.Workout.warmupReminderLink)
+                    .foregroundStyle(AppColor.accent)
+                    .underline()
+            }
+            .font(AppFont.caption.font)
+            .frame(maxWidth: .infinity, alignment: .center)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint("Opens warm-up guidance")
+    }
+
     @ViewBuilder
     private func workoutMainColumn(for section: WorkoutExerciseSectionModel) -> some View {
         VStack(spacing: AppSpacing.lg) {
-            if let warmups = warmupSets(for: section),
-               !hasLoggedWorkingSet(for: section.exercise.id) {
-                WarmupRow(
-                    warmups: warmups,
-                    completedIndices: completedWarmupIndices(for: section.exercise.id),
-                    isBodyweight: section.exercise.isBodyweight,
-                    isExpanded: $warmupExpanded,
-                    onLog: { warmup in
-                        completeWarmup(
-                            exercise: section.exercise,
-                            warmup: warmup
-                        )
-                    }
-                )
-            }
-
             WorkoutCommandCard(
                 progressSteps: progressSteps(for: section),
                 exerciseName: section.exercise.displayName,
                 metricValue: metricValue(for: section),
-                metricSupportingText: metricSupportingText(for: section),
+                metricSupportingText: nil,
                 metricIsHint: metricIsPlaceholder(for: section),
                 metricIsGhost: metricIsGhost(for: section),
                 state: workoutCommandCardState(for: section),
@@ -226,11 +344,13 @@ struct ActiveWorkoutView: View {
                 },
                 setLoggedSignal: setLoggedPhase,
                 setPRSignal: setPRPhase,
+                priorBestText: lastPRPriorText,
                 timerValue: timerDisplayText,
                 timerState: timerControlState,
                 onTimerDecrease: adjustRestTimerAction,
                 onTimerToggle: toggleRestTimerAction,
-                onTimerIncrease: increaseRestTimerAction
+                onTimerIncrease: increaseRestTimerAction,
+                suggestionActions: suggestionActions(for: section)
             )
 
             if isQuickStartSession {
@@ -248,6 +368,16 @@ struct ActiveWorkoutView: View {
     }
 
     private func metricValue(for section: WorkoutExerciseSectionModel) -> String {
+        if let preview = pendingSuggestionPreview,
+           preview.exerciseId == section.exercise.id,
+           let setCount = section.priorSessionSetCount {
+            return WorkoutTargetFormatter.lastText(
+                weightKg: preview.bumpedWeight,
+                setCount: setCount,
+                reps: preview.bumpedReps,
+                isBodyweight: section.exercise.isBodyweight
+            )
+        }
         if let lastValues = lastLoggedValues(for: section.exercise.id) {
             return WorkoutTargetFormatter.setMetricText(
                 weightKg: lastValues.weight,
@@ -259,13 +389,6 @@ struct ActiveWorkoutView: View {
             return lastActual
         }
         return emptyMetricPlaceholder()
-    }
-
-    private func metricSupportingText(for section: WorkoutExerciseSectionModel) -> String? {
-        if !currentEntries(for: section.exercise.id).isEmpty {
-            return nil
-        }
-        return section.lastActualText != nil ? "Last session" : nil
     }
 
     private func metricIsPlaceholder(for section: WorkoutExerciseSectionModel) -> Bool {
@@ -320,11 +443,20 @@ struct ActiveWorkoutView: View {
             }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            if let nextExerciseBarState {
-                SessionStateBar(
-                    state: nextExerciseBarState,
-                    onAdvance: nextSection == nil ? nil : goToNextExerciseAction
-                )
+            VStack(spacing: 0) {
+                if showsWarmupReminder {
+                    warmupReminderText
+                        .padding(.horizontal, AppSpacing.md)
+                        .padding(.vertical, AppSpacing.sm)
+                        .frame(maxWidth: .infinity)
+                        .background(AppColor.background)
+                }
+                if let nextExerciseBarState {
+                    SessionStateBar(
+                        state: nextExerciseBarState,
+                        onAdvance: nextSection == nil ? nil : goToNextExerciseAction
+                    )
+                }
             }
         }
         .navigationTitle("")
@@ -336,7 +468,6 @@ struct ActiveWorkoutView: View {
                     .foregroundStyle(AppColor.textPrimary)
                     .lineLimit(1)
                     .truncationMode(.tail)
-                    .minimumScaleFactor(0.85)
             }
             ToolbarItem(placement: .topBarLeading) {
                 Button {
@@ -385,14 +516,14 @@ struct ActiveWorkoutView: View {
         .sensoryFeedback(.success, trigger: showsReadyState) { old, new in
             !old && new
         }
-        // Warmup logged → light impact (replaces the previous imperative
-        // `UIImpactFeedbackGenerator(style: .light)` call). Lighter than the
-        // working-set success so the lifter can tell warmup from work without
-        // looking at the screen.
-        .sensoryFeedback(.impact(weight: .light), trigger: warmupLoggedPhase)
         // Workout finished → notification-style success haptic (replaces the
         // imperative `UINotificationFeedbackGenerator` in `finishWorkout`).
         .sensoryFeedback(.success, trigger: workoutFinishedPhase)
+        .sheet(isPresented: $showsWarmupGuide) {
+            WarmupGuideSheet()
+                .presentationDetents([.medium])
+                .appBottomSheetChrome()
+        }
         .sheet(isPresented: $showLineup) {
             exerciseListSheet
                 .presentationDetents([.medium, .large])
@@ -403,19 +534,50 @@ struct ActiveWorkoutView: View {
                 .presentationDetents([.medium, .large])
                 .appBottomSheetChrome()
         }
-        .sheet(item: $adjustResultPayload) { payload in
+        .sheet(item: $adjustResultPayload, onDismiss: {
+            withAnimation(reduceMotion ? nil : .appReveal) {
+                pendingSuggestionPreview = nil
+            }
+        }) { payload in
             AdjustResultSheet(
                 exerciseName: payload.exercise.displayName,
                 isBodyweight: payload.exercise.isBodyweight,
-                prefill: payload.prefill
-            ) { weight, reps, note in
-                completeSet(
-                    exercise: payload.exercise,
-                    weight: weight,
-                    reps: reps,
-                    note: note
-                )
-            }
+                mode: .log(prefill: payload.prefill),
+                onSave: { weight, reps, note in
+                    completeSet(
+                        exercise: payload.exercise,
+                        weight: weight,
+                        reps: reps,
+                        note: note
+                    )
+                }
+            )
+            .presentationDetents([.medium, .large])
+            .appBottomSheetChrome()
+        }
+        .sheet(item: $editingSetPayload) { payload in
+            AdjustResultSheet(
+                exerciseName: payload.exercise.displayName,
+                isBodyweight: payload.exercise.isBodyweight,
+                mode: .edit(
+                    weight: payload.entry.weight,
+                    reps: payload.entry.reps,
+                    note: payload.entry.note,
+                    setNumber: payload.setNumber
+                ),
+                onSave: { weight, reps, note in
+                    updateSet(
+                        payload.entry,
+                        exercise: payload.exercise,
+                        weight: weight,
+                        reps: reps,
+                        note: note
+                    )
+                },
+                onDelete: {
+                    deleteSet(payload.entry, exercise: payload.exercise)
+                }
+            )
             .presentationDetents([.medium, .large])
             .appBottomSheetChrome()
         }
@@ -435,26 +597,26 @@ struct ActiveWorkoutView: View {
             .presentationDetents([.height(320)])
             .appBottomSheetChrome()
         }
-        .alert("Cancel Workout", isPresented: $showsCancelConfirmation) {
-            Button("Cancel Workout", role: .destructive) {
+        .alert(AppCopy.Workout.cancelWorkoutTitle, isPresented: $showsCancelConfirmation) {
+            Button(AppCopy.Workout.cancelWorkoutAction, role: .destructive) {
                 cancelWorkout()
             }
-            Button("Keep Going", role: .cancel) {}
+            Button(AppCopy.Workout.keepGoing, role: .cancel) {}
         } message: {
-            Text("Are you sure you want to cancel this workout? All logged sets will be lost.")
+            Text(AppCopy.Workout.cancelWorkoutMessage)
         }
-        .alert("Skip Exercise?", isPresented: $showsSkipExerciseConfirmation) {
-            Button("Skip", role: .destructive) {
+        .alert(AppCopy.Workout.skipExerciseTitle, isPresented: $showsSkipExerciseConfirmation) {
+            Button(AppCopy.Workout.skipExerciseAction, role: .destructive) {
                 goToNextExercise()
             }
-            Button("Keep Logging", role: .cancel) {}
+            Button(AppCopy.Workout.keepLogging, role: .cancel) {}
         } message: {
             if let currentSection {
                 let remaining = currentSection.plannedSetCount - currentSection.entries.count
-                Text("You have \(remaining) unlogged set\(remaining == 1 ? "" : "s") for \(currentSection.exercise.displayName).")
+                Text("\(remaining) set\(remaining == 1 ? "" : "s") still unlogged for \(currentSection.exercise.displayName).")
             }
         }
-        .alert("Finish workout", isPresented: $showsFinishConfirmation) {
+        .alert(AppCopy.Workout.finishWorkoutTitle, isPresented: $showsFinishConfirmation) {
             Button(AppCopy.Workout.finishWorkout) {
                 finishWorkout()
                 if template?.name == "Quick Start" {
@@ -462,12 +624,12 @@ struct ActiveWorkoutView: View {
                     showsRenamePrompt = true
                 }
             }
-            Button("Cancel", role: .cancel) {}
+            Button(AppCopy.Nav.cancel, role: .cancel) {}
         } message: {
-            Text("This will finish and save your session.")
+            Text(AppCopy.Workout.finishWorkoutMessage)
         }
-        .alert("Name this workout", isPresented: $showsRenamePrompt) {
-            TextField("Workout name", text: $renameDraft)
+        .alert(AppCopy.Workout.nameWorkoutTitle, isPresented: $showsRenamePrompt) {
+            TextField(AppCopy.Workout.nameWorkoutFieldPlaceholder, text: $renameDraft)
             Button(AppCopy.Session.useName) {
                 let trimmed = renameDraft.trimmingCharacters(in: .whitespacesAndNewlines)
                 if let template, !trimmed.isEmpty {
@@ -477,7 +639,7 @@ struct ActiveWorkoutView: View {
             }
             Button(AppCopy.Session.skipNaming, role: .cancel) {}
         } message: {
-            Text("Give this session a name so you can find it later.")
+            Text(AppCopy.Workout.nameWorkoutMessage)
         }
         .onAppear {
             selectedExerciseIndex = recommendedExerciseIndex
@@ -506,16 +668,16 @@ struct ActiveWorkoutView: View {
     private var addExercisePrompt: some View {
         AppCard {
             VStack(alignment: .center, spacing: AppSpacing.md) {
-                Text("Add your first exercise")
+                Text(AppCopy.Workout.addFirstExerciseTitle)
                     .font(AppFont.productHeading.font)
                     .foregroundStyle(AppColor.textPrimary)
 
-                Text("Search existing exercises or create a new one.")
+                Text(AppCopy.Workout.addFirstExerciseHint)
                     .font(AppFont.body.font)
                     .foregroundStyle(AppColor.textSecondary)
                     .multilineTextAlignment(.center)
 
-                AppPrimaryButton("Add Exercise") {
+                AppPrimaryButton(AppCopy.Workout.addExercise) {
                     showsAddExercise = true
                 }
             }
@@ -524,7 +686,7 @@ struct ActiveWorkoutView: View {
     }
 
     private var addExerciseButton: some View {
-        AppGhostButton("Add Exercise") {
+        AppGhostButton(AppCopy.Workout.addExercise) {
             showsAddExercise = true
         }
     }
@@ -580,7 +742,7 @@ struct ActiveWorkoutView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
+                    Button(AppCopy.Nav.done) {
                         showLineup = false
                     }
                     .appToolbarTextStyle()
@@ -648,29 +810,23 @@ struct ActiveWorkoutView: View {
 
                 if let subtitle = exerciseListSubtitle(for: section) {
                     Text(subtitle)
-                        .font(AppFont.productAction.font)
-                        .foregroundStyle(isDone ? AppColor.controlBackground : AppColor.textSecondary)
+                        .font(AppFont.caption.font)
+                        .foregroundStyle(isDone ? AppColor.textDisabled : AppColor.textSecondary)
                 }
             }
 
             Spacer(minLength: 0)
 
             if isCurrent && !isDone {
-                AppTag(text: "Current", style: .accent)
+                AppTag(text: AppCopy.Workout.exerciseCurrentTag, style: .accent)
             } else if isDone {
-                ZStack {
-                    Circle()
-                        .fill(AppColor.success.opacity(0.1))
-                        .frame(width: 24, height: 24)
-
+                AppIconCircle(diameter: 24, surface: .tinted(AppColor.success, opacity: 0.1)) {
                     AppIcon.checkmark.image(size: 12, weight: .bold)
                         .foregroundStyle(AppColor.success)
                 }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.vertical, AppSpacing.md)
-        .frame(minHeight: 56)
         .contentShape(Rectangle())
     }
 
@@ -702,7 +858,7 @@ struct ActiveWorkoutView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
+                    Button(AppCopy.Nav.done) {
                         showLogs = false
                     }
                     .appToolbarTextStyle()
@@ -726,8 +882,8 @@ struct ActiveWorkoutView: View {
 
                 if let entry {
                     Text(logEntrySubtitle(for: entry, exercise: section.exercise))
-                        .font(AppFont.productAction.font)
-                        .foregroundStyle(AppColor.controlBackground)
+                        .font(AppFont.caption.font)
+                        .foregroundStyle(AppColor.textDisabled)
                 }
             }
 
@@ -739,11 +895,9 @@ struct ActiveWorkoutView: View {
                         .foregroundStyle(AppColor.textPrimary)
                 }
             } else if isCurrent {
-                AppTag(text: "Current", style: .accent)
+                AppTag(text: AppCopy.Workout.exerciseCurrentTag, style: .accent)
             }
         }
-        .padding(.vertical, AppSpacing.sm)
-        .frame(minHeight: 72)
         .contentShape(Rectangle())
     }
 
@@ -773,6 +927,7 @@ struct ActiveWorkoutView: View {
             var reps: Int?
             var weightText: String?
             var isPR: Bool = false
+            var onTap: (() -> Void)? = nil
 
             if index < section.entries.count {
                 let entry = section.entries[index]
@@ -784,6 +939,13 @@ struct ActiveWorkoutView: View {
                     weightText = WorkoutTargetFormatter.weightCompact(entry.weight)
                 }
                 isPR = prSetEntryIDs.contains(entry.id)
+                onTap = {
+                    editingSetPayload = EditSetPayload(
+                        entry: entry,
+                        exercise: section.exercise,
+                        setNumber: index + 1
+                    )
+                }
             } else if !section.hasReachedPlannedSetGoal && index == section.entries.count {
                 state = .current
             } else {
@@ -796,7 +958,8 @@ struct ActiveWorkoutView: View {
                 state: state,
                 reps: reps,
                 weightText: weightText,
-                isPR: isPR
+                isPR: isPR,
+                onTap: onTap
             )
         }
     }
@@ -872,7 +1035,7 @@ struct ActiveWorkoutView: View {
     private func startRestTimer(seconds: Int) {
         showsReadyState = false
         restDurationSeconds = max(30, seconds)
-        restTimer.start(totalSeconds: restDurationSeconds)
+        restTimer.start(totalSeconds: restDurationSeconds, upNext: nextSection?.exercise.displayName)
     }
 
     private func adjustRestTimer(by delta: Int) {
@@ -967,6 +1130,11 @@ struct ActiveWorkoutView: View {
                 || (weight == prior.weight && reps > prior.reps)
             if beats {
                 prSetEntryIDs.insert(entry.id)
+                lastPRPriorText = WorkoutTargetFormatter.milestoneText(
+                    weightKg: prior.weight,
+                    reps: prior.reps,
+                    isBodyweight: exercise.isBodyweight
+                ).map(AppCopy.Workout.priorBest)
                 setPRPhase &+= 1
             }
         }
@@ -983,40 +1151,62 @@ struct ActiveWorkoutView: View {
         }
     }
 
-    private func completeWarmup(
+    /// Tap a logged chip → edit sheet → save: replace weight/reps/note in place.
+    /// No new haptic, no PR badge — this is a correction, not a celebration.
+    /// PR flag for *this* entry is re-evaluated against the current baseline; other
+    /// entries keep their original at-log-time flags so an unrelated edit doesn't
+    /// retroactively demote earlier milestones.
+    private func updateSet(
+        _ entry: SetEntry,
         exercise: Exercise,
-        warmup: WarmupGenerator.WarmupSet
+        weight: Double,
+        reps: Int,
+        note: String
     ) {
-        let setIndex = session.setEntries
-            .filter { $0.exerciseId == exercise.id }
-            .count
-
-        let entry = SetEntry(
-            sessionId: session.id,
-            exerciseId: exercise.id,
-            weight: warmup.weightKg,
-            reps: warmup.reps,
-            rpe: 0,
-            rir: -1,
-            isWarmup: true,
-            isCompleted: true,
-            setIndex: setIndex,
-            note: ""
-        )
-        entry.session = session
-        modelContext.insert(entry)
-        try? modelContext.save()
-        warmupLoggedPhase &+= 1
+        guard reps > 0 else {
+            deleteSet(entry, exercise: exercise)
+            return
+        }
+        withAnimation(reduceMotion ? nil : .appReveal) {
+            entry.weight = weight
+            entry.reps = reps
+            entry.note = note
+            try? modelContext.save()
+        }
+        reevaluatePRFlag(for: entry, exerciseID: exercise.id)
     }
 
-    private func warmupSets(
-        for section: WorkoutExerciseSectionModel
-    ) -> [WarmupGenerator.WarmupSet]? {
-        guard let prefill = section.prefill else { return nil }
-        return WarmupGenerator.warmups(
-            forWorkingKg: prefill.weight,
-            isBodyweight: section.exercise.isBodyweight
-        )
+    /// Tap a logged chip → edit sheet → delete (or save with reps == 0). Removes
+    /// the entry, drops any stale PR flag for it, and lets the rest timer keep
+    /// running — the user is mid-rest correcting a typo, not finishing the set
+    /// over again. Set indices are intentionally not renumbered: `currentEntries`
+    /// sorts by `setIndex`, gaps are harmless, and the next `completeSet` writes
+    /// a fresh trailing index via `currentEntries.count`.
+    private func deleteSet(_ entry: SetEntry, exercise: Exercise) {
+        withAnimation(reduceMotion ? nil : .appExit) {
+            modelContext.delete(entry)
+            try? modelContext.save()
+        }
+        prSetEntryIDs.remove(entry.id)
+    }
+
+    /// Re-evaluate just the edited entry's PR flag against the current baseline.
+    /// Unedited entries retain their at-log-time flags — matching the existing
+    /// semantic (the chip Ink chrome marks "this was a PR moment when you logged it",
+    /// not "this is the current all-time best"). The 3-second PR badge does not
+    /// re-fire on edit; this only tracks the persistent chip color.
+    private func reevaluatePRFlag(for entry: SetEntry, exerciseID: UUID) {
+        if let prior = priorBest(for: exerciseID, excluding: entry.id) {
+            let beats = entry.weight > prior.weight
+                || (entry.weight == prior.weight && entry.reps > prior.reps)
+            if beats {
+                prSetEntryIDs.insert(entry.id)
+            } else {
+                prSetEntryIDs.remove(entry.id)
+            }
+        } else {
+            prSetEntryIDs.remove(entry.id)
+        }
     }
 
     private func hasLoggedWorkingSet(for exerciseID: UUID) -> Bool {
@@ -1025,14 +1215,6 @@ struct ActiveWorkoutView: View {
                 && entry.isCompleted
                 && !entry.isWarmup
         }
-    }
-
-    private func completedWarmupIndices(for exerciseID: UUID) -> Set<Int> {
-        let warmups = session.setEntries
-            .filter { $0.exerciseId == exerciseID && $0.isWarmup && $0.isCompleted }
-            .sorted { $0.setIndex < $1.setIndex }
-        // Map in order: the first completed warmup corresponds to index 0, etc.
-        return Set(warmups.indices)
     }
 
     private func finishWorkout() {
@@ -1107,6 +1289,13 @@ private struct WorkoutExerciseSectionModel: Identifiable {
     let entries: [SetEntry]
     let prefill: SetPrefill?
     let plannedSetCount: Int
+    /// Non-nil only when `prefill.source == .priorSession` — i.e. there's a
+    /// prior-session anchor to bump off. Hidden once an in-session set lands.
+    let suggestion: SetSuggestion?
+    /// Set count from the most recent completed prior session. Drives the
+    /// "3×N×Wkg" component of the metric hero so chip-tap previews keep the
+    /// same set-count digits and only the reps or weight change.
+    let priorSessionSetCount: Int?
 
     var id: UUID { exercise.id }
 
@@ -1122,11 +1311,34 @@ private struct AdjustResultPayload: Identifiable {
     var id: UUID { exercise.id }
 }
 
+/// Tap a logged chip in `SetProgressIndicator` to seed this. Carries both the
+/// exercise (for the title + bodyweight flag) and the entry being edited (so the
+/// sheet can seed weight × reps × note from the existing values, not from prefill).
+private struct EditSetPayload: Identifiable {
+    let entry: SetEntry
+    let exercise: Exercise
+    /// 1-based number shown on the chip the user tapped — drives the sheet title.
+    let setNumber: Int
+
+    var id: UUID { entry.id }
+}
+
 private struct AdjustResultSheet: View {
+    /// Drives the sheet's seed values, primary CTA, and trailing destructive action.
+    /// `.log` is the original new-set flow (prefill from prior session). `.edit` is
+    /// the new chip-tap flow (seed from the existing entry, expose Delete set).
+    enum Mode {
+        case log(prefill: SetPrefill?)
+        case edit(weight: Double, reps: Int, note: String, setNumber: Int)
+    }
+
     let exerciseName: String
     let isBodyweight: Bool
-    let prefill: SetPrefill?
+    let mode: Mode
     let onSave: (_ weight: Double, _ reps: Int, _ note: String) -> Void
+    /// Edit mode only — when non-nil, a destructive "Delete set" secondary appears
+    /// beneath "Save changes". Log mode passes nil.
+    var onDelete: (() -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
     @State private var weightText = ""
@@ -1148,6 +1360,22 @@ private struct AdjustResultSheet: View {
 
     private var canSave: Bool {
         parsedReps > 0
+    }
+
+    private var isEditMode: Bool {
+        if case .edit = mode { return true }
+        return false
+    }
+
+    private var primaryLabel: String {
+        isEditMode ? AppCopy.Workout.saveChanges : AppCopy.Workout.completeSet
+    }
+
+    private var navigationTitle: String {
+        if case .edit(_, _, _, let setNumber) = mode {
+            return AppCopy.Workout.editSet(setNumber)
+        }
+        return exerciseName
     }
 
     var body: some View {
@@ -1191,22 +1419,33 @@ private struct AdjustResultSheet: View {
                     }
                     .padding(.top, AppSpacing.md)
 
-                    AppPrimaryButton(AppCopy.Workout.completeSet, isEnabled: canSave) {
+                    AppPrimaryButton(primaryLabel, isEnabled: canSave) {
                         onSave(effectiveIsBodyweight ? 0 : parsedWeight, parsedReps, noteText)
                         dismiss()
                     }
                     .padding(.top, AppSpacing.md)
+
+                    if isEditMode, let onDelete {
+                        AppSecondaryButton(
+                            AppCopy.Workout.deleteSet,
+                            tone: .destructive,
+                            action: {
+                                onDelete()
+                                dismiss()
+                            }
+                        )
+                    }
                 }
                 .padding(.horizontal, AppSpacing.md)
                 .padding(.top, AppSpacing.sm)
                 .padding(.bottom, AppSpacing.md)
             }
             .scrollDismissesKeyboard(.interactively)
-            .navigationTitle(exerciseName)
+            .navigationTitle(navigationTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", role: .cancel) {
+                    Button(AppCopy.Nav.cancel, role: .cancel) {
                         dismiss()
                     }
                 }
@@ -1216,11 +1455,20 @@ private struct AdjustResultSheet: View {
         .onAppear {
             guard !seeded else { return }
             seeded = true
-            guard let prefill else { return }
-            if !isBodyweight, prefill.weight > 0 {
-                weightText = prefill.weight.weightString
+            switch mode {
+            case .log(let prefill):
+                guard let prefill else { return }
+                if !isBodyweight, prefill.weight > 0 {
+                    weightText = prefill.weight.weightString
+                }
+                repsText = "\(prefill.reps)"
+            case .edit(let weight, let reps, let note, _):
+                if !isBodyweight, weight > 0 {
+                    weightText = weight.weightString
+                }
+                repsText = "\(reps)"
+                noteText = note
             }
-            repsText = "\(prefill.reps)"
         }
     }
 
@@ -1239,7 +1487,8 @@ private struct AdjustResultSheet: View {
             HStack(spacing: AppSpacing.xs) {
                 TextField("0", text: text)
                     .keyboardType(keyboardType)
-                    .font(AppFont.numericDisplay.font)
+                    .font(AppFont.numericInput.font)
+                    .tracking(AppFont.numericInput.tracking)
                     .multilineTextAlignment(.center)
 
                 if let suffix {
@@ -1253,60 +1502,47 @@ private struct AdjustResultSheet: View {
     }
 }
 
+private struct SetCountOption: Hashable, Identifiable {
+    let value: Int
+    var id: Int { value }
+}
+
 private struct SetCountPickerSheet: View {
     let exerciseName: String
     let onSelect: (Int) -> Void
 
     @Environment(\.dismiss) private var dismiss
-    @State private var selectedCount = 3
+    @State private var selection: SetCountOption = SetCountOption(value: 3)
+
+    private static let options: [SetCountOption] = (1...6).map { SetCountOption(value: $0) }
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: AppSpacing.lg) {
-                VStack(spacing: AppSpacing.md) {
-                    Text("How many sets?")
-                        .font(AppFont.body.font)
-                        .foregroundStyle(AppColor.textSecondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+        AppSheetScreen(
+            title: AppCopy.Workout.setCountQuestion,
+            primaryButton: PrimaryButtonConfig(label: AppCopy.Nav.done, action: commitSelection),
+            onDismissAction: { dismiss() },
+            usesOuterScroll: false
+        ) {
+            VStack(alignment: .leading, spacing: AppSpacing.md) {
+                Text(AppCopy.Workout.setCountPrompt(exerciseName))
+                    .font(AppFont.body.font)
+                    .foregroundStyle(AppColor.textSecondary)
+                    .lineLimit(2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
-                    HStack(spacing: AppSpacing.sm) {
-                        ForEach(1...6, id: \.self) { count in
-                            Button {
-                                selectedCount = count
-                            } label: {
-                                Text("\(count)")
-                                    .font(AppFont.sectionHeader.font)
-                                    .foregroundStyle(count == selectedCount ? AppColor.accentForeground : AppColor.textPrimary)
-                                    .frame(maxWidth: .infinity)
-                                    .frame(height: 48)
-                                    .background(count == selectedCount ? AppColor.accent : AppColor.controlBackground)
-                                    .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
-                            }
-                            .buttonStyle(ScaleButtonStyle())
-                        }
-                    }
-                }
-
-                AppPrimaryButton(AppCopy.Workout.continueWorkout) {
-                    onSelect(selectedCount)
-                    dismiss()
-                }
+                AppSegmentedControl(
+                    selection: $selection,
+                    items: Self.options,
+                    size: .tall,
+                    title: { "\($0.value)" }
+                )
             }
-            .padding(.horizontal, AppSpacing.md)
-            .padding(.top, AppSpacing.md)
-            .padding(.bottom, AppSpacing.md)
-            .frame(maxHeight: .infinity, alignment: .top)
-            .navigationTitle(exerciseName)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", role: .cancel) {
-                        dismiss()
-                    }
-                }
-            }
-            .appNavigationBarChrome()
         }
+    }
+
+    private func commitSelection() {
+        onSelect(selection.value)
+        dismiss()
     }
 }
 
@@ -1319,7 +1555,6 @@ private struct AddExerciseSheet: View {
     let onSelect: (Exercise) -> Void
 
     @State private var query = ""
-    @FocusState private var isSearchFocused: Bool
 
     private var filteredExercises: [Exercise] {
         let available = exercises.filter { !existingIds.contains($0.id) }
@@ -1354,7 +1589,7 @@ private struct AddExerciseSheet: View {
                         }
                         .frame(minHeight: 44, alignment: .leading)
                     }
-                    .listRowBackground(AppColor.cardBackground)
+                    .appPlainListRowChrome()
                 }
 
                 ForEach(filteredExercises, id: \.id) { exercise in
@@ -1368,7 +1603,7 @@ private struct AddExerciseSheet: View {
                                     .font(AppFont.body.font)
                                     .foregroundStyle(AppColor.textPrimary)
                                 if exercise.isBodyweight {
-                                    Text("BW")
+                                    Text(AppCopy.Workout.bodyweightAbbrev)
                                         .font(AppFont.caption.font)
                                         .foregroundStyle(AppColor.textSecondary)
                                 }
@@ -1381,31 +1616,42 @@ private struct AddExerciseSheet: View {
                         }
                         .frame(minHeight: 44, alignment: .leading)
                     }
-                    .listRowBackground(AppColor.cardBackground)
+                    .appPlainListRowChrome()
+                }
+
+                // Empty-row hint when neither the create-new affordance nor the
+                // filtered library has anything to show — covers cold start
+                // (library empty), all-already-added, and zero-match search.
+                if filteredExercises.isEmpty && !canCreateNew {
+                    Text(query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                         ? AppCopy.Search.noExercisesYet
+                         : AppCopy.Search.noMatchingExercises)
+                        .font(AppFont.caption.font)
+                        .foregroundStyle(AppColor.textSecondary)
+                        .frame(minHeight: 44, alignment: .leading)
+                        .appPlainListRowChrome(separator: .hidden)
                 }
             }
+            .listSectionSpacing(0)
+            .listStyle(.plain)
             .scrollContentBackground(.hidden)
             .background(AppColor.sheetBackground.ignoresSafeArea())
             .scrollDismissesKeyboard(.immediately)
-            .navigationTitle("Add Exercise")
+            .navigationTitle(AppCopy.Workout.addExercise)
             .navigationBarTitleDisplayMode(.inline)
-            .searchable(text: $query, prompt: "Search or create new")
-            .searchFocused($isSearchFocused)
-            .textInputAutocapitalization(.words)
-            .autocorrectionDisabled()
+            .appExerciseSearchable(text: $query)
             .onSubmit(of: .search) {
                 guard canCreateNew else { return }
                 createAndSelect(name: query.trimmingCharacters(in: .whitespacesAndNewlines))
             }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
+                    Button(AppCopy.Nav.done) { dismiss() }
                         .appToolbarTextStyle()
                 }
             }
             .appNavigationBarChrome()
             .tint(AppColor.accent)
-            .onAppear { isSearchFocused = true }
         }
     }
 
@@ -1428,6 +1674,87 @@ struct SetPrefill {
     let weight: Double
     let reps: Int
     let source: Source
+}
+
+/// Presentation-only progressive-overload nudge — derived from the most recent
+/// completed prior-session set, recomputed on every render, never persisted.
+/// Pairs with the suggestion chips in `WorkoutCommandCard.metricSupportingSlot`.
+///
+/// Both `+ 1 rep` and `+ 2.5 kg` (or `+ 5 lb`) chips render side by side for
+/// weighted exercises so the lifter picks which axis to push without the app
+/// deciding for them. Bodyweight exercises only expose the rep chip — no
+/// plates to add. The chip is the only progression-suggestion surface in the
+/// app by doctrine: PRODUCT.md principle 2 ("History, not instructions") is
+/// partially relaxed here, scoped to two tap-to-accept hints. No engine, no
+/// rule storage, no per-exercise progression model. If a future request asks
+/// for a "third chip", "configurable increment", or "auto-accept" — push back.
+struct SetSuggestion: Equatable {
+    let lastWeightKg: Double
+    let lastReps: Int
+    /// One more than `lastReps`. Always available — every lift can take a rep.
+    let nextReps: Int
+    /// `lastWeightKg` plus the smallest legal increment for the user's unit.
+    /// `nil` for bodyweight (no plates to add).
+    let nextWeightKg: Double?
+
+    /// Smallest legal weight increment in kilograms, sized to the user's unit
+    /// system. Internal storage is kg; lb users see "+ 5 lb" because
+    /// 5 lb ≈ 2.268 kg.
+    static func smallestIncrementKg(unitSystem: String) -> Double {
+        unitSystem == "lb" ? 5.0 / 2.20462 : 2.5
+    }
+
+    static func compute(
+        lastWeightKg: Double,
+        lastReps: Int,
+        isBodyweight: Bool,
+        unitSystem: String
+    ) -> SetSuggestion {
+        SetSuggestion(
+            lastWeightKg: lastWeightKg,
+            lastReps: lastReps,
+            nextReps: lastReps + 1,
+            nextWeightKg: isBodyweight
+                ? nil
+                : lastWeightKg + smallestIncrementKg(unitSystem: unitSystem)
+        )
+    }
+
+    var repChipLabel: String { "+ 1 rep" }
+
+    var weightChipLabel: String {
+        let unit = UserDefaults.standard.string(forKey: "unitSystem") ?? "kg"
+        return unit == "lb" ? "+ 5 lb" : "+ 2.5 kg"
+    }
+
+    /// Bumped prefill for the rep chip — same weight, +1 rep.
+    var repBumpedPrefill: SetPrefill {
+        SetPrefill(weight: lastWeightKg, reps: nextReps, source: .priorSession)
+    }
+
+    /// Bumped prefill for the weight chip — same reps, +smallest increment.
+    /// `nil` when `nextWeightKg` is unavailable (bodyweight exercise).
+    var weightBumpedPrefill: SetPrefill? {
+        nextWeightKg.map {
+            SetPrefill(weight: $0, reps: lastReps, source: .priorSession)
+        }
+    }
+}
+
+/// Which axis the lifter chose to push when tapping a suggestion chip.
+enum SetSuggestionKind {
+    case reps
+    case weight
+}
+
+/// Transient preview state — when the lifter taps a suggestion chip, the
+/// metric hero shows the bumped target (animated via `numericText` cross-fade)
+/// while the AdjustResultSheet opens for confirmation. Cleared on sheet
+/// dismiss; never persisted.
+private struct PendingSuggestionPreview: Equatable {
+    let exerciseId: UUID
+    let bumpedWeight: Double
+    let bumpedReps: Int
 }
 
 @MainActor
@@ -1513,6 +1840,8 @@ final class RestTimerManager {
     private var task: Task<Void, Never>?
     private var activity: Activity<RestTimerAttributes>?
     private(set) var endDate: Date?
+    private var startDate: Date?
+    private var upNext: String?
 
     /// Persisted across app launches so a force-quit during rest doesn't
     /// desync the in-app timer from the Live Activity (compass: timer follows
@@ -1530,11 +1859,14 @@ final class RestTimerManager {
         return String(format: "%d:%02d", minutes, seconds)
     }
 
-    func start(totalSeconds: Int) {
+    func start(totalSeconds: Int, upNext: String? = nil) {
         stop()
         totalDuration = totalSeconds
         secondsRemaining = totalSeconds
-        endDate = Date().addingTimeInterval(TimeInterval(totalSeconds))
+        let now = Date()
+        startDate = now
+        endDate = now.addingTimeInterval(TimeInterval(totalSeconds))
+        self.upNext = upNext
         isRunning = true
         persistState()
         startActivity()
@@ -1547,6 +1879,7 @@ final class RestTimerManager {
         task = nil
         isRunning = false
         endDate = nil
+        startDate = nil
         clearPersistedState()
         endActivity()
     }
@@ -1554,7 +1887,9 @@ final class RestTimerManager {
     func resume() {
         guard !isRunning, secondsRemaining > 0 else { return }
         isRunning = true
-        endDate = Date().addingTimeInterval(TimeInterval(secondsRemaining))
+        let now = Date()
+        startDate = now
+        endDate = now.addingTimeInterval(TimeInterval(secondsRemaining))
         persistState()
         startActivity()
         startCountdownTask()
@@ -1581,7 +1916,9 @@ final class RestTimerManager {
         totalDuration = updatedTotal
 
         if isRunning {
-            endDate = Date().addingTimeInterval(TimeInterval(updatedRemaining))
+            let now = Date()
+            startDate = now
+            endDate = now.addingTimeInterval(TimeInterval(updatedRemaining))
             persistState()
             updateActivity()
         }
@@ -1594,6 +1931,8 @@ final class RestTimerManager {
         secondsRemaining = 0
         totalDuration = 0
         endDate = nil
+        startDate = nil
+        upNext = nil
         clearPersistedState()
         endActivity()
     }
@@ -1603,6 +1942,8 @@ final class RestTimerManager {
         isRunning = false
         totalDuration = 0
         endDate = nil
+        startDate = nil
+        upNext = nil
         completionCount += 1
         clearPersistedState()
         endActivity()
@@ -1614,13 +1955,22 @@ final class RestTimerManager {
         let defaults = UserDefaults.standard
         var recoveredEnd: Date?
         var recoveredTotal: Int = 0
+        var recoveredStart: Date?
+        var recoveredUpNext: String?
 
         if let stored = defaults.object(forKey: Self.endDateKey) as? Date {
             recoveredEnd = stored
             recoveredTotal = defaults.integer(forKey: Self.totalDurationKey)
-        } else if let liveActivity = Activity<RestTimerAttributes>.activities.first {
-            recoveredEnd = liveActivity.content.state.endDate
-            recoveredTotal = max(30, Int(liveActivity.content.state.endDate.timeIntervalSinceNow))
+        }
+
+        if let liveActivity = Activity<RestTimerAttributes>.activities.first {
+            let liveState = liveActivity.content.state
+            if recoveredEnd == nil {
+                recoveredEnd = liveState.endDate
+                recoveredTotal = max(30, Int(liveState.endDate.timeIntervalSinceNow))
+            }
+            recoveredStart = liveState.startDate
+            recoveredUpNext = liveState.upNext
             activity = liveActivity
         }
 
@@ -1634,6 +1984,8 @@ final class RestTimerManager {
         }
 
         endDate = end
+        startDate = recoveredStart ?? end.addingTimeInterval(-TimeInterval(max(remaining, recoveredTotal)))
+        upNext = recoveredUpNext
         secondsRemaining = remaining
         totalDuration = max(remaining, recoveredTotal)
         isRunning = true
@@ -1675,9 +2027,13 @@ final class RestTimerManager {
     }
 
     private func startActivity() {
-        guard let endDate else { return }
+        guard let endDate, let startDate else { return }
         let attributes = RestTimerAttributes()
-        let state = RestTimerAttributes.ContentState(endDate: endDate)
+        let state = RestTimerAttributes.ContentState(
+            startDate: startDate,
+            endDate: endDate,
+            upNext: upNext
+        )
         let content = ActivityContent(state: state, staleDate: endDate.addingTimeInterval(60))
         activity = try? Activity<RestTimerAttributes>.request(
             attributes: attributes,
@@ -1687,8 +2043,12 @@ final class RestTimerManager {
     }
 
     private func updateActivity() {
-        guard let endDate else { return }
-        let updatedState = RestTimerAttributes.ContentState(endDate: endDate)
+        guard let endDate, let startDate else { return }
+        let updatedState = RestTimerAttributes.ContentState(
+            startDate: startDate,
+            endDate: endDate,
+            upNext: upNext
+        )
         let updatedContent = ActivityContent(state: updatedState, staleDate: endDate.addingTimeInterval(60))
         let currentActivity = activity
         Task { @MainActor in
@@ -1706,97 +2066,27 @@ final class RestTimerManager {
     }
 }
 
-// MARK: - Warmup row
+// MARK: - Warmup guide sheet
 
-private struct WarmupRow: View {
-    let warmups: [WarmupGenerator.WarmupSet]
-    let completedIndices: Set<Int>
-    let isBodyweight: Bool
-    @Binding var isExpanded: Bool
-    let onLog: (WarmupGenerator.WarmupSet) -> Void
-
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+private struct WarmupGuideSheet: View {
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        VStack(spacing: 0) {
-            Button {
-                withAnimation(reduceMotion ? nil : .appState) {
-                    isExpanded.toggle()
-                }
-            } label: {
-                HStack(spacing: AppSpacing.sm) {
-                    Text("Warmup")
-                        .font(AppFont.caption.font)
-                        .foregroundStyle(AppColor.textSecondary)
-                    Text("· \(warmups.count) set\(warmups.count == 1 ? "" : "s")")
-                        .font(AppFont.caption.font)
-                        .foregroundStyle(AppColor.textSecondary)
-                    Spacer(minLength: 0)
-                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                        .font(AppFont.caption.font)
-                        .foregroundStyle(AppColor.textSecondary)
-                }
-                .padding(.horizontal, AppSpacing.md)
-                .padding(.vertical, AppSpacing.sm)
-                .contentShape(Rectangle())
+        AppSheetScreen(
+            title: AppCopy.Workout.warmupGuideTitle,
+            dismissLabel: AppCopy.Nav.done,
+            dismissActionPlacement: .confirmation,
+            onDismissAction: { dismiss() },
+            usesOuterScroll: false
+        ) {
+            VStack(alignment: .leading, spacing: AppSpacing.md) {
+                Text(AppCopy.Workout.warmupGuideRepRule)
+                Text(AppCopy.Workout.warmupGuideLoadRule)
+                Text(AppCopy.Workout.warmupGuideTempoRule)
             }
-            .buttonStyle(ScaleButtonStyle())
-
-            if isExpanded {
-                VStack(spacing: 0) {
-                    ForEach(warmups) { warmup in
-                        WarmupSetButton(
-                            warmup: warmup,
-                            isDone: completedIndices.contains(warmup.index),
-                            onTap: { onLog(warmup) }
-                        )
-                        if warmup.id != warmups.last?.id {
-                            Rectangle()
-                                .fill(AppColor.border)
-                                .frame(height: 1)
-                                .padding(.leading, AppSpacing.md)
-                        }
-                    }
-                }
-            }
+            .font(AppFont.body.font)
+            .foregroundStyle(AppColor.textPrimary)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .background(
-            RoundedRectangle(cornerRadius: AppRadius.md)
-                .fill(AppColor.cardBackground)
-        )
-    }
-}
-
-private struct WarmupSetButton: View {
-    let warmup: WarmupGenerator.WarmupSet
-    let isDone: Bool
-    let onTap: () -> Void
-
-    var body: some View {
-        Button(action: onTap) {
-            HStack(spacing: AppSpacing.sm) {
-                Image(systemName: isDone ? "checkmark.circle.fill" : "circle")
-                    .font(AppFont.caption.font)
-                    .foregroundStyle(isDone ? AppColor.textPrimary : AppColor.textSecondary)
-                Text(
-                    WorkoutTargetFormatter.setMetricText(
-                        weightKg: warmup.weightKg,
-                        reps: warmup.reps,
-                        isBodyweight: false
-                    ) ?? "\(warmup.reps)"
-                )
-                    .font(AppFont.caption.font)
-                    .foregroundStyle(AppColor.textPrimary)
-                Spacer(minLength: 0)
-                Text("Set \(warmup.index + 1)")
-                    .font(AppFont.caption.font)
-                    .foregroundStyle(AppColor.textSecondary)
-            }
-            .padding(.horizontal, AppSpacing.md)
-            .padding(.vertical, AppSpacing.sm)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(ScaleButtonStyle())
-        .disabled(isDone)
     }
 }

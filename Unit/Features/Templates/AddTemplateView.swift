@@ -21,25 +21,21 @@ struct AddTemplateView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            AppScreen(
-                primaryButton: PrimaryButtonConfig(label: "Create Day", isEnabled: canSave, isLoading: isSaving, action: save),
-                customHeader: ProductTopBar(
-                    title: "New Day",
-                    trailingActions: [
-                        .text(AppCopy.Nav.close) { dismiss() }
-                    ]
-                ).eraseToAnyView()
-            ) {
-                VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                    AppSectionHeader("Day name")
+        AppSheetScreen(
+            title: "New day",
+            primaryButton: PrimaryButtonConfig(label: "Create Day", isEnabled: canSave, isLoading: isSaving, action: save),
+            dismissLabel: AppCopy.Nav.close,
+            onDismissAction: { dismiss() },
+            usesOuterScroll: false
+        ) {
+            VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                AppSectionHeader("Day name")
 
-                    TextField("e.g. Push", text: $name)
-                        .font(AppFont.body.font)
-                        .foregroundStyle(AppColor.textPrimary)
-                        .textInputAutocapitalization(.words)
-                        .appInputFieldStyle(height: 52)
-                }
+                TextField("e.g. Push", text: $name)
+                    .font(AppFont.body.font)
+                    .foregroundStyle(AppColor.textPrimary)
+                    .textInputAutocapitalization(.words)
+                    .appInputFieldStyle(height: 52)
             }
         }
     }

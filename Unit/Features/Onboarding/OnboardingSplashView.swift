@@ -26,64 +26,61 @@ struct OnboardingSplashView: View {
     }
 
     var body: some View {
-        ZStack {
-            AppColor.background.ignoresSafeArea()
+        // No opaque background here — `OnboardingFlow` owns the Milk page so
+        // a step swap slides only this content layer over a still surface.
+        VStack(spacing: 0) {
+            Spacer(minLength: AppSpacing.lg)
 
             VStack(spacing: 0) {
-                Spacer()
-
-                VStack(spacing: 0) {
-                    Image("BrandLogo")
-                        .resizable()
-                        .interpolation(.high)
-                        .scaledToFit()
-                        .frame(width: Self.logoSide, height: Self.logoSide)
-                        .clipShape(
-                            RoundedRectangle(
-                                cornerRadius: AppRadius.appIconHomeScreenCornerRadius(sideLength: Self.logoSide),
-                                style: .continuous
-                            )
+                Image("BrandLogo")
+                    .resizable()
+                    .interpolation(.high)
+                    .scaledToFit()
+                    .frame(width: Self.logoSide, height: Self.logoSide)
+                    .clipShape(
+                        RoundedRectangle(
+                            cornerRadius: AppRadius.appIconHomeScreenCornerRadius(sideLength: Self.logoSide),
+                            style: .continuous
                         )
-                        .modifier(staggered(0))
+                    )
+                    .modifier(staggered(0))
 
-                    VStack(spacing: AppSpacing.xxs) {
-                        Text("Welcome to")
-                            .font(AppFont.splashWelcome.font)
-                            .foregroundStyle(AppColor.textSecondary)
-
-                        Text("Unit")
-                            .font(AppFont.splashTitle.font)
-                            .tracking(AppFont.splashTitle.tracking)
-                            .foregroundStyle(AppColor.textPrimary)
-                    }
-                    .padding(.top, AppSpacing.xl)
-                    .modifier(staggered(1))
-
-                    Text("Your upgraded gym notebook")
+                VStack(spacing: AppSpacing.xxs) {
+                    Text("Welcome to")
                         .font(AppFont.splashWelcome.font)
                         .foregroundStyle(AppColor.textSecondary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, AppSpacing.xl)
-                        .modifier(staggered(2))
+
+                    Text("Unit")
+                        .font(AppFont.splashTitle.font)
+                        .tracking(AppFont.splashTitle.tracking)
+                        .foregroundStyle(AppColor.textPrimary)
                 }
-                .padding(.horizontal, AppSpacing.xl)
+                .padding(.top, AppSpacing.xl)
+                .modifier(staggered(1))
 
-                Spacer()
-
-                AppPrimaryButton("Set up program", action: onGetStarted)
-                    .padding(.horizontal, AppSpacing.xl)
-                    .padding(.bottom, AppSpacing.xxl)
-                    .modifier(staggered(3))
+                Text("Your upgraded gym notebook")
+                    .font(AppFont.splashWelcome.font)
+                    .foregroundStyle(AppColor.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, AppSpacing.xl)
+                    .modifier(staggered(2))
             }
+            .padding(.horizontal, AppSpacing.xl)
+
+            Spacer(minLength: AppSpacing.lg)
+
+            AppPrimaryButton("Set up program", action: onGetStarted)
+                .padding(.horizontal, AppSpacing.xl)
+                .padding(.bottom, AppSpacing.md)
+                .modifier(staggered(3))
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear {
             guard !hasAppeared else { return }
             hasAppeared = true
         }
-        .toolbar(.hidden, for: .navigationBar)
         .overlay(alignment: .topTrailing) {
             if showsDismiss {
                 Button {
