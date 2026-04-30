@@ -87,10 +87,7 @@ export default function Header() {
           <Link href="/support" className="eyebrow-link">
             Support
           </Link>
-          <a
-            href="#download"
-            className="press-spring inline-flex items-center h-11 px-unit-md rounded-md eyebrow !text-unit-accent-foreground bg-unit-accent"
-          >
+          <a href="#download" className="btn-primary h-11 px-unit-md text-[13px]">
             Join waitlist
           </a>
         </div>
@@ -136,7 +133,7 @@ export default function Header() {
             <a
               href="#download"
               onClick={() => setMenuOpen(false)}
-              className="press-spring inline-flex items-center justify-center rounded-md eyebrow !text-unit-accent-foreground mt-unit-xs bg-unit-accent"
+              className="btn-primary text-[15px] px-unit-lg mt-unit-xs"
               style={{ height: "var(--button-height-lg)" }}
             >
               Join waitlist

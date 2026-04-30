@@ -157,6 +157,19 @@ body {
     background: radial-gradient(circle at center, var(--unit-text-primary) 0%, transparent 70%);
   }
 
+  /* Canonical primary CTA chrome. Single source of truth for every
+     accent-filled button across the marketing site (header CTA, hero
+     waitlist submit, mobile-menu CTA, etc.). Brand voice is uppercase
+     Geist Mono with 0.6px tracking — the same recipe as .eyebrow, in
+     button form. Consumers compose with size utilities (h-11 / h-[60px],
+     px-*, text-*) — never re-derive the chrome inline. */
+  .btn-primary {
+    @apply press-spring inline-flex items-center justify-center rounded-md
+      bg-unit-accent text-unit-accent-foreground
+      font-mono font-bold uppercase tracking-[0.6px] whitespace-nowrap
+      disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
   /* Calibrated press feedback for primary CTAs and pressable nav
      elements. Fast in, slow settle — feels mechanical, not laggy. */
   .press-spring {

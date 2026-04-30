@@ -120,7 +120,7 @@ export default function WaitlistForm({
         <button
           type="submit"
           disabled={!emailIsValid || state.kind === "submitting"}
-          className={`press-spring inline-flex items-center justify-center px-unit-lg rounded-md ${textClass} font-bold bg-unit-accent text-unit-accent-foreground disabled:opacity-50 disabled:cursor-not-allowed`}
+          className={`btn-primary px-unit-lg ${textClass}`}
           style={{ height: heightVar }}
         >
           {state.kind === "submitting" ? "Joining…" : "Join waitlist"}
