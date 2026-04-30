@@ -127,11 +127,11 @@ export default async function ProgramPage({ params }: { params: Params }) {
           <p className="eyebrow mb-unit-sm">Import this in 30 seconds</p>
           <ol className="space-y-unit-md">
             {data.importSteps.map((step, idx) => (
-              <li key={idx} className="flex gap-unit-md">
-                <span className="shrink-0 w-7 h-7 rounded-md bg-unit-accent text-unit-accent-foreground text-[15px] font-bold inline-flex items-center justify-center">
+              <li key={idx} className="flex gap-unit-sm items-baseline">
+                <span className="shrink-0 w-[18px] h-[18px] rounded-sm bg-unit-accent text-unit-accent-foreground text-[11px] font-bold inline-flex items-center justify-center self-start translate-y-[5px]">
                   {idx + 1}
                 </span>
-                <span className="text-base leading-relaxed text-unit-text-primary pt-[2px]">
+                <span className="text-base leading-relaxed text-unit-text-primary">
                   {step}
                 </span>
               </li>

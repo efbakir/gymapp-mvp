@@ -141,7 +141,10 @@ export default async function LandingPage() {
       </section>
 
       {/* ── Bento feature grid ── */}
-      <section id="how-it-works" className="py-unit-xxl md:py-unit-xxxl">
+      <section
+        id="how-it-works"
+        className="py-unit-xxl md:py-unit-xxxl border-t border-unit-border"
+      >
         <div className="max-w-6xl mx-auto px-unit-md md:px-unit-lg">
           <div className="mb-unit-xl md:mb-unit-xxl max-w-2xl">
             <p className="eyebrow mb-unit-xs">How it works</p>
@@ -213,7 +216,7 @@ export default async function LandingPage() {
       </section>
 
       {/* ── Positioning ── */}
-      <section className="py-unit-xxl md:py-unit-xxxl">
+      <section className="py-unit-xxl md:py-unit-xxxl border-t border-unit-border">
         <div className="max-w-3xl mx-auto px-unit-md md:px-unit-lg">
           <h2 className="h-section mb-unit-md">
             Built for lifters who already know their program.

@@ -127,6 +127,12 @@ body {
     @apply text-[13px] font-medium font-mono uppercase tracking-[0.6px] text-unit-text-secondary;
   }
 
+  /* Interactive variant of .eyebrow used for marketing-header nav items.
+     Same caps + mono recipe, with primary-text hover. */
+  .eyebrow-link {
+    @apply eyebrow transition-colors hover:text-unit-text-primary;
+  }
+
   /* Marketing type scale — 13 mono / 16 body / 20 lead / 28 section / 44 hero.
      Five steps total. Never extend with a sixth without removing one first. */
   .h-display {
