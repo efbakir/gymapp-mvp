@@ -285,8 +285,13 @@ export default async function LandingPage() {
             Common questions
           </h2>
           <div>
-            {faqs.map((f) => (
-              <FAQItem key={f.question} question={f.question} answer={f.answer} />
+            {faqs.map((f, i) => (
+              <FAQItem
+                key={f.question}
+                question={f.question}
+                answer={f.answer}
+                isLast={i === faqs.length - 1}
+              />
             ))}
           </div>
         </div>

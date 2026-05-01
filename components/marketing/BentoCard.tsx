@@ -28,7 +28,7 @@ export default function BentoCard({
 }) {
   return (
     <article
-      className={`lift-hover relative flex h-full flex-col rounded-xl border border-unit-border bg-unit-card overflow-hidden ${spanClasses[span]}`}
+      className={`lift-hover relative flex h-full flex-col rounded-xl bg-unit-card overflow-hidden ${spanClasses[span]}`}
     >
       {mediaPosition === "top" && media && (
         <div className="relative">{media}</div>

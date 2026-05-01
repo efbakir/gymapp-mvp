@@ -1,6 +1,7 @@
 import Header from "@/components/marketing/Header"
 import Footer from "@/components/marketing/Footer"
 import ConsoleSignature from "@/components/marketing/ConsoleSignature"
+import PageTransition from "@/components/marketing/PageTransition"
 
 export default function MarketingLayout({
   children,
@@ -17,7 +18,7 @@ export default function MarketingLayout({
       </a>
       <Header />
       <main id="main" className="min-h-screen">
-        {children}
+        <PageTransition>{children}</PageTransition>
       </main>
       <Footer />
       <ConsoleSignature />

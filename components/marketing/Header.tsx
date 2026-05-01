@@ -6,7 +6,8 @@ import Image from "next/image"
 import { compareSlugs, compareSlugList } from "@/app/(marketing)/compare/data"
 import { programSlugs, programSlugList } from "@/app/(marketing)/programs/data"
 
-type DropdownKey = "compare" | "programs" | null
+type DropdownKey = "compare" | "programs"
+type DropdownState = DropdownKey | null
 
 const compareItems = compareSlugList.map((slug) => ({
   href: `/compare/${slug}`,
@@ -18,9 +19,13 @@ const programItems = programSlugList.map((slug) => ({
   label: programSlugs[slug].title,
 }))
 
+// Intent delay before hover-leave closes the menu — long enough to traverse
+// the trigger→panel gap without flicker, short enough to feel snappy.
+const HOVER_CLOSE_DELAY = 140
+
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
-  const [openDropdown, setOpenDropdown] = useState<DropdownKey>(null)
+  const [openDropdown, setOpenDropdown] = useState<DropdownState>(null)
   const dropdownRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -43,9 +48,6 @@ export default function Header() {
       window.removeEventListener("keydown", onKey)
     }
   }, [openDropdown])
-
-  const toggleDropdown = (key: DropdownKey) =>
-    setOpenDropdown((prev) => (prev === key ? null : key))
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-unit-background border-b border-unit-border">
@@ -71,18 +73,18 @@ export default function Header() {
           className="hidden md:flex items-center gap-unit-lg"
         >
           <DesktopDropdown
+            itemKey="compare"
             label="Compare"
             isOpen={openDropdown === "compare"}
-            onToggle={() => toggleDropdown("compare")}
+            setOpenDropdown={setOpenDropdown}
             items={compareItems}
-            onItemClick={() => setOpenDropdown(null)}
           />
           <DesktopDropdown
+            itemKey="programs"
             label="Programs"
             isOpen={openDropdown === "programs"}
-            onToggle={() => toggleDropdown("programs")}
+            setOpenDropdown={setOpenDropdown}
             items={programItems}
-            onItemClick={() => setOpenDropdown(null)}
           />
           <Link href="/support" className="eyebrow-link">
             Support
@@ -148,23 +150,56 @@ export default function Header() {
 type NavItem = { href: string; label: string }
 
 function DesktopDropdown({
+  itemKey,
   label,
   isOpen,
-  onToggle,
+  setOpenDropdown,
   items,
-  onItemClick,
 }: {
+  itemKey: DropdownKey
   label: string
   isOpen: boolean
-  onToggle: () => void
+  setOpenDropdown: React.Dispatch<React.SetStateAction<DropdownState>>
   items: NavItem[]
-  onItemClick: () => void
 }) {
+  const closeTimer = useRef<number | null>(null)
+
+  const cancelClose = () => {
+    if (closeTimer.current !== null) {
+      window.clearTimeout(closeTimer.current)
+      closeTimer.current = null
+    }
+  }
+
+  const open = () => {
+    cancelClose()
+    setOpenDropdown(itemKey)
+  }
+
+  const scheduleClose = () => {
+    cancelClose()
+    closeTimer.current = window.setTimeout(() => {
+      setOpenDropdown((prev) => (prev === itemKey ? null : prev))
+      closeTimer.current = null
+    }, HOVER_CLOSE_DELAY)
+  }
+
+  const closeNow = () => {
+    cancelClose()
+    setOpenDropdown((prev) => (prev === itemKey ? null : prev))
+  }
+
+  useEffect(() => () => cancelClose(), [])
+
   return (
-    <div className="relative">
+    <div
+      className="relative"
+      onMouseEnter={open}
+      onMouseLeave={scheduleClose}
+    >
       <button
         type="button"
-        onClick={onToggle}
+        onClick={() => (isOpen ? closeNow() : open())}
         aria-expanded={isOpen}
         aria-haspopup="true"
         className="eyebrow-link inline-flex items-center gap-1.5 py-2"
@@ -173,21 +208,23 @@ function DesktopDropdown({
         <Caret open={isOpen} />
       </button>
       {isOpen && (
-        <div
-          role="menu"
-          className="absolute right-0 top-full mt-unit-xs min-w-[200px] rounded-md border border-unit-border bg-unit-background py-unit-xs shadow-sm"
-        >
-          {items.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              role="menuitem"
-              onClick={onItemClick}
-              className="block px-unit-md py-2 text-sm text-unit-text-secondary transition-colors hover:text-unit-text-primary hover:bg-unit-muted"
-            >
-              {item.label}
-            </Link>
-          ))}
+        // pt-unit-xs (instead of mt-unit-xs on the chrome below) keeps the
+        // hover surface continuous from trigger → panel — the visual gap is
+        // padding inside the hoverable element, not an empty layout gap.
+        <div role="menu" className="absolute right-0 top-full pt-unit-xs">
+          <div className="min-w-[200px] rounded-md border border-unit-border bg-unit-background py-unit-xs shadow-sm">
+            {items.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                role="menuitem"
+                onClick={closeNow}
+                className="block px-unit-md py-2 text-sm text-unit-text-secondary transition-colors hover:text-unit-text-primary hover:bg-unit-muted"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
         </div>
       )}
     </div>
