@@ -315,7 +315,7 @@ export default async function LandingPage() {
             Stop fighting your tracker.
           </h2>
           <p className="text-xl leading-snug mb-unit-xl text-unit-text-secondary max-w-xl mx-auto">
-            Log faster than paper. Keep your data. Train.
+            Log faster. Keep your data. Train.
           </p>
           <div className="flex justify-center">
             {isLaunched ? (
