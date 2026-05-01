@@ -68,7 +68,7 @@ export default async function ComparePage({ params }: { params: Params }) {
   ) : (
     <WaitlistForm
       size="lg"
-      caption="We'll email you once. No spam, no marketing list."
+      caption="I'll email you once. No spam, no marketing list."
     />
   )
 

@@ -24,9 +24,9 @@ export default function SupportPage() {
 
         {/* Contact */}
         <address className="not-italic block rounded-xl p-unit-lg border border-unit-border bg-unit-card mb-unit-xxl">
-          <h2 className="text-lg font-semibold mb-unit-xs">Contact us</h2>
+          <h2 className="text-lg font-semibold mb-unit-xs">Contact me</h2>
           <p className="text-[15px] mb-unit-md text-unit-text-secondary">
-            We typically respond within 24 hours.
+            I typically respond within 24 hours.
           </p>
           <a
             href={`mailto:${SUPPORT_EMAIL}?subject=Unit%20support%20request`}
@@ -45,7 +45,7 @@ export default function SupportPage() {
           />
           <FAQItem
             question="I accidentally deleted the app. Is my data gone?"
-            answer="If you deleted the app, your locally stored workout data is removed from the device. Unit stores all data on-device. We recommend using iCloud device backups to protect your data."
+            answer="If you deleted the app, your locally stored workout data is removed from the device. Unit stores all data on-device. I recommend using iCloud device backups to protect your data."
           />
           <FAQItem
             question="How do ghost values work?"
@@ -88,7 +88,7 @@ export default function SupportPage() {
             question="I found a bug. How do I report it?"
             answer={
               <>
-                Email us at{" "}
+                Email me at{" "}
                 <a
                   href={`mailto:${SUPPORT_EMAIL}?subject=Unit%20bug%20report`}
                   className="underline underline-offset-2"

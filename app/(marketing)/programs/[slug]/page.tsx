@@ -68,7 +68,7 @@ export default async function ProgramPage({ params }: { params: Params }) {
   ) : (
     <WaitlistForm
       size="lg"
-      caption="We'll email you once. No spam, no marketing list."
+      caption="I'll email you once. No spam, no marketing list."
     />
   )
 
@@ -144,7 +144,7 @@ export default async function ProgramPage({ params }: { params: Params }) {
       <section className="py-unit-xxl md:py-unit-xxxl border-t border-unit-border">
         <div className="max-w-3xl mx-auto px-unit-md md:px-unit-lg text-center">
           <h2 className="h-section mb-unit-md">
-            Bring your program. We log it.
+            Bring your program. Unit logs it.
           </h2>
           <p className="text-xl leading-snug mb-unit-xl text-unit-text-secondary max-w-xl mx-auto">
             {data.closing}

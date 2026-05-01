@@ -19,15 +19,16 @@ export default function PrivacyPage() {
 
           <p>
             Unit (&quot;the App&quot;) is developed and operated by{" "}
-            {DEVELOPER_NAME}. This Privacy Policy explains how we handle your
-            information when you use Unit.
+            {DEVELOPER_NAME} (&quot;I,&quot; &quot;me,&quot; or &quot;my&quot;).
+            This Privacy Policy explains how I handle your information when you
+            use Unit.
           </p>
 
           <nav aria-label="On this page" className="page-toc">
             <ul>
               <li><a href="#summary">Summary</a></li>
               <li><a href="#data-storage">Data storage</a></li>
-              <li><a href="#data-not-collected">Data we do not collect</a></li>
+              <li><a href="#data-not-collected">Data I do not collect</a></li>
               <li><a href="#purchases">Purchases</a></li>
               <li><a href="#healthkit">HealthKit</a></li>
               <li><a href="#cookies">Cookies and web tracking</a></li>
@@ -41,8 +42,8 @@ export default function PrivacyPage() {
           <h2 id="summary">Summary</h2>
           <p>
             Unit is designed with privacy as a default. Your workout data stays
-            on your device. We do not collect, transmit, or store your personal
-            information on our servers.
+            on your device. I do not collect, transmit, or store your personal
+            information on any server.
           </p>
 
           <h2 id="data-storage">Data Storage</h2>
@@ -57,19 +58,19 @@ export default function PrivacyPage() {
             your device.
           </p>
 
-          <h2 id="data-not-collected">Data We Do Not Collect</h2>
+          <h2 id="data-not-collected">Data I Do Not Collect</h2>
           <ul>
-            <li>We do not collect your name, email address, or contact information through the App</li>
-            <li>We do not collect workout data or training history</li>
-            <li>We do not use analytics or tracking frameworks</li>
-            <li>We do not use advertising SDKs</li>
-            <li>We do not sell, share, or transfer any data to third parties</li>
+            <li>I do not collect your name, email address, or contact information through the App</li>
+            <li>I do not collect workout data or training history</li>
+            <li>I do not use analytics or tracking frameworks</li>
+            <li>I do not use advertising SDKs</li>
+            <li>I do not sell, share, or transfer any data to third parties</li>
           </ul>
 
           <h2 id="purchases">Purchases</h2>
           <p>
             Unit offers in-app purchases processed entirely by Apple through the
-            App Store. We do not receive or store your payment information.
+            App Store. I do not receive or store your payment information.
             Purchase records are managed by your Apple ID.
           </p>
 
@@ -89,24 +90,24 @@ export default function PrivacyPage() {
 
           <h2 id="children">Children&apos;s Privacy</h2>
           <p>
-            Unit is not directed at children under the age of 13. We do not
+            Unit is not directed at children under the age of 13. I do not
             knowingly collect information from children.
           </p>
 
           <h2 id="rights">Your Rights</h2>
           <p>
             Since Unit does not collect personal data, there is no personal data
-            for us to delete, export, or modify. All your data is under your
+            for me to delete, export, or modify. All your data is under your
             control on your device.
           </p>
           <p>
             If you have questions about your data or wish to make a
-            privacy-related request, contact us at {SUPPORT_EMAIL}.
+            privacy-related request, email me at {SUPPORT_EMAIL}.
           </p>
 
           <h2 id="changes">Changes to This Policy</h2>
           <p>
-            We may update this Privacy Policy from time to time. Changes will be
+            I may update this Privacy Policy from time to time. Changes will be
             posted on this page with an updated &quot;Last updated&quot; date.
             Continued use of the App after changes constitutes acceptance of the
             revised policy.
@@ -114,7 +115,7 @@ export default function PrivacyPage() {
 
           <h2 id="contact">Contact</h2>
           <p>
-            If you have questions about this Privacy Policy, contact us at:
+            If you have questions about this Privacy Policy, email me at:
           </p>
           <ul>
             <li>Email: {SUPPORT_EMAIL}</li>

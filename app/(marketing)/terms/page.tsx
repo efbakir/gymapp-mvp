@@ -20,8 +20,8 @@ export default function TermsPage() {
           <p>
             These Terms of Use (&quot;Terms&quot;) govern your use of the Unit
             mobile application (&quot;the App&quot;) developed by{" "}
-            {DEVELOPER_NAME} (&quot;we,&quot; &quot;us,&quot; or
-            &quot;our&quot;). By downloading or using Unit, you agree to these
+            {DEVELOPER_NAME} (&quot;I,&quot; &quot;me,&quot; or
+            &quot;my&quot;). By downloading or using Unit, you agree to these
             Terms.
           </p>
 
@@ -43,7 +43,7 @@ export default function TermsPage() {
 
           <h2 id="license">License</h2>
           <p>
-            We grant you a limited, non-exclusive, non-transferable, revocable
+            I grant you a limited, non-exclusive, non-transferable, revocable
             license to use Unit for your personal, non-commercial fitness
             tracking purposes, subject to these Terms and the Apple Media
             Services Terms and Conditions.
@@ -52,7 +52,7 @@ export default function TermsPage() {
           <h2 id="purchase">Purchase and Payment</h2>
           <p>
             Unit offers in-app purchases through the Apple App Store. All
-            payment processing is handled by Apple. We do not handle your
+            payment processing is handled by Apple. I do not handle your
             payment information.
           </p>
           <ul>
@@ -92,7 +92,7 @@ export default function TermsPage() {
           <p>
             All workout data you create in Unit is stored locally on your
             device. You are responsible for maintaining backups of your device.
-            We are not responsible for data loss resulting from device failure,
+            I am not responsible for data loss resulting from device failure,
             loss, or App deletion.
           </p>
 
@@ -119,14 +119,14 @@ export default function TermsPage() {
 
           <h2 id="service-changes">Changes to the App and Service</h2>
           <p>
-            We reserve the right to modify, update, or discontinue the App at
-            any time without prior notice. We are not obligated to provide
+            I reserve the right to modify, update, or discontinue the App at
+            any time without prior notice. I am not obligated to provide
             updates, enhancements, or support indefinitely.
           </p>
 
           <h2 id="terms-changes">Changes to These Terms</h2>
           <p>
-            We may update these Terms from time to time. Changes will be posted
+            I may update these Terms from time to time. Changes will be posted
             on this page with an updated &quot;Last updated&quot; date.
             Continued use of the App after changes constitutes acceptance of the
             revised Terms.
@@ -141,7 +141,7 @@ export default function TermsPage() {
 
           <h2 id="contact">Contact</h2>
           <p>
-            If you have questions about these Terms, contact us at:
+            If you have questions about these Terms, email me at:
           </p>
           <ul>
             <li>Email: {SUPPORT_EMAIL}</li>

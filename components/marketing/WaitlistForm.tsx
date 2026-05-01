@@ -84,7 +84,7 @@ export default function WaitlistForm({
         }}
         role="status"
       >
-        You&rsquo;re on the list. We&rsquo;ll email you at launch.
+        You&rsquo;re on the list. I&rsquo;ll email you at launch.
       </div>
     )
   }
