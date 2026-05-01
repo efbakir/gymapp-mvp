@@ -280,7 +280,7 @@ struct TrainingWeekStripView: View {
                 .padding(.horizontal, AppSpacing.md)
                 .padding(.vertical, AppSpacing.xs)
                 .background(AppColor.textPrimary)
-                .clipShape(Capsule())
+                .clipShape(Capsule(style: .continuous))
                 .layoutPriority(1)
 
         case .circle(let glyph):

@@ -277,9 +277,12 @@ enum AppSpacing {
     static let xxl: CGFloat = 48
 }
 
-/// Corner radius tokens, all used with `RoundedRectangle(style: .continuous)`.
-/// `sm` compact chips/cells, `md` buttons + inputs, `lg` (`card`) cards.
-/// No other radii should appear in page code.
+/// Corner radius tokens. Always paired with `RoundedRectangle(style: .continuous)`
+/// — iOS's native squircle (≈60% Figma corner smoothing). `sm` compact chips/cells,
+/// `md` buttons + inputs, `lg` (`card`) cards. Hook-enforced via
+/// `.claude/hooks/ui-banned-list.sh`: bare `RoundedRectangle(cornerRadius:)` and
+/// `.cornerRadius(...)` are blocked in feature code. No other radii should appear
+/// in page code.
 enum AppRadius {
     static let sm: CGFloat = 10
     static let md: CGFloat = 14
@@ -1095,13 +1098,13 @@ struct AppTag: View {
                 .padding(.horizontal, AppSpacing.smd)
                 .padding(.vertical, AppSpacing.sm)
                 .background(backgroundColor)
-                .clipShape(Capsule())
+                .clipShape(Capsule(style: .continuous))
         case .compactCapsule:
             content
                 .padding(.horizontal, AppProgressChipMetrics.compactHorizontalPadding)
                 .frame(minHeight: AppProgressChipMetrics.rowHeight)
                 .background(backgroundColor)
-                .clipShape(Capsule())
+                .clipShape(Capsule(style: .continuous))
         }
     }
 
@@ -1179,7 +1182,7 @@ struct AppDropdownChip<Content: View>: View {
             .padding(.horizontal, AppSpacing.smd)
             .padding(.vertical, AppSpacing.xs)
             .background(
-                Capsule()
+                Capsule(style: .continuous)
                     .fill(isActive ? AppColor.textPrimary : AppColor.accentSoft)
             )
             // Visible capsule stays compact; hit zone extends to 44pt floor
@@ -1233,7 +1236,7 @@ struct AppFilterChip: View {
             .padding(.trailing, isSelected && showsClearGlyphWhenSelected ? AppSpacing.sm : AppSpacing.smd)
             .padding(.vertical, AppSpacing.xs)
             .background(
-                Capsule()
+                Capsule(style: .continuous)
                     .fill(isSelected ? AppColor.textPrimary : AppColor.accentSoft)
             )
             // Visible capsule stays compact; hit zone extends to 44pt floor
@@ -1484,7 +1487,7 @@ struct SetProgressIndicator: View {
                 .foregroundStyle(AppColor.accentForeground)
                 .padding(.horizontal, AppSpacing.smd)
                 .frame(height: 24)
-                .background(Capsule().fill(AppColor.accent))
+                .background(Capsule(style: .continuous).fill(AppColor.accent))
         } else if (step.state == .completed || step.state == .failed),
                   let chipText = step.chipText {
             HStack(spacing: AppSpacing.xxs) {
@@ -1501,7 +1504,7 @@ struct SetProgressIndicator: View {
             .foregroundStyle(step.isPR ? AppColor.accentForeground : AppColor.textSecondary)
             .padding(.horizontal, AppSpacing.sm)
             .frame(height: 24)
-            .background(Capsule().fill(step.isPR ? AppColor.accent : AppColor.controlBackground))
+            .background(Capsule(style: .continuous).fill(step.isPR ? AppColor.accent : AppColor.controlBackground))
         } else {
             ZStack {
                 Circle()
@@ -1591,8 +1594,8 @@ struct RestTimerControl: View {
                     Group {
                         if showsTimerCapsule {
                             timerCenterTapLabel
-                                .clipShape(Capsule())
-                                .contentShape(Capsule())
+                                .clipShape(Capsule(style: .continuous))
+                                .contentShape(Capsule(style: .continuous))
                         } else {
                             timerCenterTapLabel
                                 .contentShape(Rectangle())
@@ -1632,12 +1635,12 @@ struct RestTimerControl: View {
         .padding(.horizontal, AppSpacing.smd)
         .background {
             if showsTimerCapsule {
-                Capsule().fill(AppColor.controlBackground)
+                Capsule(style: .continuous).fill(AppColor.controlBackground)
             }
         }
         .overlay {
             if showsTimerCapsule {
-                Capsule()
+                Capsule(style: .continuous)
                     .stroke(AppColor.border.opacity(0.55), lineWidth: 1)
             }
         }
@@ -1949,8 +1952,8 @@ struct AppToast: ViewModifier {
                         .padding(.horizontal, AppSpacing.lg)
                         .padding(.vertical, AppSpacing.sm)
                         .background(AppColor.cardBackground)
-                        .clipShape(Capsule())
-                        .overlay(Capsule().stroke(AppColor.border, lineWidth: 1))
+                        .clipShape(Capsule(style: .continuous))
+                        .overlay(Capsule(style: .continuous).stroke(AppColor.border, lineWidth: 1))
                         .padding(.bottom, AppSpacing.xl)
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                         .task(id: text) {
@@ -2610,7 +2613,7 @@ struct WorkoutCommandCard: View {
                     }
                     .padding(.horizontal, AppSpacing.smd)
                     .padding(.vertical, AppSpacing.xs)
-                    .background(AppColor.successSoft, in: Capsule())
+                    .background(AppColor.successSoft, in: Capsule(style: .continuous))
 
                     if let priorBestText, !priorBestText.isEmpty {
                         Text(priorBestText)

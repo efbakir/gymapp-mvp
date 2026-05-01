@@ -17,6 +17,8 @@
   --unit-success: #34C759;
   --unit-error: #FF3B30;
 
+  /* 14px = AppRadius.md (iOS button standard). Always rendered with iOS-native
+     squircle corner smoothing — see the @supports block at the bottom of @layer base. */
   --radius: 0.875rem;
   --header-height: 64px; /* h-16 on Header */
   --button-height-lg: 60px;
@@ -61,6 +63,30 @@ body {
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
+    }
+  }
+
+  /* iOS-native squircle corner smoothing on every rounded surface.
+     Equivalent to AppRadius + RoundedRectangle(style: .continuous) on iOS,
+     ≈ 60% Figma corner smoothing. Progressive enhancement: when the CSS
+     Round Display Module ships in a browser, every existing border-radius
+     on the marketing site renders as a superellipse without per-element
+     migration. Browsers without support fall back to standard circular
+     corners (today's behavior — no breakage). */
+  @supports (corner-shape: squircle) {
+    *,
+    *::before,
+    *::after {
+      corner-shape: squircle;
+    }
+  }
+  @supports not (corner-shape: squircle) {
+    @supports (corner-shape: superellipse(2.5)) {
+      *,
+      *::before,
+      *::after {
+        corner-shape: superellipse(2.5);
+      }
     }
   }
 }

@@ -27,6 +27,8 @@ const config: Config = {
       borderRadius: {
         // Mirrors iOS AppRadius (DESIGN.md): sm 10, md 14, lg 22.
         // --radius is 14px = AppRadius.md (button); xl extends to 22px = AppRadius.lg (cards).
+        // All radii rendered with iOS-native squircle smoothing (≈60% Figma) via
+        // the `corner-shape: squircle` progressive enhancement in app/globals.css.
         sm: "calc(var(--radius) - 4px)",
         md: "var(--radius)",
         lg: "var(--radius)",

@@ -20,6 +20,14 @@
 
 ---
 
+## 2026-05-01 — iOS-native squircle smoothing is the only corner shape
+
+**Decision:** Every radius container — iOS app and marketing site — renders with iOS's native squircle corner smoothing (≈60% Figma corner smoothing). On iOS this is `RoundedRectangle(style: .continuous)` / `Capsule(style: .continuous)`, now hook-enforced via `.claude/hooks/ui-banned-list.sh` (bare `RoundedRectangle(cornerRadius:)` and `.cornerRadius(...)` modifier are blocked in feature code). On the web this is a global `corner-shape: squircle` (with a `superellipse(2.5)` fallback) under `@supports`, applied in `app/globals.css` `@layer base`. All 14 `Capsule()` instances in `Unit/UI/DesignSystem.swift` plus one stray in `TrainingWeekProgress.swift` migrated to `Capsule(style: .continuous)`.
+**Why:** Efe asked for "60% smooth radius because iOS does that" and emphasized system-level + consistent + reuse-existing. Audit revealed iOS already used `.continuous` on all 23 `RoundedRectangle` callsites — so the gap was enforcement (no hook rule existed) and Capsule consistency (most omitted `style:`), not migration. The web side had no squircle implementation at all; the CSS Round Display Module's `corner-shape: squircle` is iOS-native equivalent and shipping into Chromium/Electron, so a single global @supports rule lights up squircles where supported and cleanly falls back to circular elsewhere. No per-component migration, no JS dependency, no bespoke `Squircle` shape (would conflict with CLAUDE.md §4 "iOS-native over custom").
+**Implication:** Hook now enforces `style: .continuous` on every `RoundedRectangle` in feature code — regression closes silently. `AppRadius` docstring upgraded from recommendation to enforced contract. Marketing site verified live in preview (Electron 41 / Chromium): all 18 rounded elements compute `corner-shape: squircle`, border-radius values unchanged. For non-supporting browsers (older Safari / Firefox) the @supports block is a no-op — they get today's circular corners, no breakage.
+
+---
+
 ## 2026-05-01 — First-person singular is the only voice
 
 **Decision:** Every user-facing surface uses `I / me / my` (or **Unit** as the actor) — never `we / us / our / our team`. Applies to marketing site, legal pages (privacy/terms entity defined as `{DEVELOPER_NAME} ("I," "me," or "my")`), in-app copy, App Store description, support/contact, social posts.

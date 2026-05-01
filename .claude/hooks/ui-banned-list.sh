@@ -45,6 +45,17 @@ check '\.padding\([[:space:]]*[0-9]+'                                      'hard
 check '\.padding\(\.[a-z]+,[[:space:]]*[0-9]+'                             'hardcoded directional padding — use AppSpacing.* tokens'
 check 'cornerRadius\([[:space:]]*[0-9]+'                                   'hardcoded cornerRadius — use AppRadius.* tokens'
 check 'RoundedRectangle\(cornerRadius:[[:space:]]*[0-9]+'                  'RoundedRectangle(cornerRadius: <number>) — use AppRadius.* tokens'
+check '\.cornerRadius\('                                                   '.cornerRadius(...) modifier — deprecated and always renders .circular corners. Use .clipShape(RoundedRectangle(cornerRadius: AppRadius.x, style: .continuous)).'
+
+# RoundedRectangle without explicit .continuous style → would default to
+# .circular and ship a wrong-shape corner. Squircle is the system; .continuous
+# is non-negotiable. Line-scoped scan: any line that opens a RoundedRectangle
+# with cornerRadius must also carry style: .continuous on the same line.
+if grep -nE 'RoundedRectangle\(cornerRadius:' <<< "$new_content" \
+   | grep -vE 'style:[[:space:]]*\.continuous' \
+   | grep -q .; then
+  violations+=('RoundedRectangle(cornerRadius:) without style: .continuous — every radius container must use the iOS-native squircle. Use RoundedRectangle(cornerRadius: AppRadius.x, style: .continuous).')
+fi
 check 'preferredColorScheme\(\.dark\)'                                     '.preferredColorScheme(.dark) — Unit is light-mode only (CLAUDE.md §5 P3)'
 check '\.scrollEdgeEffectStyle\(\.(automatic|hard)'                        'scrollEdgeEffectStyle .automatic/.hard — use appScrollEdgeSoft(top:bottom:)'
 check 'ProcessInfo\.processInfo\.environment\["UNIT_'                      'UNIT_* env scaffolding — must be reverted before turn end (CLAUDE.md §5)'
