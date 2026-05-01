@@ -20,6 +20,14 @@
 
 ---
 
+## 2026-05-01 — Added `docs/INDEX.md` and archived 4 stale docs
+
+**Decision:** Built `docs/INDEX.md` as on-demand catalog of all docs (loaded from CLAUDE.md §1 only when the agent doesn't know which doc applies). Moved `geminiresearch-1/2/mvp-pivot.md` and `cleanup-spec.md` to `docs/archive/`.
+**Why:** ~15 of ~30 docs in `docs/` were invisible to fresh sessions because CLAUDE.md only routed to ~10 of them. Karpathy LLM-wiki pattern: thin always-loaded router → fuller on-demand index. Adds 1 line to CLAUDE.md, surfaces 30 docs, no per-session token cost for the catalog itself.
+**Implication:** When extending the docs set, add a row to `INDEX.md`. Don't grow CLAUDE.md. Archived files stay readable for history but are deprioritized.
+
+---
+
 ## 2026-05-01 — Started this decision log
 
 **Decision:** Add `docs/decision-log.md` as the append-only record for cross-session decisions.

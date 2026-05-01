@@ -10,10 +10,11 @@ This file is intentionally tight. Detail spills into:
 - [`docs/claude/harness.md`](docs/claude/harness.md) — full hook pattern list, skills, audit mode, order of operations
 
 Other source-of-truth docs:
-- Product: `PRODUCT.md` (root — persona, voice, anti-references, principles), `docs/product-compass.md`, `docs/goals.md`, `docs/AGENTS.md`
+- Product: `PRODUCT.md` (root — persona, voice incl. **first-person singular rule**, anti-references, principles), `docs/product-compass.md`, `docs/goals.md`, `docs/AGENTS.md`
 - Design: `DESIGN.md` (root — palette, type, components, do/don't) + `DESIGN.json` (machine-readable mirror), `docs/atomic-design-system.md`, `docs/visual-language.md`
-- References: `docs/references/` (ios-screens/, details/, notes/)
+- References: `docs/references/` (ios-screens/, details/, notes/) — and the canonical Figma file for card/row visual specs lives at node `166:8` (see `docs/claude/design-system.md` §Card composition)
 - Marketing: `docs/launch-plan.md` (8-week strategic timeline) + `docs/marketing/` (operational infra: tools, playbooks, templates, anti-patterns, dated research). When marketing tactics in a request conflict with `docs/marketing/anti-patterns.md`, push back per §2.
+- Decision log: `docs/decision-log.md` — append-only record of scope/design/direction changes. Read before answering "why did we…?" or proposing an experiment that may already have been tried. Index: `docs/INDEX.md`.
 
 ---
 
@@ -34,7 +35,10 @@ Other source-of-truth docs:
 2. If the task involves UI, product direction, or scope: skim `docs/product-compass.md` §Pillars + §Decision log **and** `docs/goals.md` §v1 scope boundaries.
 3. If the task involves any visual/component change: skim `DESIGN.md` (root — single-page system summary) and `docs/atomic-design-system.md`, then open `Unit/UI/DesignSystem.swift`. Reuse > extend > create.
 4. If the task is non-trivial UI: list `docs/references/ios-screens/` and `docs/references/details/`. Pick the closest anchor. If none fits, ask the user before inventing.
-5. State out loud (one line) which docs and references you consulted, then proceed.
+5. **If the task involves user-facing copy** (marketing site, legal page, in-app text, App Store metadata, social post, support/contact): read `PRODUCT.md` §Brand Personality. The first-person singular rule (`I / me / my`, never `we / us / our`) is non-negotiable and applies across every surface.
+6. If you are about to act on a "why did we…?" question, propose an experiment, or revisit a banned-list item: open `docs/decision-log.md` and check whether the answer (or a prior attempt) is already there. Append a new entry when you green-light a scope override or direction shift.
+7. If unsure which doc covers your task, open `docs/INDEX.md` — one-liner catalog of every doc with a "use when" trigger.
+8. State out loud (one line) which docs and references you consulted, then proceed.
 
 ---
 
