@@ -29,7 +29,7 @@ export default function ChangelogPage() {
         <p className="eyebrow mb-unit-xs">Changelog</p>
         <h1 className="h-section mb-unit-lg">What&rsquo;s shipped.</h1>
         <p className="text-base text-unit-text-secondary mb-unit-xxl max-w-prose">
-          Every Unit release, newest at the top. We post here whenever we ship,
+          Every Unit release, newest at the top. I post here whenever I ship,
           even small fixes.
         </p>
 

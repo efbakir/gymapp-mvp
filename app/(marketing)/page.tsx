@@ -50,7 +50,7 @@ const faqs = [
   {
     question: "When does Unit launch?",
     answer:
-      "Unit is in App Store review now. Join the waitlist above and we'll email you once at launch; no marketing follow-up.",
+      "Unit is in App Store review now. Join the waitlist above and I'll email you once at launch; no marketing follow-up.",
   },
 ]
 
@@ -87,7 +87,7 @@ export default async function LandingPage() {
       ) : (
         <WaitlistForm
           size="lg"
-          caption="We'll email you once. No spam, no marketing list."
+          caption="I'll email you once. No spam, no marketing list."
         />
       )}
     </div>
@@ -196,6 +196,14 @@ export default async function LandingPage() {
               }
             />
 
+            {/* Square 1×1 — History + PRs (progression proof) */}
+            <BentoCard
+              span="1x1"
+              eyebrow="History · PRs"
+              title="Every set. Every PR."
+              body="Calendar of every session. PRs detected automatically. You decide when to add weight — Unit just remembers what you did."
+            />
+
             {/* Square 1×1 — Rest Timer */}
             <BentoCard
               span="1x1"
@@ -204,12 +212,12 @@ export default async function LandingPage() {
               body="Auto-starts on Done. Lives in the Dynamic Island. No need to reopen the app between sets."
             />
 
-            {/* Wide 2×1 — Offline + Local-first */}
+            {/* Square 1×1 — Offline + Local-first */}
             <BentoCard
-              span="2x1"
+              span="1x1"
               eyebrow="Offline · Local-first"
-              title="Always works. Your data never leaves your phone."
-              body="No account. No sync. No internet required. Unit stores everything on-device — including your full workout history and PRs."
+              title="Always works. Stays on your phone."
+              body="No account. No sync. No internet. Your full workout history and PRs live on-device."
             />
           </BentoGrid>
         </div>
@@ -237,7 +245,7 @@ export default async function LandingPage() {
             {[
               {
                 title: "Not an AI coach.",
-                body: "We don't tell you what to lift. You bring the program, we make logging instant.",
+                body: "Unit doesn't tell you what to lift. You bring the program; Unit makes logging instant.",
               },
               {
                 title: "Not a social platform.",
@@ -245,7 +253,7 @@ export default async function LandingPage() {
               },
               {
                 title: "Not for beginners.",
-                body: "We assume you know your way around a barbell. That's a feature, not a limitation.",
+                body: "Unit assumes you know your way around a barbell. That's a feature, not a limitation.",
               },
               {
                 title: "Not subscription-locked.",
