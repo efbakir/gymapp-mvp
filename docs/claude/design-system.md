@@ -95,6 +95,32 @@ The hook (`.claude/hooks/ui-banned-list.sh`) enforces a subset of these mechanic
 
 - `AppCard(contentInset: 0)` outside `Unit/UI/DesignSystem.swift` — produces 16pt text-from-edge instead of the canonical 24pt and collapses vertical inset to 0. The docstring reserves 0 for full-bleed media only. **Use `AppCardList` for any list-in-card surface.** Hook blocks this.
 - `AppCard { … AppDividedList(…) … }` composed by hand outside `Unit/UI/DesignSystem.swift` — banned. **`AppCardList(data) { row }` is the canonical molecule** so card insets, divider insets, row horizontal padding, and row chrome cannot mismatch. Hook blocks this.
+- Per-row shadowed cards in lists (one shadowed `AppCard` per row) — banned. The stacked variant of `AppDividedList` was deleted on purpose. A list is **one** `AppCard` containing rows separated by `AppDivider`, never N shadows in a column.
+
+### Row-on-card recipe (the only "what goes inside an AppCard" pattern)
+
+Any element nested inside `AppCard` (exercise rows, inline cells, chips inside a card body) follows this exact recipe — adopted 2026-04-27 from the Figma file as the canonical "row-inside-card" surface:
+
+| Property | Token | Value |
+|---|---|---|
+| Background | `AppColor.cardRowFill` | `#F5F5F5` (light) |
+| Radius | `AppRadius.sm` | 10 |
+| Padding | `AppSpacing.sm` | 8 |
+| Gap between sibling rows | `AppSpacing.sm` | 8 |
+| Primary label | `AppFont.body` | 17 medium, `textPrimary` |
+| Trailing / value label | `AppFont.caption` + `AppColor.textSecondary` | 15 medium, `#595959` |
+
+**Do not** use `controlBackground` (`#E8E8E8`) for nested rows — `controlBackground` is intentionally darker and reserved for top-level controls / segmented inactive states. The outer `AppCard` itself stays at its defaults (24pt padding, 30pt radius, dual shadow); those already match Figma.
+
+If a screen needs something that doesn't fit this recipe, push back per CLAUDE.md §2 and ask before introducing a new variant — adding ad-hoc fills inside cards is the parallel-implementation drift this section exists to prevent.
+
+### Figma source of truth (card / row visual specs)
+
+The canonical Figma file is `KvghAbkTdTmcfThMdp1S4p` (`Gym-app — Figma`), node **`166:8`** ("Day card — Push") — the source of truth for **padding, corner radii, shadow, and any element nested inside `AppCard`**.
+
+URL: <https://www.figma.com/design/KvghAbkTdTmcfThMdp1S4p/Gym-app---Figma?node-id=166-8>
+
+Fetch via the figma MCP (`get_design_context`, `get_screenshot`, `get_variable_defs`) before inventing a new card / row spec. When in doubt about card chrome or nested-row visuals, fetch this node first.
 
 ### Mode and orientation
 

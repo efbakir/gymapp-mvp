@@ -20,6 +20,14 @@
 
 ---
 
+## 2026-05-01 — First-person singular is the only voice
+
+**Decision:** Every user-facing surface uses `I / me / my` (or **Unit** as the actor) — never `we / us / our / our team`. Applies to marketing site, legal pages (privacy/terms entity defined as `{DEVELOPER_NAME} ("I," "me," or "my")`), in-app copy, App Store description, support/contact, social posts.
+**Why:** Unit is solo (Efe Bakir, `DEVELOPER_NAME` in `lib/contact.ts`). Corporate "we" is dishonest for a one-person product and conflicts with the calm-expert-honest brand voice. Caught on the changelog page on 2026-05-01 — Efe: *"I just realized here you use we language. Do not forget that I am the only one here working it Efe."* Solo-founder identity is a positioning asset, not something to hide.
+**Implication:** Pre-ship grep on any user-facing surface: `\bwe\b|\bwe'|\bour\b|\b us \b`. Rule lives in `PRODUCT.md` §Brand Personality. Implemented across compare/programs/support/legal pages in commits `b6c1e8d` and `96e341f`.
+
+---
+
 ## 2026-05-01 — Added `docs/INDEX.md` and archived 4 stale docs
 
 **Decision:** Built `docs/INDEX.md` as on-demand catalog of all docs (loaded from CLAUDE.md §1 only when the agent doesn't know which doc applies). Moved `geminiresearch-1/2/mvp-pivot.md` and `cleanup-spec.md` to `docs/archive/`.
