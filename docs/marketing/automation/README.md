@@ -8,7 +8,7 @@
 ### 1. Install Python dependencies
 
 ```bash
-cd /Users/efbakir/gymapp-mvp/docs/marketing/automation/python
+cd /Users/efbakir/unit/docs/marketing/automation/python
 pip3 install -r requirements.txt
 ```
 

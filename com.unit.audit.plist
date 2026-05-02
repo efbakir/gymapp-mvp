@@ -6,10 +6,10 @@
     <string>com.unit.audit</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/Users/efbakir/gymapp-mvp/run-audit-auto.sh</string>
+        <string>/Users/efbakir/unit/run-audit-auto.sh</string>
     </array>
     <key>WorkingDirectory</key>
-    <string>/Users/efbakir/gymapp-mvp</string>
+    <string>/Users/efbakir/unit</string>
     <key>StartCalendarInterval</key>
     <array>
         <dict>
@@ -50,9 +50,9 @@
         </dict>
     </array>
     <key>StandardOutPath</key>
-    <string>/Users/efbakir/gymapp-mvp/audit-launchd.log</string>
+    <string>/Users/efbakir/unit/audit-launchd.log</string>
     <key>StandardErrorPath</key>
-    <string>/Users/efbakir/gymapp-mvp/audit-launchd.log</string>
+    <string>/Users/efbakir/unit/audit-launchd.log</string>
     <key>EnvironmentVariables</key>
     <dict>
         <key>PATH</key>
