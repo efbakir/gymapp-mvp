@@ -7,9 +7,9 @@ import { APP_STORE_URL } from "@/lib/launchState"
 export default function EditorialHero() {
   return (
     <section className="overflow-x-clip pb-unit-xxl pt-28 md:pb-unit-xxxl md:pt-32">
-      <div className="mx-auto max-w-6xl px-unit-md md:px-unit-lg">
-        <div className="grid items-center gap-unit-xxl lg:grid-cols-[0.86fr_1.14fr] lg:gap-unit-xxxl">
-          <div className="stagger-hero max-w-xl">
+      <div className="mx-auto max-w-[1360px] px-unit-md md:px-unit-lg xl:px-unit-xl">
+        <div className="grid items-center gap-unit-xxl lg:grid-cols-[0.76fr_1.24fr] lg:gap-unit-xxxl">
+          <div className="stagger-hero max-w-[480px]">
             <p className="eyebrow mb-unit-lg">Your program. Logged fast.</p>
             <h1 className="h-hero text-balance">
               Log a set
@@ -27,18 +27,18 @@ export default function EditorialHero() {
             </div>
           </div>
 
-          <div className="relative mx-auto w-full max-w-[620px] lg:justify-self-end">
+          <div className="relative mx-auto w-full max-w-[760px] lg:justify-self-end">
             <MarketingPhoto
               src="/people/unit-hero-lifter.webp"
               alt="Lifter between sets in a gym"
               slotLabel="unit-hero-lifter.webp"
-              sizes="(min-width: 1024px) 56vw, 92vw"
+              sizes="(min-width: 1280px) 760px, (min-width: 1024px) 62vw, 92vw"
               priority
               enabled
               className="aspect-[4/5] rounded-[32px] bg-black shadow-[0_32px_80px_rgba(10,10,10,0.16)]"
             />
 
-            <div className="pointer-events-none absolute -bottom-8 -left-8 z-10 w-[240px] drop-shadow-[0_24px_32px_rgba(10,10,10,0.22)] sm:-bottom-12 sm:-left-12 sm:w-[300px] lg:w-[320px]">
+            <div className="pointer-events-none absolute bottom-unit-md left-unit-md z-10 w-[220px] drop-shadow-[0_24px_32px_rgba(10,10,10,0.22)] sm:bottom-unit-lg sm:left-unit-lg sm:w-[280px] lg:bottom-unit-xl lg:left-unit-xl lg:w-[320px]">
               <Image
                 src="/screenshots/hero-ghost-values.png"
                 alt="Unit workout screen with the last weight and reps ready"
