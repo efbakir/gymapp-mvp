@@ -13,7 +13,7 @@ export default function EditorialHero() {
             <p className="eyebrow mb-unit-lg">Your program. Logged fast.</p>
             <h1 className="text-balance text-[48px] font-bold leading-[0.96] tracking-[-0.045em] text-unit-text-primary sm:text-[64px] lg:text-[76px]">
               Log a set
-              <span className="editorial-display mt-unit-xs block">
+              <span className="mt-unit-xs block">
                 in 3 seconds.
               </span>
             </h1>
@@ -37,13 +37,13 @@ export default function EditorialHero() {
               imageClassName="grayscale"
             />
 
-            <div className="absolute -bottom-8 -left-6 w-[210px] overflow-hidden rounded-[28px] bg-unit-background p-unit-sm shadow-[0_24px_64px_rgba(10,10,10,0.16)] sm:-left-10 sm:w-[260px] lg:-left-16">
+            <div className="pointer-events-none absolute -bottom-12 -left-8 w-[240px] drop-shadow-[0_28px_36px_rgba(10,10,10,0.2)] sm:-left-12 sm:w-[300px] lg:-left-20">
               <Image
                 src="/screenshots/hero-ghost-values.png"
                 alt="Unit workout screen with the last weight and reps ready"
                 width={1658}
                 height={2386}
-                sizes="260px"
+                sizes="300px"
                 className="block h-auto w-full"
               />
             </div>

@@ -57,7 +57,7 @@ export default function AudienceStrip() {
       <div className="mx-auto max-w-6xl px-unit-md md:px-unit-lg">
         <div className="mx-auto mb-unit-xxl max-w-3xl text-center">
           <p className="eyebrow mb-unit-sm">Your training. Your way.</p>
-          <h2 className="editorial-display text-balance text-[38px] leading-none text-unit-text-primary md:text-[52px]">
+          <h2 className="text-balance text-[38px] font-bold leading-none tracking-[-0.04em] text-unit-text-primary md:text-[52px]">
             For everyone who lifts.
           </h2>
         </div>

@@ -45,7 +45,7 @@ const features: {
 
 function LocalVisual() {
   return (
-    <div className="flex h-full items-end justify-center">
+    <div className="flex justify-center">
       <div className="w-full max-w-[240px] rounded-[22px] bg-unit-background p-unit-md">
         <div className="mb-unit-md flex items-center gap-unit-sm">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-unit-accent text-unit-accent-foreground">
@@ -81,7 +81,7 @@ function LocalVisual() {
 
 function TimerVisual() {
   return (
-    <div className="flex h-full items-end justify-center">
+    <div className="flex justify-center">
       <div className="w-full max-w-[260px] rounded-[28px] bg-unit-accent p-unit-lg text-unit-accent-foreground shadow-[0_20px_50px_rgba(10,10,10,0.14)]">
         <div className="flex items-center justify-between">
           <div>
@@ -108,7 +108,7 @@ function TimerVisual() {
 
 function PRVisual() {
   return (
-    <div className="flex h-full flex-col justify-end">
+    <div className="flex flex-col">
       <div className="mb-unit-md">
         <div className="flex items-end justify-between">
           <div>
@@ -152,7 +152,7 @@ function CalendarVisual() {
   ] as const
 
   return (
-    <div className="flex h-full items-end justify-center">
+    <div className="flex justify-center">
       <div className="w-full max-w-[270px] rounded-[22px] bg-unit-background p-unit-md">
         <div className="mb-unit-md flex items-center justify-between">
           <p className="text-sm font-bold tracking-tight">This week</p>
@@ -177,7 +177,7 @@ function CalendarVisual() {
 
 function QuickVisual() {
   return (
-    <div className="flex h-full items-end justify-center">
+    <div className="flex justify-center">
       <div className="w-full max-w-[250px] text-center">
         <div className="mb-unit-md flex items-center justify-center gap-unit-xs">
           {["Squat", "Press", "Row"].map((exercise) => (
@@ -200,7 +200,7 @@ function QuickVisual() {
 
 function ProgramsVisual() {
   return (
-    <div className="flex h-full items-end justify-center">
+    <div className="flex justify-center">
       <div className="w-full max-w-[260px] space-y-unit-xs">
         {[
           ["PPL", "6 days"],
@@ -254,7 +254,7 @@ export default function SecondaryFeatures() {
         {features.map((feature) => (
           <article
             key={feature.title}
-            className="lift-hover flex min-h-[320px] flex-col rounded-[32px] bg-unit-card p-unit-lg md:min-h-[340px]"
+            className="lift-hover flex h-full flex-col rounded-[32px] bg-unit-card p-unit-lg"
           >
             <div>
               <h3 className="text-xl font-bold leading-tight tracking-tight">
@@ -264,7 +264,7 @@ export default function SecondaryFeatures() {
                 {feature.body}
               </p>
             </div>
-            <div className="mt-unit-xl min-h-[150px] flex-1">
+            <div className="mt-unit-lg">
               <FeatureVisual visual={feature.visual} />
             </div>
           </article>

@@ -11,6 +11,7 @@ export default function MarketingPhoto({
   className = "",
   imageClassName = "",
   priority = false,
+  enabled = false,
 }: {
   src: string
   alt: string
@@ -19,6 +20,7 @@ export default function MarketingPhoto({
   className?: string
   imageClassName?: string
   priority?: boolean
+  enabled?: boolean
 }) {
   const [loaded, setLoaded] = useState(false)
 
@@ -37,18 +39,20 @@ export default function MarketingPhoto({
           </p>
         </div>
       </div>
-      <Image
-        src={src}
-        alt={alt}
-        fill
-        priority={priority}
-        sizes={sizes}
-        onLoad={() => setLoaded(true)}
-        onError={() => setLoaded(false)}
-        className={`object-cover transition-opacity duration-300 ${
-          loaded ? "opacity-100" : "opacity-0"
-        } ${imageClassName}`}
-      />
+      {enabled && (
+        <Image
+          src={src}
+          alt={alt}
+          fill
+          priority={priority}
+          sizes={sizes}
+          onLoad={() => setLoaded(true)}
+          onError={() => setLoaded(false)}
+          className={`object-cover transition-opacity duration-300 ${
+            loaded ? "opacity-100" : "opacity-0"
+          } ${imageClassName}`}
+        />
+      )}
     </div>
   )
 }

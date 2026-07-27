@@ -24,7 +24,7 @@ export default function HumanMomentSection() {
             <p className="eyebrow mb-unit-md">Built for the gym floor</p>
             <h2 className="text-balance text-[36px] font-bold leading-[1.02] tracking-[-0.04em] md:text-[48px]">
               Training should be hard.
-              <span className="editorial-display mt-unit-xs block">
+              <span className="mt-unit-xs block">
                 Logging should not.
               </span>
             </h2>

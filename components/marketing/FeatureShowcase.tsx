@@ -43,9 +43,9 @@ export default function FeatureShowcase({
         {items.map((item) => (
           <article
             key={item.title}
-            className="lift-hover flex min-h-[280px] flex-col overflow-hidden rounded-[32px] bg-unit-card"
+            className="lift-hover flex min-h-[280px] flex-col overflow-visible rounded-[32px] bg-unit-card"
           >
-            <div className="flex flex-1 flex-col p-unit-lg md:p-unit-xl">
+            <div className="flex flex-col px-unit-lg pt-unit-lg md:px-unit-xl md:pt-unit-xl">
               {item.eyebrow && <p className="eyebrow mb-unit-sm">{item.eyebrow}</p>}
               <h3 className="text-[24px] font-bold leading-[1.12] tracking-tight text-unit-text-primary">
                 {item.title}
@@ -60,7 +60,7 @@ export default function FeatureShowcase({
             </div>
 
             {item.mockup && (
-              <div className="mt-auto px-unit-lg pb-unit-lg md:px-unit-xl md:pb-unit-xl">
+              <div className="mt-unit-lg px-unit-lg pb-unit-lg md:px-unit-xl md:pb-unit-xl">
                 <div className="mx-auto max-w-[var(--marketing-feature-device-width)]">
                   <DeviceFrame
                     src={item.mockup.src}

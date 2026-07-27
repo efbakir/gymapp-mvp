@@ -103,6 +103,8 @@ const importSources = [
 // the page shares this geometry so hero and cards render at one scale.
 const HERO_W = 1658
 const HERO_H = 2386
+const REST_TIMER_W = 1800
+const REST_TIMER_H = 2377
 
 export default function LandingPage() {
   return (
@@ -238,10 +240,10 @@ export default function LandingPage() {
                   // Background-keyed crop of listing screenshot 2, padded to
                   // the same 1658×2386 geometry as the hero exports so all
                   // cards render at one scale.
-                  src: "/screenshots/rest-timer-transparent.png",
+                  src: "/screenshots/rest-timer-figma.png",
                   alt: "Unit rest timer running at 1:57 with the set editor below",
-                  width: HERO_W,
-                  height: HERO_H,
+                  width: REST_TIMER_W,
+                  height: REST_TIMER_H,
                   sizes: "380px",
                 },
               },
