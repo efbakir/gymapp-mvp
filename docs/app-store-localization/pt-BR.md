@@ -1,6 +1,7 @@
 # Portuguese — Brazil (pt-BR) — Unit 2.1 App Store metadata
 
-> Status: **REGENERATED FOR 2.1 — native review required before paste.**
+> Status: **AI LINGUISTIC QA COMPLETE — corrections applied; founder paste approval required.**
+> Reviewed 2026-07-27 by five parallel Claude linguistic-review agents plus one adjudication pass. This is AI linguistic QA, not native-human approval.
 > Register: Brazilian Portuguese with implicit “você.” The app UI remains English.
 
 ## App name (30 max)
@@ -9,7 +10,7 @@
 Unit: Diário de Treino
 ```
 
-Candidate pending native approval.
+Approved in AI linguistic QA (2026-07-27) — "diário de treino" is the established BR term for a log of completed workouts; "ficha de treino" names the prescribed program sheet and stays in keywords. Not a native read; founder paste approval required.
 
 ## Subtitle (30 max)
 
@@ -33,14 +34,14 @@ Escolha um treino pronto ou cole o seu. O Unit mantém suas últimas cargas pron
 • Registro de séries com um toque
 • Treinos prontos para usar
 • Cole qualquer treino
-• Timer de descanso automático na tela bloqueada
+• Timer de descanso automático na Tela Bloqueada
 • Histórico de treinos e recordes pessoais
 
 Sem conta. Sem anúncios. Sem feed social. Seu treino fica no seu iPhone.
 
 Observação: a interface do app está em inglês por enquanto.
 
-O Unit exige uma compra paga após a configuração. Há assinaturas semanais, mensais e anuais com renovação automática. A opção Lifetime aparece somente se estiver disponível. Os preços são mostrados no app antes da compra. Não há teste grátis.
+O Unit exige uma compra paga após a configuração. Há assinaturas semanais, mensais e anuais com renovação automática. A opção vitalícia aparece somente se estiver disponível. Os preços são mostrados no app antes da compra. Não há teste grátis.
 
 Termos de uso (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 Política de privacidade: https://unitlift.app/privacy
@@ -49,7 +50,7 @@ Política de privacidade: https://unitlift.app/privacy
 ## Keywords (100 max, comma-separated, no spaces)
 
 ```
-academia,musculação,hipertrofia,progressão,supino,agachamento,peso,anotar,ficha,halteres
+academia,musculação,hipertrofia,progressão,supino,agachamento,peso,anotar,ficha,planilha
 ```
 
 ## What’s New — v2.1

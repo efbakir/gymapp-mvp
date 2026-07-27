@@ -1,6 +1,7 @@
 # Turkish (tr) — Unit 2.1 App Store metadata
 
-> Status: **REGENERATED FOR 2.1 — founder review required before paste.**
+> Status: **AI LINGUISTIC QA COMPLETE — corrections applied; founder paste approval required.**
+> Reviewed 2026-07-27 by five parallel Claude linguistic-review agents plus one adjudication pass. This is AI linguistic QA, not native-human approval. The founder can add a native read; Apple does not require it.
 > Register: “sen.” The app UI remains English.
 
 ## App name (30 max)
@@ -20,7 +21,7 @@ Basit kuvvet takibi
 ## Promotional text (170 max)
 
 ```
-Hazır bir program seç veya kendi programını yapıştır. Geçen seferki ağırlıkların dolu gelir, her set tek dokunuş sürer ve dinlenme sayacı otomatik başlar.
+Hazır bir program seç veya kendi programını yapıştır. Geçen seferki ağırlıkların dolu gelir, her set tek dokunuşla kaydedilir ve dinlenme sayacı otomatik başlar.
 ```
 
 ## Description (4000 max)
@@ -40,7 +41,7 @@ Hesap yok. Reklam yok. Sosyal akış yok. Antrenmanın iPhone’unda kalır.
 
 Not: Uygulama arayüzü şimdilik İngilizce.
 
-Unit, kurulumdan sonra ücretli satın alma gerektirir. Haftalık, aylık ve yıllık otomatik yenilenen abonelikler sunulur. İsteğe bağlı Lifetime seçeneği yalnızca mevcutsa görünür. Fiyatlar satın almadan önce uygulamada gösterilir. Ücretsiz deneme yoktur.
+Unit, kurulumdan sonra ücretli satın alma gerektirir. Haftalık, aylık ve yıllık otomatik yenilenen abonelikler sunulur. İsteğe bağlı Ömür Boyu seçeneği yalnızca mevcutsa görünür. Fiyatlar satın almadan önce uygulamada gösterilir. Ücretsiz deneme yoktur.
 
 Kullanım Koşulları (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 Gizlilik Politikası: https://unitlift.app/privacy
@@ -49,7 +50,7 @@ Gizlilik Politikası: https://unitlift.app/privacy
 ## Keywords (100 max, comma-separated, no spaces)
 
 ```
-gym,fitness,vücut,geliştirme,egzersiz,program,spor,salonu,demir,kayıt,halter,tekrar
+gym,fitness,vücut,geliştirme,egzersiz,program,spor,salonu,ağırlık,kayıt,halter,tekrar
 ```
 
 ## What’s New — v2.1

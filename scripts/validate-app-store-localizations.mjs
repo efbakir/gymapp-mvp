@@ -47,6 +47,12 @@ function count(value) {
   return [...value.normalize("NFC")].length;
 }
 
+// Keywords are budgeted in UTF-8 bytes, not characters, so accented
+// locales can never overrun the field regardless of how ASC counts.
+function keywordBytes(value) {
+  return Buffer.byteLength(value.normalize("NFC"), "utf8");
+}
+
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -73,6 +79,13 @@ for (const locale of locales) {
     const value = fields[field];
     if (!value) {
       fail(locale.file, `missing fenced ${field} value`);
+      continue;
+    }
+    if (field === "Keywords") {
+      const bytes = keywordBytes(value);
+      if (bytes > limit) {
+        fail(locale.file, `Keywords are ${bytes}/${limit} UTF-8 bytes (${count(value)} characters)`);
+      }
       continue;
     }
     const length = count(value);
@@ -143,7 +156,7 @@ for (const locale of locales) {
     name: `${count(fields["App name"] ?? "")}/30`,
     subtitle: `${count(fields.Subtitle ?? "")}/30`,
     promo: `${count(fields["Promotional text"] ?? "")}/170`,
-    keywords: `${count(keywords)}/100`,
+    keywords: `${count(keywords)}ch/${keywordBytes(keywords)}B/100`,
   });
 }
 
@@ -156,4 +169,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log("All five locale files passed structural, character-limit, disclosure, and keyword-duplication checks.");
+console.log("All five locale files passed structural, character-limit, keyword-byte-limit, disclosure, and keyword-duplication checks.");

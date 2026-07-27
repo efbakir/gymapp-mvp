@@ -1,6 +1,7 @@
 # German (de-DE) — Unit 2.1 App Store metadata
 
-> Status: **REGENERATED FOR 2.1 — native review required before paste.**
+> Status: **AI LINGUISTIC QA COMPLETE — corrections applied; founder paste approval required.**
+> Reviewed 2026-07-27 by five parallel Claude linguistic-review agents plus one adjudication pass. This is AI linguistic QA, not native-human approval.
 > Register: informal “du.” The app UI remains English.
 
 ## App name (30 max)
@@ -20,7 +21,7 @@ Krafttraining einfach tracken
 ## Promotional text (170 max)
 
 ```
-Wähle einen fertigen Plan oder füge deinen eigenen ein. Die letzten Gewichte sind eingetragen, jeder Satz braucht einen Tap und der Pausen-Timer startet automatisch.
+Wähle einen fertigen Plan oder füge deinen eigenen ein. Die letzten Gewichte sind vorausgefüllt, jeder Satz braucht einen Tap und der Pausen-Timer startet automatisch.
 ```
 
 ## Description (4000 max)
@@ -40,7 +41,7 @@ Kein Konto. Keine Werbung. Kein Social Feed. Dein Training bleibt auf deinem iPh
 
 Hinweis: Die App-Oberfläche ist derzeit auf Englisch.
 
-Unit erfordert nach der Einrichtung einen kostenpflichtigen Kauf. Wöchentliche, monatliche und jährliche Abos mit automatischer Verlängerung sind verfügbar. Eine optionale Lifetime-Option erscheint nur, wenn sie verfügbar ist. Preise werden vor dem Kauf in der App angezeigt. Es gibt keine kostenlose Testphase.
+Unit erfordert nach der Einrichtung einen kostenpflichtigen Kauf. Wöchentliche, monatliche und jährliche Abos mit automatischer Verlängerung sind verfügbar. Eine Lifetime-Option erscheint nur, wenn sie verfügbar ist. Preise werden vor dem Kauf in der App angezeigt. Es gibt keine kostenlose Testphase.
 
 Nutzungsbedingungen (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 Datenschutzrichtlinie: https://unitlift.app/privacy
@@ -49,7 +50,7 @@ Datenschutzrichtlinie: https://unitlift.app/privacy
 ## Keywords (100 max, comma-separated, no spaces)
 
 ```
-kraftsport,fitness,muskelaufbau,trainingsplan,hantel,gewichte,wiederholungen,protokoll,gym
+kraftsport,fitness,muskelaufbau,trainingsplan,hantel,gewichte,wiederholungen,protokoll,gym,anfänger
 ```
 
 ## What’s New — v2.1
@@ -58,7 +59,7 @@ kraftsport,fitness,muskelaufbau,trainingsplan,hantel,gewichte,wiederholungen,pro
 Unit 2.1 macht Einrichtung und Logging klarer.
 
 • Wähle einen fertigen Trainingsplan oder füge deinen eigenen ein
-• Verbessertes Workout-Logging und Körpergewichtsverlauf
+• Verbessertes Workout-Logging und verbesserter Körpergewichtsverlauf
 • Zuverlässigere Kaufabwicklung und Fehlerbehebungen
 ```
 

@@ -1,6 +1,7 @@
 # Spanish — Mexico (es-MX) — Unit 2.1 App Store metadata
 
-> Status: **REGENERATED FOR 2.1 — native review required before paste.**
+> Status: **AI LINGUISTIC QA COMPLETE — corrections applied; founder paste approval required.**
+> Reviewed 2026-07-27 by five parallel Claude linguistic-review agents plus one adjudication pass. This is AI linguistic QA, not native-human approval.
 > Register: informal “tú,” neutral Latin American Spanish. The app UI remains English.
 
 ## App name (30 max)
@@ -20,7 +21,7 @@ Seguimiento simple de fuerza
 ## Promotional text (170 max)
 
 ```
-Elige una rutina lista o pega la tuya. Los pesos de la última vez ya están cargados, cada serie requiere un toque y el descanso se inicia automáticamente.
+Elige una rutina lista o pega la tuya. Los pesos de la última vez ya están cargados, cada serie requiere un toque y el temporizador de descanso se inicia automáticamente.
 ```
 
 ## Description (4000 max)
@@ -40,7 +41,7 @@ Sin cuenta. Sin anuncios. Sin feed social. Tu entrenamiento se queda en tu iPhon
 
 Nota: la interfaz de la app está en inglés por ahora.
 
-Unit requiere una compra de pago después de la configuración. Hay suscripciones semanales, mensuales y anuales con renovación automática. La opción Lifetime aparece solo si está disponible. Los precios se muestran en la app antes de comprar. No hay prueba gratuita.
+Unit requiere una compra después de la configuración. Hay suscripciones semanales, mensuales y anuales con renovación automática. La opción de por vida (Lifetime) aparece solo si está disponible. Los precios se muestran en la app antes de comprar. No hay prueba gratuita.
 
 Términos de uso (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 Política de privacidad: https://unitlift.app/privacy
@@ -49,13 +50,13 @@ Política de privacidad: https://unitlift.app/privacy
 ## Keywords (100 max, comma-separated, no spaces)
 
 ```
-rutina,gimnasio,pesas,entrenamiento,musculación,ejercicio,bitácora,progreso,reps,sentadilla
+rutina,gimnasio,pesas,entrenamiento,ejercicio,bitácora,progreso,reps,principiante,series,historial
 ```
 
 ## What’s New — v2.1
 
 ```
-Unit 2.1 hace más claros la configuración y el registro.
+Unit 2.1 hace que la configuración y el registro sean más claros.
 
 • Elige una rutina lista o pega la tuya
 • Mejoras en el registro de entrenamientos y el historial de peso corporal
