@@ -76,7 +76,7 @@ final class EngagementPromptTrackerTests: XCTestCase {
 
         let url = EngagementPromptTracker.feedbackEmailURL(
             appVersion: "2.1",
-            buildNumber: "58",
+            buildNumber: "59",
             systemVersion: "iOS test"
         )
         let components = url.flatMap { URLComponents(url: $0, resolvingAgainstBaseURL: false) }
@@ -92,6 +92,6 @@ final class EngagementPromptTrackerTests: XCTestCase {
         XCTAssertTrue(query["body"]?.contains("What worked:") == true)
         XCTAssertTrue(query["body"]?.contains("What got in the way:") == true)
         XCTAssertTrue(query["body"]?.contains("What should improve:") == true)
-        XCTAssertTrue(query["body"]?.contains("Unit 2.1 · build 58 · iOS test") == true)
+        XCTAssertTrue(query["body"]?.contains("Unit 2.1 · build 59 · iOS test") == true)
     }
 }

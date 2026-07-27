@@ -20,6 +20,14 @@
 
 ---
 
+## 2026-07-27 — Version 2.1 release candidate advances to build 59
+
+**Decision:** Version 2.1 ships as **2.1 (59)** from tag `v2.1-build59`. This supersedes only the build-58 release identity recorded on 2026-07-23; the engagement-prompt and App Store positioning decisions remain unchanged.
+
+**Why:** Physical-device StoreKit testing exposed an entitlement race in build 58: a successful purchase could be followed by a stale empty entitlement refresh that restored the hard paywall. Build 59 makes the verified purchase authoritative while preserving refund and expiration revocation.
+
+**Implication:** Do not submit or archive build 58. Repeat the physical-device purchase/unlock smoke test on build 59, then archive only the clean tagged `main` commit.
+
 ## 2026-07-23 — Version 2.1 engagement prompts and inclusive App Store positioning
 
 **Decision:** Version 2.1 counts only newly completed workout session IDs in a version-scoped UserDefaults tracker. It makes one StoreKit review-request attempt after workout one’s summary closes, and shows one non-blocking feedback card on workout three’s summary. The card opens `https://calendar.notion.so/meet/efbakir/unit-feedback` or a prefilled email to `support@unitlift.app`. Neither prompt can interrupt active logging. App Store English copy now welcomes beginner-to-experienced users through ready-made programs or pasted routines; the five existing metadata translations are stale and must not ship in 2.1. Release identity is **2.1 (58)**.
