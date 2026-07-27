@@ -220,6 +220,7 @@ export default function LandingPage() {
                   sizes: "380px",
                   className:
                     "md:origin-top md:-translate-y-[73px] md:scale-[1.05]",
+                  clipOverflow: true,
                 },
               },
             ]}

@@ -13,6 +13,7 @@ type FeatureShowcaseItem = {
     height: number
     sizes?: string
     className?: string
+    clipOverflow?: boolean
   }
   children?: ReactNode
 }
@@ -61,7 +62,11 @@ export default function FeatureShowcase({
             </div>
 
             {item.mockup && (
-              <div className="mt-unit-lg px-unit-lg pb-unit-lg md:px-unit-xl md:pb-unit-xl">
+              <div
+                className={`mt-unit-lg px-unit-lg pb-unit-lg md:px-unit-xl md:pb-unit-xl ${
+                  item.mockup.clipOverflow ? "overflow-hidden" : ""
+                }`}
+              >
                 <div className="mx-auto max-w-[var(--marketing-feature-device-width)]">
                   <DeviceFrame
                     src={item.mockup.src}
