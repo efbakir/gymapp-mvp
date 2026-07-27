@@ -7,15 +7,16 @@
 
 ## 0. Release gate (do nothing in ASC before this)
 
-1. All five locale files have a recorded native/founder approval.
-2. `npm run test:localizations` passes after the final reviewer edits.
-3. PRO-32 is Done.
-4. The approved locale commit is on `main`.
+1. All five locale files record completed AI linguistic QA and applied corrections.
+2. The founder has granted paste approval after accepting the documented residual risks.
+3. `npm run test:localizations` passes after the final reviewer edits.
+4. PRO-32 is Done.
+5. The approved locale commit is on `main`.
 
 ## 1. Pre-checks (5 min)
 
 - [ ] ASC → Subscriptions → `com.unit.weekly` → price reads **$2.99** (the 2026-07-02 change). If it still reads $4.99, fix that before anything else — it gates v2 regardless of localization.
-- [ ] Native reviews done (see §7). **Do not paste unreviewed copy.** Turkish is the exception: you are the native reviewer.
+- [ ] AI linguistic QA is complete for all five locales and founder paste approval is recorded (see §7).
 
 ## 2. What to paste first
 
@@ -80,18 +81,18 @@ Product IDs never change. If any screen asks you to create a product, stop — w
 - In-app UI localization, `.xcstrings`, any code change
 - Any price change, custom storefront price, intro offer, or promotional offer
 
-## 7. Native-speaker review checklist (before §3, per language)
+## 7. Founder paste approval (before §3)
 
-One gym-going native reader each for **German, Spanish, Portuguese, French** (~10 min per language). **Turkish: you review it yourself — read the description once out loud.** Per reader:
+The five locale files completed AI linguistic QA on 2026-07-27. This is not native-human approval. Before pasting:
 
-- [ ] Description reads like a person, not a translation; register matches the file header (de "du", es "tú", pt "você", fr "vous" — fr reader also answers the tu/vous question flagged in `fr-FR.md`)
-- [ ] No we-forms (kein "wir" / "nosotros" / "nós" / "nous" / "biz")
-- [ ] The "app interface is in English" line is present and natural
-- [ ] App name suffix and subscription display names read as product names, not sentences
-- [ ] Keywords are words a lifter would type, in that language
-- [ ] Any edit stays inside the ASC limits noted in the file (re-count after edits: name/subtitle 30, promo 170, keywords 100, sub name 30, sub desc 45)
+- [ ] Read `asc-execution-status.md` and accept the two residual risks: native cadence is unverified and keyword choices lack real search-volume data.
+- [ ] Optionally read the Turkish listing aloud as the native founder; record any correction in `tr.md`.
+- [ ] Confirm every locale still discloses that the app interface is in English.
+- [ ] Confirm the paid-purchase, subscription, optional Lifetime, and no-free-trial disclosures remain present.
+- [ ] Run `npm run test:localizations`; all five locales must pass, including the 100-byte keyword limit.
+- [ ] Record founder paste approval in `asc-execution-status.md`, then mark PRO-32 Done.
 
-Record the reviewer's fixes in the locale file (edit the fenced blocks) before pasting, so repo and ASC never diverge.
+Any later correction must be made in the locale file and revalidated before pasting so the repository and App Store Connect never diverge.
 
 ## 8. Verify each locale after pasting
 
@@ -104,4 +105,4 @@ Per language, still in ASC:
 - [ ] Subscriptions: each product shows the language listed with a green/complete state, no "Missing Metadata"
 - [ ] After v2 approval: switch your App Store account region or use the web preview links per storefront (Germany, Mexico, Brazil, France, Turkey) and check the listing shows the localized name + subtitle
 
-Final gate before Submit: version 2.1 has all five approved languages attached, English (U.S.) is still the primary language, and the attached binary is exactly 2.1 (58).
+Final gate before Submit: version 2.1 has all five approved languages attached, English (U.S.) is still the primary language, and the attached binary matches the current release-candidate build in `docs/decision-log.md`.

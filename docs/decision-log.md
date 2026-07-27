@@ -20,6 +20,14 @@
 
 ---
 
+## 2026-07-27 — AI linguistic QA replaces the unavailable native-review gate for 2.1 metadata
+
+**Decision:** German, Spanish (Mexico), Portuguese (Brazil), French, and Turkish metadata may clear PRO-32 after five independent AI linguistic reviews, one adjudication pass, applied corrections, byte-aware repository validation, and explicit founder paste approval. This is recorded as AI linguistic QA, not native-human approval.
+
+**Why:** Native reviewers were unavailable. Apple recommends native feedback but does not require proof of it for App Store submission; the structured AI review and automated disclosure/limit checks are the strongest available preflight.
+
+**Implication:** This supersedes only the native/founder-review method in the 2026-07-23 localization decision. The five-language submission gate, English-only app interface and screenshots, exact legal disclosures, founder paste approval, and PRO-32 completion remain required.
+
 ## 2026-07-23 — Localized metadata is a Unit 2.1 submission gate
 
 **Decision:** Version 2.1 will not be submitted until PRO-32 is complete. German, Spanish (Mexico), Portuguese (Brazil), French, and Turkish metadata must derive from the frozen beginner-inclusive English copy, pass the repository localization test, and receive the recorded native/founder approvals. The app UI and inherited screenshots remain English.

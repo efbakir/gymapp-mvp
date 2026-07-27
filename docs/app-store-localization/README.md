@@ -3,7 +3,7 @@
 > Decision doc + rollout plan. Written 2026-07-11. Supersedes the earlier "defer localization until $5k MRR" position (from the v1 submission doc, since deleted — git history has it).
 > Three separate tracks. Do not mix them: shipping track 1 does **not** mean the app is translated.
 
-**The plan in one paragraph:** Ship App Store **metadata only** in five languages with 2.1: German, Spanish-MX, Portuguese-BR, French, and Turkish. The 2026-07-23 files are regenerated and machine-tested, but they do not ship until PRO-32 records the required native approvals. Screenshots and the in-app UI stay English. Prices continue to use Apple’s automatic conversion from the USD base.
+**The plan in one paragraph:** Ship App Store **metadata only** in five languages with 2.1: German, Spanish-MX, Portuguese-BR, French, and Turkish. The files are regenerated from the frozen English copy, corrected through five independent AI linguistic reviews plus adjudication, and machine-tested with byte-aware keyword limits. They do not ship until the founder grants paste approval. Screenshots and the in-app UI stay English. Prices continue to use Apple’s automatic conversion from the USD base.
 
 ---
 
@@ -11,7 +11,7 @@
 
 | Track | What it is | Status |
 |---|---|---|
-| 1. App Store metadata | Per-locale name, subtitle, description, keywords, promo text, What's New, subscription names/descriptions | **2.1 release gate** — regenerated and machine-tested; native reviews pending |
+| 1. App Store metadata | Per-locale name, subtitle, description, keywords, promo text, What's New, subscription names/descriptions | **2.1 release gate** — AI linguistic QA and machine validation complete; founder paste approval pending |
 | 2. In-app UI | `.xcstrings` String Catalog, translated `AppCopy.swift`, layout QA per language | **Not now** — binary has `knownRegions = (en, Base)`; zero localization infra exists. Tier 3 below. |
 | 3. Regional pricing | Per-storefront prices for the 4 products | **No change** — keep Apple automatic conversion. See §Pricing. |
 
@@ -27,13 +27,13 @@ Canonical English strings live in [`docs/app-store-copy.md`](../app-store-copy.m
 
 ### Tier 1 — ship with v2 (metadata only)
 
-| Locale | ASC language | Why in | Founder review |
+| Locale | ASC language | Why in | 2.1 review status |
 |---|---|---|---|
-| `de-DE` | German | Largest EU paid-fitness market, high willingness to pay | 2.1 copy awaits native read |
-| `es-MX` | Spanish (Mexico) | Covers Mexico + most Latin American storefronts | 2.1 copy awaits native Mexican read |
-| `pt-BR` | Portuguese (Brazil) | Brazil is a top market by gym count | Name and 2.1 copy await native read |
-| `fr-FR` | French | Large market with strong local gym vocabulary | 2.1 copy and vous/tu choice await native read |
-| `tr` | Turkish | Founder is the native reviewer | New 2.1 copy awaits founder approval |
+| `de-DE` | German | Largest EU paid-fitness market, high willingness to pay | AI linguistic QA complete; corrections applied |
+| `es-MX` | Spanish (Mexico) | Covers Mexico + most Latin American storefronts | AI linguistic QA complete; corrections applied |
+| `pt-BR` | Portuguese (Brazil) | Brazil is a top market by gym count | AI linguistic QA complete; name approved in AI QA |
+| `fr-FR` | French | Large market with strong local gym vocabulary | AI linguistic QA complete; `vous` locked |
+| `tr` | Turkish | Founder can add a native read | AI linguistic QA complete; corrections applied |
 
 Five languages is the ceiling for one review pass. Each file in this folder = one ASC language, paste-ready.
 
@@ -79,8 +79,8 @@ German, Portuguese-BR, Spanish, Turkish — decided by Tier 1 install data. Hard
 
 Not translated — researched per market. Each locale file documents intent behind its keyword field. Principles:
 
-- The name field carries the local **log/record-family** term. Founder-approved and final (2026-07-13): tr "Antrenman Günlüğü", de "Trainingstagebuch", es-MX "Registro de gym", fr "Carnet de Muscu". Still a candidate awaiting native review: pt-BR "Diário de Treino". Terms displaced from a name keep their search value elsewhere (pt-BR *ficha* and fr *journal* in the keyword field; es *diario* in the subtitle). Competitor differentiation is not a naming criterion (founder rule) — natural local wording, log-vs-plan accuracy, and native comprehension decide; conventional category terms are acceptable and often desirable.
-- Keyword field = 100 chars, comma-separated, no spaces, no words already in that locale's name/subtitle, no competitor trademarks.
+- The name field carries the local **log/record-family** term. Founder-approved and final (2026-07-13): tr "Antrenman Günlüğü", de "Trainingstagebuch", es-MX "Registro de gym", fr "Carnet de Muscu". AI linguistic QA approved pt-BR "Diário de Treino" on 2026-07-27. Terms displaced from a name keep their search value elsewhere (pt-BR *ficha* and fr *journal* in the keyword field; es *diario* in the subtitle). Competitor differentiation is not a naming criterion (founder rule) — natural local wording, log-vs-plan accuracy, and native comprehension decide; conventional category terms are acceptable and often desirable.
+- Keyword field = 100 UTF-8 bytes, comma-separated, no spaces, no words already in that locale's name/subtitle, no competitor trademarks.
 - Many EU users also search English ("gym tracker" works in Germany). The English keyword field already covers those searches on storefronts where en is indexed; locale fields chase native-language queries only.
 
 ---
@@ -130,10 +130,11 @@ Execution runbook with per-click detail and post-paste verification: [`asc-paste
 
 ---
 
-## Native-speaker review risks
+## AI review status and residual risks
 
-- The 2.1 locale files are AI-assisted and machine-tested, not native-approved. Before submission: one native read per language (de, es-MX, pt-BR, fr), preferably by a gym-goer. Turkish: founder reviews directly.
-- Register choices made and flagged per file: German "du", Spanish "tú", Portuguese "você", French "vous" (open question — lifter slang leans "tu"; see `fr-FR.md`), Turkish "sen".
+- Native reviewers were unavailable for 2.1. Five parallel Claude linguistic reviewers checked meaning, naturalness, local gym vocabulary, and ASO; a separate adjudication pass accepted only required and recommended corrections. This is **AI linguistic QA, not native-human approval**.
+- Register choices are locked for 2.1: German "du", Spanish "tú", Portuguese "você", French "vous", Turkish "sen".
+- Remaining risk is cadence that only native ears can fully judge and keyword choices without real search-volume data. The founder accepts or rejects that residual risk at the paste-approval gate; Apple does not require proof of native review.
 - First-person-singular rule (`PRODUCT.md`): no we-forms in any language (kein "wir", no "nosotros", "nós", "nous", "biz"). Checked in each file.
 - Subscription disclosure language (Guideline 3.1.2(b)) is translated inside every description — do not trim those paragraphs when pasting.
 
