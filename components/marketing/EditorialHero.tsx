@@ -34,11 +34,11 @@ export default function EditorialHero() {
               slotLabel="unit-hero-lifter.webp"
               sizes="(min-width: 1024px) 56vw, 92vw"
               priority
-              className="aspect-[4/5] rounded-[36px]"
-              imageClassName="grayscale"
+              enabled
+              className="aspect-[4/5] rounded-[32px] bg-black shadow-[0_32px_80px_rgba(10,10,10,0.16)]"
             />
 
-            <div className="pointer-events-none absolute -bottom-12 -left-8 w-[240px] drop-shadow-[0_28px_36px_rgba(10,10,10,0.2)] sm:-left-12 sm:w-[300px] lg:-left-20">
+            <div className="pointer-events-none absolute -bottom-10 -left-5 w-[210px] drop-shadow-[0_24px_32px_rgba(10,10,10,0.22)] sm:-bottom-12 sm:-left-10 sm:w-[260px] lg:-left-16">
               <Image
                 src="/screenshots/hero-ghost-values.png"
                 alt="Unit workout screen with the last weight and reps ready"
