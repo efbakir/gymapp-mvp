@@ -18,7 +18,8 @@ export default function EditorialHero() {
               </span>
             </h1>
             <p className="mb-unit-xl mt-unit-lg max-w-lg text-xl leading-snug text-unit-text-secondary">
-              Your last weight and reps are ready. Tap Done and keep lifting.
+              Your last weight and reps are ready.
+              <span className="block">Tap Done and keep lifting.</span>
             </p>
             <AppStoreBadge href={APP_STORE_URL} />
             <div className="mt-unit-lg">
