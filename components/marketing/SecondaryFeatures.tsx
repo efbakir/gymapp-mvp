@@ -254,9 +254,9 @@ export default function SecondaryFeatures() {
         {features.map((feature) => (
           <article
             key={feature.title}
-            className="lift-hover flex h-full flex-col rounded-[32px] bg-unit-card p-unit-lg"
+            className="lift-hover flex h-full min-h-[320px] flex-col rounded-[32px] bg-unit-card p-unit-lg"
           >
-            <div>
+            <div className="shrink-0">
               <h3 className="text-xl font-bold leading-tight tracking-tight">
                 {feature.title}
               </h3>
@@ -264,8 +264,10 @@ export default function SecondaryFeatures() {
                 {feature.body}
               </p>
             </div>
-            <div className="mt-unit-lg">
-              <FeatureVisual visual={feature.visual} />
+            <div className="flex min-h-[176px] flex-1 items-center justify-center">
+              <div className="w-full">
+                <FeatureVisual visual={feature.visual} />
+              </div>
             </div>
           </article>
         ))}

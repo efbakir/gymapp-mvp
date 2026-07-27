@@ -14,6 +14,7 @@ export default function FounderStory() {
             alt={`${DEVELOPER_NAME}, maker of Unit, at his desk`}
             width={600}
             height={600}
+            unoptimized
             className="h-full w-full object-cover"
           />
         </div>
