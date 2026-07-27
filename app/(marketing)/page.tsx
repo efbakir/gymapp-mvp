@@ -237,14 +237,13 @@ export default function LandingPage() {
                 title: "Follows you to the Lock Screen.",
                 body: "Starts when you tap Done. Check it on the Dynamic Island or Lock Screen.",
                 mockup: {
-                  // Background-keyed crop of listing screenshot 2, padded to
-                  // the same 1658×2386 geometry as the hero exports so all
-                  // cards render at one scale.
                   src: "/screenshots/rest-timer-figma.png",
                   alt: "Unit rest timer running at 1:57 with the set editor below",
                   width: REST_TIMER_W,
                   height: REST_TIMER_H,
                   sizes: "380px",
+                  className:
+                    "md:origin-top md:-translate-y-[73px] md:scale-[1.05]",
                 },
               },
             ]}

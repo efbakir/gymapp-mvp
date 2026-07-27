@@ -12,6 +12,7 @@ type FeatureShowcaseItem = {
     width: number
     height: number
     sizes?: string
+    className?: string
   }
   children?: ReactNode
 }
@@ -45,7 +46,7 @@ export default function FeatureShowcase({
             key={item.title}
             className="lift-hover flex min-h-[280px] flex-col overflow-visible rounded-[32px] bg-unit-card"
           >
-            <div className="flex flex-col px-unit-lg pt-unit-lg md:px-unit-xl md:pt-unit-xl">
+            <div className="flex flex-col px-unit-lg pt-unit-lg md:min-h-[152px] md:px-unit-xl md:pt-unit-xl">
               {item.eyebrow && <p className="eyebrow mb-unit-sm">{item.eyebrow}</p>}
               <h3 className="text-[22px] font-bold leading-[1.12] tracking-tight text-unit-text-primary">
                 {item.title}
@@ -68,6 +69,7 @@ export default function FeatureShowcase({
                     width={item.mockup.width}
                     height={item.mockup.height}
                     sizes={item.mockup.sizes}
+                    className={item.mockup.className}
                   />
                 </div>
               </div>
