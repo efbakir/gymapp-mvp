@@ -258,7 +258,7 @@ function MobileSection({
           key={item.href}
           href={item.href}
           onClick={onItemClick}
-          className="text-base text-unit-text-secondary py-1"
+          className="text-[15px] text-unit-text-secondary py-1"
         >
           {item.label}
         </Link>

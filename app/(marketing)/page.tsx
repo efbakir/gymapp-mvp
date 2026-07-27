@@ -148,7 +148,7 @@ export default function LandingPage() {
                   ★★★★★
                 </p>
                 <blockquote
-                  className="my-unit-lg max-w-[28ch] text-xl font-bold tracking-tight leading-snug"
+                  className="my-unit-lg max-w-[28ch] text-lg font-bold tracking-tight leading-snug"
                   title={review.original}
                 >
                   {review.quote}
@@ -198,7 +198,7 @@ export default function LandingPage() {
                       <span className="eyebrow">Imports from</span>
                       {importSources.map((src, i) => (
                         <span key={src} className="flex items-center gap-x-unit-md">
-                          <span className="text-base font-semibold tracking-tight">
+                          <span className="text-[15px] font-semibold tracking-tight">
                             {src}
                           </span>
                           {i < importSources.length - 1 && (
@@ -266,7 +266,7 @@ export default function LandingPage() {
           <h2 className="h-section mb-unit-md">
             Local-first. Stays on your phone.
           </h2>
-          <p className="text-xl leading-snug text-unit-text-secondary max-w-xl mx-auto">
+          <p className="text-lg leading-snug text-unit-text-secondary max-w-xl mx-auto">
             No account or server sync. Your history stays on your iPhone and
             can be included in iCloud Backup.
           </p>
@@ -301,10 +301,10 @@ export default function LandingPage() {
                 key={item.title}
                 className="py-unit-lg md:py-unit-xl flex flex-col md:flex-row md:items-baseline md:gap-unit-xl"
               >
-                <h3 className="text-xl font-bold tracking-tight leading-snug md:flex-1">
+                <h3 className="text-lg font-bold tracking-tight leading-snug md:flex-1">
                   {item.title}
                 </h3>
-                <p className="mt-unit-xs md:mt-0 text-base leading-relaxed text-unit-text-secondary md:flex-1 md:max-w-md">
+                <p className="mt-unit-xs md:mt-0 text-[15px] leading-relaxed text-unit-text-secondary md:flex-1 md:max-w-md">
                   {item.body}
                 </p>
               </div>
@@ -352,7 +352,7 @@ export default function LandingPage() {
           <h2 className="h-display mb-unit-md">
             Log a set in 3 seconds.
           </h2>
-          <p className="text-xl leading-snug mb-unit-xl text-unit-text-secondary max-w-xl mx-auto">
+          <p className="text-lg leading-snug mb-unit-xl text-unit-text-secondary max-w-xl mx-auto">
             One tap per set. Everything stays on your phone. The notebook,
             upgraded.
           </p>

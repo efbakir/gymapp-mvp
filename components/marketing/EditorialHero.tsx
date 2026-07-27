@@ -11,13 +11,13 @@ export default function EditorialHero() {
         <div className="grid items-center gap-unit-xxl lg:grid-cols-[0.86fr_1.14fr] lg:gap-unit-xxxl">
           <div className="stagger-hero max-w-xl">
             <p className="eyebrow mb-unit-lg">Your program. Logged fast.</p>
-            <h1 className="text-balance text-[48px] font-bold leading-[0.96] tracking-[-0.045em] text-unit-text-primary sm:text-[64px] lg:text-[76px]">
+            <h1 className="h-hero text-balance">
               Log a set
               <span className="mt-unit-xs block">
                 in 3 seconds.
               </span>
             </h1>
-            <p className="mb-unit-xl mt-unit-lg max-w-lg text-xl leading-snug text-unit-text-secondary">
+            <p className="mb-unit-xl mt-unit-lg max-w-lg text-lg leading-snug text-unit-text-secondary">
               Your last weight and reps are ready.
               <span className="block">Tap Done and keep lifting.</span>
             </p>

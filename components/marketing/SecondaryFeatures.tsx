@@ -88,7 +88,7 @@ function TimerVisual() {
             <p className="text-[10px] font-semibold uppercase tracking-[0.16em] opacity-60">
               Rest timer
             </p>
-            <p className="mt-unit-xs text-[34px] font-bold tabular-nums tracking-tight">
+            <p className="mt-unit-xs text-[30px] font-bold tabular-nums tracking-tight">
               01:57
             </p>
           </div>
@@ -115,7 +115,7 @@ function PRVisual() {
             <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-unit-text-secondary">
               Back squat
             </p>
-            <p className="mt-unit-xs text-[36px] font-bold tabular-nums tracking-tight">
+            <p className="mt-unit-xs text-[32px] font-bold tabular-nums tracking-tight">
               140 kg
             </p>
           </div>
@@ -245,7 +245,7 @@ export default function SecondaryFeatures() {
       <div className="mx-auto mb-unit-xxl max-w-3xl text-center">
         <p className="eyebrow mb-unit-sm">Built in</p>
         <h2 className="h-section text-balance">Everything your log needs.</h2>
-        <p className="mx-auto mt-unit-md max-w-xl text-lg leading-snug text-unit-text-secondary">
+        <p className="mx-auto mt-unit-md max-w-xl text-base leading-snug text-unit-text-secondary">
           Useful between sets. Quiet everywhere else.
         </p>
       </div>
@@ -257,7 +257,7 @@ export default function SecondaryFeatures() {
             className="lift-hover flex h-full min-h-[320px] flex-col rounded-[32px] bg-unit-card p-unit-lg"
           >
             <div className="shrink-0">
-              <h3 className="text-xl font-bold leading-tight tracking-tight">
+              <h3 className="text-lg font-bold leading-tight tracking-tight">
                 {feature.title}
               </h3>
               <p className="mt-unit-xs max-w-[30ch] text-sm leading-relaxed text-unit-text-secondary">

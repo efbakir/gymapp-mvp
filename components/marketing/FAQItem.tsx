@@ -27,7 +27,7 @@ export default function FAQItem({
         aria-controls={panelId}
         className="w-full flex items-center justify-between gap-unit-md py-unit-lg text-left"
       >
-        <span className="text-base font-semibold">{question}</span>
+        <span className="text-[15px] font-semibold">{question}</span>
         <svg
           width="16"
           height="16"
@@ -59,7 +59,7 @@ export default function FAQItem({
         }}
       >
         <div className="overflow-hidden">
-          <p className="pb-unit-lg text-base leading-relaxed text-unit-text-secondary">
+          <p className="pb-unit-lg text-[15px] leading-relaxed text-unit-text-secondary">
             {answer}
           </p>
         </div>

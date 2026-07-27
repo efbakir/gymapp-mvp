@@ -33,7 +33,7 @@ export default function FeatureShowcase({
         {eyebrow && <p className="eyebrow mb-unit-sm">{eyebrow}</p>}
         <h2 className="h-section text-balance">{title}</h2>
         {body && (
-          <p className="mx-auto mt-unit-md max-w-2xl text-lg leading-snug text-unit-text-secondary">
+          <p className="mx-auto mt-unit-md max-w-2xl text-base leading-snug text-unit-text-secondary">
             {body}
           </p>
         )}
@@ -47,10 +47,10 @@ export default function FeatureShowcase({
           >
             <div className="flex flex-col px-unit-lg pt-unit-lg md:px-unit-xl md:pt-unit-xl">
               {item.eyebrow && <p className="eyebrow mb-unit-sm">{item.eyebrow}</p>}
-              <h3 className="text-[24px] font-bold leading-[1.12] tracking-tight text-unit-text-primary">
+              <h3 className="text-[22px] font-bold leading-[1.12] tracking-tight text-unit-text-primary">
                 {item.title}
               </h3>
-              <p className="mt-unit-sm max-w-xl text-base leading-relaxed text-unit-text-secondary">
+              <p className="mt-unit-sm max-w-xl text-[15px] leading-relaxed text-unit-text-secondary">
                 {item.body}
               </p>
               {item.microStat && (
