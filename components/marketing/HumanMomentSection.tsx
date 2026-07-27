@@ -22,13 +22,11 @@ export default function HumanMomentSection() {
 
           <div className="max-w-xl">
             <p className="eyebrow mb-unit-md">Built for the gym floor</p>
-            <h2 className="text-balance text-[36px] font-bold leading-[1.02] tracking-[-0.04em] md:text-[48px]">
+            <h2 className="h-campaign text-balance">
               Training should be hard.
-              <span className="editorial-display mt-unit-xs block">
-                Logging should not.
-              </span>
+              <span className="block">Logging should not.</span>
             </h2>
-            <p className="mt-unit-lg text-lg leading-snug text-unit-text-secondary">
+            <p className="mt-unit-lg text-base leading-snug text-unit-text-secondary">
               Unit remembers the last set, starts your timer, and gets out of
               the way.
             </p>
@@ -36,7 +34,7 @@ export default function HumanMomentSection() {
             <dl className="mt-unit-xl grid grid-cols-3 gap-unit-md">
               {facts.map((fact) => (
                 <div key={fact.label}>
-                  <dt className="text-2xl font-bold tracking-tight tabular-nums">
+                  <dt className="text-[22px] font-bold tracking-tight tabular-nums">
                     {fact.value}
                   </dt>
                   <dd className="mt-unit-xs text-xs text-unit-text-secondary">

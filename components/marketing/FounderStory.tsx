@@ -14,6 +14,7 @@ export default function FounderStory() {
             alt={`${DEVELOPER_NAME}, maker of Unit, at his desk`}
             width={600}
             height={600}
+            unoptimized
             className="h-full w-full object-cover"
           />
         </div>
@@ -21,15 +22,15 @@ export default function FounderStory() {
 
       <div className="order-2 max-w-[600px] space-y-unit-md">
         <p className="eyebrow">From the maker</p>
-        <p className="text-lg leading-relaxed">
+        <p className="text-base leading-relaxed">
           I trained with a paper notebook for years. Gym apps added too many
           menus and too much typing.
         </p>
-        <p className="text-lg leading-relaxed text-unit-text-secondary">
+        <p className="text-base leading-relaxed text-unit-text-secondary">
           I built Unit to do one job: log each set fast. Your last numbers are
           ready, the timer follows you, and your data stays on your phone.
         </p>
-        <p className="pt-unit-xs text-base font-semibold tracking-tight">
+        <p className="pt-unit-xs text-[15px] font-semibold tracking-tight">
           {DEVELOPER_NAME.split(" ")[0]}
         </p>
       </div>

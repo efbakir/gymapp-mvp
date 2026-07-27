@@ -160,19 +160,19 @@ body {
     @apply eyebrow transition-colors hover:text-unit-text-primary;
   }
 
-  /* Marketing type scale: 13 mono / 16 body / 20 lead / 28 section / 44 hero.
-     Five steps total. Never extend with a sixth without removing one first. */
+  /* Marketing type scale: compact labels stay at 13 and 14px. Larger text
+     uses a restrained 16 / 18 / 22 / 32 / 44 / 54 / 60px progression. */
   .h-display {
-    @apply text-[44px] md:text-[60px] font-bold tracking-tight leading-[1.04] text-unit-text-primary;
+    @apply text-[40px] md:text-[54px] font-bold tracking-tight leading-[1.04] text-unit-text-primary;
   }
   .h-section {
-    @apply text-[28px] md:text-[36px] font-bold tracking-tight leading-[1.1] text-unit-text-primary;
+    @apply text-[26px] md:text-[32px] font-bold tracking-tight leading-[1.1] text-unit-text-primary;
   }
-  .editorial-display {
-    font-family: Georgia, "Times New Roman", serif;
-    font-style: italic;
-    font-weight: 400;
-    letter-spacing: -0.045em;
+  .h-campaign {
+    @apply text-[34px] md:text-[44px] font-bold tracking-[-0.04em] leading-[1.02] text-unit-text-primary;
+  }
+  .h-hero {
+    @apply text-[40px] sm:text-[52px] lg:text-[60px] font-bold tracking-[-0.045em] leading-[0.96] text-unit-text-primary;
   }
 
   /* The Ink radial-gradient ambient blur used behind hero mockup and

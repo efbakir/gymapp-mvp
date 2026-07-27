@@ -10,6 +10,25 @@
 import StoreKit
 import OSLog
 
+/// Prevents an entitlement refresh that started before a purchase completed
+/// from overwriting that newer, authoritative transaction with a stale
+/// "nothing active" result.
+struct EntitlementRefreshState {
+    private(set) var revision = 0
+
+    func beginRefresh() -> Int {
+        revision
+    }
+
+    mutating func recordAuthoritativeChange() {
+        revision &+= 1
+    }
+
+    func canApplyEmptyResult(from refreshRevision: Int) -> Bool {
+        refreshRevision == revision
+    }
+}
+
 @MainActor
 @Observable
 final class StoreManager {
@@ -83,6 +102,7 @@ final class StoreManager {
 
     private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "app.unitlift", category: "StoreManager")
     @ObservationIgnored nonisolated(unsafe) private var transactionListener: Task<Void, Never>?
+    @ObservationIgnored private var entitlementRefreshState = EntitlementRefreshState()
 
     // MARK: - Init
 
@@ -162,12 +182,9 @@ final class StoreManager {
             case .success(let verification):
                 let transaction = try checkVerified(verification)
                 if let tier = Tier(rawValue: transaction.productID) {
-                    setEntitlement(tier)
+                    confirmEntitlement(tier)
                 }
                 await transaction.finish()
-                // Confirm against currentEntitlements without holding the
-                // paywall closed if StoreKit's second lookup stalls.
-                Task { [weak self] in await self?.checkEntitlement() }
             case .userCancelled:
                 break
             case .pending:
@@ -218,6 +235,7 @@ final class StoreManager {
 
     @MainActor
     func checkEntitlement() async {
+        let refreshRevision = entitlementRefreshState.beginRefresh()
         var entitlementTier: Tier?
         var sawAny = false
         for await result in Transaction.currentEntitlements {
@@ -236,7 +254,13 @@ final class StoreManager {
         if entitlementTier == nil {
             logger.info("Entitlement check: none active (any results: \(sawAny, privacy: .public))")
         }
-        setEntitlement(entitlementTier)
+        if let entitlementTier {
+            confirmEntitlement(entitlementTier)
+        } else if entitlementRefreshState.canApplyEmptyResult(from: refreshRevision) {
+            clearEntitlement()
+        } else {
+            logger.info("Ignoring stale empty entitlement result because a newer transaction changed access.")
+        }
         hasCheckedEntitlement = true
     }
 
@@ -257,19 +281,26 @@ final class StoreManager {
     private func listenForTransactions() -> Task<Void, Never> {
         Task.detached { [weak self] in
             for await result in Transaction.updates {
-                // Always finish verified transactions so they don't replay on
-                // next launch. Then re-derive entitlement from
-                // `currentEntitlements`, which excludes revoked / refunded /
-                // expired transactions — never assume "verified update =
-                // isPurchased true". A refund arrives here as a verified
-                // transaction with a revocationDate; without re-checking, the
-                // user would keep Pro until the next cold launch.
                 guard let self else { return }
                 do {
                     let transaction = try await self.checkVerified(result)
                     if Self.allProductIDs.contains(transaction.productID) {
                         await transaction.finish()
-                        await self.checkEntitlement()
+                        if transaction.revocationDate != nil
+                            || transaction.isUpgraded
+                            || transaction.expirationDate.map({ $0 <= Date() }) == true {
+                            // A refund or expiration is an authoritative access
+                            // change. Re-derive from current entitlements in
+                            // case another subscription tier remains active.
+                            await self.recordAuthoritativeEntitlementChange()
+                            await self.checkEntitlement()
+                        } else if let tier = Tier(rawValue: transaction.productID) {
+                            // A verified active transaction is itself the
+                            // entitlement. Applying it directly avoids the
+                            // StoreKit race where currentEntitlements briefly
+                            // returns empty after an Xcode/device purchase.
+                            await self.confirmEntitlement(tier)
+                        }
                     }
                 } catch {
                     let productID = result.unsafePayloadValue.productID
@@ -281,10 +312,24 @@ final class StoreManager {
 
     // MARK: - Verification
 
-    private func setEntitlement(_ tier: Tier?) {
+    private func confirmEntitlement(_ tier: Tier) {
+        entitlementRefreshState.recordAuthoritativeChange()
         activeTier = tier
-        isPurchased = tier != nil
-        UserDefaults.standard.set(tier?.rawValue ?? "", forKey: Self.lastKnownEntitlementKey)
+        isPurchased = true
+        UserDefaults.standard.set(tier.rawValue, forKey: Self.lastKnownEntitlementKey)
+        logger.info("Entitlement active: \(tier.rawValue, privacy: .public)")
+    }
+
+    private func clearEntitlement() {
+        entitlementRefreshState.recordAuthoritativeChange()
+        activeTier = nil
+        isPurchased = false
+        UserDefaults.standard.set("", forKey: Self.lastKnownEntitlementKey)
+        logger.info("Entitlement inactive.")
+    }
+
+    private func recordAuthoritativeEntitlementChange() {
+        entitlementRefreshState.recordAuthoritativeChange()
     }
 
     private func checkVerified(_ result: VerificationResult<Transaction>) throws -> Transaction {

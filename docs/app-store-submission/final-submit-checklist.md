@@ -1,4 +1,4 @@
-# Final submit checklist — Unit v2.1 (build 58)
+# Final submit checklist — Unit v2.1 (build 59)
 
 > The ASC handoff package. Everything below is paste-exact for App Store Connect; nothing requires a code change.
 > Updated 2026-07-23 for the recovered v2.1 release. Companions: `docs/pricing.md` (pricing truth) and `docs/release-qa.md` (device gauntlet).
@@ -17,8 +17,8 @@
 | Field | Value | Verified |
 |---|---|---|
 | Marketing version | **2.1** | `MARKETING_VERSION = 2.1` in all 8 pbxproj configs |
-| Build | **58** | `CURRENT_PROJECT_VERSION = 58` in all 8 pbxproj configs |
-| Archive source | tagged `main` | clean tree, local `main` equals `origin/main`, tag `v2.1-build58` points at the archived commit |
+| Build | **59** | `CURRENT_PROJECT_VERSION = 59` in all 8 pbxproj configs |
+| Archive source | tagged `main` | clean tree, local `main` equals `origin/main`, tag `v2.1-build59` points at the archived commit |
 
 ## 2. App name
 
@@ -62,7 +62,7 @@ The description's paid-purchase paragraph and the two legal URLs are Guideline 3
 - [ ] Features → Subscriptions → `unit-pro` group exists with the 3 auto-renewables (§3 IDs and prices exact).
 - [ ] Each product has an English display name + description and a **review screenshot** (one capture of `PaywallView` covers all).
 - [ ] App Store tab → version 2.1 → In-App Purchases and Subscriptions → **attach Weekly, Monthly, Yearly** (+ Lifetime if configured).
-- [ ] Build 58 attached to the version.
+- [ ] Build 59 attached to the version.
 
 ## 8. Localization
 
@@ -88,8 +88,8 @@ The description's paid-purchase paragraph and the two legal URLs are Guideline 3
 
 - [ ] StoreKit sandbox QA — all 5 steps in `docs/pricing.md` §StoreKit sandbox verification checklist, on this exact build, with sandbox Apple ID.
 - [ ] `docs/release-qa.md` gauntlet run on device.
-- [ ] Xcode Settings shows **Version 2.1 (58)**.
+- [ ] Xcode Settings shows **Version 2.1 (59)**.
 - [ ] `git status --short` is empty and local `main` equals `origin/main`.
-- [ ] Tag `v2.1-build58` points at the exact commit being archived.
+- [ ] Tag `v2.1-build59` points at the exact commit being archived.
 - [ ] Archive from clean tagged `main` only.
 - [ ] Known site inconsistency (not an archive blocker, fix before marketing push): `app/(marketing)/compare/data.ts` still says "Core logging is free forever. Pro is $4.99/mo or $29.99/yr." in 3 rows, and `app/(marketing)/page.tsx` has one "Free. No account. No ads." eyebrow. Both contradict the hard paywall on the live site.

@@ -28,6 +28,14 @@
 
 **Implication:** This supersedes only the native/founder-review method in the 2026-07-23 localization decision. The five-language submission gate, English-only app interface and screenshots, exact legal disclosures, founder paste approval, and PRO-32 completion remain required.
 
+## 2026-07-27 — Version 2.1 release candidate advances to build 59
+
+**Decision:** Version 2.1 ships as **2.1 (59)** from tag `v2.1-build59`. This supersedes only the build-58 release identity recorded on 2026-07-23; the engagement-prompt and App Store positioning decisions remain unchanged.
+
+**Why:** Physical-device StoreKit testing exposed an entitlement race in build 58: a successful purchase could be followed by a stale empty entitlement refresh that restored the hard paywall. Build 59 makes the verified purchase authoritative while preserving refund and expiration revocation.
+
+**Implication:** Do not submit or archive build 58. Repeat the physical-device purchase/unlock smoke test on build 59, then archive only the clean tagged `main` commit.
+
 ## 2026-07-23 — Localized metadata is a Unit 2.1 submission gate
 
 **Decision:** Version 2.1 will not be submitted until PRO-32 is complete. German, Spanish (Mexico), Portuguese (Brazil), French, and Turkish metadata must derive from the frozen beginner-inclusive English copy, pass the repository localization test, and receive the recorded native/founder approvals. The app UI and inherited screenshots remain English.

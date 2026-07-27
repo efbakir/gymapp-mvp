@@ -124,6 +124,21 @@ final class OnboardingPaywallFlowUITests: XCTestCase {
 
         tap(button(in: app, containing: AppCopy.Paywall.subscribeWeekly), "purchase CTA")
 
+        // iOS 26 simulator runtime: `SKTestSession.disableDialogs` no longer
+        // suppresses the SK2 payment sheet or its success alert — storekitd
+        // presents both and `Product.purchase()` blocks until they resolve.
+        // Confirm them from springboard when they appear; if Apple restores
+        // suppression, the waits time out harmlessly and the flow continues.
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let paymentSheetConfirm = springboard.buttons["Subscribe"]
+        if paymentSheetConfirm.waitForExistence(timeout: 10) {
+            paymentSheetConfirm.tap()
+            let purchaseSuccessOK = springboard.buttons["OK"]
+            if purchaseSuccessOK.waitForExistence(timeout: 10) {
+                purchaseSuccessOK.tap()
+            }
+        }
+
         // ── Unlock ──
         let todayTab = app.tabBars.buttons["Today"]
         XCTAssertTrue(todayTab.waitForExistence(timeout: 25), "post-unlock tab bar missing — purchase did not unlock")

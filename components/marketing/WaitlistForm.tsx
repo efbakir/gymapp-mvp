@@ -43,7 +43,7 @@ export default function WaitlistForm({
 
   const heightVar =
     size === "lg" ? "var(--button-height-lg)" : "var(--button-height-md)"
-  const textClass = size === "lg" ? "text-[17px]" : "text-[15px]"
+  const textClass = size === "lg" ? "text-base" : "text-[15px]"
   const emailIsValid = isValidEmail(email)
 
   async function onSubmit(e: React.FormEvent) {

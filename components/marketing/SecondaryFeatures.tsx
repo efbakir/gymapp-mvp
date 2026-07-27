@@ -45,7 +45,7 @@ const features: {
 
 function LocalVisual() {
   return (
-    <div className="flex h-full items-end justify-center">
+    <div className="flex justify-center">
       <div className="w-full max-w-[240px] rounded-[22px] bg-unit-background p-unit-md">
         <div className="mb-unit-md flex items-center gap-unit-sm">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-unit-accent text-unit-accent-foreground">
@@ -81,14 +81,14 @@ function LocalVisual() {
 
 function TimerVisual() {
   return (
-    <div className="flex h-full items-end justify-center">
+    <div className="flex justify-center">
       <div className="w-full max-w-[260px] rounded-[28px] bg-unit-accent p-unit-lg text-unit-accent-foreground shadow-[0_20px_50px_rgba(10,10,10,0.14)]">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.16em] opacity-60">
               Rest timer
             </p>
-            <p className="mt-unit-xs text-[34px] font-bold tabular-nums tracking-tight">
+            <p className="mt-unit-xs text-[30px] font-bold tabular-nums tracking-tight">
               01:57
             </p>
           </div>
@@ -108,14 +108,14 @@ function TimerVisual() {
 
 function PRVisual() {
   return (
-    <div className="flex h-full flex-col justify-end">
+    <div className="flex flex-col">
       <div className="mb-unit-md">
         <div className="flex items-end justify-between">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-unit-text-secondary">
               Back squat
             </p>
-            <p className="mt-unit-xs text-[36px] font-bold tabular-nums tracking-tight">
+            <p className="mt-unit-xs text-[32px] font-bold tabular-nums tracking-tight">
               140 kg
             </p>
           </div>
@@ -152,7 +152,7 @@ function CalendarVisual() {
   ] as const
 
   return (
-    <div className="flex h-full items-end justify-center">
+    <div className="flex justify-center">
       <div className="w-full max-w-[270px] rounded-[22px] bg-unit-background p-unit-md">
         <div className="mb-unit-md flex items-center justify-between">
           <p className="text-sm font-bold tracking-tight">This week</p>
@@ -177,7 +177,7 @@ function CalendarVisual() {
 
 function QuickVisual() {
   return (
-    <div className="flex h-full items-end justify-center">
+    <div className="flex justify-center">
       <div className="w-full max-w-[250px] text-center">
         <div className="mb-unit-md flex items-center justify-center gap-unit-xs">
           {["Squat", "Press", "Row"].map((exercise) => (
@@ -200,7 +200,7 @@ function QuickVisual() {
 
 function ProgramsVisual() {
   return (
-    <div className="flex h-full items-end justify-center">
+    <div className="flex justify-center">
       <div className="w-full max-w-[260px] space-y-unit-xs">
         {[
           ["PPL", "6 days"],
@@ -245,7 +245,7 @@ export default function SecondaryFeatures() {
       <div className="mx-auto mb-unit-xxl max-w-3xl text-center">
         <p className="eyebrow mb-unit-sm">Built in</p>
         <h2 className="h-section text-balance">Everything your log needs.</h2>
-        <p className="mx-auto mt-unit-md max-w-xl text-lg leading-snug text-unit-text-secondary">
+        <p className="mx-auto mt-unit-md max-w-xl text-base leading-snug text-unit-text-secondary">
           Useful between sets. Quiet everywhere else.
         </p>
       </div>
@@ -254,18 +254,20 @@ export default function SecondaryFeatures() {
         {features.map((feature) => (
           <article
             key={feature.title}
-            className="lift-hover flex min-h-[320px] flex-col rounded-[32px] bg-unit-card p-unit-lg md:min-h-[340px]"
+            className="lift-hover flex h-full min-h-[320px] flex-col rounded-[32px] bg-unit-card p-unit-lg"
           >
-            <div>
-              <h3 className="text-xl font-bold leading-tight tracking-tight">
+            <div className="shrink-0">
+              <h3 className="text-lg font-bold leading-tight tracking-tight">
                 {feature.title}
               </h3>
               <p className="mt-unit-xs max-w-[30ch] text-sm leading-relaxed text-unit-text-secondary">
                 {feature.body}
               </p>
             </div>
-            <div className="mt-unit-xl min-h-[150px] flex-1">
-              <FeatureVisual visual={feature.visual} />
+            <div className="flex min-h-[176px] flex-1 items-center justify-center">
+              <div className="w-full">
+                <FeatureVisual visual={feature.visual} />
+              </div>
             </div>
           </article>
         ))}

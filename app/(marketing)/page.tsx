@@ -89,20 +89,16 @@ const faqLd = {
   })),
 }
 
-const importSources = [
-  "Notes",
-  "WhatsApp",
-  "paper",
-  "CSV",
-  "Markdown",
-]
-
 // Crops of the approved App Store listing screenshots: transparent-background
 // exports (headline band removed, device bleeding off the bottom). The wider
 // canvas carries the unclipped drop shadow (~184px per side); every mockup on
 // the page shares this geometry so hero and cards render at one scale.
 const HERO_W = 1658
 const HERO_H = 2386
+const ONBOARDING_W = 1792
+const ONBOARDING_H = 2377
+const REST_TIMER_W = 1800
+const REST_TIMER_H = 2377
 
 export default function LandingPage() {
   return (
@@ -146,7 +142,7 @@ export default function LandingPage() {
                   ★★★★★
                 </p>
                 <blockquote
-                  className="my-unit-lg max-w-[28ch] text-xl font-bold tracking-tight leading-snug"
+                  className="my-unit-lg max-w-[28ch] text-lg font-bold tracking-tight leading-snug"
                   title={review.original}
                 >
                   {review.quote}
@@ -190,33 +186,15 @@ export default function LandingPage() {
                 eyebrow: "Bring your program",
                 title: "Paste from Notes. Done.",
                 body: "Paste a routine or build one. Unit reads the exercises, sets, reps, and weights.",
-                children: (
-                  <>
-                    <div className="mt-unit-lg flex flex-wrap items-center gap-x-unit-md gap-y-unit-xs">
-                      <span className="eyebrow">Imports from</span>
-                      {importSources.map((src, i) => (
-                        <span key={src} className="flex items-center gap-x-unit-md">
-                          <span className="text-base font-semibold tracking-tight">
-                            {src}
-                          </span>
-                          {i < importSources.length - 1 && (
-                            <span className="text-unit-text-secondary opacity-50">·</span>
-                          )}
-                        </span>
-                      ))}
-                    </div>
-                    {/* A pasted-program snippet instead of a device mockup:
-                        the paste flow's "before" state is a note, not an app
-                        screen. flex-1 keeps the card height level with its
-                        image-card siblings. */}
-                    <div className="mt-unit-lg flex-1 rounded-[24px] bg-unit-background p-unit-lg">
-                      <p className="eyebrow mb-unit-sm">Pasted from Notes</p>
-                      <p className="whitespace-pre-line font-mono text-sm leading-relaxed text-unit-text-secondary">
-                        {"push day\nbench press 5x5 @ 80kg\nohp 3x8 @ 40kg\nincline db 3x10 @ 24kg\nlateral raise 3x12"}
-                      </p>
-                    </div>
-                  </>
-                ),
+                mockup: {
+                  src: "/screenshots/onboarding-2.png",
+                  alt: "Unit turning a pasted Upper A workout into five exercises",
+                  width: ONBOARDING_W,
+                  height: ONBOARDING_H,
+                  sizes: "380px",
+                  className:
+                    "md:origin-top md:translate-y-[10px] md:scale-[1.14]",
+                },
               },
               {
                 eyebrow: "History · PRs",
@@ -235,14 +213,14 @@ export default function LandingPage() {
                 title: "Follows you to the Lock Screen.",
                 body: "Starts when you tap Done. Check it on the Dynamic Island or Lock Screen.",
                 mockup: {
-                  // Background-keyed crop of listing screenshot 2, padded to
-                  // the same 1658×2386 geometry as the hero exports so all
-                  // cards render at one scale.
-                  src: "/screenshots/rest-timer-transparent.png",
+                  src: "/screenshots/rest-timer-figma.png",
                   alt: "Unit rest timer running at 1:57 with the set editor below",
-                  width: HERO_W,
-                  height: HERO_H,
+                  width: REST_TIMER_W,
+                  height: REST_TIMER_H,
                   sizes: "380px",
+                  className:
+                    "md:origin-top md:-translate-y-[90px] md:scale-[1.26]",
+                  clipOverflow: true,
                 },
               },
             ]}
@@ -264,7 +242,7 @@ export default function LandingPage() {
           <h2 className="h-section mb-unit-md">
             Local-first. Stays on your phone.
           </h2>
-          <p className="text-xl leading-snug text-unit-text-secondary max-w-xl mx-auto">
+          <p className="text-lg leading-snug text-unit-text-secondary max-w-xl mx-auto">
             No account or server sync. Your history stays on your iPhone and
             can be included in iCloud Backup.
           </p>
@@ -299,10 +277,10 @@ export default function LandingPage() {
                 key={item.title}
                 className="py-unit-lg md:py-unit-xl flex flex-col md:flex-row md:items-baseline md:gap-unit-xl"
               >
-                <h3 className="text-xl font-bold tracking-tight leading-snug md:flex-1">
+                <h3 className="text-lg font-bold tracking-tight leading-snug md:flex-1">
                   {item.title}
                 </h3>
-                <p className="mt-unit-xs md:mt-0 text-base leading-relaxed text-unit-text-secondary md:flex-1 md:max-w-md">
+                <p className="mt-unit-xs md:mt-0 text-[15px] leading-relaxed text-unit-text-secondary md:flex-1 md:max-w-md">
                   {item.body}
                 </p>
               </div>
@@ -350,7 +328,7 @@ export default function LandingPage() {
           <h2 className="h-display mb-unit-md">
             Log a set in 3 seconds.
           </h2>
-          <p className="text-xl leading-snug mb-unit-xl text-unit-text-secondary max-w-xl mx-auto">
+          <p className="text-lg leading-snug mb-unit-xl text-unit-text-secondary max-w-xl mx-auto">
             One tap per set. Everything stays on your phone. The notebook,
             upgraded.
           </p>

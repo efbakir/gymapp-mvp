@@ -65,6 +65,7 @@
 		UI100000000000000000006 /* AppCopy.swift in Sources */ = {isa = PBXBuildFile; fileRef = UI000000000000000000006 /* AppCopy.swift */; };
 		UI100000000000000000007 /* EngagementPromptTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = UI000000000000000000007 /* EngagementPromptTracker.swift */; };
 		UT100000000000000000004 /* EngagementPromptTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UT200000000000000000004 /* EngagementPromptTrackerTests.swift */; };
+		UT100000000000000000005 /* EntitlementRefreshStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UT200000000000000000005 /* EntitlementRefreshStateTests.swift */; };
 		UT100000000000000000001 /* OnboardingPaywallFlowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UT200000000000000000001 /* OnboardingPaywallFlowUITests.swift */; };
 		UT100000000000000000002 /* Unit.storekit in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000013 /* Unit.storekit */; };
 		UT100000000000000000003 /* AppCopy.swift in Sources */ = {isa = PBXBuildFile; fileRef = UI000000000000000000006 /* AppCopy.swift */; };
@@ -181,6 +182,7 @@
 		UI000000000000000000006 /* AppCopy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCopy.swift; sourceTree = "<group>"; };
 		UI000000000000000000007 /* EngagementPromptTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EngagementPromptTracker.swift; sourceTree = "<group>"; };
 		UT200000000000000000004 /* EngagementPromptTrackerTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EngagementPromptTrackerTests.swift; sourceTree = "<group>"; };
+		UT200000000000000000005 /* EntitlementRefreshStateTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EntitlementRefreshStateTests.swift; sourceTree = "<group>"; };
 		UT200000000000000000001 /* OnboardingPaywallFlowUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OnboardingPaywallFlowUITests.swift; sourceTree = "<group>"; };
 		UT200000000000000000002 /* UnitUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = UnitUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		WE000000000000000000001 /* UnitWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = UnitWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -224,6 +226,7 @@
 			isa = PBXGroup;
 			children = (
 				UT200000000000000000004 /* EngagementPromptTrackerTests.swift */,
+				UT200000000000000000005 /* EntitlementRefreshStateTests.swift */,
 				165569863085B0817806842C /* ProgramImportParserTests.swift */,
 				165569863085B0817806842D /* ProgramImporterTests.swift */,
 			);
@@ -668,6 +671,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				UT100000000000000000004 /* EngagementPromptTrackerTests.swift in Sources */,
+				UT100000000000000000005 /* EntitlementRefreshStateTests.swift in Sources */,
 				4BD7329FD7C1BC7DD8F91226 /* ProgramImportParserTests.swift in Sources */,
 				4BD7329FD7C1BC7DD8F91227 /* ProgramImporterTests.swift in Sources */,
 			);
@@ -721,7 +725,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 58;
+				CURRENT_PROJECT_VERSION = 59;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -745,7 +749,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 58;
+				CURRENT_PROJECT_VERSION = 59;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -879,7 +883,7 @@
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_ENTITLEMENTS = Unit/Unit.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 58;
+				CURRENT_PROJECT_VERSION = 59;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "";
 				ENABLE_PREVIEWS = YES;
@@ -919,7 +923,7 @@
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_ENTITLEMENTS = Unit/Unit.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 58;
+				CURRENT_PROJECT_VERSION = 59;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "";
 				ENABLE_PREVIEWS = YES;
@@ -955,7 +959,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 58;
+				CURRENT_PROJECT_VERSION = 59;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -977,7 +981,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 58;
+				CURRENT_PROJECT_VERSION = 59;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1001,7 +1005,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 58;
+				CURRENT_PROJECT_VERSION = 59;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = R2BR5SX98Y;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -1034,7 +1038,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 58;
+				CURRENT_PROJECT_VERSION = 59;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = R2BR5SX98Y;
 				GENERATE_INFOPLIST_FILE = YES;

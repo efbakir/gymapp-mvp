@@ -6,12 +6,14 @@ const audiences = [
     src: "/people/lifter-bodybuilder.webp",
     file: "lifter-bodybuilder.webp",
     rotation: "-rotate-2",
+    enabled: true,
   },
   {
     label: "Powerlifters",
     src: "/people/lifter-powerlifter.webp",
     file: "lifter-powerlifter.webp",
     rotation: "rotate-2",
+    enabled: true,
   },
   {
     label: "New lifters",
@@ -57,7 +59,7 @@ export default function AudienceStrip() {
       <div className="mx-auto max-w-6xl px-unit-md md:px-unit-lg">
         <div className="mx-auto mb-unit-xxl max-w-3xl text-center">
           <p className="eyebrow mb-unit-sm">Your training. Your way.</p>
-          <h2 className="editorial-display text-balance text-[38px] leading-none text-unit-text-primary md:text-[52px]">
+          <h2 className="h-campaign text-balance">
             For everyone who lifts.
           </h2>
         </div>
@@ -74,7 +76,7 @@ export default function AudienceStrip() {
                 slotLabel={audience.file}
                 sizes="72px"
                 className={`h-[72px] w-[72px] shrink-0 rounded-2xl shadow-[0_12px_28px_rgba(10,10,10,0.1)] ${audience.rotation}`}
-                imageClassName="grayscale"
+                enabled={audience.enabled}
               />
               <p className="text-sm font-bold tracking-tight">{audience.label}</p>
             </div>

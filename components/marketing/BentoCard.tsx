@@ -36,10 +36,10 @@ export default function BentoCard({
 
       <div className="relative flex flex-col gap-unit-xs p-unit-lg md:p-unit-xl">
         {eyebrow && <p className="eyebrow">{eyebrow}</p>}
-        <h3 className="text-xl font-bold tracking-tight leading-snug">
+        <h3 className="text-lg font-bold tracking-tight leading-snug">
           {title}
         </h3>
-        <p className="text-base leading-relaxed text-unit-text-secondary">
+        <p className="text-[15px] leading-relaxed text-unit-text-secondary">
           {body}
         </p>
       </div>
