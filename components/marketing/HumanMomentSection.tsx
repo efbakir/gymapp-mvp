@@ -24,9 +24,7 @@ export default function HumanMomentSection() {
             <p className="eyebrow mb-unit-md">Built for the gym floor</p>
             <h2 className="h-campaign text-balance">
               Training should be hard.
-              <span className="mt-unit-xs block">
-                Logging should not.
-              </span>
+              <span className="block">Logging should not.</span>
             </h2>
             <p className="mt-unit-lg text-base leading-snug text-unit-text-secondary">
               Unit remembers the last set, starts your timer, and gets out of
