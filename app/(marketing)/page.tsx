@@ -89,20 +89,14 @@ const faqLd = {
   })),
 }
 
-const importSources = [
-  "Notes",
-  "WhatsApp",
-  "paper",
-  "CSV",
-  "Markdown",
-]
-
 // Crops of the approved App Store listing screenshots: transparent-background
 // exports (headline band removed, device bleeding off the bottom). The wider
 // canvas carries the unclipped drop shadow (~184px per side); every mockup on
 // the page shares this geometry so hero and cards render at one scale.
 const HERO_W = 1658
 const HERO_H = 2386
+const ONBOARDING_W = 1792
+const ONBOARDING_H = 2377
 const REST_TIMER_W = 1800
 const REST_TIMER_H = 2377
 
@@ -192,33 +186,15 @@ export default function LandingPage() {
                 eyebrow: "Bring your program",
                 title: "Paste from Notes. Done.",
                 body: "Paste a routine or build one. Unit reads the exercises, sets, reps, and weights.",
-                children: (
-                  <>
-                    <div className="mt-unit-lg flex flex-wrap items-center gap-x-unit-md gap-y-unit-xs">
-                      <span className="eyebrow">Imports from</span>
-                      {importSources.map((src, i) => (
-                        <span key={src} className="flex items-center gap-x-unit-md">
-                          <span className="text-[15px] font-semibold tracking-tight">
-                            {src}
-                          </span>
-                          {i < importSources.length - 1 && (
-                            <span className="text-unit-text-secondary opacity-50">·</span>
-                          )}
-                        </span>
-                      ))}
-                    </div>
-                    {/* A pasted-program snippet instead of a device mockup:
-                        the paste flow's "before" state is a note, not an app
-                        screen. flex-1 keeps the card height level with its
-                        image-card siblings. */}
-                    <div className="mt-unit-lg flex-1 rounded-[24px] bg-unit-background p-unit-lg">
-                      <p className="eyebrow mb-unit-sm">Pasted from Notes</p>
-                      <p className="whitespace-pre-line font-mono text-sm leading-relaxed text-unit-text-secondary">
-                        {"push day\nbench press 5x5 @ 80kg\nohp 3x8 @ 40kg\nincline db 3x10 @ 24kg\nlateral raise 3x12"}
-                      </p>
-                    </div>
-                  </>
-                ),
+                mockup: {
+                  src: "/screenshots/onboarding-2.png",
+                  alt: "Unit turning a pasted Upper A workout into five exercises",
+                  width: ONBOARDING_W,
+                  height: ONBOARDING_H,
+                  sizes: "380px",
+                  className:
+                    "md:origin-top md:translate-y-[10px] md:scale-[1.14]",
+                },
               },
               {
                 eyebrow: "History · PRs",
