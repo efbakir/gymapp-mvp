@@ -161,7 +161,7 @@ body {
   }
 
   /* Marketing type scale: compact labels stay at 13 and 14px. Larger text
-     uses a restrained 16 / 18 / 22 / 32 / 44 / 54 / 68px progression. */
+     uses a restrained 16 / 18 / 22 / 32 / 44 / 54 / 60px progression. */
   .h-display {
     @apply text-[40px] md:text-[54px] font-bold tracking-tight leading-[1.04] text-unit-text-primary;
   }
@@ -172,7 +172,7 @@ body {
     @apply text-[34px] md:text-[44px] font-bold tracking-[-0.04em] leading-[1.02] text-unit-text-primary;
   }
   .h-hero {
-    @apply text-[44px] sm:text-[58px] lg:text-[68px] font-bold tracking-[-0.045em] leading-[0.96] text-unit-text-primary;
+    @apply text-[40px] sm:text-[52px] lg:text-[60px] font-bold tracking-[-0.045em] leading-[0.96] text-unit-text-primary;
   }
 
   /* The Ink radial-gradient ambient blur used behind hero mockup and

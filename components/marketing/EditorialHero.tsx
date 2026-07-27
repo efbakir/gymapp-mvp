@@ -38,13 +38,13 @@ export default function EditorialHero() {
               className="aspect-[4/5] rounded-[32px] bg-black shadow-[0_32px_80px_rgba(10,10,10,0.16)]"
             />
 
-            <div className="pointer-events-none absolute -bottom-10 -left-5 w-[210px] drop-shadow-[0_24px_32px_rgba(10,10,10,0.22)] sm:-bottom-12 sm:-left-10 sm:w-[260px] lg:-left-16">
+            <div className="pointer-events-none absolute -bottom-8 -left-8 z-10 w-[240px] drop-shadow-[0_24px_32px_rgba(10,10,10,0.22)] sm:-bottom-12 sm:-left-12 sm:w-[300px] lg:w-[320px]">
               <Image
                 src="/screenshots/hero-ghost-values.png"
                 alt="Unit workout screen with the last weight and reps ready"
                 width={1658}
                 height={2386}
-                sizes="300px"
+                sizes="320px"
                 className="block h-auto w-full"
               />
             </div>
