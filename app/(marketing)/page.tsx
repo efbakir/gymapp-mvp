@@ -219,7 +219,7 @@ export default function LandingPage() {
                   height: REST_TIMER_H,
                   sizes: "380px",
                   className:
-                    "md:origin-top md:-translate-y-[73px] md:scale-[1.05]",
+                    "md:origin-top md:-translate-y-[90px] md:scale-[1.26]",
                   clipOverflow: true,
                 },
               },
