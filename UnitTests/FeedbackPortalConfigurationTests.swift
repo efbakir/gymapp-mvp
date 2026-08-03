@@ -8,20 +8,22 @@ import XCTest
 
 @MainActor
 final class FeedbackPortalConfigurationTests: XCTestCase {
-    func testPortalURLIsParameterFreeFeaturebaseHTTPSDestination() throws {
-        let url = try XCTUnwrap(AppCopy.FeatureRequest.portalURL)
+    func testFeatureRequestURLIsPrefilledSupportEmail() throws {
+        let url = try XCTUnwrap(AppCopy.FeatureRequest.requestURL)
         let components = try XCTUnwrap(
             URLComponents(url: url, resolvingAgainstBaseURL: false)
         )
 
-        XCTAssertEqual(components.scheme, "https")
-        XCTAssertTrue(
-            components.host?.lowercased().hasSuffix(".featurebase.app") == true
+        XCTAssertEqual(components.scheme, "mailto")
+        XCTAssertEqual(components.path, "support@unitlift.app")
+        XCTAssertEqual(
+            components.queryItems?.first(where: { $0.name == "subject" })?.value,
+            "Unit feature request"
         )
-        XCTAssertNil(components.user)
-        XCTAssertNil(components.password)
-        XCTAssertNil(components.query)
-        XCTAssertNil(components.fragment)
+        XCTAssertTrue(
+            components.queryItems?.first(where: { $0.name == "body" })?.value?
+                .contains("What problem would this solve?") == true
+        )
     }
 
     func testActionTitleRemainsExplicit() {
@@ -29,5 +31,10 @@ final class FeedbackPortalConfigurationTests: XCTestCase {
             AppCopy.FeatureRequest.actionTitle,
             "Request a feature"
         )
+    }
+
+    func testUpdatesURLUsesCanonicalHTTPSDestination() throws {
+        let url = try XCTUnwrap(AppCopy.Updates.url)
+        XCTAssertEqual(url.absoluteString, "https://unitlift.app/updates")
     }
 }

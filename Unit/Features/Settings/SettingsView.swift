@@ -256,14 +256,28 @@ struct SettingsView: View {
 
     private var feedbackSection: some View {
         SettingsSection(title: "Feedback", contentInset: AppSpacing.sm) {
-            Button {
-                openFeatureRequestPortal()
-            } label: {
-                AppListRow(title: AppCopy.FeatureRequest.actionTitle)
+            AppDividedList(
+                data: [AppCopy.Updates.actionTitle, AppCopy.FeatureRequest.actionTitle],
+                id: \.self
+            ) { title in
+                if title == AppCopy.Updates.actionTitle {
+                    Button {
+                        openUpdates()
+                    } label: {
+                        AppListRow(title: title)
+                    }
+                    .buttonStyle(ScaleButtonStyle())
+                    .accessibilityHint(AppCopy.Updates.accessibilityHint)
+                } else {
+                    Button {
+                        openFeatureRequest()
+                    } label: {
+                        AppListRow(title: title)
+                    }
+                    .buttonStyle(ScaleButtonStyle())
+                    .accessibilityHint(AppCopy.FeatureRequest.accessibilityHint)
+                }
             }
-            .buttonStyle(ScaleButtonStyle())
-            .accessibilityLabel(AppCopy.FeatureRequest.actionTitle)
-            .accessibilityHint(AppCopy.FeatureRequest.accessibilityHint)
         }
     }
 
@@ -302,8 +316,8 @@ struct SettingsView: View {
         .padding(.top, AppSpacing.lg)
     }
 
-    private func openFeatureRequestPortal() {
-        guard let url = AppCopy.FeatureRequest.portalURL else {
+    private func openFeatureRequest() {
+        guard let url = AppCopy.FeatureRequest.requestURL else {
             toastMessage = AppCopy.FeatureRequest.openError
             return
         }
@@ -311,6 +325,19 @@ struct SettingsView: View {
         openURL(url) { accepted in
             if !accepted {
                 toastMessage = AppCopy.FeatureRequest.openError
+            }
+        }
+    }
+
+    private func openUpdates() {
+        guard let url = AppCopy.Updates.url else {
+            toastMessage = AppCopy.Updates.openError
+            return
+        }
+
+        openURL(url) { accepted in
+            if !accepted {
+                toastMessage = AppCopy.Updates.openError
             }
         }
     }

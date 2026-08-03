@@ -33,7 +33,11 @@
           "familyShareable" : false,
           "groupNumber" : 1,
           "internalID" : "3000000001",
-          "introductoryOffer" : null,
+          "introductoryOffer" : {
+            "internalID" : "4000000001",
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P1W"
+          },
           "localizations" : [
             {
               "description" : "Weekly access to Unit.",
@@ -54,7 +58,11 @@
           "familyShareable" : false,
           "groupNumber" : 2,
           "internalID" : "3000000002",
-          "introductoryOffer" : null,
+          "introductoryOffer" : {
+            "internalID" : "4000000002",
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P1W"
+          },
           "localizations" : [
             {
               "description" : "Monthly access to Unit.",
@@ -75,7 +83,11 @@
           "familyShareable" : false,
           "groupNumber" : 3,
           "internalID" : "3000000003",
-          "introductoryOffer" : null,
+          "introductoryOffer" : {
+            "internalID" : "4000000003",
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P1W"
+          },
           "localizations" : [
             {
               "description" : "Yearly access to Unit.",
