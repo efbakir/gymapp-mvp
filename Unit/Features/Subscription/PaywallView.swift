@@ -4,7 +4,8 @@
 //
 //  Hard paywall presented after onboarding, before first workout log.
 //  Weekly, Monthly, Yearly subscriptions plus optional Lifetime purchase.
-//  No free trial. No dismissal.
+//  StoreKit-backed seven-day introductory trial for eligible subscribers.
+//  No dismissal.
 //  Pricing authority: docs/pricing.md.
 //
 
@@ -320,6 +321,10 @@ struct PaywallView: View {
             return "Subscribe to continue"
         }
 
+        if store.eligibleFreeTrial(for: store.selectedTier) != nil {
+            return AppCopy.Paywall.startFreeTrial
+        }
+
         switch store.selectedTier {
         case .weekly: return AppCopy.Paywall.subscribeWeekly
         case .monthly: return AppCopy.Paywall.subscribeMonthly
@@ -343,6 +348,9 @@ struct PaywallView: View {
         let price = priceText(for: store.selectedTier)
         if store.selectedTier == .lifetime {
             return AppCopy.Paywall.lifetimePurchaseContext(price)
+        }
+        if store.eligibleFreeTrial(for: store.selectedTier) != nil {
+            return AppCopy.Paywall.freeTrialPurchaseContext(price)
         }
         return AppCopy.Paywall.subscriptionPurchaseContext(price)
     }
@@ -415,6 +423,10 @@ struct PaywallView: View {
     }
 
     private func sublabel(for tier: StoreManager.Tier) -> String {
+        if store.eligibleFreeTrial(for: tier) != nil {
+            return "7 days free · then \(renewalLabel(for: tier))"
+        }
+
         switch tier {
         case .weekly: return "Auto-renews weekly"
         case .monthly:
@@ -428,6 +440,15 @@ struct PaywallView: View {
             }
             return "Auto-renews yearly"
         case .lifetime: return "One-time purchase"
+        }
+    }
+
+    private func renewalLabel(for tier: StoreManager.Tier) -> String {
+        switch tier {
+        case .weekly: return "renews weekly"
+        case .monthly: return "renews monthly"
+        case .annual: return "renews yearly"
+        case .lifetime: return "one-time purchase"
         }
     }
 
@@ -525,7 +546,8 @@ struct PaywallView: View {
     //
     // Apple Guideline 3.1.2(b): the purchase surface must disclose
     // subscription title, period, auto-renewal language, and how to cancel.
-    // No trial language — hard paywall, no free trial (docs/pricing.md).
+    // Trial language appears only when StoreKit reports both a free-trial
+    // offer and eligibility for the current Apple Account.
 
     private var subscriptionDisclosure: some View {
         Text(disclosureCopy)
@@ -538,6 +560,9 @@ struct PaywallView: View {
     private var disclosureCopy: String {
         if store.selectedTier == .lifetime {
             return "Lifetime is a one-time purchase. Subscriptions auto-renew unless cancelled. Payment is charged to your Apple Account. You can manage or cancel your subscription in App Store settings."
+        }
+        if store.eligibleFreeTrial(for: store.selectedTier) != nil {
+            return "7-day free trial for eligible new subscribers. After the trial, \(priceText(for: store.selectedTier)) is charged and the subscription auto-renews unless cancelled. You can manage or cancel in App Store settings."
         }
         return "Subscriptions auto-renew unless cancelled. Payment is charged to your Apple Account. You can manage or cancel your subscription in App Store settings."
     }
@@ -587,7 +612,7 @@ struct PaywallView: View {
     /// timeline. The optional sheet carries the reassurance so the paywall
     /// stays focused on choosing a plan.
     private var timelineTrigger: some View {
-        Button(AppCopy.Paywall.timelineTrigger) {
+        Button(timelineTriggerTitle) {
             showsRenewalTimeline = true
         }
         .font(AppFont.caption.font)
@@ -597,7 +622,7 @@ struct PaywallView: View {
 
     private var renewalTimelineSheet: some View {
         AppSheetScreen(
-            title: AppCopy.Paywall.timelineTitle,
+            title: timelineSheetTitle,
             dismissLabel: AppCopy.Nav.done,
             dismissActionPlacement: .confirmation,
             onDismissAction: { showsRenewalTimeline = false },
@@ -615,6 +640,18 @@ struct PaywallView: View {
                     )
             }
         }
+    }
+
+    private var timelineTriggerTitle: String {
+        store.eligibleFreeTrial(for: store.selectedTier) == nil
+            ? AppCopy.Paywall.timelineTrigger
+            : "How the free trial works"
+    }
+
+    private var timelineSheetTitle: String {
+        store.eligibleFreeTrial(for: store.selectedTier) == nil
+            ? AppCopy.Paywall.timelineTitle
+            : "After you start your trial"
     }
 
     @ViewBuilder
@@ -637,8 +674,8 @@ struct PaywallView: View {
             )
         case 2:
             AppListRow(
-                title: AppCopy.Paywall.timelineRenewalTitle,
-                subtitle: AppCopy.Paywall.timelineRenewalMessage,
+                title: timelineRenewalTitle,
+                subtitle: timelineRenewalMessage,
                 leadingIcon: .calendarClock,
                 style: .cardListContent
             )
@@ -650,6 +687,19 @@ struct PaywallView: View {
                 style: .cardListContent
             )
         }
+    }
+
+    private var timelineRenewalTitle: String {
+        store.eligibleFreeTrial(for: store.selectedTier) == nil
+            ? AppCopy.Paywall.timelineRenewalTitle
+            : "Day 7"
+    }
+
+    private var timelineRenewalMessage: String {
+        guard store.eligibleFreeTrial(for: store.selectedTier) != nil else {
+            return AppCopy.Paywall.timelineRenewalMessage
+        }
+        return "\(priceText(for: store.selectedTier)) is charged unless you cancel before then. It then auto-renews."
     }
 
     private var footer: some View {

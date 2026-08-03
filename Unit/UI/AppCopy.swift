@@ -148,13 +148,16 @@ enum AppCopy {
 
     enum FeatureRequest {
         static let actionTitle = "Request a feature"
-        static let accessibilityHint = "Opens the Unit feature request board in your browser."
-        static let openError = "Couldn’t open feature requests"
+        static let accessibilityHint = "Opens a prefilled email to request a Unit feature."
+        static let openError = "Couldn’t open your email app"
+        static let requestURL = URL(string: "mailto:support@unitlift.app?subject=Unit%20feature%20request&body=What%20would%20you%20like%20Unit%20to%20do%3F%0A%0AWhat%20problem%20would%20this%20solve%3F%0A")
+    }
 
-        /// Replace this placeholder with the live public Featurebase portal URL
-        /// after the Unit workspace has been configured.
-        static let portalURLString = "https://YOUR-UNIT-SLUG.featurebase.app"
-        static let portalURL = URL(string: portalURLString)
+    enum Updates {
+        static let actionTitle = "What’s new"
+        static let accessibilityHint = "Opens Unit release notes in your browser."
+        static let openError = "Couldn’t open release notes"
+        static let url = URL(string: "https://unitlift.app/updates")
     }
 
     enum Legal {
@@ -293,12 +296,16 @@ enum AppCopy {
         static let subscribeWeekly = "Subscribe weekly"
         static let subscribeMonthly = "Subscribe monthly"
         static let subscribeYearly = "Subscribe yearly"
+        static let startFreeTrial = "Start 7-day free trial"
         static let buyLifetime = "Buy Lifetime"
         static func subscriptionPurchaseContext(_ price: String) -> String {
             "\(price) · Auto-renews"
         }
         static func lifetimePurchaseContext(_ price: String) -> String {
             "\(price) · One-time purchase"
+        }
+        static func freeTrialPurchaseContext(_ price: String) -> String {
+            "7 days free · then \(price)"
         }
 
         // Renewal-transparency sheet ("what happens next" timeline). One

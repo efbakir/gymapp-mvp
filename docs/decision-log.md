@@ -20,7 +20,17 @@
 
 ---
 
+## 2026-08-03 — Version 2.1 becomes the progressive-overload pivot release
+
+**Decision:** Ship the rename **`Unit: Progressive Overload`** and subtitle **`Gym Workout Log & Tracker`** in version 2.1, together with the smallest credible progression engine: completed working sets produce one explained next-workout target that the user can accept or change. The same release adds a StoreKit-backed seven-day introductory trial for eligible new subscribers, working feature requests, in-app patch notes, and the pending reliability fixes. This supersedes the earlier pure-logger positioning and the plan to defer the pivot to 2.2.
+
+**Why:** Logging is the mechanism, not the differentiated outcome. Unit’s purchase reason is removing the repeated “what should I do differently next time?” decision while preserving the user’s program and three-second logging flow.
+
+**Implication:** Never publish the progressive-overload name before the matching feature is present in the selected build and screenshot set. No AI coach, program rewriting, recovery model, RIR/RPE adaptation, or guaranteed results. The Gym Test remains non-negotiable.
+
 ## 2026-08-03 — Do not position Unit as an automated progression tracker
+
+**SUPERSEDED by 2026-08-03 — Version 2.1 becomes the progressive-overload pivot release.**
 
 **Decision:** Keep automated progression out of Unit's visible App Store promise. The current v2.2 candidate is **`Unit: Gym Workout Log`** with **`Fast set and rep tracker`**; do not use “Progressive Overload” in the name, subtitle, or screenshot headlines until Unit actually recommends the next load or reps.
 

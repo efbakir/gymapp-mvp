@@ -84,6 +84,10 @@ final class StoreManager {
     // MARK: - State
 
     var products: [String: Product] = [:]
+    /// Product IDs whose StoreKit introductory offer is a free trial and
+    /// whose subscription group is eligible for this Apple Account.
+    /// StoreKit remains the authority; the paywall never guesses eligibility.
+    var freeTrialEligibleProductIDs: Set<String> = []
     var isLoading = false
     var hasAttemptedProductLoad = false
     var isPurchased = false
@@ -132,6 +136,13 @@ final class StoreManager {
         products[tier.rawValue]
     }
 
+    func eligibleFreeTrial(for tier: Tier) -> Product.SubscriptionOffer? {
+        guard freeTrialEligibleProductIDs.contains(tier.rawValue),
+              let offer = product(for: tier)?.subscription?.introductoryOffer,
+              offer.paymentMode == .freeTrial else { return nil }
+        return offer
+    }
+
     var selectedProduct: Product? { product(for: selectedTier) }
 
     // MARK: - Load Products
@@ -150,15 +161,31 @@ final class StoreManager {
 
         do {
             let loaded = try await Product.products(for: Self.allProductIDs)
+            let eligibleFreeTrials = await eligibleFreeTrialProductIDs(in: loaded)
             products = Dictionary(uniqueKeysWithValues: loaded.map { ($0.id, $0) })
+            freeTrialEligibleProductIDs = eligibleFreeTrials
             let selectableTiers = Self.requiredTiers + [Tier.lifetime]
             if selectedProduct == nil,
                let firstAvailableTier = selectableTiers.first(where: { product(for: $0) != nil }) {
                 selectedTier = firstAvailableTier
             }
         } catch {
+            freeTrialEligibleProductIDs = []
             logger.error("Failed to load products: \(error.localizedDescription)")
         }
+    }
+
+    private func eligibleFreeTrialProductIDs(in loaded: [Product]) async -> Set<String> {
+        var eligibleIDs: Set<String> = []
+
+        for product in loaded {
+            guard let subscription = product.subscription,
+                  subscription.introductoryOffer?.paymentMode == .freeTrial,
+                  await subscription.isEligibleForIntroOffer else { continue }
+            eligibleIDs.insert(product.id)
+        }
+
+        return eligibleIDs
     }
 
     // MARK: - Purchase

@@ -106,7 +106,10 @@ final class OnboardingPaywallFlowUITests: XCTestCase {
         )
         XCTAssertTrue(staticText(in: app, containing: "$4.99").exists, "monthly $4.99 missing")
         XCTAssertTrue(staticText(in: app, containing: "$29.99").exists, "yearly $29.99 missing")
-        XCTAssertFalse(staticText(in: app, containing: "trial").exists, "trial copy must not exist")
+        XCTAssertTrue(
+            staticText(in: app, containing: "7 days free").waitForExistence(timeout: 8),
+            "eligible StoreKit test account did not receive trial copy"
+        )
 
         app.swipeUp()
         XCTAssertTrue(
@@ -122,7 +125,7 @@ final class OnboardingPaywallFlowUITests: XCTestCase {
             "Privacy Policy unreachable"
         )
 
-        tap(button(in: app, containing: AppCopy.Paywall.subscribeWeekly), "purchase CTA")
+        tap(button(in: app, containing: AppCopy.Paywall.startFreeTrial), "trial CTA")
 
         // iOS 26 simulator runtime: `SKTestSession.disableDialogs` no longer
         // suppresses the SK2 payment sheet or its success alert — storekitd
