@@ -20,42 +20,51 @@ const audiences = [
     src: "/people/lifter-beginner.webp",
     file: "lifter-beginner.webp",
     rotation: "-rotate-1",
+    enabled: true,
   },
   {
     label: "Strength athletes",
     src: "/people/lifter-strength.webp",
     file: "lifter-strength.webp",
     rotation: "rotate-1",
+    enabled: true,
   },
   {
     label: "Hypertrophy lifters",
     src: "/people/lifter-hypertrophy.webp",
     file: "lifter-hypertrophy.webp",
     rotation: "rotate-2",
+    enabled: true,
   },
   {
     label: "Home gym lifters",
     src: "/people/lifter-home-gym.webp",
     file: "lifter-home-gym.webp",
     rotation: "-rotate-2",
+    enabled: true,
   },
   {
     label: "Program followers",
     src: "/people/lifter-program-follower.webp",
     file: "lifter-program-follower.webp",
     rotation: "rotate-1",
+    enabled: true,
   },
   {
     label: "Routine builders",
     src: "/people/lifter-routine-builder.webp",
     file: "lifter-routine-builder.webp",
     rotation: "-rotate-1",
+    enabled: true,
   },
 ]
 
 export default function AudienceStrip() {
   return (
-    <section className="border-t border-unit-border py-unit-xxl md:py-unit-xxxl">
+    <section
+      id="for-lifters"
+      className="scroll-mt-20 border-t border-unit-border py-unit-xxl md:py-unit-xxxl"
+    >
       <div className="mx-auto max-w-6xl px-unit-md md:px-unit-lg">
         <div className="mx-auto mb-unit-xxl max-w-3xl text-center">
           <p className="eyebrow mb-unit-sm">Your training. Your way.</p>

@@ -9,6 +9,7 @@ import EditorialHero from "@/components/marketing/EditorialHero"
 import HumanMomentSection from "@/components/marketing/HumanMomentSection"
 import AudienceStrip from "@/components/marketing/AudienceStrip"
 import { APP_STORE_URL } from "@/lib/launchState"
+import { SITE_URL } from "@/lib/site"
 
 export const metadata: Metadata = {
   description:
@@ -67,7 +68,7 @@ const softwareLd = {
   operatingSystem: "iOS",
   description:
     "Fast iOS gym tracker and workout log. Log a set in under 3 seconds. Every set opens with what you did last time. Local-first, no account, no AI.",
-  url: "https://unitlift.app/",
+  url: `${SITE_URL}/`,
   keywords:
     "gym tracker, workout log, lifting log, strength log, last session values, rest timer, local-first, no account",
   offers: {

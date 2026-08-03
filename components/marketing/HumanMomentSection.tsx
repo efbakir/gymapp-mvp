@@ -18,6 +18,7 @@ export default function HumanMomentSection() {
             sizes="(min-width: 1024px) 58vw, 92vw"
             className="aspect-[3/2] rounded-[32px]"
             imageClassName="grayscale"
+            enabled
           />
 
           <div className="max-w-xl">

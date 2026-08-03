@@ -3,6 +3,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import AppStoreBadge from "@/components/marketing/AppStoreBadge"
 import { APP_STORE_URL } from "@/lib/launchState"
+import { SITE_URL } from "@/lib/site"
 import { compareSlugs, compareSlugList } from "../data"
 
 export function generateStaticParams() {
@@ -26,7 +27,7 @@ export async function generateMetadata({
     openGraph: {
       title: data.metaTitle,
       description: data.metaDescription,
-      url: `https://unitlift.app/compare/${slug}`,
+      url: `${SITE_URL}/compare/${slug}`,
       type: "website",
     },
   }
@@ -45,19 +46,19 @@ export default async function ComparePage({ params }: { params: Params }) {
         "@type": "ListItem",
         position: 1,
         name: "Home",
-        item: "https://unitlift.app/",
+        item: `${SITE_URL}/`,
       },
       {
         "@type": "ListItem",
         position: 2,
         name: "Compare",
-        item: "https://unitlift.app/compare",
+        item: `${SITE_URL}/compare`,
       },
       {
         "@type": "ListItem",
         position: 3,
         name: `Unit vs ${data.competitor}`,
-        item: `https://unitlift.app/compare/${slug}`,
+        item: `${SITE_URL}/compare/${slug}`,
       },
     ],
   }

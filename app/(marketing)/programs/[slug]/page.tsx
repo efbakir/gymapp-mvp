@@ -3,6 +3,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import AppStoreBadge from "@/components/marketing/AppStoreBadge"
 import { APP_STORE_URL } from "@/lib/launchState"
+import { SITE_URL } from "@/lib/site"
 import { programSlugs, programSlugList } from "../data"
 
 export function generateStaticParams() {
@@ -26,7 +27,7 @@ export async function generateMetadata({
     openGraph: {
       title: data.metaTitle,
       description: data.metaDescription,
-      url: `https://unitlift.app/programs/${slug}`,
+      url: `${SITE_URL}/programs/${slug}`,
       type: "article",
     },
   }
@@ -45,19 +46,19 @@ export default async function ProgramPage({ params }: { params: Params }) {
         "@type": "ListItem",
         position: 1,
         name: "Home",
-        item: "https://unitlift.app/",
+        item: `${SITE_URL}/`,
       },
       {
         "@type": "ListItem",
         position: 2,
         name: "Programs",
-        item: "https://unitlift.app/programs",
+        item: `${SITE_URL}/programs`,
       },
       {
         "@type": "ListItem",
         position: 3,
         name: data.title,
-        item: `https://unitlift.app/programs/${slug}`,
+        item: `${SITE_URL}/programs/${slug}`,
       },
     ],
   }

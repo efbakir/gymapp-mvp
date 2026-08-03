@@ -75,6 +75,12 @@ export default function Header() {
           ref={dropdownRef}
           className="hidden md:flex items-center gap-unit-lg"
         >
+          <Link href="/#how-it-works" className="eyebrow-link">
+            Features
+          </Link>
+          <Link href="/#for-lifters" className="eyebrow-link">
+            For lifters
+          </Link>
           <DesktopDropdown
             itemKey="compare"
             label="Compare"
@@ -131,6 +137,20 @@ export default function Header() {
       {menuOpen && (
         <div className="md:hidden border-t border-unit-border bg-unit-background">
           <div className="max-w-6xl mx-auto px-unit-md py-unit-lg flex flex-col gap-unit-lg">
+            <Link
+              href="/#how-it-works"
+              onClick={() => setMenuOpen(false)}
+              className="eyebrow-link py-2"
+            >
+              Features
+            </Link>
+            <Link
+              href="/#for-lifters"
+              onClick={() => setMenuOpen(false)}
+              className="eyebrow-link py-2"
+            >
+              For lifters
+            </Link>
             <MobileSection label="Compare" items={compareItems} onItemClick={() => setMenuOpen(false)} />
             <MobileSection label="Programs" items={programItems} onItemClick={() => setMenuOpen(false)} />
             <Link

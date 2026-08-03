@@ -1,6 +1,10 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { SUPPORT_EMAIL, DEVELOPER_NAME, LEGAL_LAST_UPDATED } from "@/lib/contact"
+import {
+  SUPPORT_EMAIL,
+  DEVELOPER_NAME,
+  PRIVACY_LAST_UPDATED,
+} from "@/lib/contact"
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
@@ -15,7 +19,7 @@ export default function PrivacyPage() {
       <div className="max-w-3xl mx-auto px-unit-md md:px-unit-lg">
         <article className="prose-page">
           <h1>Privacy Policy</h1>
-          <p className="last-updated">Last updated: {LEGAL_LAST_UPDATED}</p>
+          <p className="last-updated">Last updated: {PRIVACY_LAST_UPDATED}</p>
 
           <p>
             Unit (&quot;the App&quot;) is developed and operated by{" "}
@@ -29,6 +33,7 @@ export default function PrivacyPage() {
               <li><a href="#summary">Summary</a></li>
               <li><a href="#data-storage">Data storage</a></li>
               <li><a href="#data-not-collected">Data I do not collect</a></li>
+              <li><a href="#feature-requests">Feature requests</a></li>
               <li><a href="#purchases">Purchases</a></li>
               <li><a href="#healthkit">HealthKit</a></li>
               <li><a href="#cookies">Cookies and web tracking</a></li>
@@ -42,8 +47,8 @@ export default function PrivacyPage() {
           <h2 id="summary">Summary</h2>
           <p>
             Unit is designed with privacy as a default. Your workout data stays
-            on your device. I do not collect, transmit, or store your personal
-            information on any server.
+            on your device. I do not collect or transmit your workout data, use
+            analytics, or require a Unit account.
           </p>
 
           <h2 id="data-storage">Data Storage</h2>
@@ -70,8 +75,30 @@ export default function PrivacyPage() {
             <li>I do not collect workout data or training history</li>
             <li>I do not use analytics or tracking frameworks</li>
             <li>I do not use advertising SDKs</li>
-            <li>I do not sell, share, or transfer any data to third parties</li>
+            <li>Unit does not automatically send personal data to third parties</li>
           </ul>
+
+          <h2 id="feature-requests">Feature Requests</h2>
+          <p>
+            Settings includes an optional &quot;Request a feature&quot; link. It
+            opens a public feedback portal operated by Featurebase (CORDNET OÜ).
+            Unit does not send workout data, health data, device information,
+            your identity, or analytics parameters when opening this link.
+          </p>
+          <p>
+            Anything you choose to submit or upvote on the portal is handled by
+            Featurebase and may be publicly visible. Do not include personal or
+            workout information in a request. Featurebase may process technical
+            information such as your IP address, browser details, and cookies
+            under its{" "}
+            <a
+              href="https://help.featurebase.app/articles/4744036-privacy-policy"
+              rel="noreferrer"
+              target="_blank"
+            >
+              privacy policy
+            </a>.
+          </p>
 
           <h2 id="purchases">Purchases</h2>
           <p>
@@ -102,9 +129,10 @@ export default function PrivacyPage() {
 
           <h2 id="rights">Your Rights</h2>
           <p>
-            Since Unit does not collect personal data, there is no personal data
-            for me to delete, export, or modify. All your data is under your
-            control on your device.
+            Unit does not maintain an account or server-side workout record for
+            me to delete, export, or modify. Your workout data remains under
+            your control on your device. Requests submitted through Featurebase
+            are governed by Featurebase&apos;s privacy controls and policy.
           </p>
           <p>
             If you have questions about your data or wish to make a
