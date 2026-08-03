@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import { SITE_URL } from "@/lib/site"
 import "./globals.css"
 
 // Sans is the LCP font (hero h1, body copy). Preload, weights 500-700 only.
@@ -31,13 +32,13 @@ export const metadata: Metadata = {
   title: { default: "Unit: Gym Workout Log for iPhone", template: "%s | Unit" },
   description:
     "Unit is a fast, local-first iOS gym tracker and workout log. Log a set in 3 seconds. Every set opens with what you did last time. No AI, no social, no account.",
-  metadataBase: new URL("https://unitlift.app"),
+  metadataBase: new URL(SITE_URL),
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     locale: "en_US",
     siteName: "Unit",
-    url: "https://unitlift.app/",
+    url: `${SITE_URL}/`,
     title: "Unit: Gym Workout Log for iPhone",
     description:
       "Fast iOS gym tracker. Log a set in 3 seconds. Every set opens with what you did last time. Local-first, no account, no AI.",

@@ -14,7 +14,7 @@ const programLinks = programSlugList.map((slug) => ({
 }))
 
 const resourceLinks = [
-  { href: "/changelog", label: "Changelog" },
+  { href: "/updates", label: "What’s New" },
   { href: "/support", label: "Support" },
 ]
 
