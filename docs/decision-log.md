@@ -20,6 +20,14 @@
 
 ---
 
+## 2026-08-03 — Do not position Unit as an automated progression tracker
+
+**Decision:** Keep automated progression out of Unit's visible App Store promise. The current v2.2 candidate is **`Unit: Gym Workout Log`** with **`Fast set and rep tracker`**; do not use “Progressive Overload” in the name, subtitle, or screenshot headlines until Unit actually recommends the next load or reps.
+
+**Why:** Alpha Progression defines the category expectation: its algorithm recommends weight, reps, and intensity for every set and adapts those targets over time. Unit deliberately does not do that. Unit remembers the previous workout; the user decides when to add weight.
+
+**Implication:** Position Unit as the fast, non-coaching workout logger. Keep “History is your coach” and “You decide when to add weight” explicit. Revisit this only if `ProgressionEngine` becomes a shipped product capability.
+
 ## 2026-07-27 — Version 2.1 release candidate advances to build 59
 
 **Decision:** Version 2.1 ships as **2.1 (59)** from tag `v2.1-build59`. This supersedes only the build-58 release identity recorded on 2026-07-23; the engagement-prompt and App Store positioning decisions remain unchanged.
