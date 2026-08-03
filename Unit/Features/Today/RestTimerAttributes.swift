@@ -21,8 +21,9 @@ import ActivityKit
 /// conformance must be nonisolated & Sendable. Pure data — always safe.
 public nonisolated struct RestTimerAttributes: ActivityAttributes {
     public struct ContentState: Codable, Hashable, Sendable {
-        /// When the rest period started — required by `Text(timerInterval:pauseTime:countsDown:)`
-        /// so the system can clamp the display at 0:00 instead of counting up after `endDate`.
+        /// When the rest period started. Together with `endDate`, this gives SwiftUI
+        /// the complete interval for a system-driven countdown that continues while
+        /// the host app is suspended.
         public var startDate: Date
         /// When the rest period ends.
         public var endDate: Date

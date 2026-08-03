@@ -1,3 +1,6 @@
+Warning: truncated output (original token count: 55345)
+Total output lines: 5194
+
 //
 //  DesignSystem.swift
 //  Unit
@@ -902,7 +905,13 @@ struct AppInlineWeightField: View {
 /// Used for set counts, rest-duration seconds, reps, etc. Value is a pre-formatted
 /// string (monospaced digits) so callers own unit rendering ("12 reps" vs "12").
 struct AppStepper: View {
+    enum Size {
+        case compact
+        case prominent
+    }
+
     let value: String
+    var size: Size = .compact
     var minimumValueWidth: CGFloat = 28
     var isDecrementEnabled: Bool = true
     var isIncrementEnabled: Bool = true
@@ -917,15 +926,16 @@ struct AppStepper: View {
     @State private var decrementPhase: Int = 0
 
     var body: some View {
-        HStack(spacing: AppSpacing.sm) {
+        HStack(spacing: controlSpacing) {
             stepButton(icon: .remove, isEnabled: isDecrementEnabled) {
                 decrementPhase &+= 1
                 onDecrement()
             }
 
             Text(value)
-                .font(AppFont.sectionHeader.font)
-                .foregroundStyle(AppFont.sectionHeader.color)
+                .font(valueFont.font)
+                .tracking(valueFont.tracking)
+                .foregroundStyle(valueFont.color)
                 .monospacedDigit()
                 .lineLimit(1)
                 .fixedSize(horizontal: true, vertical: false)
@@ -939,18 +949,53 @@ struct AppStepper: View {
             }
         }
         .padding(.horizontal, AppSpacing.sm)
-        .padding(.vertical, AppSpacing.xs)
+        .padding(.vertical, verticalPadding)
         .background(AppColor.controlBackground)
         .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
         .appHaptic(.stepperIncrement, trigger: incrementPhase)
         .appHaptic(.stepperDecrement, trigger: decrementPhase)
     }
 
+    private var valueFont: AppFont {
+        switch size {
+        case .compact: return .sectionHeader
+        case .prominent: return .numericDisplay
+        }
+    }
+
+    private var controlSpacing: CGFloat {
+        switch size {
+        case .compact: return AppSpacing.sm
+        case .prominent: return AppSpacing.xs
+        }
+    }
+
+    private var verticalPadding: CGFloat {
+        switch size {
+        case .compact: return AppSpacing.xs
+        case .prominent: return AppSpacing.sm
+        }
+    }
+
+    private var buttonVisualSize: CGFloat {
+        switch size {
+        case .compact: return 36
+        case .prominent: return 44
+        }
+    }
+
+    private var iconSize: CGFloat {
+        switch size {
+        case .compact: return 14
+        case .prominent: return 16
+        }
+    }
+
     private func stepButton(icon: AppIcon, isEnabled: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            icon.image(size: 14, weight: .semibold)
+            icon.image(size: iconSize, weight: .semibold)
                 .foregroundStyle(isEnabled ? AppColor.textPrimary : AppColor.textDisabled)
-                .frame(width: 36, height: 36)
+                .frame(width: buttonVisualSize, height: buttonVisualSize)
                 .contentShape(Rectangle())
         }
         .buttonStyle(ScaleButtonStyle())
@@ -2056,9 +2101,10 @@ struct RestTimerControl: View {
                 .monospacedDigit()
                 // Per-second countdown roll. iOS picks the changed digits and
                 // fades them downward so the timer reads as deliberately
-                // ticking instead of flickering. State-only motion → not
-                // gated by Reduce Motion (cross-fade survives the system pref).
-                .contentTransition(.numericText(countsDown: true))
+                // ticking instead of flickering. "Ready" is nonnumeric, so it
+                // cross-fades instead of entering the numeric transition at
+                // the exact moment the countdown completes.
+                .contentTransition(timerContentTransition)
                 .animation(.appReveal, value: timeText)
 
             if let indicatorIcon {
@@ -2079,6 +2125,10 @@ struct RestTimerControl: View {
                     .stroke(AppColor.border.opacity(0.55), lineWidth: 1)
             }
         }
+    }
+
+    private var timerContentTransition: ContentTransition {
+        state == .ready ? .opacity : .numericText(countsDown: true)
     }
 
     /// Capsule fill + stroke for **idle / paused / disabled** so the affordance reads as
@@ -2346,510 +2396,7 @@ struct AppOptionTileCard: View {
     /// a second tap should no-op rather than queueing another navigation.
     /// Reset isn't strictly required because the step swap destroys the
     /// view, but resetting after `action()` keeps the card safe in the
-    /// unlikely case the parent ignores the tap and the view stays mounted.
-    @State private var isProcessingTap = false
-
-    var body: some View {
-        Button(action: handleTap) {
-            HStack(alignment: .center, spacing: AppSpacing.md) {
-                if icon != nil || iconText != nil {
-                    iconBubble
-                }
-
-                Text(title)
-                    .font(AppFont.sectionHeader.font)
-                    .foregroundStyle(AppColor.textPrimary)
-
-                Spacer(minLength: 0)
-
-                if let badge {
-                    AppTag(text: badge, style: .accent, layout: .compactCapsule)
-                }
-            }
-            .appCardStyle()
-        }
-        // Press feedback (opacity dim + brightness shift + scale) is the
-        // canonical system-level treatment on `ScaleButtonStyle`. Every
-        // tappable atom in Unit uses the same style so onboarding cards,
-        // CTAs, ghost buttons, and floating pills all flash the same way on
-        // tap. Don't override here — fix at `ScaleButtonStyle` and the
-        // whole product moves.
-        .buttonStyle(ScaleButtonStyle())
-    }
-
-    private func handleTap() {
-        guard !isProcessingTap else { return }
-        isProcessingTap = true
-        // Selection haptic fires at the same instant the press-state
-        // animation begins (via `ScaleButtonStyle`). Visual + tactile
-        // together so the tap feels received in two senses.
-        UISelectionFeedbackGenerator().selectionChanged()
-        // Hold the action by 50ms so a couple of frames of press-state dim
-        // from `ScaleButtonStyle` register before the forward transition
-        // slides the card fully off-screen and fades it
-        // (`.move(.leading) + .opacity`, OnboardingView). 50ms sits below the
-        // ~100ms threshold where a delay starts to read as latency (Nielsen),
-        // so the step feels instant while the press still gets a moment. The
-        // tap is already acknowledged on finger-down — this only keeps the dim
-        // from being swallowed by the aggressive exit, it is not the feedback
-        // itself. CTAs that stay in place (Continue, Read program) don't need
-        // it — the press is visible during finger-down because nothing moves.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-            action()
-            isProcessingTap = false
-        }
-    }
-
-    @ViewBuilder
-    private var iconBubble: some View {
-        AppIconCircle(
-            diameter: 40,
-            shape: .roundedRect(radius: AppRadius.md),
-            surface: .accentSoft
-        ) {
-            Group {
-                if let icon {
-                    icon.image(size: 18, weight: .semibold)
-                } else if let iconText {
-                    Text(iconText)
-                        .font(AppFont.stepIndicator.font)
-                }
-            }
-            .foregroundStyle(AppColor.accent)
-        }
-    }
-}
-
-/// Canonical tier-selection card for the paywall (and any future "pick one of
-/// N priced tiers" surface). Replaces the 50-line inline `tierCard` in
-/// `PaywallView` that hand-rolled its own `.background`/`.clipShape` chrome
-/// outside the design system — CLAUDE.md §4 parallel-implementation ban.
-///
-/// Layout: optional accent badge top, eyebrow row (small-caps label +
-/// trailing checkmark when selected), price (`productHeading` tracking),
-/// muted sublabel. Selected state shifts the background to `accentSoft`
-/// AND lays down a 1.5pt accent border so the affordance reads correctly
-/// for reduced-color-discrimination users (WCAG AA), not just for the
-/// 14pt checkmark glyph alone.
-///
-/// Accessibility: the `.isSelected` trait fires on the underlying button so
-/// VoiceOver announces the selected tier without an extra label hack.
-struct AppSelectableTierCard: View {
-    let label: String
-    let price: String
-    let sublabel: String
-    var badge: String? = nil
-    let isSelected: Bool
-    let action: () -> Void
-
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    var body: some View {
-        Button(action: handleTap) {
-            VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                // No reserved empty badge slot. Paywall tiers are stacked
-                // vertically, so unbadged cards should keep their natural
-                // compact height and leave room for legal copy + CTA.
-                if let badge {
-                    AppTag(text: badge, style: .accent, layout: .compactCapsule)
-                }
-
-                // Eyebrow + price + sublabel grouped so the outer VStack's
-                // `sm` gap separates the badge from this block, while
-                // the block itself stays tight at `xs` (4). Mirrors the
-                // Figma AppSelectableTierCard structure (node 341-18).
-                VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                    Text(label)
-                        .appCapsLabel(.smallLabel)
-                        .foregroundStyle(AppColor.textSecondary)
-
-                    Text(price)
-                        .font(AppFont.productHeading.font)
-                        .tracking(AppFont.productHeading.tracking)
-                        .foregroundStyle(AppColor.textPrimary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.6)
-                        .allowsTightening(true)
-
-                    Text(sublabel)
-                        .font(AppFont.muted.font)
-                        .foregroundStyle(AppColor.textSecondary)
-                        .lineLimit(2)
-                        .minimumScaleFactor(0.65)
-                        .multilineTextAlignment(.leading)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.vertical, AppSpacing.smd)
-            .padding(.horizontal, AppSpacing.smd)
-            .background(isSelected ? AppColor.accentSoft : AppColor.cardBackground)
-            // Selection check pins to the card corner so it sits in the same
-            // spot on every card — with a badge above the eyebrow it used to
-            // ride the eyebrow row and read as misaligned.
-            .overlay(alignment: .topTrailing) {
-                if isSelected {
-                    AppIcon.checkmarkFilled.image(size: 14, weight: .semibold)
-                        .foregroundStyle(AppColor.accent)
-                        .padding(AppSpacing.smd)
-                        .accessibilityHidden(true)
-                }
-            }
-            // 1.5pt accent border on selected — a second WCAG-friendly cue
-            // beyond the tinted fill, so users with reduced color
-            // discrimination (or who have just glanced at the card from
-            // across the room) can still tell which tier is selected.
-            .overlay(
-                RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous)
-                    .strokeBorder(
-                        isSelected ? AppColor.accent : Color.clear,
-                        lineWidth: 1.5
-                    )
-            )
-            .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
-        }
-        .buttonStyle(ScaleButtonStyle())
-        .accessibilityAddTraits(isSelected ? .isSelected : [])
-    }
-
-    private func handleTap() {
-        // Selection animation matches every other ScaleButtonStyle press in
-        // the app — Reduce Motion clamps to a still selection transition.
-        withAnimation(reduceMotion ? nil : .appPress) {
-            action()
-        }
-    }
-}
-
-/// Session header row: eyebrow (date), title (template name), optional caption,
-/// trailing status. No card chrome — use directly as a row inside `AppCardList`
-/// (history list of sessions) or compose into `AppSessionHighlightCard` when a
-/// single session needs its own elevated surface (missed-day card, earlier-week
-/// catch-up). The row owns text hierarchy only; card/list chrome owns vertical
-/// insets so captioned and non-captioned sessions share the same edge rhythm.
-/// Single source of truth for the session header layout.
-struct AppSessionHighlightRow<Trailing: View>: View {
-    let eyebrow: String
-    let title: String
-    let caption: String?
-    @ViewBuilder let trailing: () -> Trailing
-
-    private var hasCaption: Bool {
-        guard let caption else { return false }
-        return !caption.isEmpty
-    }
-
-    var body: some View {
-        HStack(alignment: .center, spacing: AppSpacing.md) {
-            VStack(alignment: .leading, spacing: hasCaption ? AppSpacing.sm : AppSpacing.xs) {
-                Text(eyebrow)
-                    .appCapsLabel(.overline)
-                    .foregroundStyle(AppColor.textSecondary)
-
-                Text(title)
-                    .font(AppFont.title.font)
-                    .foregroundStyle(AppColor.textPrimary)
-                    .lineLimit(2)
-                    .truncationMode(.tail)
-
-                if let caption, !caption.isEmpty {
-                    Text(caption)
-                        .font(AppFont.caption.font)
-                        .foregroundStyle(AppColor.textSecondary)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                }
-            }
-
-            Spacer(minLength: 0)
-
-            trailing()
-        }
-    }
-}
-
-/// Session highlight as a single elevated card. Wraps `AppSessionHighlightRow`
-/// in `AppCard` chrome and optionally appends extra detail beneath the header
-/// (separated by an `AppDivider`) — used by the calendar summary sheet where
-/// the session header is followed by a context note + per-exercise breakdown.
-/// For lists of multiple sessions on a single surface, use
-/// `AppSessionHighlightRow` inside `AppCardList` instead — never stack
-/// per-row `AppSessionHighlightCard`s in a list (CLAUDE.md §5: no per-row
-/// shadowed cards in lists).
-///
-/// Card chrome owns no padding (`contentInset: 0`, `verticalInset: 0`) so
-/// every `AppDivider` — the header→body hairline AND any list dividers inside
-/// `belowContent` — runs card-edge to card-edge, matching the full-bleed rule
-/// shared with `AppCardList`.
-///
-/// **Caller contract for `belowContent`** (the slot is rendered full-bleed,
-/// no horizontal or vertical wrapper padding):
-/// - Floating chrome (notes, empty-state text) → wrap in
-///   `.padding(.horizontal, .lg).padding(.vertical, .md)`.
-/// - List rows inside an `AppDividedList` → apply `.appCardRowChrome()` to
-///   each row. Dividers will then run full-width with uniform 16pt breathing
-///   above and below every row.
-///
-/// Header rhythm: the highlight row uses the canonical `.appCardRowChrome()`
-/// recipe (24pt horizontal, 16pt vertical, 52pt floor) so a lone session card
-/// (e.g. the earlier-week catch-up row in History) and a session row inside
-/// `AppCardList` (the History month list) share an identical vertical rhythm.
-/// Forking padding here (e.g. 24pt vertical for the lone-card variant only)
-/// produces the kind of parallel-implementation drift CLAUDE.md §4 bans.
-struct AppSessionHighlightCard<Trailing: View, BelowContent: View>: View {
-    let eyebrow: String
-    let title: String
-    let caption: String?
-    @ViewBuilder let trailing: () -> Trailing
-    @ViewBuilder let belowContent: () -> BelowContent
-
-    private var hasBelowContent: Bool {
-        BelowContent.self != EmptyView.self
-    }
-
-    var body: some View {
-        AppCard(contentInset: 0, verticalInset: 0) {
-            VStack(alignment: .leading, spacing: 0) {
-                AppSessionHighlightRow(
-                    eyebrow: eyebrow,
-                    title: title,
-                    caption: caption,
-                    trailing: trailing
-                )
-                .appCardRowChrome()
-
-                if hasBelowContent {
-                    AppDivider()
-                    belowContent()
-                }
-            }
-        }
-    }
-}
-
-extension AppSessionHighlightCard where BelowContent == EmptyView {
-    init(
-        eyebrow: String,
-        title: String,
-        caption: String?,
-        @ViewBuilder trailing: @escaping () -> Trailing
-    ) {
-        self.eyebrow = eyebrow
-        self.title = title
-        self.caption = caption
-        self.trailing = trailing
-        self.belowContent = { EmptyView() }
-    }
-}
-
-/// Optional trailing action on a transient `AppToast` — single reversible step
-/// (e.g. "Undo" after a non-destructive deletion). The handler is responsible
-/// for the actual reversal; the toast dismisses automatically when tapped.
-struct AppToastAction {
-    let label: String
-    let handler: () -> Void
-}
-
-/// Transient pill-shaped notification mounted as a top overlay (not a
-/// `safeAreaInset`) so showing or hiding it does **not** reflow layout — sticky
-/// CTAs stay pinned, scroll content stays where it is. Sits at the top of the
-/// safe area, horizontally centered, on the same line as the host's
-/// navigation-bar leading button so the eye lands on it without leaving the
-/// "where I just acted" zone. The pill is the canonical Cupertino top toast:
-/// drop-shadowed white capsule that floats over content rather than docking to
-/// the home-indicator edge.
-///
-/// Bind `message` to a `String?` `@State`; setting non-nil shows the toast,
-/// which auto-dismisses after `duration` seconds. When an `action` is set
-/// (e.g. `AppToastAction(label: AppCopy.Toast.undo, handler: ...)`), the pill
-/// gains a trailing tap target — same auto-dismiss timing whether or not the
-/// user taps it.
-struct AppToast: ViewModifier {
-    @Binding var message: String?
-    var duration: TimeInterval = 3.0
-    var action: AppToastAction? = nil
-
-    func body(content: Content) -> some View {
-        content
-            .overlay(alignment: .top) {
-                ZStack {
-                    if let text = message {
-                        AppToastPill(
-                            text: text,
-                            action: action,
-                            onActionTap: { withAnimation(.appState) { message = nil } }
-                        )
-                        .transition(.move(edge: .top).combined(with: .opacity))
-                        .task(id: text) {
-                            try? await Task.sleep(for: .seconds(duration))
-                            withAnimation(.appState) { message = nil }
-                        }
-                    }
-                }
-                .padding(.horizontal, AppSpacing.md)
-                .padding(.top, AppSpacing.xs)
-                .animation(.appState, value: message)
-                // Transparent overlay area must stay tap-through so the toast
-                // doesn't shadow taps on the navigation-bar back button or any
-                // top-of-screen affordance behind it.
-                .allowsHitTesting(message != nil)
-            }
-    }
-}
-
-/// Floating pill shell for `AppToast`. Light card fill on a soft drop-shadow
-/// pair (one large/diffuse for lift, one tight for edge definition) — the only
-/// shadowed surface in the system, justified by the pill needing to feel
-/// detached from whatever screen content sits beneath it.
-private struct AppToastPill: View {
-    let text: String
-    let action: AppToastAction?
-    let onActionTap: () -> Void
-
-    var body: some View {
-        HStack(spacing: AppSpacing.md) {
-            Text(text)
-                .font(AppFont.body.font)
-                .foregroundStyle(AppColor.textPrimary)
-                .lineLimit(1)
-                .truncationMode(.tail)
-            if let action {
-                Button {
-                    action.handler()
-                    onActionTap()
-                } label: {
-                    Text(action.label)
-                        .font(AppFont.productAction.font)
-                        .foregroundStyle(AppColor.accent)
-                }
-                .buttonStyle(ScaleButtonStyle())
-                .accessibilityLabel(action.label)
-            }
-        }
-        .padding(.horizontal, AppSpacing.lg)
-        .padding(.vertical, AppSpacing.smd)
-        .frame(minHeight: 44)
-        .background(AppColor.cardBackground)
-        .clipShape(Capsule(style: .continuous))
-        .appFloatingShadow()
-    }
-}
-
-extension View {
-    /// Show a transient bottom toast bound to a `String?` state. Pass `action`
-    /// to add a single trailing tap target (e.g. "Undo"); the toast dismisses
-    /// after the user taps it or after `duration` elapses, whichever first.
-    func appToast(
-        message: Binding<String?>,
-        duration: TimeInterval = 3.0,
-        action: AppToastAction? = nil
-    ) -> some View {
-        modifier(AppToast(message: message, duration: duration, action: action))
-    }
-
-    /// Two-layer drop shadow applied to surfaces that genuinely float over
-    /// scroll content (the transient `AppToast` pill, the elevated
-    /// `AppFloatingPillButton`). One large/diffuse shadow for lift, one tight
-    /// shadow for edge definition. The flat-card doctrine still applies to
-    /// every other surface — only views that need to read as detached from the
-    /// page get this treatment.
-    ///
-    /// **Directional, not haloed.** `y == radius` on both layers so the
-    /// shadow extends purely downward from the pill — no upward bleed. The
-    /// earlier halo recipe (`radius: 20, y: 10`) reached ~10pt above the
-    /// pill's top edge, which got hard-clipped by the iOS 26 navigation-bar
-    /// Liquid Glass material whenever a top-mounted `AppToast` sat near the
-    /// safe-area inset (visible on the onboarding "Add exercises" undo
-    /// toast as a sharp horizontal cut along the toast's top edge). Matches
-    /// the Apple-native floating-pill convention (Clipboard / "Copied")
-    /// where the shadow lives beneath the object, not around it.
-    func appFloatingShadow() -> some View {
-        self
-            .shadow(color: AppColor.textPrimary.opacity(0.14), radius: 14, x: 0, y: 14)
-            .shadow(color: AppColor.textPrimary.opacity(0.06), radius: 2, x: 0, y: 2)
-    }
-}
-
-/// Empty-state card. Two shapes share one molecule:
-/// 1. **CTA-bearing** (`eyebrow` + `title` + `message` + `buttonLabel` + `action`) — for
-///    features the user *can* fix from this screen (no program → "Create program").
-/// 2. **Quiet** (`title` + `message`) — for screens where the missing data is created
-///    elsewhere (History → "No sessions yet").
-///
-/// Compose inside `AppScreen`; don't rebuild a title+message card in-place when this
-/// covers the shape. Per CLAUDE.md §5 (extend > create), variants live behind one
-/// struct so list screens converge instead of forking.
-struct EmptyStateCard<Content: View>: View {
-    let eyebrow: String?
-    let title: String
-    /// Optional: one status line per state — omit when the title already
-    /// says everything (minimal-language rule, 2026-07-13).
-    let message: String?
-    let note: String?
-    let buttonLabel: String?
-    let action: (() -> Void)?
-    let content: () -> Content
-
-    var body: some View {
-        AppCard {
-            VStack(alignment: .center, spacing: AppSpacing.md) {
-                if let eyebrow {
-                    Text(eyebrow)
-                        .appCapsLabel(.overline)
-                        .foregroundStyle(AppColor.textSecondary)
-                }
-
-                VStack(alignment: .center, spacing: AppSpacing.xs) {
-                    Text(title)
-                        .font(AppFont.productHeading.font)
-                        .tracking(AppFont.productHeading.tracking)
-                        .foregroundStyle(AppColor.textPrimary)
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    if let message {
-                        Text(message)
-                            .font(AppFont.body.font)
-                            .foregroundStyle(AppColor.textSecondary)
-                            .multilineTextAlignment(.center)
-                    }
-
-                    if let note {
-                        Text(note)
-                            .font(AppFont.caption.font)
-                            .foregroundStyle(AppColor.textTertiary)
-                            .multilineTextAlignment(.center)
-                    }
-                }
-
-                if Content.self != EmptyView.self {
-                    content()
-                }
-
-                if let buttonLabel, let action {
-                    AppPrimaryButton(buttonLabel, action: action)
-                }
-            }
-            .frame(maxWidth: .infinity)
-        }
-    }
-}
-
-extension EmptyStateCard where Content == EmptyView {
-    /// CTA-bearing empty state (primary use — feature can be initiated here).
-    init(eyebrow: String, title: String, message: String, buttonLabel: String, action: @escaping () -> Void) {
-        self.eyebrow = eyebrow
-        self.title = title
-        self.message = message
-        self.note = nil
-        self.buttonLabel = buttonLabel
-        self.action = action
-        self.content = { EmptyView() }
-    }
-
-    /// Quiet empty state — title + message only, for screens where missing data is
-    /// created elsewhere. Replaces hand-rolled `AppCard { VStack { Text + Text } }`.
-    init(title: String, message: String) {
-        self.eyebrow = nil
+    /// unlikely case the parent ignores t…5345 tokens truncated…ebrow = nil
         self.title = title
         self.message = message
         self.note = nil
@@ -3207,16 +2754,18 @@ struct AppReorderDragPreview<Content: View>: View {
 
 /// Canonical drag-to-reorder row recipe. Apply to a row inside `AppCardList`
 /// to make the **entire row** the drag affordance (not just a 44pt icon),
-/// dim the source row in place while it floats, fire a medium-impact haptic
-/// on lift, and render a custom Bond-fill pill as the floating preview so the
-/// row reads as a single card plucked from the list.
+/// keep the source row legible while it floats, fire a medium-impact haptic on
+/// lift, and render a custom Bond-fill pill as the floating preview. The source
+/// deliberately stays at full opacity: SwiftUI can retain a stale drag identity
+/// when a live-reordered destination moves beneath the pointer, and dimming the
+/// full row in that state makes successfully moved content look disabled.
 ///
 /// One canonical recipe — never hand-roll `.onDrag` on a sub-element of a
 /// reorderable row. The "only the hamburger highlights, hard to grab" failure
 /// mode is what this molecule exists to prevent.
 ///
-/// Reduce Motion: opacity dim cross-fades instantly; drag-and-drop is
-/// unchanged. Pair the call-site `DropDelegate` with
+/// Reduce Motion: drag-and-drop remains system-owned. Pair the call-site
+/// `DropDelegate` with
 /// `withAnimation(reduceMotion ? nil : .appConfirm) { ... }` for the swap.
 ///
 /// Usage:
@@ -3255,10 +2804,7 @@ private struct AppReorderableRow<Preview: View>: ViewModifier {
     let preview: () -> Preview
 
     func body(content: Content) -> some View {
-        let isDragged = draggedID == id
         return content
-            .opacity(isDragged ? 0.25 : 1.0)
-            .appAnimation(.appConfirm, value: isDragged, reduceMotion: reduceMotion)
             .onDrag {
                 draggedID = id
                 AppHaptic.reorderLift.fire()
@@ -3957,10 +3503,10 @@ struct AppSetRepEditorSheet: View {
             dismissActionPlacement: .cancellation,
             onDismissAction: { dismiss() }
         ) {
-            VStack(alignment: .center, spacing: AppSpacing.lg) {
+            VStack(alignment: .center, spacing: AppSpacing.xl) {
                 if let subject, !subject.isEmpty {
                     Text(subject)
-                        .appFont(.title)
+                        .appFont(.productHeading)
                         .foregroundStyle(AppColor.textPrimary)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
@@ -3992,14 +3538,15 @@ struct AppSetRepEditorSheet: View {
     ) -> some View {
         let currentValue = value.wrappedValue
 
-        VStack(alignment: .center, spacing: AppSpacing.sm) {
+        VStack(alignment: .center, spacing: AppSpacing.smd) {
             Text(label)
-                .appCapsLabel(.smallLabel)
-                .foregroundStyle(AppColor.textSecondary)
+                .appFont(.sectionHeader)
+                .foregroundStyle(AppColor.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .center)
 
             AppStepper(
                 value: "\(currentValue)",
+                size: .prominent,
                 minimumValueWidth: AppSpacing.xl,
                 isDecrementEnabled: currentValue > range.lowerBound,
                 isIncrementEnabled: currentValue < range.upperBound,

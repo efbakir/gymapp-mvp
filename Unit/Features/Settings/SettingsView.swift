@@ -92,10 +92,12 @@ struct SettingsView: View {
 
     @AppStorage("unitSystem") private var unitSystem: String = "kg"
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
     @Environment(StoreManager.self) private var store
 
     @State private var showingRestoreSuccess = false
     @State private var showingManageSubscriptions = false
+    @State private var toastMessage: String?
 
     init(showsCloseButton: Bool = true) {
         self.shouldShowCloseButton = showsCloseButton
@@ -120,6 +122,7 @@ struct SettingsView: View {
             }
         }
         .tint(AppColor.accent)
+        .appToast(message: $toastMessage)
         .alert("Purchases restored", isPresented: $showingRestoreSuccess) {
             Button("OK", role: .cancel) { }
         }
@@ -150,6 +153,7 @@ struct SettingsView: View {
             dataSection
             preferencesSection
             subscriptionSection
+            feedbackSection
             legalSection
 
             settingsFooter
@@ -250,6 +254,19 @@ struct SettingsView: View {
         return activeTier.isSubscription
     }
 
+    private var feedbackSection: some View {
+        SettingsSection(title: "Feedback", contentInset: AppSpacing.sm) {
+            Button {
+                openFeatureRequestPortal()
+            } label: {
+                AppListRow(title: AppCopy.FeatureRequest.actionTitle)
+            }
+            .buttonStyle(ScaleButtonStyle())
+            .accessibilityLabel(AppCopy.FeatureRequest.actionTitle)
+            .accessibilityHint(AppCopy.FeatureRequest.accessibilityHint)
+        }
+    }
+
     @ViewBuilder
     private var legalSection: some View {
         SettingsSection(title: "Legal", contentInset: AppSpacing.sm) {
@@ -283,6 +300,19 @@ struct SettingsView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.top, AppSpacing.lg)
+    }
+
+    private func openFeatureRequestPortal() {
+        guard let url = AppCopy.FeatureRequest.portalURL else {
+            toastMessage = AppCopy.FeatureRequest.openError
+            return
+        }
+
+        openURL(url) { accepted in
+            if !accepted {
+                toastMessage = AppCopy.FeatureRequest.openError
+            }
+        }
     }
 
     private func runRestore() async {

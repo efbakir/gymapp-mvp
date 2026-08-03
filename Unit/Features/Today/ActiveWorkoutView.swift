@@ -1082,6 +1082,11 @@ private struct EditSetPayload: Identifiable {
 }
 
 private struct AdjustResultSheet: View {
+    private enum FocusedField: Hashable {
+        case weight
+        case reps
+    }
+
     /// Drives the sheet's seed values, primary CTA, and trailing destructive action.
     /// `.log` is the original new-set flow (prefill from prior session). `.edit` is
     /// the new chip-tap flow (seed from the existing entry, expose Delete set).
@@ -1094,8 +1099,8 @@ private struct AdjustResultSheet: View {
     let isBodyweight: Bool
     let mode: Mode
     let onSave: (_ weight: Double, _ reps: Int, _ note: String) -> Void
-    /// Edit mode only — when non-nil, a destructive "Delete set" secondary appears
-    /// beneath "Save changes". Log mode passes nil.
+    /// Edit mode only — when non-nil, a native trash action appears in the
+    /// top-right toolbar. Log mode passes nil.
     var onDelete: (() -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
@@ -1115,6 +1120,7 @@ private struct AdjustResultSheet: View {
     @State private var seededWeightText = ""
     @State private var seededRepsText = ""
     @State private var seededNoteText = ""
+    @FocusState private var focusedField: FocusedField?
     /// Drives the "Discard this set?" confirmation alert. Funnels both the
     /// swipe-down attempt (intercepted via `interactiveDismissDisabled`) and
     /// the explicit Cancel toolbar tap through the same prompt so the lifter
@@ -1170,6 +1176,14 @@ private struct AdjustResultSheet: View {
         return false
     }
 
+    /// A planned value is not logged history. The cold-start sheet intentionally
+    /// leaves weight blank and puts the cursor there, even when an imported
+    /// routine carried a planned weight behind the "Log first set" hint.
+    private var shouldAutofocusWeight: Bool {
+        guard case .log(let prefill) = mode else { return false }
+        return prefill == nil || prefill?.source == .planned
+    }
+
     private var primaryLabel: String {
         isEditMode ? AppCopy.Workout.saveChanges : AppCopy.Workout.completeSet
     }
@@ -1218,6 +1232,7 @@ private struct AdjustResultSheet: View {
                         title: AppCopy.Workout.weightLabel(isBodyweight: isBodyweight, unitSystem: unitSystem),
                         text: $weightText,
                         keyboardType: .decimalPad,
+                        field: .weight,
                         suffix: (isBodyweight || hasExplicitZeroWeight)
                             ? AppCopy.Workout.bodyweightAbbrev
                             : nil
@@ -1226,7 +1241,8 @@ private struct AdjustResultSheet: View {
                     manualInputField(
                         title: AppCopy.Workout.repsLabel,
                         text: $repsText,
-                        keyboardType: .numberPad
+                        keyboardType: .numberPad,
+                        field: .reps
                     )
                 }
 
@@ -1251,21 +1267,19 @@ private struct AdjustResultSheet: View {
                     )
                 }
                 .padding(.top, AppSpacing.md)
-
-                // Destructive "Delete set" stays inline at the end of the
-                // scroll content (edit mode only) so it never visually competes
-                // with the sticky primary CTA below. Quiet by design — rarely
-                // tapped, doubly-confirming via the system delete sheet.
-                if isEditMode, let onDelete {
-                    AppSecondaryButton(
-                        AppCopy.Workout.deleteSet,
-                        tone: .destructive,
-                        action: {
-                            onDelete()
-                            dismiss()
-                        }
-                    )
-                    .padding(.top, AppSpacing.md)
+            }
+        }
+        .toolbar {
+            if isEditMode, let onDelete {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(role: .destructive) {
+                        onDelete()
+                        dismiss()
+                    } label: {
+                        AppIcon.trash.image(size: 16, weight: .medium)
+                            .foregroundStyle(AppColor.error)
+                    }
+                    .accessibilityLabel(AppCopy.Workout.deleteSet)
                 }
             }
         }
@@ -1289,11 +1303,12 @@ private struct AdjustResultSheet: View {
             seeded = true
             switch mode {
             case .log(let prefill):
-                guard let prefill else { return }
-                if prefill.weight > 0 || prefill.source != .planned {
-                    weightText = seedWeightText(prefill.weight)
+                if let prefill {
+                    if prefill.source != .planned {
+                        weightText = seedWeightText(prefill.weight)
+                    }
+                    repsText = "\(prefill.reps)"
                 }
-                repsText = "\(prefill.reps)"
             case .edit(let weight, let reps, let note, _):
                 weightText = seedWeightText(weight)
                 repsText = "\(reps)"
@@ -1307,6 +1322,11 @@ private struct AdjustResultSheet: View {
             seededRepsText = repsText
             seededNoteText = noteText
         }
+        .task {
+            guard shouldAutofocusWeight else { return }
+            await Task.yield()
+            focusedField = .weight
+        }
     }
 
     @ViewBuilder
@@ -1314,6 +1334,7 @@ private struct AdjustResultSheet: View {
         title: String,
         text: Binding<String>,
         keyboardType: UIKeyboardType,
+        field: FocusedField,
         suffix: String? = nil
     ) -> some View {
         VStack(alignment: .leading, spacing: AppSpacing.sm) {
@@ -1324,6 +1345,7 @@ private struct AdjustResultSheet: View {
             HStack(spacing: AppSpacing.xs) {
                 TextField("0", text: text)
                     .keyboardType(keyboardType)
+                    .focused($focusedField, equals: field)
                     .font(AppFont.numericInput.font)
                     .tracking(AppFont.numericInput.tracking)
                     .multilineTextAlignment(.center)
@@ -1517,7 +1539,8 @@ final class RestTimerManager {
     }
 
     func start(totalSeconds: Int, upNext: String? = nil) {
-        stop()
+        task?.cancel()
+        task = nil
         totalDuration = totalSeconds
         secondsRemaining = totalSeconds
         let now = Date()
@@ -1526,7 +1549,11 @@ final class RestTimerManager {
         self.upNext = upNext
         isRunning = true
         persistState()
-        startActivity()
+        if activity == nil {
+            startActivity()
+        } else {
+            updateActivity()
+        }
         startCountdownTask()
     }
 
@@ -1691,7 +1718,11 @@ final class RestTimerManager {
             endDate: endDate,
             upNext: upNext
         )
-        let content = ActivityContent(state: state, staleDate: endDate.addingTimeInterval(60))
+        let content = ActivityContent(
+            state: state,
+            staleDate: endDate,
+            relevanceScore: 100
+        )
         activity = try? Activity<RestTimerAttributes>.request(
             attributes: attributes,
             content: content,
@@ -1706,7 +1737,11 @@ final class RestTimerManager {
             endDate: endDate,
             upNext: upNext
         )
-        let updatedContent = ActivityContent(state: updatedState, staleDate: endDate.addingTimeInterval(60))
+        let updatedContent = ActivityContent(
+            state: updatedState,
+            staleDate: endDate,
+            relevanceScore: 100
+        )
         let currentActivity = activity
         Task {
             await currentActivity?.update(updatedContent)

@@ -54,10 +54,10 @@ struct TemplateDetailView: View {
                 } else {
                     AppCardList(orderedExercises) { exercise in
                         exerciseRow(exercise)
-                    }
-
-                    AppGhostButton(AppCopy.Workout.addExercise) {
-                        showingAddExercise = true
+                    } trailing: {
+                        AppCardListAddRow(AppCopy.Workout.addExercise) {
+                            showingAddExercise = true
+                        }
                     }
                 }
             }
@@ -100,18 +100,18 @@ struct TemplateDetailView: View {
     }
 
     private func exerciseRow(_ exercise: Exercise) -> some View {
-        HStack(spacing: AppSpacing.sm) {
+        HStack(spacing: AppSpacing.md) {
             Button {
                 targetEditPayload = targetEditPayload(for: exercise)
             } label: {
-                HStack(spacing: AppSpacing.sm) {
-                    AppIcon.reorder.image(size: 15, weight: .semibold)
+                HStack(spacing: AppSpacing.md) {
+                    AppIcon.reorder.image(size: 16, weight: .semibold)
                         .foregroundStyle(AppColor.textSecondary)
                         .frame(minWidth: 44, minHeight: 44, alignment: .leading)
                         .accessibilityHidden(true)
 
                     Text(exercise.displayName)
-                        .font(AppFont.body.font)
+                        .appFont(.title)
                         .foregroundStyle(AppColor.textPrimary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .multilineTextAlignment(.leading)
@@ -128,7 +128,7 @@ struct TemplateDetailView: View {
             Button {
                 removeExerciseWithUndo(exercise)
             } label: {
-                AppIcon.close.image(size: 15, weight: .semibold)
+                AppIcon.close.image(size: 17, weight: .semibold)
                     .foregroundStyle(AppColor.textSecondary)
                     .frame(minWidth: 44, minHeight: 44, alignment: .trailing)
                     .contentShape(Rectangle())
@@ -159,9 +159,9 @@ struct TemplateDetailView: View {
     @ViewBuilder
     private func exerciseDragPreview(for exercise: Exercise) -> some View {
         AppReorderDragPreview {
-            HStack(spacing: AppSpacing.sm) {
+            HStack(spacing: AppSpacing.md) {
                 Text(exercise.displayName)
-                    .font(AppFont.body.font)
+                    .appFont(.title)
                     .foregroundStyle(AppColor.textPrimary)
                     .lineLimit(1)
 
@@ -176,7 +176,7 @@ struct TemplateDetailView: View {
     private func exerciseTargetSubtitle(for exercise: Exercise) -> some View {
         if let planned = plannedTargetDisplay(for: exercise) {
             Text(WorkoutTargetFormatter.setRepCompact(setCount: planned.setCount, reps: planned.reps) ?? "")
-                .font(AppFont.performance.font)
+                .font(AppFont.productAction.font)
                 .foregroundStyle(AppColor.textPrimary)
                 .monospacedDigit()
         } else {

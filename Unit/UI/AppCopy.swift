@@ -146,6 +146,17 @@ enum AppCopy {
         static let tryAgain = "Try again"
     }
 
+    enum FeatureRequest {
+        static let actionTitle = "Request a feature"
+        static let accessibilityHint = "Opens the Unit feature request board in your browser."
+        static let openError = "Couldn’t open feature requests"
+
+        /// Replace this placeholder with the live public Featurebase portal URL
+        /// after the Unit workspace has been configured.
+        static let portalURLString = "https://YOUR-UNIT-SLUG.featurebase.app"
+        static let portalURL = URL(string: portalURLString)
+    }
+
     enum Legal {
         static let termsOfService = "Terms of Service"
         static let privacyPolicy = "Privacy Policy"
