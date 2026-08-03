@@ -4,14 +4,14 @@
 
 ## Tiers
 
-| Tier     | Price       | Billing       | Product ID         | Notes                                                   |
-| -------- | ----------- | ------------- | ------------------ | ------------------------------------------------------- |
-| Weekly   | **$2.99**   | auto-renewing | `com.unit.weekly`  | Default selection — the smallest number on screen (lowest commitment first). |
-| Monthly  | **$4.99**   | auto-renewing | `com.unit.monthly` | The normal plan.                                        |
-| Yearly   | **$29.99**  | auto-renewing | `com.unit.annual`  | Best value — about half the monthly-equivalent total.   |
-| Lifetime | **$44.99**  | one-time      | `com.unit.lifetime` | Optional non-consumable. Show only if configured in ASC and returned by StoreKit. |
+| Tier     | Price       | Billing       | Product ID         | Introductory offer |
+| -------- | ----------- | ------------- | ------------------ | ------------------ |
+| Weekly   | **$2.99**   | auto-renewing | `com.unit.weekly`  | 7 days free for eligible new subscribers; default selection |
+| Monthly  | **$4.99**   | auto-renewing | `com.unit.monthly` | 7 days free for eligible new subscribers |
+| Yearly   | **$29.99**  | auto-renewing | `com.unit.annual`  | 7 days free for eligible new subscribers; best value |
+| Lifetime | **$44.99**  | one-time      | `com.unit.lifetime` | None; optional non-consumable |
 
-**No free trial** on any tier unless a real App Store Connect introductory offer is configured and detected. Lifetime is not a fallback price: it appears only when `Product.products(for:)` returns `com.unit.lifetime`.
+All three subscriptions use one seven-day free introductory offer in App Store Connect. Eligibility is subscription-group-wide and determined by StoreKit; a customer who already used an introductory offer in `unit-pro` must see the normal purchase copy. Lifetime never receives a trial and appears only when `Product.products(for:)` returns `com.unit.lifetime`.
 
 ## Math
 
@@ -24,7 +24,7 @@
 ## Rationale
 
 - **Hard paywall** (resolved 2026-06-16, see `docs/decision-log.md`). All app functionality is gated behind a paid purchase. Onboarding completes free so the user sees their program built; the paywall appears immediately after setup is saved, no dismissal.
-- **No free trial.** Day-1 conversion friction is the explicit goal; Apple Guideline 3.1.2(b) disclosure requirements still apply (auto-renewal language, cancellation method). Acknowledged risks: 1-star reviews citing "pay to even try," App Store reviewer scrutiny around the "no preview of value" pattern (mitigated by placing the wall after onboarding, not before).
+- **Seven-day free trial.** This 2026-08-03 pivot supersedes the no-trial decision. The hard paywall remains after onboarding, but eligible new subscribers can start a real StoreKit introductory trial on Weekly, Monthly, or Yearly. The paywall must show `7 days free` only when StoreKit reports eligibility, plus the exact post-trial price and renewal/cancellation terms.
 - **Weekly is default.** This founder override supersedes the 2026-06-17 annual-default experiment plan. The paywall opens on Weekly and the CTA reads `Subscribe weekly` (minimal-language pass, 2026-07-13). Honest-optics condition (2026-07-02): the default tier must be the smallest visible price on the screen — a pre-selected tier that a cheaper-per-period plan strictly dominates reads as a dark pattern and is banned.
 - **All subscription plans stay visible.** Weekly, Monthly, and Yearly cards render even while StoreKit is loading. Missing products show loading/unavailable copy, never fake prices.
 - **Lifetime is optional.** If the existing non-consumable is configured and StoreKit returns it, Unit shows it as a one-time purchase. If ASC does not return it, the card is hidden.
@@ -59,10 +59,12 @@ Apple's subscription review surface is not just the in-app paywall. Before every
 Run this on the exact archive/build submitted for review, using products attached to the App Store Connect version and a sandbox Apple ID:
 
 1. Fresh install → complete onboarding → confirm the app lands on `PaywallView`, not `TodayView`.
-2. Start a purchase from the default Weekly plan, cancel the Apple purchase sheet, and confirm the user remains on `PaywallView`.
-3. Complete a sandbox purchase for Weekly and confirm the app enters the main tab UI.
-4. Delete and reinstall the app, tap `Restore Purchases`, and confirm entitlement restores access to the main tab UI.
-5. Cancel the sandbox subscription from App Store subscription management, relaunch after StoreKit reflects the cancellation, and confirm inactive entitlement returns to `PaywallView`.
+2. With a trial-eligible sandbox account, confirm all three recurring products show `7 days free`, the selected CTA names the free trial, and the disclosure shows the exact post-trial price.
+3. Start the default Weekly trial, cancel the Apple purchase sheet, and confirm the user remains on `PaywallView`.
+4. Complete the sandbox trial purchase for Weekly and confirm the app enters the main tab UI.
+5. With a sandbox account that already used the group’s introductory offer, confirm no free-trial claim appears and the normal purchase succeeds.
+6. Delete and reinstall the app, tap `Restore Purchases`, and confirm entitlement restores access to the main tab UI.
+7. Cancel the sandbox subscription from App Store subscription management, relaunch after StoreKit reflects the cancellation, and confirm inactive entitlement returns to `PaywallView`.
 
 ## Win-back
 

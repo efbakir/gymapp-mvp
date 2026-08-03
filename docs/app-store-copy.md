@@ -1,117 +1,116 @@
 # Unit — App Store copy (canonical)
 
-> **FROZEN 2026-07-23 FOR VERSION 2.1 — founder-approved.** The single source of truth for every App Store Connect text field; if a string isn't here, it isn't canon. The five locale files are stale for 2.1 and must not be published without a new native review.
-> Process (what to click, in what order): `docs/app-store-submission/final-submit-checklist.md`.
-> Localized metadata derives from this file — see `docs/app-store-localization/README.md`.
-> Consolidated 2026-07-11 from `docs/marketing/app-store-copy.md` (deleted), the old draft here, and `source-en.md`. Conflicting variants live in git history only.
+> **2.1 PIVOT CANDIDATE — founder-approved 2026-08-03.** Paste only after the progression flow, seven-day trial, patch notes, feature-request action, and reliability fixes are merged, tested, and present in the selected archive. The five previous locale files are stale and must not be published from their old copy.
+> Process: `docs/app-store-submission/final-submit-checklist.md`.
 
 ---
 
 ## App name (30)
 
 ```
-Unit: Gym Workout Log
+Unit: Progressive Overload
 ```
 
-21 chars. Locked 2026-07-11 (ASO over brand), superseding `Unit: Gym Notebook`. **Separator resolved to the colon** (2026-07-11, see decision log): identical keyword indexing either way, but the colon is the category norm, scans better at list size, and matches how the live 1.0 listing already renders (`Unit: Gym Notebook`). Home-screen icon stays `Unit` (`INFOPLIST_KEY_CFBundleDisplayName`).
-Locale names take the same separator — flagged for the next locale regeneration pass (do not edit locale files outside that pass).
+26 characters. The home-screen name stays `Unit`. This title is honest only when the submitted build calculates and presents a clear next-workout target from completed sets.
 
 ## Subtitle (30)
 
 ```
-Simple strength tracker
+Gym Workout Log & Tracker
 ```
 
-Inclusive positioning for beginner-to-experienced gym users. It describes the product without implying that users must already have a program.
+25 characters. It keeps the category immediately understandable while the title carries the outcome.
 
-## Promotional text (170, editable anytime without review)
+## Promotional text (170)
 
 ```
-Choose a ready-made program or paste your own. Last time’s weights are filled in, every set takes one tap, and the rest timer starts automatically.
+Know what to do next. Unit turns your completed sets into a clear next-workout target you can accept or change. New subscribers get 7 days free.
 ```
-
-Evergreen (reads right for cold visitors after launch week too). Update-announcement variants belong in What's New, not here.
 
 ## Description (4000)
 
 ```
-Log a set in 3 seconds and get back to your workout.
+Know what to do next—and log every set in seconds.
 
-Choose a ready-made program or paste your own. Unit keeps your last weights ready, so each set is quick to confirm or adjust.
+Unit uses your completed working sets to suggest one clear target for next time. Reach the top of your rep range and Unit suggests the next weight. Not there yet? Keep the weight and add a rep. Every suggestion explains why, and you can accept or change it.
 
-• One-tap set logging
-• Ready-made programs
-• Paste any routine
+• Clear next-workout targets
+• Rep ranges and weight increments per exercise
+• One-tap set logging with last time’s values ready
+• Ready-made programs or paste your own routine
 • Automatic rest timer on the Lock Screen
-• Workout history and personal records
+• Progress history for weight, reps, and volume
 
 No account. No ads. No social feed. Your training stays on your iPhone.
 
-Unit requires a paid purchase after setup. Weekly, monthly, and yearly auto-renewing subscriptions are available. Optional Lifetime appears only if available. Prices are shown in the app before purchase. There is no free trial.
+Eligible new subscribers can start a 7-day free trial on a weekly, monthly, or yearly plan. After the trial, the selected subscription renews automatically at the price shown in the app unless cancelled. Optional Lifetime appears only if available and has no trial.
 
 Terms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 Privacy Policy: https://unitlift.app/privacy
 ```
 
-Short on purpose: iOS descriptions are conversion-only (not search-indexed) and only ~3 lines show before "more". The paid-purchase paragraph + both legal URLs are Guideline 3.1.2(b) compliance — **never trim them**.
-
-## Keywords (100, comma-separated, no spaces)
+## Keywords (100 bytes, comma-separated, no spaces)
 
 ```
-beginner,program,routine,lifting,rest,timer,weights,reps,training,progress,history,sets
+rest,timer,rep,counter,set,barbell,notebook,diary,strength,lifting,weights,routine,personal,record
 ```
 
-Beginner-inclusive feature and behavior terms, deduped against the app name and subtitle.
+98 UTF-8 bytes. No repetition of indexed title/subtitle terms. RespectASO evidence available on 2026-08-03 supported `rest timer` (opportunity 61), `rep counter` (64), `reps tracker` (48), `barbell tracker` (37), and `progressive overload` (39); the title/subtitle carry the last term and `tracker` already.
 
-## What's New — v2.1
+## What’s New — v2.1
 
 ```
-Unit 2.1 makes setup and logging clearer.
+Unit now helps you decide what to do next.
 
-• Choose a ready-made program or paste your own
-• Improved workout logging and bodyweight history
-• Better purchase handling and reliability fixes
+• Clear next-workout targets based on completed sets
+• Accept or change every progression suggestion
+• Progress history for weight, reps, and volume
+• Patch notes and feature requests in Settings
+• Improved logging, purchases, and reliability
 ```
 
 ## Screenshots
 
-Keep the five currently approved screenshots in their current order for 2.1. Do not replace, reorder, or localize them in this submission. The English metadata follows their existing speed, program-import, privacy, notebook, and rest-timer story.
+The rename and progression feature ship together. Replace the first screenshot with the real progression result state:
+
+```
+Know what to do next
+62.5 kg · 8 reps
+All sets reached the top of your range.
+```
+
+Keep the strongest existing speed, program import, privacy/history, and Lock Screen rest-timer screenshots after it. Do not submit the new name with a screenshot set that shows only generic logging.
 
 ## Reviewer notes (App Review Information → Notes)
 
 ```
-Unit v2 is a local-first gym logger for iPhone. It requires a paid purchase to access the workout-logging features. Onboarding runs free — the reviewer can complete the opener, the three-slide carousel, and the full program setup flow without paying. After setup is saved, the paywall appears full-screen and cannot be dismissed.
+Unit 2.1 is a local-first progressive-overload workout logger for iPhone. It uses completed working sets and each exercise’s rep range and weight increment to show one transparent next-workout target. The user can accept or change every suggestion; Unit does not rewrite the user’s program or provide recovery, medical, or AI coaching advice.
 
 To evaluate:
-1. Open the app. Onboarding starts with a standalone opener, then a three-slide value carousel with the "Set up your program" CTA, then program setup. No personal information is requested.
-2. After onboarding completes, the paywall appears with these StoreKit products: Weekly com.unit.weekly $2.99/week, Monthly com.unit.monthly $4.99/month, Yearly com.unit.annual $29.99/year, and Lifetime com.unit.lifetime $44.99 one-time only if that non-consumable is configured and returned by StoreKit. Weekly is selected by default. There is no "Not now" affordance; the only ways out are to purchase through StoreKit sandbox or close the app.
-3. Subscribe to any recurring tier, or buy Lifetime if visible, via the sandbox account. The paywall dismisses and the Today tab unlocks. Log a set; the rest timer starts automatically and appears on the Lock Screen / Dynamic Island.
-4. To verify cancellation flow for subscriptions: Settings (visible only when entitled) → Manage Subscription → cancel. Lifetime entitlement has no Manage Subscription row because it is a one-time purchase.
+1. Complete onboarding and save a ready-made or pasted program. No personal information is requested. The full-screen paywall appears after setup and cannot be dismissed.
+2. Weekly (com.unit.weekly), Monthly (com.unit.monthly), and Yearly (com.unit.annual) each have a 7-day free introductory offer for eligible new subscribers in the unit-pro subscription group. StoreKit determines eligibility. Ineligible accounts see the normal price and renewal disclosure. Optional Lifetime (com.unit.lifetime) is a one-time purchase with no trial and appears only if StoreKit returns it.
+3. Start any eligible trial or complete a sandbox purchase. After StoreKit verifies the transaction, the paywall dismisses and Today unlocks.
+4. Complete the working sets for an exercise. If every set reaches the top of its rep range, Unit suggests the next available weight and resets the target to the bottom of the range. Otherwise Unit keeps the weight and suggests one more rep. Accept or edit the target, then open the next workout and confirm it is prefilled.
+5. Log a set to verify that the rest timer starts automatically on the Lock Screen / Dynamic Island. Settings → What’s new opens https://unitlift.app/updates. Settings → Request a feature opens a prefilled email to support@unitlift.app.
+6. To manage or cancel a subscription: Settings → Manage Subscription. Lifetime has no Manage Subscription row because it is a non-consumable.
 
-Engagement prompts in version 2.1 count only workouts completed after installing this version:
-- After the first new completed workout, close its workout summary. Two seconds after Today is active, Unit makes one standard StoreKit review-request attempt. iOS may suppress the visible prompt.
-- On the third new completed workout’s summary, Unit shows a one-time “Help improve Unit” card. “Book a 15-minute call” opens https://calendar.notion.so/meet/efbakir/unit-feedback and “Email feedback” opens a prefilled email to support@unitlift.app.
-- Neither prompt appears during an active workout. Both attempt/shown states persist locally and do not repeat.
+Engagement prompts count only workouts completed after installing this version. After workout one, Unit makes one standard StoreKit review-request attempt two seconds after the summary closes and Today is active; iOS may suppress it. On workout three’s summary, a one-time non-blocking feedback card opens https://calendar.notion.so/meet/efbakir/unit-feedback or a prefilled email to support@unitlift.app. Neither prompt appears during an active workout.
 
-There is no free trial. Apple Guideline 3.1.2(b) disclosure is satisfied: each tier card shows product title, full StoreKit price, and billing period; the selected billed amount remains visible directly above the CTA; auto-renewal and cancel-via-Settings copy is on the paywall itself. No deceptive trial framing.
-
-The app does not collect, transmit, or store any personal data. All workout data lives on-device via SwiftData. The PrivacyInfo manifest declares only UserDefaults (reason CA92.1 — app functionality). Privacy is verifiable offline: post-subscription, put the device in airplane mode and every feature still works.
-
-If you have questions during review, please email support@unitlift.app.
+The app does not collect, transmit, or store personal data. Workout data stays on-device via SwiftData. If you have questions during review, email support@unitlift.app.
 ```
 
-## Subscription group + products (ASC display fields)
+## Subscription group + products
 
 Group: reference name `unit-pro` (immutable) · display name `Unit Pro`.
 
-| Product ID | Display name (≤30) | Description (≤45) | Price (USD base) |
-|---|---|---|---|
-| `com.unit.weekly` | `Unit Weekly` | `Weekly access to Unit.` | **$2.99** (default selection) |
-| `com.unit.monthly` | `Unit Monthly` | `Monthly access to Unit.` | $4.99 |
-| `com.unit.annual` | `Unit Yearly` | `Yearly access to Unit.` | $29.99 |
-| `com.unit.lifetime` | `Unit Lifetime` | `One-time purchase. Lifetime access.` | $44.99 (optional — only if already configured) |
+| Product ID | Display name | Description | USD base | Introductory offer |
+|---|---|---|---|---|
+| `com.unit.weekly` | `Unit Weekly` | `Weekly access to Unit.` | **$2.99** | 7 days free |
+| `com.unit.monthly` | `Unit Monthly` | `Monthly access to Unit.` | $4.99 | 7 days free |
+| `com.unit.annual` | `Unit Yearly` | `Yearly access to Unit.` | $29.99 | 7 days free |
+| `com.unit.lifetime` | `Unit Lifetime` | `One-time purchase. Lifetime access.` | $44.99 optional | None |
 
-Pricing authority: `docs/pricing.md`. Product IDs never change. No introductory offers — there is no trial.
+StoreKit and App Store Connect are the eligibility and price authorities. A customer can use only one introductory offer in the subscription group.
 
 ## URLs / fixed fields
 
@@ -124,11 +123,9 @@ Pricing authority: `docs/pricing.md`. Product IDs never change. No introductory 
 | Age rating | 4+ |
 | Copyright | 2026 Efe Bakir |
 
-## What's New history
+## Voice and claim rules
 
-**v1.1 — prepared, never shipped** (ASC shows 1.0 as the only released version; verified live 2026-07-11): PR badges in History; paste import reads table-style + Turkish programs; onboarding day-count 1–7, keyboard fix, force-quit crash fix; stray Done button removed; Start workout only on Today. Fold anything still relevant into the v2.0 notes if wanted.
-**v1.0 (live):** "Unit is here. Log your sets in one tap, import your program from Notes, and track your progress — all without leaving the gym floor."
-
-## Voice rules (apply to every field above)
-
-First-person singular only (`I / me / my`) — never `we / us / our` (PRODUCT.md §Brand Personality). No trial/discount/urgency language anywhere. No coaching or progression claims.
+- Sell the second-order benefit: knowing what to do next and making progress.
+- Prove it with the transparent first-order mechanism: completed sets → one explained target → accept or change.
+- Never claim AI coaching, automatic program rewriting, recovery guidance, guaranteed muscle gain, or guaranteed strength gain.
+- Never show trial copy unless StoreKit reports both a free-trial offer and eligibility.

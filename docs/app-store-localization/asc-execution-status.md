@@ -1,6 +1,6 @@
-# ASC execution status — ALL FIVE LOCALES STALE FOR VERSION 2.1
+# ASC execution status — ALL FIVE LOCALES STALE AFTER THE 2.1 PIVOT
 
-> Updated 2026-07-23. The English 2.1 positioning now includes ready-made programs and beginners. The existing de-DE, es-MX, pt-BR, fr-FR, and tr files derive from the retired experienced-lifter positioning. They are reference material only: **do not paste or publish any of them for 2.1.** Version 2.1 ships English-only until every translated field is regenerated and receives a native-speaker review.
+> Updated 2026-08-03. English now positions Unit around transparent progressive-overload guidance and discloses a seven-day introductory trial. The existing de-DE, es-MX, pt-BR, fr-FR, and tr files predate both changes. They are reference material only: **do not paste or publish any of them for 2.1.** Regenerate from `docs/app-store-copy.md`, validate every App Store limit and disclosure, and complete linguistic QA before any locale is pasted.
 
 ## Changed fields per locale (re-derivation, 2026-07-11)
 
