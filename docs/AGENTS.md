@@ -4,9 +4,9 @@
 
 ---
 
-## What Unit is (post-pivot, 2026-03-26)
+## What Unit is (progression pivot, 2026-08-03)
 
-Unit is a **zero-friction gym logging tool** for intermediate-to-advanced lifters. The primary metric is **seconds per set logged**. It is not an AI coach, not a social platform, and not a periodisation planner.
+Unit is a **zero-friction, progression-guided gym logging tool** for beginner-to-experienced gym users. People can choose a ready-made program or bring their own. The primary metric is **seconds per set logged**. Unit is not an AI coach, social platform, exercise-instruction product, or periodisation planner: it gives one transparent next-session suggestion while the user keeps final control.
 
 **Core loop:** Open app → see today's template → tap Start → log sets with one tap each → finish.
 
@@ -31,11 +31,12 @@ Unit is a **zero-friction gym logging tool** for intermediate-to-advanced lifter
 |---------|---------------|----------------|
 | **Template** | A lightweight, repeatable collection of exercises (e.g. "Push Day A"). Not bound to a week or cycle. The primary program unit. | Not an 8-week cycle. Not a periodisation plan. |
 | **Session** | A single workout instance. May be linked to a template or freestyle. | Not a "Day" within a numbered week. |
-| **Ghost values** | Pre-filled weight/reps from the most recent session for that exercise, queried globally across all templates. | Not a target set by the engine. Not per-template. |
-| **"No history yet"** | Shown when an exercise has never been logged anywhere. Fields are empty; user fills in manually. | Not "0 kg". Never show 0 as a default. |
+| **Last time values** | Global fallback prefill from the most recent session for that exercise. | Not the same as an accepted progression target, which is scoped to one routine and exercise and takes precedence. |
+| **Starting target** | Explicit sets, reps, and weight saved with the current template/program, used only when no accepted target or valid prior session exists. | Not completed history and never labelled "Last time". |
+| **"No history yet"** | Shown only when no accepted target, valid prior session, or explicit starting value exists. Fields are empty; user fills in manually. | Not "0 kg". Never show 0 as a default. |
 | **Rest timer** | Auto-starts on "Done" tap. Visible on Lock Screen and Dynamic Island. | Not optional / hidden. |
-| **Cycles** | An optional organisational layer. Not required. Not shown prominently. | Not the main container. Not mandatory. |
-| **ProgressionEngine** | Deferred to post-v1. Code may exist in `ProgressionEngine.swift` but is not active in the UI. | Not exposed to users in v1. Do not build new engine features. |
+| **Cycles** | Retired legacy container; out of scope for v2.1. | Templates are the program unit. Do not restore week/cycle UI. |
+| **DoubleProgressionEngine** | One pure, deterministic v2.1 calculator. It evaluates completed working sets and proposes the smallest next target after a workout. | Not the old cycle/failure/deload engine. It never mutates a routine before acceptance. |
 
 ---
 
@@ -43,19 +44,22 @@ Unit is a **zero-friction gym logging tool** for intermediate-to-advanced lifter
 
 - **Gym Test:** A user must be able to log a set in ≤ 3 seconds under physical stress.
 - **One-tap Done:** The primary interaction is a large (44×44 pt minimum) "Done" button/checkbox. Haptic feedback on tap.
-- **No keyboard for happy path:** Ghost values mean the user never types during a normal set. Keyboard only appears when the user explicitly edits a value.
+- **No keyboard for happy path:** An accepted target, Last time value, or Starting target keeps normal set logging one-tap. Keyboard only appears when the user explicitly edits a value.
 - **≤ 2 taps to start:** From app launch to first logged set must be 2 taps or fewer (Today → Start → Done).
 - **No social features.** No feed, no likes, no leaderboards, no sharing prompts.
+- **No progression UI in the hot loop.** Suggestions and edits happen after the exercise or workout. Accepted targets prefill the next matching routine/exercise.
 
 ---
 
 ## Onboarding
 
-Three paths to creating a template, all shipping in v1:
+Two first-run paths ship in v2.1:
 
 1. **Text-paste import** — user pastes a routine from Notes/WhatsApp. Basic exercise name-matching builds a structured template.
-2. **Redo-from-history** — one-tap conversion of any past freestyle session into a saved template.
-3. **Manual builder** — search-and-add exercises to a new template.
+2. **Starter program library** — user chooses a ready-made program and reviews it before saving.
+
+Manual template editing remains available after onboarding. Redo-from-history
+and manual-builder onboarding are not first-run paths in v2.1.
 
 ---
 
@@ -64,9 +68,9 @@ Three paths to creating a template, all shipping in v1:
 - CloudKit sync
 - Exercise discovery feed
 - Social / community features
-- Algorithmic progression (auto-increment, fail modes, deload rules)
+- Progression algorithms beyond opt-in double progression (fail modes, deloads, periodisation, recovery adaptation)
 - Mandatory cycle/week/day structure
-- Subscription gate on core logging
+- Changes to the current post-onboarding access gate (`docs/pricing.md`)
 - Any feature that increases taps-to-log
 
 ---

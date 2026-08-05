@@ -1,0 +1,56 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F640319F-BF9B-425C-A3BC-EB201E6855EF",
+        "deviceName" : "iPhone SE (3rd gen) QA",
+        "exportedFileName" : "4EEAAA08-970A-4828-8E5D-4F16E501759B.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "06-feature-table-accessibility-medium_0_BC6624B6-C1D5-4D5A-B3C7-1C0E4F1F2176.png",
+        "timestamp" : 1785845186.558
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F640319F-BF9B-425C-A3BC-EB201E6855EF",
+        "deviceName" : "iPhone SE (3rd gen) QA",
+        "exportedFileName" : "898C3138-9E64-4B9E-B75A-1F9E6D135A66.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "05-feature-table-iphone-se_0_40201619-2B80-43D4-8465-F7DBED074054.png",
+        "timestamp" : 1785845175.052
+      }
+    ],
+    "testIdentifier" : "OnboardingPaywallFlowUITests/testFeatureTableFitsCompactAndAccessibilityMediumLayouts()",
+    "testIdentifierURL" : "test://com.apple.xcode/Unit/UnitUITests/OnboardingPaywallFlowUITests/testFeatureTableFitsCompactAndAccessibilityMediumLayouts"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F640319F-BF9B-425C-A3BC-EB201E6855EF",
+        "deviceName" : "iPhone SE (3rd gen) QA",
+        "exportedFileName" : "79EB8911-59FE-40E9-B55A-99114A51A0C9.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "04-ineligible-standard-paywall_0_2BBBA80A-C966-46BD-B3C6-2F802C2259AE.png",
+        "timestamp" : 1785845195.668
+      }
+    ],
+    "testIdentifier" : "OnboardingPaywallFlowUITests/testIneligibleCustomerGetsStandardWeeklyPaywall()",
+    "testIdentifierURL" : "test://com.apple.xcode/Unit/UnitUITests/OnboardingPaywallFlowUITests/testIneligibleCustomerGetsStandardWeeklyPaywall"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F640319F-BF9B-425C-A3BC-EB201E6855EF",
+        "deviceName" : "iPhone SE (3rd gen) QA",
+        "exportedFileName" : "D89E73D7-2FDD-4916-9025-51A62573DD78.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "07-successful-purchase-today_0_0D8D4232-ADBD-4122-A493-F96052CCE270.png",
+        "timestamp" : 1785845208.674
+      }
+    ],
+    "testIdentifier" : "OnboardingPaywallFlowUITests/testOfflineRelaunchKeepsLastVerifiedAccess()",
+    "testIdentifierURL" : "test://com.apple.xcode/Unit/UnitUITests/OnboardingPaywallFlowUITests/testOfflineRelaunchKeepsLastVerifiedAccess"
+  }
+]

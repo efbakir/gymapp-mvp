@@ -1,9 +1,10 @@
 # App Store localization + regional pricing — strategy
 
 > Decision doc + rollout plan. Written 2026-07-11. Supersedes the earlier "defer localization until $5k MRR" position (from the v1 submission doc, since deleted — git history has it).
-> Three separate tracks. Do not mix them: shipping track 1 does **not** mean the app is translated.
+> **Status update 2026-08-04:** English 2.1 was renamed to `Unit: Progressive Overload`. Every locale file in this folder is now stale reference material. Do not paste any localized field into App Store Connect until it has been regenerated from the current English source and reviewed again.
+> Three separate tracks. Do not mix them: localized metadata does **not** mean the app is translated.
 
-**The plan in one paragraph:** Localize App Store **metadata only**, in 5 languages (German, Spanish-MX, Portuguese-BR, French, Turkish), riding the v2 submission. Screenshots stay English. All prices stay on Apple's automatic conversion from the USD base — no custom storefront prices. The in-app UI stays English; UI localization is a separate future project with its own infra and QA gate. Every localized description states, honestly, that the app UI is in English.
+**Current plan:** Ship 2.1 English-only. Regenerate App Store metadata later in German, Spanish-MX, Portuguese-BR, French, and Turkish from the progressive-overload English source. Screenshots and the in-app UI remain English. All prices stay on Apple's automatic conversion from the USD base.
 
 ---
 
@@ -11,7 +12,7 @@
 
 | Track | What it is | Status |
 |---|---|---|
-| 1. App Store metadata | Per-locale name, subtitle, description, keywords, promo text, What's New, subscription names/descriptions | **Do now** — Tier 1 copy is in this folder, ready for ASC |
+| 1. App Store metadata | Per-locale name, subtitle, description, keywords, promo text, What's New, subscription names/descriptions | **Stale** — do not publish the current files |
 | 2. In-app UI | `.xcstrings` String Catalog, translated `AppCopy.swift`, layout QA per language | **Not now** — binary has `knownRegions = (en, Base)`; zero localization infra exists. Tier 3 below. |
 | 3. Regional pricing | Per-storefront prices for the 4 products | **No change** — keep Apple automatic conversion. See §Pricing. |
 
@@ -25,7 +26,7 @@ Rule from track separation: localized metadata must never claim or imply a trans
 
 Canonical English strings live in [`docs/app-store-copy.md`](../app-store-copy.md) (single source of truth since 2026-07-11); [`source-en.md`](source-en.md) holds the derivation rules. All translations derive from the canonical file; when English changes, locale files are stale until re-derived (last re-derivation: 2026-07-11 — see [`asc-execution-status.md`](asc-execution-status.md)).
 
-### Tier 1 — ship with v2 (metadata only)
+### Tier 1 — regenerate after the English 2.1 release (metadata only)
 
 | Locale | ASC language | Why in | Founder review |
 |---|---|---|---|
@@ -35,7 +36,7 @@ Canonical English strings live in [`docs/app-store-copy.md`](../app-store-copy.m
 | `fr-FR` | French | Large market, low English search tolerance, strong muscu niche vocabulary | **Name final 2026-07-13**; copy awaits native read |
 | `tr` | Turkish | Founder is a native speaker — zero review risk; parser already handles Turkish programs; near-zero cost | **Founder-approved 2026-07-11 — name final** |
 
-Five languages is the ceiling for one review pass. Each file in this folder = one ASC language, paste-ready.
+Five languages is the ceiling for one review pass. Each existing file is reference material, not paste-ready.
 
 ### Tier 2 — later metadata languages (not produced yet)
 

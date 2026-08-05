@@ -1,5 +1,9 @@
 # Onboarding → Paywall — release QA report
 
+> **Historical snapshot with current addendum.** Sections A–I record the 2026-07-01/11
+> verification state. The 2026-08-04 automated release-gate addendum at the end is the current
+> repository evidence and supersedes the older machine-verification gaps.
+
 - **Date:** 2026-07-01
 - **Branch:** `release/onboarding-paywall-qa`
 - **Scope:** onboarding splash → program setup → hard paywall (the flow gated by `ContentView`).
@@ -7,9 +11,9 @@
 
 ## A) Goal status
 
-**Not fully complete — code/build/tests/onboarding-start verified; loaded-paywall on 3 sizes + purchase-unlock remain a documented ~10-min manual Xcode walk.**
+**Historical 2026-07-01 status: incomplete — code/build/tests/onboarding-start verified; loaded-paywall on 3 sizes + purchase-unlock still required a documented ~10-min manual Xcode walk.**
 
-The flow audits **clean** (no duplicate/unreachable CTAs, no misleading price/trial copy, no coaching language, StoreKit states all recoverable, design-system-conformant). Build and tests pass. Onboarding launch/render is screenshot-verified. The two criteria that need a running StoreKit purchase — **#6 paywall layout on small/normal/large** and **#8 purchase unlock** — are not machine-verified here (see §I) and are covered by the manual walk in `docs/release-qa.md` §9, which the now-wired `Unit.storekit` config makes trivial.
+At that time, the flow audited **clean** (no duplicate/unreachable CTAs, no misleading price/trial copy, no coaching language, StoreKit states all recoverable, design-system-conformant). Build and tests passed. Onboarding launch/render was screenshot-verified. The two criteria requiring a running StoreKit purchase — **#6 paywall layout on small/normal/large** and **#8 purchase unlock** — were not yet machine-verified (see §I). The 2026-08-04 addendum closes those repository-controlled gaps.
 
 ## B) Branch / commits
 
@@ -123,3 +127,34 @@ v2 IAP table and reviewer notes — corrected to $2.99, and a founder ASC checkl
 2. Everything in asc-submission.md §"v2 external gate — founder checklist" (Agreements/Tax/
    Banking for paid apps, subscription products at the locked prices, reviewer notes, archive
    build 15 + upload).
+
+---
+
+## Addendum — 2026-08-04 automated release gate
+
+The July status above is retained as historical evidence, but its machine-verification gaps are
+now closed. `UnitUITests/OnboardingPaywallFlowUITests.swift` contains twelve deterministic UI
+tests covering the compact paste editor, onboarding-to-purchase-to-first-set journey, eligible
+Monthly/Yearly/Weekly presentations, ineligible Weekly presentation, cancelled/unverified and
+pending purchases, restore, existing subscription and Lifetime bypass, offline verified access,
+product-load failure/retry/partial loading, and compact plus Accessibility Medium layouts.
+
+All twelve paywall/onboarding UI tests passed on 2026-08-04 as part of the 14-test full UI suite
+on **iPhone SE (3rd generation), iOS 27.0, 375 × 667**. The screenshots include the loaded tier
+states, standard ineligible state, compact and Accessibility Medium feature-table layouts, and
+the post-purchase Today/Programs surfaces. This supersedes the original “not machine-verified”
+claim; it does not supersede Apple-controlled release gates.
+
+The exact final code also passed **157 / 157 unit tests** on iPhone 17,
+iOS 26.3.1, including the copied-version-2.1 migration, entitlement races,
+duplicate-purchase prevention, introductory-offer presentation, and the full
+starting-target/progression persistence contract. The final Release build for
+Unit plus `UnitWidgetExtension` succeeded as **2.1 (65)**, and a clean iOS 26.3.1
+Release launch produced no Unit-owned release-blocker log entries.
+
+Still physical/external-only:
+
+1. Confirm the exact submitted archive against App Store Connect products and a fresh Apple
+   sandbox customer, including introductory-offer eligibility and Apple's purchase sheet.
+2. Rewalk purchase, restore, cold relaunch, and one real-gym set on the connected iPhone.
+3. Do not upload or submit from a dirty or diverged repository state.

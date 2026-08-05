@@ -74,7 +74,7 @@ SF Symbol names as `String` raw values; use `.image(size:weight:)` for consisten
 
 **Rules**
 
-- Set icon size explicitly at the call site (see `AppNavBar` / `AppListRow` for defaults).
+- Set icon size explicitly at the call site (see `ProductTopBar` / `AppListRow` for defaults).
 - **List rows**: `AppListRow` is chevron-free by design; do not add `chevron.right` for “disclosure” — use context and tap targets (HIG: don’t rely on chevrons alone for meaning).
 
 ### Divider — `AppDivider`
@@ -88,18 +88,18 @@ Use instead of bare `Divider()` where the design system specifies a hairline wit
 | Component | Purpose |
 |-----------|---------|
 | `AppListRow` | Standard list row; optional leading icon, title, subtitle, trailing slot. Use `.cardListContent` only when `AppCardList` owns the row chrome. |
+| `AppInlineWeightField` | Canonical compact editable weight/increment field with unit and caller-owned accessibility label. |
 | `AppStepper` | − / value / + control with fixed internal spacing |
 | `AppTag` | Pills (default, accent, success, warning, error, muted, custom) |
 | `AppPrimaryButton` | Full-width primary CTA (see `visual-language.md` for height/contrast) |
 | `AppSecondaryButton` | Pumice-fill secondary action; tones `.default`, `.accentSoft`, `.destructive` |
 | `AppGhostButton` | Text-only "Add X" trigger for inside-card affordances |
 | `ProductTopBarAction` | Shared pill-style header action for text and icon affordances |
-| `IconSquareButton` | 48pt icon action for secondary card controls and compact utility actions |
-| `ExercisePreviewItem` | Compact preview item for exercise name + target inside horizontal summary rails |
 | `SetProgressIndicator` | Set-step tracker with Ink current, neutral completed/failed/upcoming, and Verde PR-completed states |
-| `MetricDisplay` | Large numeric/value lockup for target, timer, and command-style data |
 | `RestTimerControl` | Rest countdown control with `-15`, central timer pill, and `+15` |
-| `UnitTabItem` | Custom root-tab item with icon + label and clear active state |
+| `PreviewListRow` | Shared preview row; use `identityFirst` when long identity must wrap above target/evidence. |
+| `AppOptionTileCard` | Canonical single-choice onboarding/selection card. |
+| `AppSelectableTierCard` | StoreKit tier card with selected, disabled, and accessibility states. |
 
 ### Pressed-state rule
 
@@ -120,14 +120,15 @@ Toolbar and nav-bar chrome defers to iOS-native — there is no `AppNavBar` mole
 | `AppCard` | Default card surface: padding, `cardBackground`, `AppRadius.card` |
 | `appCardStyle()` | Modifier matching `AppCard` when a wrapper type is awkward |
 | `AppDividedList` | Bare divided list of rows separated by `AppDivider`. Use directly only when you already own the surrounding card chrome. |
-| `AppCardList(data) { row }` | **Canonical** list-in-card primitive — bakes the 8/24 inset recipe and the divider. Hand-composing `AppCard { AppDividedList(...) }` outside `DesignSystem.swift` is banned (hook-enforced). |
+| `AppCardList(data) { row }` | **Canonical** list-in-card primitive — bakes the 8/24 inset recipe, divider, and full padded rectangular hit shape for interactive rows. Hand-composing `AppCard { AppDividedList(...) }` outside `DesignSystem.swift` is banned (hook-enforced). |
 | `AppCardListAddRow` | Trailing "+ Add X" affordance designed to live in `AppCardList(_:row:trailing:)`. |
 | `SettingsSection` | Titled group inside an `AppCard` |
 | `ProductTopBar` | Shared root/product-screen top bar replacing ad-hoc large title headers |
-| `ExercisePreviewStrip` | Horizontal exercise-summary rail with overflow fade cue |
-| `WorkoutCommandCard` | Primary workout command surface: set progress, target metric, `Done`, and edit |
+| `PreviewListContainer` | Capped preview viewport with overflow cue and two-line/Dynamic-Type sizing. |
+| `WorkoutCommandCard` | Primary workout command surface: set progress, target metric, `Complete set`, adjustment, and timer. |
 | `SessionStateBar` | Bottom-aligned rest/ready/next-exercise state handler for active sessions |
-| `UnitTabBar` | Shared custom root tab bar; native UITabBar visuals are not used on root screens |
+| `AppSetRepEditorSheet` | Shared routine target editor, including optional rep-range progression and increment. |
+| `AppFeatureAccessTable` | Compact Dynamic-Type-safe paywall feature matrix. |
 
 ---
 
@@ -138,7 +139,8 @@ Toolbar and nav-bar chrome defers to iOS-native — there is no `AppNavBar` mole
 **Rules**
 
 - New full-screen flows should compose inside `AppScreen` rather than ad-hoc `VStack` + custom nav.
-- Root/product screens should prefer `customHeader:` with `ProductTopBar`; legacy `AppNavBar` remains for detail flows still on the old path.
+- Root/product screens may use `ProductTopBar`; detail screens use native navigation titles/toolbars.
+- Root navigation uses native `TabView`; do not recreate a custom tab bar.
 - Bottom primary actions should go through `primaryButton:` when they match the sticky CTA pattern.
 
 ---
@@ -167,14 +169,14 @@ Allowed in `*View.swift`:
 | `Divider()` where spec calls for tokenized hairline | `AppDivider` |
 | `.padding(16)` / `.cornerRadius(12)` in new UI | `AppSpacing.*` / `AppRadius.*` |
 | Rounded rectangles with default corner rendering | `RoundedRectangle(..., style: .continuous)` |
-| Native UITabBar visuals on root screens | `UnitTabBar` via app-shell `safeAreaInset` |
+| Custom root-tab chrome | Native `TabView` / `UITabBar` behavior |
 | `AppTabHeader` large-title root chrome on Today / Program | `ProductTopBar` |
 | `chevron.right` on `AppListRow`-style content | Context + row tap; no decorative chevron |
 | `.regular` weight anywhere; calling `Font.custom("Geist*"/"GeistMono*")` directly | `AppFont` cases (Medium minimum); never bypass `AppFont` for Geist |
 | New hex colours in Features | `AppColor` extension or asset + wrapper |
-| Page-specific workout timer cards / custom command panels | `ExerciseCommandCard` + `SessionStateBar` |
+| Page-specific workout timer cards / custom command panels | `WorkoutCommandCard` + `SessionStateBar` |
 | Floating text-only header actions without visible tap area | `ProductTopBarAction` |
-| Ambiguous logging copy like “Log target” | Outcome labels like `Done`, `Finish Session`, `Next exercise` |
+| Ambiguous logging copy like “Log target” | Outcome labels like `Complete set`, `Finish workout`, `Next exercise` |
 
 ---
 
@@ -190,6 +192,7 @@ Allowed in `*View.swift`:
 
 | Date | Change |
 |------|--------|
+| 2026-08-04 (latest) | Progressive-overload overhaul: documented `PreviewListRow.identityFirst`, two-line preview sizing, the extended `AppSetRepEditorSheet`, accessible inline weight/increment input, and the new shared `AppFeatureAccessTable`; corrected stale custom-tab and removed-component references. |
 | 2026-04-28 (latest) | Doc refresh after Geist swap + DS unification commits (`241ebeb`, `4beafb2`): font family is **Geist / Geist Mono** (not SF Pro Rounded); `AppNavBar` removed (toolbar chrome is iOS-native via `ProductTopBar` + system `.toolbar`); `AppCardList(data) { row }` is the canonical list-in-card primitive (hand-composed `AppCard { AppDividedList(...) }` blocked by hook); `HeroWorkoutCard` / `ExerciseCommandCard` / `WeeklyProgressStepper` removed from organism inventory. |
 | 2026-04-28 (later) | Token simplification pass: removed `barBackground` (= `background`), `secondaryLabel` (= `textSecondary`), `systemTint` (= `accent`), `shadow`/`scrim` (orphans — chrome modifiers are stroke-only post-shadow refactor), `AppFont.listSecondary` (1 use → `body`), `AppFont.numericLarge` (0 uses), `AppFont.compactLabel` (1 internal use → inline), `AppRadius.sheet` (0 uses). Doc updated to match the actual single-file layout (`Unit/UI/DesignSystem.swift`) — empty `Atoms/Molecules/Organisms/Templates` subdirectories deleted. Two minor feature drifts fixed: `.headline` toolbar title in `ActiveWorkoutView` → `AppFont.sectionHeader`; `.padding(.vertical, 3)` in `PaywallView` → `AppSpacing.xs`. |
 | 2026-04-28 | DS audit fixes: light-only palette (no dark variants), card chrome is now contrast + stroke (no shadows) per visual-language.md, `AppFont` flattened to single enum (statics folded into cases, tracking bundled), `mutedFill` / `disabledSurface` collapsed into `controlBackground`, `AppFont.label` / `display` removed (use `sectionHeader` / `numericDisplay`), `splashAccent` removed (orange `#FF4400` was banned + unused), stale config comment block dropped, `AppRadius.card` alias added (= `lg` = 22), `PreviewListContainer` uses canonical `cardRowFill` + `AppRadius.sm`. |

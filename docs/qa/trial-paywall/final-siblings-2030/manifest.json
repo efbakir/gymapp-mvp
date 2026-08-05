@@ -1,0 +1,26 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F640319F-BF9B-425C-A3BC-EB201E6855EF",
+        "deviceName" : "iPhone SE (3rd gen) QA",
+        "exportedFileName" : "4E02523E-F08E-4DEF-A5EB-34B478E9D6AD.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "08-appscreen-sibling-programs_0_1F3553D8-05D5-4346-9872-6F38429451AB.png",
+        "timestamp" : 1785845680.243
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F640319F-BF9B-425C-A3BC-EB201E6855EF",
+        "deviceName" : "iPhone SE (3rd gen) QA",
+        "exportedFileName" : "7B92357E-9328-45CC-88B0-DCB75FE07EC3.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "07-successful-purchase-today_0_05CE38B3-8558-4DD2-A271-F773BF059532.png",
+        "timestamp" : 1785845676.084
+      }
+    ],
+    "testIdentifier" : "OnboardingPaywallFlowUITests/testOfflineRelaunchKeepsLastVerifiedAccess()",
+    "testIdentifierURL" : "test://com.apple.xcode/Unit/UnitUITests/OnboardingPaywallFlowUITests/testOfflineRelaunchKeepsLastVerifiedAccess"
+  }
+]

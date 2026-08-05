@@ -29,7 +29,7 @@
 
 ### Missing empty states (severity: major)
 
-- **`empty-templates-no-cta`** — `TemplatesView` with zero templates shows nothing or shows a list header with no body. Should present the three onboarding paths: text-paste, redo-from-history, manual builder (per `CLAUDE.md §2 MVP scope`).
+- **`empty-templates-no-cta`** — `TemplatesView` with zero templates shows nothing or shows a list header with no body. It should offer a viable routine-creation path; first-run onboarding supports text paste and the starter program library.
 - **`empty-history-no-guidance`** — `HistoryView` with zero sessions. Should explain what to do, not render a blank chart.
 - **`empty-exercise-history-zero-kg`** — a never-logged exercise renders the Last time value as `0 kg` instead of the `"No history yet"` prompt.
 - **`empty-calendar-silent`** — `CalendarTabView` with no session data renders a blank heatmap instead of an affordance.
@@ -37,9 +37,9 @@
 
 ### First-launch / onboarding edge cases (severity: critical — this is the single most-critical flow)
 
-Onboarding is where new users bounce. Any break here is a user loss. Three onboarding paths must all end with at least one template and a viable first workout (per `CLAUDE.md §2 Ships in v1`):
+Onboarding is where new users bounce. Any break here is a user loss. Both first-run paths must end with at least one template and a viable first workout (per `docs/goals.md` v2.2 scope):
 
-- **`onboarding-path-incomplete`** — a path (text-paste / redo-from-history / manual builder) that can complete without producing a template. User lands on Today with nothing to do.
+- **`onboarding-path-incomplete`** — a path (text paste / starter program library) that can complete without producing a template. User lands on Today with nothing to do.
 - **`onboarding-skip-leaves-app-broken`** — a "Skip" button on any onboarding screen that skips past template creation without backfilling.
 - **`onboarding-back-resets-progress`** — pressing back in onboarding nukes previous step's answers.
 - **`onboarding-long-program-paste-truncates`** — a very long program pasted into the import flow fails silently, parses partially, or crashes.
@@ -114,10 +114,10 @@ Screenshot each step to `audit-screenshots/flows-<iter>-<step>.png`.
 
 ### Pass 3 — goals.md cross-check
 
-Read `docs/goals.md` §v1 scope boundaries. For each "Ships in v1" item, confirm it is reachable from a cold start:
+Read `docs/goals.md` §v2.2 scope boundaries. For each "Ships" item, confirm it is reachable from a cold start:
 
 - Template-based logging with Last time values (pre-filled from last session) → reachable?
-- Three onboarding paths → all three actually selectable and completable?
+- Two onboarding paths → text paste and starter program library both selectable and completable?
 - Auto rest timer with Lock Screen / Dynamic Island → visible on lock screen during a set?
 - History view (list + calendar) → both modes reachable?
 - Exercise library (search + custom exercise creation) → both actions reachable from a sensible place (not just onboarding — see `project_unit_exercise_library.md` in memory: library must be surfaced app-wide)?
@@ -134,14 +134,14 @@ Before filing:
 
 1. **Can I describe the exact tap sequence that reproduces the dead end / edge case?** If not → don't file.
 2. **Is the thing I'm missing listed in `docs/goals.md` §v1 "Ships"** OR **listed in `CLAUDE.md §5` "empty states" / `audit-prompt.md` Step 1** OR **obviously broken from a user's POV (button opens nothing, blank screen)?** If not → don't file.
-3. **Am I filing something that's actually deferred per `CLAUDE.md §4`?** (cycles, ProgressionEngine, social, etc.) If so → don't file; that's compass-aligned absence, not a missing flow.
+3. **Am I filing something that's actually deferred per `CLAUDE.md §4`?** (cycles, legacy fail/deload progression, social, etc.) If so → don't file; that's compass-aligned absence, not a missing flow.
 
 ---
 
 ## Candidate probes (draw from here when signal goes silent)
 
 - **`live-activity-rest-timer-drift`** — start a workout's rest timer, check Live Activity on lock screen, compare elapsed to in-app timer. Drift ≥ 2s → file.
-- **`paywall-on-core-logging`** — any paywall / `StoreManager` prompt that appears during the core log-a-set / create-a-template / view-history flow. Paywall on core logging is banned per `CLAUDE.md §4`.
+- **`paywall-interrupts-active-workout`** — any access prompt that appears after a workout has started or interrupts the log-a-set loop. The normal post-onboarding access gate is intentional; mid-workout interruption is not.
 - **`import-program-filter-conditioning`** — paste a program that includes conditioning days (e.g. "Sunday: 20min Zone 2"). Are those filtered out per `CLAUDE.md §4 Conditioning days in imported programs`? Or do they appear as templates?
 - **`history-session-count-per-day-wrong`** — log two sessions in one day. Does history show 2 cards or merge into 1?
 - **`template-duplicate-allowed`** — create two templates with the same name. Is that OK, confusing, or blocked? Check against goals.md — probably OK, but the UI should distinguish them.
@@ -156,9 +156,9 @@ Before filing:
 - **Do not** file "missing social share" / "missing community feed" — anti-persona, banned.
 - **Do not** file "missing dark mode" — light-mode-only per `CLAUDE.md §5 Principle 3`.
 - **Do not** file "missing landscape layout" — portrait-only per `CLAUDE.md §5 Principle 4`.
-- **Do not** file "missing paywall prompt on logging" — core logging is free, paywall is banned on core per `CLAUDE.md §4`.
+- **Do not** file the normal post-onboarding access gate as a bug; it is the current pricing model in `docs/pricing.md`.
 - **Do not** file "plate calculator missing" — deferred per `CLAUDE.md §4`.
-- **Do not** file "auto-increment / ProgressionEngine missing from UI" — deferred per `CLAUDE.md §4`. Last time values (pre-filled from last session) are the in-scope alternative.
+- **Do** file a missing or broken configured double-progression flow: post-workout suggestion, explanation/edit/acceptance, and accepted-target prefill are v2.2 scope. Legacy cycles, failure counters, and deloads remain excluded.
 - **Do not** file "CloudKit sync missing" — post-v1 per `CLAUDE.md §4`.
 
 If the human marks a finding `false_positive` because it's actually a banned-v1 item, the correct next-iter action is to add it to this exclusion list — not to try to justify it. The v1 scope fence is the source of truth.

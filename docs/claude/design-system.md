@@ -169,7 +169,7 @@ Two competing failure modes drift the codebase. **Both are equally bad.** This t
 | **Body content — colors** | DS `AppColor.<token>` only | `Color.black/.white/.gray/.primary/.secondary/.tertiary`, hex literals, `Color(red:green:blue:)` are banned in feature code. |
 | **Body content — spacing / radii** | DS `AppSpacing.*` / `AppRadius.*` only | `.padding(<int>)`, `.cornerRadius(<int>)`, hardcoded `RoundedRectangle(cornerRadius: <int>)` are banned. `Spacer(minLength: 0)` is fine — zero is a valid escape, not a token. |
 | **Body content — divider** | DS `AppDivider` only | Raw `Divider()` is banned in feature code. |
-| **Body content — tab bar** | DS `UnitTabBar` only | Native `UITabBar` chrome is banned on root screens. |
+| **Body content — tab bar** | Native SwiftUI `TabView` / `UITabBar` chrome | Root tabs defer to the system for selection, state preservation, Dynamic Type, and accessibility. Do not recreate a custom tab bar. |
 | **Body content — scroll-edge fade** | DS `appScrollEdgeSoft(top:bottom:)` only | Inline `LinearGradient` / `.mask` fades behind fixed bars are banned. |
 | **Body content — set count / weight tweaks** | DS `AppStepper` | Native `Stepper` is too small for the Gym Test (44pt floor). |
 

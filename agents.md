@@ -5,9 +5,9 @@ Quick orientation for AI agents working on the Unit codebase.
 
 ## What this project is
 
-Unit is a **zero-friction gym logging tool** for iOS. The primary program unit is the **Template** — a lightweight repeatable routine. The core UI paradigm is **Last time** — the app pre-fills weight and reps from the last session so the user can log a set with a single tap.
+Unit is a **zero-friction, progression-guided gym logging tool** for iOS. The primary program unit is the **Template** — a lightweight repeatable routine. The core UI paradigm is **Last time** — the app pre-fills weight and reps from the last session so the user can log a set with a single tap.
 
-The **Gym Test** applies: logging a set (weight, reps) in **under 3 seconds** under physical stress. `ProgressionEngine`, 8-week cycles, target-vs-actual UI, and weekly increment rules are **out of scope for v1** and have been removed from the codebase. See [`docs/claude/scope.md`](docs/claude/scope.md) for the full banned list.
+The **Gym Test** applies: logging a set (weight, reps) in **under 3 seconds** under physical stress. Version 2.1 adds one opt-in, post-workout double-progression suggestion while preserving the active logging UI. The old cycle/failure/deload `ProgressionEngine` remains removed. See [`docs/claude/scope.md`](docs/claude/scope.md) for the current boundary.
 
 ## Tech stack
 
@@ -41,7 +41,7 @@ The **Gym Test** applies: logging a set (weight, reps) in **under 3 seconds** un
 | `Unit/Features/History/` | `HistoryView` (single list), `SessionDetailView`, `ExerciseProgressView` |
 | `Unit/Features/Onboarding/` | Splash → import method → program-import → split-builder → exercises |
 | `Unit/Features/Settings/` | `SettingsView` (weight unit, restart onboarding) |
-| `Unit/Features/Subscription/` | `PaywallView` (one-time lifetime purchase, never gates core logging) |
+| `Unit/Features/Subscription/` | `PaywallView` / `StoreManager` (hard post-onboarding StoreKit gate; weekly, monthly, yearly, and optional lifetime access) |
 | `Unit/Features/ProgramLaunch/` | Quick-start support |
 | `Unit/UI/` | `DesignSystem.swift` — atoms, molecules, organisms, `AppScreen` template |
 | `Unit/Resources/Fonts/` | Geist + Geist Mono `.ttf` |
@@ -50,12 +50,12 @@ The **Gym Test** applies: logging a set (weight, reps) in **under 3 seconds** un
 
 - **Light mode only.** No `.preferredColorScheme(.dark)`, no dark-first decisions. Tokens may carry dark values for system compatibility, but visual review and screenshots happen in light mode.
 - **Portrait only.** No landscape support.
-- **Last time** is the primary pre-fill mechanism. Look up the last completed session for the same exercise (any template) and pre-fill weight + reps. Never display "0 kg" — bodyweight shows "BW", and unseen exercises show "No history yet".
+- **Prefill order:** an accepted progression target for the same routine and exercise takes precedence, then the latest valid completed session across templates, then explicit starting values saved with the current template/program, then the truly empty state. Only completed history is labelled **Last time**; planned values are **Starting target**. Never display "0 kg" — bodyweight shows "BW".
 - **Templates are the program unit.** Not cycles, not weeks, not engines.
 - **Adaptive appearance via tokens only.** Use `AppColor` / `AppFont` / `AppSpacing` / `AppRadius` / `AppIcon` from `Unit/UI/DesignSystem.swift`. No raw `Color(...)`, hex literals, `.font(.system(...))`, or hardcoded paddings/radii in feature code. The harness PreToolUse hook (`.claude/hooks/ui-banned-list.sh`) enforces this mechanically.
 - **Reuse > extend > create.** Before any new `struct X: View` / `ViewModifier` / variant, grep `DesignSystem.swift` and run the [`/component-reuse-check`](.claude/skills/component-reuse-check/) skill. Parallel implementations are the #1 drift in this codebase.
 - **HIG compliance:** all interactive elements ≥ 44×44pt; never color alone for meaning; honor `accessibilityReduceMotion`.
-- **No social features, no exercise discovery feed, no algorithmic progression in core flow.**
+- **No social features, no exercise discovery feed, or progression controls in the active logging flow.** Suggestions appear only after the exercise or workout and require acceptance.
 
 ## Conventions
 

@@ -1,0 +1,19 @@
+{
+  "resultBundle": "/private/tmp/UnitProgressionContract-aug03-final3.xcresult",
+  "simulator": {
+    "name": "Unit-Migration-QA2",
+    "model": "iPhone 17 Pro",
+    "os": "iOS 26.3.1",
+    "deviceId": "8F885C71-6B7F-465C-BA64-C0EFFD530424"
+  },
+  "screenshots": [
+    "01-active-ready-to-finish.png",
+    "02-increase-weight.png",
+    "03-increase-repetitions.png",
+    "04-repeat-target.png",
+    "05-unavailable-mixed-weight.png",
+    "06-accepted-targets-today.png",
+    "07-progression-configuration.png",
+    "08-accepted-target-next-workout.png"
+  ]
+}

@@ -8,18 +8,18 @@
 
 ## Vision
 
-A world where every lifter's training knowledge lives in a tool as fast and trusted as their own memory — not buried behind algorithms or social feeds.
+A world where every lifter's training knowledge lives in a tool as fast and trusted as their own memory — with clear next steps instead of opaque algorithms or social feeds.
 
 ## Mission
 
-Build the fastest, most trustworthy gym logging tool for intermediate-to-advanced athletes. Replace the paper notebook and the Notes app with something that respects the lifter's expertise, survives gym fatigue, and earns its place on the dock through daily utility.
+Build the fastest, most trustworthy progression-guided gym logger for beginner-to-experienced users. Replace the paper notebook and the Notes app with something that survives gym fatigue, makes the next step understandable, and earns its place on the dock through daily utility.
 
 ## Values
 
 | Value | What it means in practice |
 |-------|---------------------------|
 | **Speed over features** | Every design and engineering decision is judged by its impact on *seconds per set logged*. If a feature adds friction, it waits. |
-| **Athlete autonomy** | The lifter decides what to lift, when to progress, and how to structure their training. We show history, not instructions. |
+| **Athlete autonomy** | Unit may recommend the smallest next-session change, but the lifter accepts or edits it and keeps control of the program. |
 | **Invisible UI** | The best interaction is one the user doesn't notice. Last time pre-fill, haptic confirmation, auto-timers — the app anticipates, not interrogates. |
 | **Local trust** | Data lives on-device. No account required, no cloud dependency at v1. The app works in airplane mode, in a basement gym, always. |
 | **Honest simplicity** | No hype, no dark patterns, no social pressure. The voice is direct, the interface is quiet, the product earns attention through utility. |
@@ -28,11 +28,11 @@ Build the fastest, most trustworthy gym logging tool for intermediate-to-advance
 
 ## User segment
 
-**Primary:** Intermediate-to-advanced lifter (1–10+ years training) who already knows their program. They follow a structured routine — written by a coach, copied from a community, or self-designed — and need a tool to *execute and track*, not to be *told what to do*.
+**Primary:** Beginner-to-experienced gym user following a structured routine. They may choose one of Unit's ready-made programs or bring a routine from a coach, community, or their own notes. They need a tool to execute, track, and understand the smallest next step without surrendering control to a black box.
 
-**Defining behaviours:** Trains 3–6×/week. Currently uses a Notes app, paper notebook, or a tracker they've outgrown. Has abandoned at least one "smart" app because it was too slow, too rigid, or too noisy. Values speed and control over recommendations and community.
+**Defining behaviours:** Trains consistently or is trying to establish consistency. Values fast logging, a visible previous performance, and an understandable next target over feeds, dashboards, and opaque coaching.
 
-**Anti-persona:** The beginner who needs guidance on *what* to do. The social lifter who wants likes, leaderboards, or community feeds. These users may find value in Unit eventually, but v1 is not designed for them.
+**Anti-persona:** Someone seeking exercise-form instruction, adaptive recovery coaching, automatic program generation, or social competition. Unit supplies starter programs and progression guidance, not a full coaching service.
 
 ---
 
@@ -42,7 +42,7 @@ Build the fastest, most trustworthy gym logging tool for intermediate-to-advance
 |--------|----------------|
 | **North star** | **Fast, trustworthy logging under fatigue.** Success metric: *seconds per set logged*. We fill the "notebook gap" — faster than paper, smarter than Notes, zero complexity fatigue. Progression insight is a reward for logging, not a prerequisite. |
 | **Non-negotiables** | Gym Test (≤ 3s per set under stress) · Last time (pre-filled from last session) · Local-first · No social feed · One-tap "Done" (44×44 pt min) · Haptic confirmation · Auto rest timer with Lock Screen / Dynamic Island |
-| **MVP boundary** | **Log + template path ships v1.** Templates are lightweight repeatable routines, not bound to weeks or cycles. v1 ships two onboarding paths only: paste import and starter program library. `ProgressionEngine` stays deferred. Hard access gate after onboarding follows `docs/pricing.md`. |
+| **MVP boundary** | **Version 2.1 adds transparent double progression to the log + template path.** It is opt-in per routine/exercise, evaluated after the workout, and never changes a routine before acceptance. Cycles, deloads, readiness, RIR/RPE adaptation, and program generation stay out. Hard access gate after onboarding follows `docs/pricing.md`. |
 | **Voice** | Utility-first, direct, no hype. No competitor-framed copy. *"Faster than paper. Smarter than Notes. Your gym notebook, upgraded."* |
 
 ---
@@ -51,6 +51,8 @@ Build the fastest, most trustworthy gym logging tool for intermediate-to-advance
 
 | Date | Decision | Rationale | Supersedes |
 |------|----------|-----------|------------|
+| 2026-08-04 | **Progression, rename, and current reliability work ship together as 2.1** | Version 2.0 is live; no separate 2.2 release is required before testing the new promise. App Store identity becomes `Unit: Progressive Overload` / `Gym Workout Log & Tracker` only with the verified feature. | The 2026-08-03 `v2.2` release label; the feature boundary itself is unchanged |
+| 2026-08-03 | **Transparent progression-guided logger** | Unit may recommend the smallest next-session change while preserving the user’s program and final control. The active workout must still pass the three-second Gym Test. | Pure-logger positioning and the blanket progression ban |
 | 2026-03-26 | **Primary promise is zero-friction logging**, not auto-adjusting coach | "Complexity fatigue" + "notebook gap" research: intermediate+ lifters default to Notes apps. Open space = Zero-Friction Execution Engine. | "Adaptive Periodization Engine" narrative |
 | 2026-03-26 | **8-week cycles demoted** to optional layer | Rigid scheduling frustrates users who miss days. Templates replace cycles as primary program unit. | "8-week cycle as main container" |
 | 2026-03-26 | **Algorithmic overload rules removed from v1** | Auto-suggestions feel like a black box to veterans. History-as-guide via ghost values instead. | Engine rules (hit→increment, miss→repeat, 3 misses→deload) |
@@ -68,8 +70,8 @@ Build the fastest, most trustworthy gym logging tool for intermediate-to-advance
 
 ## Open questions
 
-- **Progression Engine resurrection:** When does auto-adjustment return? Opt-in "Coach mode"? v2 headline? Permanently shelved?
-- **Data model migration:** Cycle → Week → Day schema needs to support unbound templates without breaking existing data.
+- **Bodyweight progression:** External-load rules remain out of scope until a separate product decision.
+- **Progression expansion:** Validate opt-in double progression before considering any additional algorithm or bodyweight rule.
 
 ---
 

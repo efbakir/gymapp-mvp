@@ -14,7 +14,7 @@ Short summary of concepts from **Designing for Behavior Change** (Stephen Wendel
 ## 2. Motivation, ability, and prompts (MAP / Fogg)
 
 - **Idea**: Behavior happens when **motivation** and **ability** are sufficient, and a **prompt** (trigger) occurs. Increase ability (make it easy) and align prompts with context.
-- **Unit**: Motivation = “I want to track my program” and “I’m someone who logs” (identity). Ability = high (defaults, one-tap, no required RPE). Prompts = “Start workout” on open, “Next set” after rest, “Complete set” on each row. We don’t rely on raising motivation; we lower the bar (ability) and make prompts obvious.
+- **Unit**: Motivation = “I want to track my program” and “I’m someone who logs” (identity). Ability = high (last-time or accepted-target defaults and one-tap Done). Prompts = “Start workout” on open and “Done” on each set row. We don’t rely on raising motivation; we lower the bar (ability) and make prompts obvious.
 
 ---
 
@@ -28,14 +28,14 @@ Short summary of concepts from **Designing for Behavior Change** (Stephen Wendel
 ## 4. Reducing friction and cognitive load
 
 - **Idea**: Friction (steps, fields, decisions) reduces the likelihood of the behavior. Under physical stress (post-set), cognitive load is high—minimize it.
-- **Unit**: Gym Test is the design constraint. Defaults (last weight/reps/RPE), one primary CTA (“Complete set”), optional RPE, rest timer on Lock Screen. No multi-step set entry. Every tap should have a clear purpose.
+- **Unit**: Gym Test is the design constraint. Defaults use last weight/reps or an explicitly accepted target, the set row has one primary Done action, and the rest timer remains available on the Lock Screen. No multi-step set entry or progression interruption. Every tap should have a clear purpose.
 
 ---
 
 ## 5. Feedback and reinforcement
 
 - **Idea**: Immediate, clear feedback reinforces the behavior and confirms success.
-- **Unit**: After “Complete set,” show clear success (e.g. checkmark, row marked done). Session end: “Workout complete.” History shows past sessions so progress is visible. Feedback is immediate and unambiguous.
+- **Unit**: After “Done,” show clear success (e.g. checkmark, row marked done). Session end: “Workout complete.” History shows past sessions so progress is visible. Feedback is immediate and unambiguous.
 
 ---
 

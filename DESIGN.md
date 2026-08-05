@@ -120,7 +120,7 @@ components:
   stepper:
     backgroundColor: "{colors.pumice}"
     textColor: "{colors.ink}"
-    typography: "{typography.label}"
+    typography: "{typography.body}"
     rounded: "{rounded.md}"
     padding: "4px 8px"
     height: "44px"
@@ -258,7 +258,7 @@ Elements nested inside a card use `AppColor.cardRowFill` (Milk `#F5F5F5`) + `App
 
 ### Steppers
 
-`AppStepper`: Pumice background, `AppRadius.md` (14px) capsule, 44×44pt minimum tap targets on each ± button, value text in Label weight with monospaced digits. The fundamental "tweak a number" affordance for weight and rep adjustment.
+`AppStepper`: Pumice background, `AppRadius.md` (14px) capsule, 44×44pt minimum tap targets on each ± button. Compact values use Body (17px medium) with monospaced digits; prominent workout values retain Numeric Display. The fundamental "tweak a number" affordance for weight and rep adjustment.
 
 ### Dividers
 
@@ -267,7 +267,7 @@ Elements nested inside a card use `AppColor.cardRowFill` (Milk `#F5F5F5`) + `App
 ### Navigation
 
 - **`ProductTopBar`:** 64pt tall, Title typography (24px semibold rounded, tracking -0.3), title in Ash (secondary text), 16pt spacing between leading/title/trailing slots. Sizes: `.md` and `.large`.
-- **`UnitTabBar`:** custom tab bar; active tab gets a Pumice fill, inactive tabs are clear. Native `UITabBar` chrome is forbidden on root screens.
+- **Root tab bar:** native SwiftUI `TabView` / `UITabBar` chrome. Today and Programs keep their navigation state, system selection feedback, Dynamic Type, and accessibility behavior. Do not recreate a custom tab bar.
 - **Toolbar buttons:** defer to iOS-native chrome. **`.weight()` modifiers on `ToolbarItem` buttons are banned** — they fight the system styling.
 
 ### Signature: The Workout Command Card

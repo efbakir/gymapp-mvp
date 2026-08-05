@@ -7,13 +7,13 @@
 
 ## The problem we noticed
 
-There's a lifter — let's call them the veteran — who trains 4–5 times a week, has for years, and knows exactly what they're doing today. They have a program. They know their numbers. They don't need an app to tell them what to lift.
+There is a gym user with a program but no clear, low-friction way to follow it. They may be experienced and bring their own routine, or they may be starting with one of Unit's ready-made programs. In both cases, they need to see what happened last time and understand one clear next step.
 
-And yet, their "tracker" is a Notes file. Or a scrap of paper. Or nothing at all — just memory.
+Their tracker is often a Notes file, a scrap of paper, or nothing at all — just memory.
 
-Why? Because every serious gym app they've tried makes the same mistake: it assumes the lifter needs coaching, structure, or community more than they need speed. These apps are slower than the notebook they replaced. Dropdown menus. Mandatory onboarding wizards. Rigid 8-week plans that break the moment you skip a Tuesday. Social feeds that have nothing to do with the bar in front of you.
+Why? Many gym apps confuse more functionality with more usefulness. They become slower than the notebook they replace: dropdown menus, rigid cycles, opaque coaching, and social feeds that have nothing to do with the set in front of you.
 
-The veteran doesn't need more features. They need fewer taps.
+The user does not need more interface. They need fewer taps and a clearer next target.
 
 ---
 
@@ -21,7 +21,7 @@ The veteran doesn't need more features. They need fewer taps.
 
 **The gym is a hostile environment for software.** You're fatigued. Your hands are chalked or sweaty. You have 90 seconds of rest and your phone is balanced on a bench. If logging a set takes more than 3 seconds, the app has failed. This is our Gym Test — every feature must pass it.
 
-**History is a better coach than an algorithm.** Show the lifter what they did last time. Let them decide whether today is a day to push or a day to hold. RPE, sleep, stress — these variables are invisible to software but obvious to the athlete. We trust the lifter.
+**A transparent calculation beats a black box.** Show the lifter what they did last time, then offer the smallest clear next-session change when their configured rep range supports it. The lifter can accept, edit, or ignore the suggestion.
 
 **Templates, not plans.** A program is a collection of routines you repeat. It doesn't need to be an 8-week periodisation cycle with auto-increment rules and failure modes. "Push Day A" is enough. Pick it, do it, log it.
 
@@ -35,17 +35,17 @@ The veteran doesn't need more features. They need fewer taps.
 
 A gym logging tool that fills the gap between a paper notebook and a bloated tracker app. I call it the "notebook gap."
 
-Unit is for the lifter who already knows their program and wants a tool that executes at the speed of thought. One tap to start. One tap per set. Last time's weight and reps handle the rest.
+Unit is for the gym user who wants a simple structured program, fast execution, and a transparent next target. Choose a ready-made program or bring your own. One tap to start. One tap per set. Last time's weight and reps handle the rest.
 
 ---
 
 ## What Unit is not
 
-Unit is not an AI coach. It doesn't generate workouts or adjust your program. The Progression Engine exists in the codebase as a future possibility, but v1 ships without it. The algorithm's job is to stay silent until the lifter asks for it.
+Unit is not an AI coach. It does not generate workouts, infer recovery, or rewrite a program. Version 2.1 offers one opt-in double-progression suggestion after training and changes the routine only after the lifter accepts or edits it.
 
 Unit is not a social platform. There is no feed, no profile, no likes, no leaderboard. Training is personal.
 
-Unit is not for beginners — yet. A lifter who doesn't know what exercises to do today will find Unit unhelpful. That's a deliberate scope choice, not a permanent one.
+Unit is not an exercise-instruction or adaptive coaching product. Ready-made programs help beginners start, but Unit does not teach technique, evaluate recovery, or generate a personalized plan.
 
 Everything flows from it. If a design adds a tap, it needs to justify that tap against the logging speed budget. If a feature is cool but slows the core loop, it waits.
 
@@ -53,13 +53,9 @@ Secondary metrics we track: taps to start a workout, template creation time, ses
 
 ---
 
-## Where the engine fits
+## Where progression fits
 
-The Progression Engine — auto-increment on success, repeat on failure, deload on three consecutive misses — was Unit's original differentiator. It's elegant. It's useful. And it's not in v1.
-
-The pivot is not a rejection of the engine. It's a sequencing decision. You can't sell a smart coach if the logging experience underneath it is slower than a Notes file. Nail the logging. Earn the right to add intelligence on top.
-
-The engine returns when: (a) v1 logging speed is validated as best-in-class, (b) user research confirms demand for auto-progression, and (c) it can be added without slowing the core loop.
+The old Progression Engine — cycles, failure counters, and deload automation — stays retired. Version 2.1 implements only double progression: complete every configured working set at one load, then either add a rep or move to the next weight. The result appears after the workout, explains itself, and remains a proposal until accepted.
 
 ---
 
@@ -67,6 +63,6 @@ The engine returns when: (a) v1 logging speed is validated as best-in-class, (b)
 
 Direct. Honest. No hype.
 
-We don't say "revolutionary." We say "one tap." We don't say "AI-powered." We say "shows what you did last time." We don't compare ourselves to competitors on the marketing site. We describe what Unit does, and let the lifter decide.
+Unit does not say "revolutionary." It says "one tap." Unit does not say "AI-powered." It says "shows what you did last time." Product copy describes what Unit does and lets the user decide.
 
 The app's personality is the quiet training partner who racks your plates and doesn't talk during your set.

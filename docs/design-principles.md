@@ -22,7 +22,7 @@ Principles that support “good design” and **always the one wins with the bes
 
 ## 3. Speed (Gym Test)
 
-- **What**: Log a set in **under 3 seconds**—the “Gym Test.” Defaults (last weight/reps), big tap targets, optional RPE, minimal steps.
+- **What**: Log a set in **under 3 seconds**—the “Gym Test.” Defaults (last weight/reps or an accepted target), big tap targets, and minimal steps.
 - **Why**: Users are out of breath or under load; friction kills consistency.
 - **Apply**: Pre-fill next set from previous. One-tap “same as last set” where useful. Primary CTA = complete set. Rest timer visible without leaving the screen (and on Lock Screen via Live Activity).
 
@@ -46,7 +46,7 @@ Principles that support “good design” and **always the one wins with the bes
 
 ## 6. Atomic tokens & shared UI
 
-- **What**: New and refactored UI uses the **atomic design system** — tokens (`AppColor`, `AppFont`, `AppSpacing`, `AppRadius`, `AppIcon`) in `Unit/UI/Atoms/AppAtoms.swift`, composed into molecules, organisms, and the `AppScreen` template. See `atomic-design-system.md`.
+- **What**: New and refactored UI uses the **atomic design system** — tokens (`AppColor`, `AppFont`, `AppSpacing`, `AppRadius`, `AppIcon`) in `Unit/UI/DesignSystem.swift`, composed into molecules, organisms, and the `AppScreen` template. See `atomic-design-system.md`.
 - **Why**: Fewer one-off styles means faster iteration, fewer bugs, and screens that stay readable under stress (Gym Test).
 - **Apply**: Don’t add raw spacing, ad-hoc colors, or duplicate nav/card chrome in feature views when an atom or shared component already exists. Extend the atom or add a molecule/organism, then use it.
 
@@ -56,11 +56,11 @@ Principles that support “good design” and **always the one wins with the bes
 
 | Principle | One-line |
 |-----------|----------|
-| Minimalism | Only what’s needed to log, track, and run a cycle. |
-| Clarity | Obvious purpose, controls, and state — including Target vs. Actual. |
-| Speed | Gym Test: log a set with RIR in under 3 seconds. |
+| Minimalism | Only what’s needed to log, track, and repeat a template. |
+| Clarity | Obvious purpose, controls, and state; progression appears only after the workout. |
+| Speed | Gym Test: log a set in under 3 seconds. |
 | Consistency | Same patterns and tokens everywhere. |
 | Accessibility | HIG-compliant: 44pt targets, 4.5:1 contrast, VoiceOver, Reduce Motion. |
-| Atomic tokens | Use `AppAtoms` + `Unit/UI` layers; document changes in `atomic-design-system.md`. |
+| Atomic tokens | Use `DesignSystem.swift` + `Unit/UI` layers; document changes in `atomic-design-system.md`. |
 
 Every design decision should be checked against these; when in doubt, favor **speed** and **minimalism** for the active workout experience.

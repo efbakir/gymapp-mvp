@@ -1,0 +1,122 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F640319F-BF9B-425C-A3BC-EB201E6855EF",
+        "deviceName" : "iPhone SE (3rd gen) QA",
+        "exportedFileName" : "808FCF58-2BEF-43A0-B480-983C008633D0.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "App UI hierarchy for app_0_F088260B-912E-4794-B717-DDE448851CF8.unitlift",
+        "timestamp" : 1785842431.395
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F640319F-BF9B-425C-A3BC-EB201E6855EF",
+        "deviceName" : "iPhone SE (3rd gen) QA",
+        "exportedFileName" : "03FD0F2B-CB03-4142-8025-0D1C3BE40967",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "UI Snapshot 2026-08-04 at 02.20.31 PM",
+        "timestamp" : 1785842431.395
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F640319F-BF9B-425C-A3BC-EB201E6855EF",
+        "deviceName" : "iPhone SE (3rd gen) QA",
+        "exportedFileName" : "E056C6AD-D846-4E03-BC66-106EF21BB298.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Debug description for `\"paywall-feature-row-0\" Any`_0_BADD6F67-8CDD-48DC-8726-56557D9C1B0A.txt",
+        "timestamp" : 1785842431.317
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F640319F-BF9B-425C-A3BC-EB201E6855EF",
+        "deviceName" : "iPhone SE (3rd gen) QA",
+        "exportedFileName" : "996BE925-69C8-470D-8829-4E0058212108.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Debug description for `\"paywall-feature-row-0\" Any`_0_7E0B7F16-B4D4-41A5-9882-9FC50A9E479D.txt",
+        "timestamp" : 1785842430.347
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F640319F-BF9B-425C-A3BC-EB201E6855EF",
+        "deviceName" : "iPhone SE (3rd gen) QA",
+        "exportedFileName" : "A1714968-B1E6-4D47-9AED-37E91D117185.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Debug description for `\"paywall-feature-row-0\" Any`_0_678B8605-AF60-41B7-A3B8-854CC03AA943.txt",
+        "timestamp" : 1785842429.362
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F640319F-BF9B-425C-A3BC-EB201E6855EF",
+        "deviceName" : "iPhone SE (3rd gen) QA",
+        "exportedFileName" : "7D4143CA-0FEF-4D78-9D14-AACBD9B03884.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Debug description for `\"paywall-feature-row-0\" Any`_0_AB0FE3A8-81E4-4315-938C-090F36EDD91D.txt",
+        "timestamp" : 1785842428.881
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F640319F-BF9B-425C-A3BC-EB201E6855EF",
+        "deviceName" : "iPhone SE (3rd gen) QA",
+        "exportedFileName" : "8013783C-D8BB-40EB-8980-4D40C7CC6D43.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Debug description for `\"paywall-feature-row-0\" Any`_0_9309BD00-5E8A-4B81-B33A-7B1C066C0B3F.txt",
+        "timestamp" : 1785842427.392
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F640319F-BF9B-425C-A3BC-EB201E6855EF",
+        "deviceName" : "iPhone SE (3rd gen) QA",
+        "exportedFileName" : "C684E377-BD4A-4060-9645-0B50640F14FF.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Debug description for `\"paywall-feature-row-0\" Any`_0_34FEA102-1FE3-4B94-A2D7-D0A22738EA9A.txt",
+        "timestamp" : 1785842426.313
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F640319F-BF9B-425C-A3BC-EB201E6855EF",
+        "deviceName" : "iPhone SE (3rd gen) QA",
+        "exportedFileName" : "DDDA514B-FD91-45B1-B494-32B667690D03.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Debug description for `\"paywall-feature-row-0\" Any`_0_B398618E-C5DA-41D3-8873-C783143C6651.txt",
+        "timestamp" : 1785842425.35
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F640319F-BF9B-425C-A3BC-EB201E6855EF",
+        "deviceName" : "iPhone SE (3rd gen) QA",
+        "exportedFileName" : "452986CC-CB8C-42EC-BEEB-407CFD7A5E9A.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Debug description for `\"paywall-feature-row-0\" Any`_0_6F117C4E-4F28-431D-8099-21081F0098FF.txt",
+        "timestamp" : 1785842424.346
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F640319F-BF9B-425C-A3BC-EB201E6855EF",
+        "deviceName" : "iPhone SE (3rd gen) QA",
+        "exportedFileName" : "AEBDBFE8-F005-4BD7-885C-3A57EC70C7EA.mp4",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Screen Recording 2026-08-04 at 02.20.16 PM.mp4",
+        "timestamp" : 1785842416.802
+      }
+    ],
+    "testIdentifier" : "OnboardingPaywallFlowUITests/testFeatureTableFitsCompactAndAccessibilityMediumLayouts()",
+    "testIdentifierURL" : "test://com.apple.xcode/Unit/UnitUITests/OnboardingPaywallFlowUITests/testFeatureTableFitsCompactAndAccessibilityMediumLayouts"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F640319F-BF9B-425C-A3BC-EB201E6855EF",
+        "deviceName" : "iPhone SE (3rd gen) QA",
+        "exportedFileName" : "BA862109-1606-4312-9BB3-33840048CB1F.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "04-ineligible-standard-paywall_0_EA2631FD-E0DF-4E75-B303-0BB28FC0A23E.png",
+        "timestamp" : 1785842436.712
+      }
+    ],
+    "testIdentifier" : "OnboardingPaywallFlowUITests/testIneligibleCustomerGetsStandardWeeklyPaywall()",
+    "testIdentifierURL" : "test://com.apple.xcode/Unit/UnitUITests/OnboardingPaywallFlowUITests/testIneligibleCustomerGetsStandardWeeklyPaywall"
+  }
+]

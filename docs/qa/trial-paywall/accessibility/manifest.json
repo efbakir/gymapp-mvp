@@ -1,0 +1,26 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F640319F-BF9B-425C-A3BC-EB201E6855EF",
+        "deviceName" : "iPhone SE (3rd gen) QA",
+        "exportedFileName" : "AB2F1453-6A78-41E3-B22A-25B9DE01FE20.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "06-feature-table-accessibility-medium_0_8675A5DE-3FDA-4C14-9C0F-4D37A179C6A2.png",
+        "timestamp" : 1785842980.466
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F640319F-BF9B-425C-A3BC-EB201E6855EF",
+        "deviceName" : "iPhone SE (3rd gen) QA",
+        "exportedFileName" : "153B3645-EE49-4332-86B1-67FE5BA42F66.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "05-feature-table-iphone-se_0_63DBCDFC-0903-4161-831D-1A54640B1A03.png",
+        "timestamp" : 1785842969.881
+      }
+    ],
+    "testIdentifier" : "OnboardingPaywallFlowUITests/testFeatureTableFitsCompactAndAccessibilityMediumLayouts()",
+    "testIdentifierURL" : "test://com.apple.xcode/Unit/UnitUITests/OnboardingPaywallFlowUITests/testFeatureTableFitsCompactAndAccessibilityMediumLayouts"
+  }
+]

@@ -104,9 +104,9 @@ Patterns we rely on:
 
 ## 8. Root shell
 
-- **Tabs**: Root navigation uses `UnitTabBar`, not native UITabBar visuals.
-- **Active state**: Active tab gets a filled muted surface; inactive tabs remain clear and legible.
-- **Behavior**: Keep `TabView` for state and navigation preservation; custom tab bar owns appearance.
+- **Tabs**: Root navigation uses native SwiftUI `TabView` / `UITabBar` chrome.
+- **Active state**: Use the system-selected state with Unit's single accent; do not draw a second selection treatment.
+- **Behavior**: Let `TabView` own state preservation, touch feedback, Dynamic Type, and accessibility. Do not recreate a custom tab bar.
 
 ---
 
@@ -115,7 +115,7 @@ Patterns we rely on:
 - No gratuitous gradients, glows, or decorative illustration in core flows
 - No shadows or “elevated” card illusions — rely on surface/background contrast and borders
 - No unbounded one-off components in page files — extend atoms/molecules/organisms first
-- No native UITabBar chrome on root screens
+- No custom replacement for native root-tab chrome
 - No floating text-only header actions without a clear tap container
 - No spreadsheet-style logging layouts with parallel target/actual tables on critical set-entry screens
 - No premature “Next exercise” CTA while the current exercise still owns the primary action

@@ -1,6 +1,6 @@
-# Unit — Goals
+# Unit — Goals for version 2.1
 
-> Measurable targets for v1. Source of truth: `product-compass.md`.
+> Measurable targets for version 2.1. Source of truth: `product-compass.md`.
 
 ---
 
@@ -16,7 +16,8 @@
 |------|--------|----------------|
 | **Gym Test** | Log a set in ≤ 3 seconds under physical stress | Manual QA: one-handed, sweaty-finger simulation on device |
 | **Taps to start** | ≤ 2 taps from app launch to first set logged | Count: open → tap Start → tap Done |
-| **Last-time hit rate** | > 90% of sets logged without keyboard | Analytics: % of sets where weight and reps match the last-time pre-fill exactly |
+| **No-keyboard hit rate** | > 90% of sets logged without keyboard | Analytics: % of sets where weight and reps match an accepted target or Last time pre-fill exactly |
+| **Progression trust** | 100% of accepted targets are explicit and idempotent | Test + manual QA: dismiss changes nothing; accepting twice never compounds |
 | **Template creation** | < 2 minutes for either path (paste import, starter library) | Manual QA: time each onboarding flow end-to-end |
 | **Session completion** | > 80% of started sessions reach "Finish" | Analytics: started vs finished sessions |
 | **App launch to interactive** | < 500ms | Instruments profiling on baseline device |
@@ -33,7 +34,7 @@
 
 ---
 
-## v1 scope boundaries
+## v2.1 scope boundaries
 
 **Ships:**
 - Template-based logging with Last time pre-fill
@@ -44,9 +45,12 @@
 - Haptic confirmation on set logged
 - PR detection and notification
 - Current access model follows `docs/pricing.md`: onboarding is free; post-onboarding app access is gated
+- Opt-in double progression per routine/exercise
+- Post-workout next-target suggestions with explanation, edit, and explicit acceptance
+- Accepted-target prefill before the global Last time fallback
 
 **Does not ship:**
-- ProgressionEngine (auto-increment, fail modes, deload)
+- Legacy ProgressionEngine behavior (cycles, fail modes, deloads, periodisation)
 - CloudKit sync
 - Social features (feed, profiles, sharing)
 - Exercise discovery / recommendation

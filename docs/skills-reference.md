@@ -27,8 +27,8 @@ The [awesome-openclaw-skills](https://github.com/VoltAgent/awesome-openclaw-skil
 | **hevy** | Hevy’s workout data model and API. Reinforces our schema (workouts, exercises, sets) and ideas for defaults/history. |
 | **workout** (workout-cli) | Track workouts, log sets, manage exercises and templates. Close to our domain; reinforces template + set logging. |
 | **workout-logger** | Log workouts, progress, suggestions. Ideas for progress display and session completion. |
-| **ranked-gym** | Gamification (XP, levels). We stay minimal; reference for “what to avoid” or future light engagement (e.g. streaks only). |
-| **muscle-gain** | Weight progression, protein tracking. We focus on set logging; progression can be a future feature. |
+| **ranked-gym** | Gamification (XP, levels). Reference only for what to avoid; streaks and achievement systems are outside the current product. |
+| **muscle-gain** | Weight progression and protein tracking. Compare only the clarity of its next-step mechanism; Unit ships one transparent, opt-in double-progression rule and no nutrition tracking. |
 | **strava** | Activity and stats. Reference for history/analytics presentation, not for social. |
 
 ---

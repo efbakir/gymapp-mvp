@@ -59,7 +59,21 @@ Use `xcrun simctl` deep-link if available, or describe the manual nav path the u
 xcrun simctl io booted screenshot ~/Desktop/unit-verify-$(date +%Y%m%d-%H%M%S).png
 ```
 
-### 5. Read the screenshot
+### 5. Compare distinct states mechanically
+
+When two or more states should render differently, capture each one and compare
+the files before judging polish:
+
+```bash
+shasum -a 256 state-a.png state-b.png
+cmp -s state-a.png state-b.png
+```
+
+If `cmp` exits successfully, the images are byte-identical. Treat that as a
+failed hard gate: one state is broken, stale, or never rendered. Do not continue
+to a passing verdict until the states differ for the intended reason.
+
+### 6. Read the screenshot
 Open the screenshot. Describe what you observe in plain English, claim by claim:
 
 > "From the visual evidence, I observe: section headers in TodayView now read in regular weight, matching `AppFont.sectionTitle`. Spacing above the rest timer pill measures roughly 16pt. The orange #FF4400 accent is gone."
@@ -68,12 +82,17 @@ If a claim is NOT visible in the screenshot, state that clearly:
 
 > "I cannot confirm the toolbar button weight change from this screenshot — the toolbar is occluded by the sheet. Need a second screenshot with the sheet dismissed."
 
-### 6. Sibling-screen regression check (for atom/molecule fixes)
+Record every applicable hard gate from
+`docs/qa/design-evaluation/rubric.md` as PASS, FAIL, or UNVERIFIED. A screenshot
+alone does not prove target size, contrast, reduced motion, or the Gym Test;
+measure or exercise those claims before passing them.
+
+### 7. Sibling-screen regression check (for atom/molecule fixes)
 If the change was at the atom or molecule layer (per `/page-audit` fix-level), screenshot at least 2 sibling screens that use the same atom/molecule. Confirm no regression.
 
 Example: a change to `AppCard` shadow → screenshot TodayView, HistoryView, and TemplatesView (all use AppCard). If any look wrong, the fix is not done — it created a regression.
 
-### 7. Compare against the named reference (if applicable)
+### 8. Compare against the named reference (if applicable)
 If `/page-audit` named a reference from `docs/references/`, open both side by side. Note where the implementation matches the reference and where it diverges. Divergence is fine if intentional — say so.
 
 ## Output format
@@ -99,6 +118,14 @@ If `/page-audit` named a reference from `docs/references/`, open both side by si
 | Screen | Screenshot | Atom/molecule under test | Looks correct? |
 |---|---|---|---|
 
+### Hard gates
+| Gate | PASS / FAIL / UNVERIFIED | Evidence |
+|---|---|---|
+
+### State-difference check
+| State pair | SHA-256 | Byte-identical? | Verdict |
+|---|---|---|---|
+
 ### Reference comparison (if applicable)
 - Match: [what aligns]
 - Divergence: [what differs and whether intentional]
@@ -116,6 +143,8 @@ If `/page-audit` named a reference from `docs/references/`, open both side by si
 - **Never describe what you "expect to see"** — only what is *actually* in the screenshot.
 - **If the simulator is not booted or the build failed**, the answer is NOT VERIFIED. Do not work around it.
 - **One screenshot per claim minimum.** Don't aggregate multiple claims into one screenshot unless they're all visible at once.
+- **Never pass a state-difference gate without comparing the captured files.**
+- **Any failed or unverified applicable hard gate prevents an official passing scorecard.**
 - **The conclusion must be one of the three labels above.** No fourth option, no "probably verified", no "looks good".
 
 ## Why this works

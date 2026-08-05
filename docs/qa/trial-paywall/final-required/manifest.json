@@ -1,0 +1,50 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F640319F-BF9B-425C-A3BC-EB201E6855EF",
+        "deviceName" : "iPhone SE (3rd gen) QA",
+        "exportedFileName" : "E17CC6B6-184A-4E07-B274-742C043089D3.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "03-weekly-selected-no-trial_0_12967EBE-27B4-4F28-860A-B58CF08040F1.png",
+        "timestamp" : 1785843167.79
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F640319F-BF9B-425C-A3BC-EB201E6855EF",
+        "deviceName" : "iPhone SE (3rd gen) QA",
+        "exportedFileName" : "137029F9-B836-4445-A9FE-C0630B9E0C2E.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "02-eligible-yearly-trial-paywall_0_42FFD6E1-0795-4EDA-9225-D1D9B2E521FC.png",
+        "timestamp" : 1785843165.179
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F640319F-BF9B-425C-A3BC-EB201E6855EF",
+        "deviceName" : "iPhone SE (3rd gen) QA",
+        "exportedFileName" : "EBC31D07-A581-41EE-8B35-B3476268BBF3.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "01-eligible-monthly-trial-paywall_0_F4D05F99-66E7-4A74-8052-07C48FF11490.png",
+        "timestamp" : 1785843159.783
+      }
+    ],
+    "testIdentifier" : "OnboardingPaywallFlowUITests/testEligibleMonthlyYearlyAndWeeklyPaywallStates()",
+    "testIdentifierURL" : "test://com.apple.xcode/Unit/UnitUITests/OnboardingPaywallFlowUITests/testEligibleMonthlyYearlyAndWeeklyPaywallStates"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F640319F-BF9B-425C-A3BC-EB201E6855EF",
+        "deviceName" : "iPhone SE (3rd gen) QA",
+        "exportedFileName" : "13D45D62-7721-4145-B220-AC3C0F7483E0.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "07-successful-purchase-today_0_05A9F481-FA24-46DC-84E6-15AEEE28A1B1.png",
+        "timestamp" : 1785843179.33
+      }
+    ],
+    "testIdentifier" : "OnboardingPaywallFlowUITests/testOfflineRelaunchKeepsLastVerifiedAccess()",
+    "testIdentifierURL" : "test://com.apple.xcode/Unit/UnitUITests/OnboardingPaywallFlowUITests/testOfflineRelaunchKeepsLastVerifiedAccess"
+  }
+]

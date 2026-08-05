@@ -62,7 +62,7 @@ You want a subscription experiment: **$9/mo, $49/yr, $30/yr win-back.** Good ins
   - Custom app icons (4-6 variants)
   - Custom template accent colors
   - "Founding supporter" in-app badge
-  - **Commitment**: every future v2 feature (Apple Watch companion, ProgressionEngine opt-in, cloud backup) ships inside Pro. No second paywall ever.
+  - **Commitment**: future expansion beyond v2.1's transparent progression MVP (Apple Watch companion, cloud backup) ships inside Pro. No second paywall ever.
 
 ### Infrastructure decision: use RevenueCat, not raw StoreKit 2
 
@@ -214,7 +214,7 @@ Turn Pro on when: **≥30 users have logged 3+ sessions per week for 2 consecuti
 
 - Don't rebuild onboarding. It ships.
 - Don't widen the ICP to "everyone who wants to get in shape." It kills your positioning.
-- Don't add social / AI coach / ProgressionEngine to "look competitive." Your compass is your moat.
+- Don't add social, an AI coach, or opaque cycle/deload automation to "look competitive." Keep progression opt-in, minimal, and transparent.
 - Don't buy ads. Not this year.
 - Don't build Android, Apple Watch, iPad, or Mac until 1,000+ active iPhone users.
 - Don't hire, don't co-found, don't take investment. A $49.99/yr app with a solo dev is a beautiful business.

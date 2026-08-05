@@ -1,8 +1,8 @@
 # Unit
 
-**A zero-friction gym logger for athletes who already know how to train.**
+**A zero-friction, progression-guided gym logger.**
 
-Unit replaces the paper notebook and the Notes app with a tool that survives gym fatigue and earns its place on the dock through daily utility. The core paradigm is **Last time** — last session's weight and reps are pre-filled, and one tap confirms a set. The primary program unit is the **Template**, not 8-week cycles, not periodisation engines, not weekly increment rules.
+Unit lets beginner-to-experienced gym users choose a ready-made program or bring their own, then replaces the paper notebook and Notes app with a tool that survives gym fatigue. **Last time** pre-fills the previous weight and reps; one tap confirms a set. After training, optional transparent double progression suggests one next target without taking control of the program.
 
 Authoritative product / design docs:
 
@@ -51,18 +51,18 @@ docs/                        — Product, design, references, claude/ intent spi
 
 ## Data model (SwiftData)
 
-- **DayTemplate** — id, name, splitId, orderedExerciseIds, plannedSetsByExerciseId, plannedRepsByExerciseId, lastPerformedDate
+- **DayTemplate** — id, name, splitId, orderedExerciseIds, planned targets, optional JSON-backed per-exercise progression state, lastPerformedDate
 - **Exercise** — id, displayName, aliases, notes, isBodyweight
 - **WorkoutSession** — id, date, templateId, isCompleted
 - **SetEntry** — id, sessionId, exerciseId, weight, reps, rpe, isWarmup, isCompleted, setIndex
 
-**Rule:** Last-time values are computed at read-time from the most recent completed `SetEntry` for the same exercise (any template). They are never persisted.
+**Rule:** Last-time values are computed at read-time from the most recent completed `SetEntry` for the same exercise (any template). An explicitly accepted progression target is persisted per routine/exercise and takes precedence for the next matching workout.
 
 ## Out of v1 scope
 
 The following were intentionally cut or deferred — see [`docs/claude/scope.md`](docs/claude/scope.md) for the full list:
 
-- `ProgressionEngine`, auto-increment, deload rules → deferred post-v1
+- Legacy cycle/failure/deload progression logic → excluded; v2.1 ships only opt-in, transparent double progression after a workout
 - 8-week cycles, `Cycle`, `WeekDetailView`, "Week N of M" → templates replace cycles
 - Target-vs-actual weight columns → last-time pre-fill only
 - Plate calculator, social / feeds / sharing, exercise discovery → not for this product

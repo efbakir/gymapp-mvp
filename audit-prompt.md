@@ -25,7 +25,7 @@ Scan every `.swift` file under the project source directory (this repo currently
 ### Compass alignment
 
 - [ ] Any UI that references "cycle", "week of", "week N of 8", or "weekly increase" as a required/prominent concept (should be demoted per `docs/product-compass.md` decision log 2026-03-26)
-- [ ] Any active `ProgressionEngine` concepts surfaced in UI (should be deferred per compass + `docs/AGENTS.md`). Note: `Unit/Engine/`, `Cycle.swift`, `ProgressionRule*.swift`, and `Unit/Features/Cycles/` were deleted from the repo — flag any reintroduction.
+- [ ] Any legacy cycle/failure/deload progression concepts surfaced in UI. The one allowed algorithm is `DoubleProgressionEngine`: opt-in per routine/exercise, post-workout only, transparent, editable, and inert until accepted. `Cycle.swift`, `ProgressionRule*.swift`, and `Unit/Features/Cycles/` remain deleted — flag their reintroduction.
 - [ ] Any "Day N ·" prefixes that imply rigid day numbering (should use template/routine names only)
 - [ ] Any social features, sharing, or community code (explicitly out of scope)
 
@@ -167,4 +167,3 @@ Create `audit-report.md` with this structure:
 ```
 
 Be thorough. Be specific. Reference file paths, line numbers, and exact rule names from the source documents. The goal is a report the user can wake up to and immediately start fixing things.
-

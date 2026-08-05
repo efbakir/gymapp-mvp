@@ -41,11 +41,19 @@ Three skills enforce the rest of the gatekeeper checklist where a hook can't:
 
 | Skill | When to invoke | Replaces |
 |---|---|---|
-| `/page-audit` | Before any single-screen review or polish task. Loads `CLAUDE.md` §3–§6, `DesignSystem.swift`, the closest `docs/references/` anchor, and produces a severity-ranked report tied to atom/molecule/screen layers. | Asking "is this consistent with the system?" then guessing. |
+| `/page-audit` | Before or after any non-trivial single-screen design task. Loads the frozen Unit rubric, source-of-truth docs, `DesignSystem.swift`, the closest reference anchor, and produces an evidence-backed scorecard tied to atom/molecule/screen layers. | Letting the builder award itself an uncalibrated “looks good” grade. |
 | `/component-reuse-check` | Before declaring any new `struct X: View` / `ViewModifier` / variant. Surveys existing primitives, runs the 80% match test, returns USE / EXTEND / NEW with one-sentence justification. | Inventing parallel components. |
 | `/ui-visual-verify` | **User-invoked only.** Run when the user explicitly asks (`/ui-visual-verify`, "screenshot it", "verify", "did it work?"). Never auto-trigger after a UI edit. | Claiming success based on the code looking right. |
 
 `/page-audit` and `/component-reuse-check` should be triggered proactively — don't wait for the slash command. `/ui-visual-verify` is the exception: per `CLAUDE.md` §6, the user runs multiple Claude agents in parallel and auto-triggering the simulator causes conflicts. Only invoke it when explicitly asked.
+
+### Frozen scorecard and memory
+
+- `docs/qa/design-evaluation/rubric.md` is the fixed ruler. Do not rewrite weights or anchors between reviews.
+- `docs/qa/design-evaluation/lessons.md` stores only recurring misses and evaluator blind spots. One-off details stay in dated scorecards.
+- A builder-context review is **contextual**, not blind. A score is **official** only after a fresh reviewer grades current visual evidence and every applicable hard gate is checked.
+- Code-only review caps craft, UX, and accessibility at 7. Missing visual evidence means **provisional**, never “verified.”
+- Post-fix work is recorded separately. Do not replace the original baseline with a self-assessed higher number.
 
 ---
 
@@ -62,8 +70,9 @@ If `docs/references/` has no anchor for the screen type at hand, **say so before
 1. Run the `CLAUDE.md` §1 session-start checklist (docs + references).
 2. If proposing a new component: run `/component-reuse-check` first.
 3. Make the edit. Hook fires automatically — fix any blocked patterns at the canonical layer.
-4. Label the result "edits applied, not yet verified — visual pass is yours." Do **not** auto-run `/ui-visual-verify` or the simulator (§6, parallel-agent conflicts).
-5. If the task was a single-screen review/polish: run `/page-audit` either at start (to plan the change) or end (to confirm nothing else drifted).
+4. For a non-trivial single-screen design, run `/page-audit` and save the contextual baseline under `docs/qa/design-evaluation/scorecards/`. Apply cheap, high-impact fixes without inflating that baseline.
+5. Label the result "edits applied, not yet verified — visual pass is yours." Do **not** auto-run `/ui-visual-verify` or the simulator (§6, parallel-agent conflicts).
+6. When the user explicitly requests visual verification, run `/ui-visual-verify`; only a blind, fully verified follow-up can become the official trend score.
 
 ---
 

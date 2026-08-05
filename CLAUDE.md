@@ -20,12 +20,12 @@ Other source-of-truth docs:
 
 ## North star
 
-**Unit is a zero-friction gym logger. Every decision is judged by *seconds per set logged under fatigue*. Everything else is secondary.**
+**Unit is a zero-friction, progression-guided gym logger. Every decision is judged by *seconds per set logged under fatigue*. Everything else is secondary.**
 
 - **Gym Test**: one-handed, sweaty, ≤ 3 seconds to log a set.
 - **Last time** values (pre-fill from last session; formerly "ghost values", still `metricIsGhost` in code) are the primary logging mechanism.
 - **Templates** are the program unit — not cycles, not weeks, not engines.
-- **Local-first, light-first, quiet UI.** No social, no feeds, no recommendations.
+- **Local-first, light-first, quiet UI.** No social or feeds. Progression guidance is opt-in, transparent, post-workout, and never mutates a routine without acceptance.
 
 ---
 
@@ -54,16 +54,16 @@ If the user explicitly overrides, proceed — and note the override in your resp
 
 ---
 
-## §3. Scope fence — banned from v1
+## §3. Scope fence — remaining exclusions
 
 Per compass decision 2026-03-26, these are **removed** or **deferred**. Claude keeps trying to re-add them. Stop.
 
 | Banned | Why |
 |---|---|
-| `ProgressionEngine`, auto-increment, deload rules | Deferred post-v1. |
+| Legacy `ProgressionEngine`, cycles, failure counters, deload rules | Replaced by the single transparent double-progression MVP in v2.1. Do not restore the old engine. |
 | 8-week cycles, `Cycle`, `WeekDetailView`, "Week N of M" | Templates replace cycles. |
 | "Day N ·" rigid numbering prefixes | Use template/routine names. |
-| Target-vs-actual weight UI | Last-time pre-fill only. |
+| Target-vs-actual UI during active logging | Accepted next targets may prefill; the active set row stays unchanged. |
 | Plate calculator | Skipped. |
 | Social / feeds / sharing / community | Anti-persona. |
 | Exercise discovery / recommendation | Athletes choose their own. |

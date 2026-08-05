@@ -6,29 +6,31 @@
 
 ## Authoritative sources (cite in order of specificity)
 
-1. `docs/goals.md` §v1 scope boundaries — the Ships / Does not ship list. Highest specificity.
+1. `docs/goals.md` §v2.1 scope boundaries — the Ships / Does not ship list. Highest specificity.
 2. `docs/product-compass.md` §Pillars (MVP boundary row) + §Decision log (2026-03-26 entries) — the *why* behind each boundary.
 3. `CLAUDE.md` §3 — banned-list quick reference.
 
 ---
 
-## v1 ships (from `docs/goals.md`)
+## v2.1 ships (from `docs/goals.md`)
 
 - Template-based logging with ghost values
-- Three onboarding paths: text-paste, redo-from-history, manual builder
+- Two first-run onboarding paths: text-paste and starter program library
 - Auto rest timer with Lock Screen / Dynamic Island
 - History view (list + calendar)
 - Exercise library (search + custom exercise creation)
 - Haptic confirmation on set logged
 - PR detection + notification
+- Opt-in double progression configured per routine/exercise
+- Post-workout suggestions that require acceptance and prefill the next matching workout
 
-## v1 does not ship (from `docs/goals.md` + compass decisions)
+## v2.1 does not ship (from `docs/goals.md` + compass decisions)
 
-- `ProgressionEngine` (auto-increment, fail modes, deload)
+- Legacy `ProgressionEngine` behavior (cycles, failure counters, deloads, periodisation)
 - CloudKit sync
 - Social features (feed, profiles, sharing)
 - Exercise discovery / recommendation
-- Subscription paywall on core logging
+- Changes to the current post-onboarding access gate (`docs/pricing.md`)
 - 8-week cycles as primary container; "Week N of M" UI
 - Day-N rigid numbering; target-vs-actual weight UI
 - Plate calculator; conditioning days; pricing component on landing
@@ -64,7 +66,7 @@ If the user explicitly overrides ("yes, do it anyway / ignore the rule"), procee
 
 | Banned | If user asks |
 |---|---|
-| `ProgressionEngine`, auto-increment, deload rules | Offer ghost-value history as the in-scope alternative. |
+| Legacy progression cycles, failure counters, deload rules | Keep the single transparent double-progression rule and accepted-target prefill. |
 | 8-week cycles, `Cycle`, `WeekDetailView`, "Week N of M" | Use template-based flow. |
 | "Day N ·" rigid numbering prefixes | Use the template name. |
 | Target-vs-actual weight UI in active workout | Ghost value prefill. |
@@ -74,4 +76,4 @@ If the user explicitly overrides ("yes, do it anyway / ignore the rule"), procee
 | Pricing component on landing | Decline. |
 | Conditioning days in imported programs | Filter on import. |
 | CloudKit sync | Local-first only. |
-| Paywall on core logging | Paywall only on non-core features. |
+| Changing the access gate | Preserve the current post-onboarding hard gate; see `docs/pricing.md`. |

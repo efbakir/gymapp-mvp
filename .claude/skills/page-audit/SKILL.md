@@ -1,134 +1,155 @@
 ---
 name: page-audit
-description: Audits a single SwiftUI screen in Unit against the design system, the references library, and the CLAUDE.md gatekeeper checklist. Use whenever the user asks to "review", "audit", "check", "fix", or "polish" a specific screen (TodayView, HistoryView, TemplatesView, ActiveWorkoutView, OnboardingShell, etc.), shares a simulator screenshot of one screen, or says things like "make this consistent", "follow the system", "feels off on this page", "is this on-brand", "clean this up". Trigger even if the user does not say the word "audit" — if a single-screen visual review is implied, run this. Produces a severity-ranked report tied to atoms/molecules, not screens, so fixes land at the right layer.
+description: Audit and improve a Unit SwiftUI screen with the frozen Unit design-evaluation rubric. Use when a user asks to review, audit, check, fix, redesign, or polish a specific screen; shares a screenshot; says a page feels off or inconsistent; or requests a non-trivial single-screen UI change. Produces an evidence-backed scorecard, classifies fixes at atom/molecule/screen level, preserves one official baseline, and records only recurring lessons.
 ---
 
-# /page-audit
+# Page audit
 
-Audit one Unit screen end-to-end against the design system, the visual references, and the CLAUDE.md gatekeeper checklist. Every finding is tied to a fix-level (atom / molecule / screen) per CLAUDE.md §6 — fixing at the wrong layer is itself a violation.
+Evaluate one Unit screen against the product rules, design system, visual
+references, and the frozen scorecard. Keep review evidence separate from builder
+intent: judge what exists, not what the implementation meant to do.
 
-## Input required
+## Required sources
 
-One of:
-- A view file path: `Unit/Features/<area>/<Screen>View.swift`
-- A simulator screenshot path
-- A screen name the user mentioned (resolve to the file before starting)
+Read in this order:
 
-If ambiguous, ask: "Which screen — the file path, or the simulator screenshot?"
+1. `CLAUDE.md` §1 and §§4–8
+2. `docs/product-compass.md` pillars and current decision log
+3. `DESIGN.md` and `Unit/UI/DesignSystem.swift`
+4. `docs/atomic-design-system.md` and `docs/visual-language.md`
+5. `docs/qa/design-evaluation/rubric.md` in full
+6. `docs/qa/design-evaluation/lessons.md`
+7. The closest anchor in `docs/references/ios-screens/` or
+   `docs/references/details/`
+8. The target view and directly used shared components
 
-## Sources of truth (read in this order, do not skip)
+If no reference fits, name the gap. Do not invent a new visual language.
 
-1. `CLAUDE.md` §4 banned-list, §5 design-system rules, §6 fix-level, §7 verification gates
-2. `Unit/UI/DesignSystem.swift` — every existing atom, molecule, modifier, token
-3. `docs/atomic-design-system.md`
-4. `docs/visual-language.md`
-5. `docs/references/ios-screens/` and `docs/references/details/` — the visual taste anchors
-6. The view file itself (if not already loaded)
+## Review mode
 
-If `docs/references/` has no anchor for this screen type, name that gap in the report. Do not invent visual decisions.
+- Mark the review **blind** only if the reviewer did not build the work and did
+  not see a prior score.
+- Otherwise mark it **contextual**. Do not imply independence.
+- Do not read previous numeric scores until the new baseline is recorded.
+- Use independent critics only when the user explicitly requests a blind panel
+  or delegated review. Keep each critic on one distinct lens and hide all prior
+  scores.
 
 ## Process
 
-### 1. Load context
-- Open the view file. Read it end to end.
-- Open `Unit/UI/DesignSystem.swift` and grep for any atoms or modifiers the screen *should* be using but isn't.
-- List `docs/references/ios-screens/` and pick the closest anchor. Name it.
+### 1. Define the evidence
 
-### 2. Banned-list scan (mechanical)
-The PreToolUse hook (`.claude/hooks/ui-banned-list.sh`) blocks new violations. The audit catches existing ones. Check for:
+Resolve the screen file and available render or screenshot. Name the reference
+anchor and the specific quality being borrowed. State which claims can and
+cannot be verified from the evidence.
 
-- `chevron.right` / `chevron.forward`
-- Hex literals, `Color(red:..)`, `Color.black/.white/.gray/etc.`
-- `.foregroundStyle(.gray)` / `.foregroundColor(.gray)`
-- `.font(.system(size:))`, raw `.body`/`.caption` where `AppFont.*` exists
-- Hardcoded `.padding(<int>)` / `.cornerRadius(<int>)` / `RoundedRectangle(cornerRadius: <int>)`
-- `.preferredColorScheme(.dark)`, dark-mode-first decisions
-- `.scrollEdgeEffectStyle(.automatic)` / `.hard` (canonical: `appScrollEdgeSoft(top:bottom:)`)
-- `LinearGradient` / `.mask` used as a fade behind a fixed bar
-- `.weight(.regular)`, `#FF4400`, `0xFF4400`
-- `Text("–")` / `Text("—")` / `Text("0 kg")` placeholder copy
-- `ToolbarItem` with `.weight(.semibold/.bold/.heavy)`
-- `.sheet { }` whose root is `ScrollView` or `AppCard`
-- `ProcessInfo.processInfo.environment["UNIT_*"]` scaffolding
+Do not start the simulator automatically. `ui-visual-verify` remains
+user-invoked only. Without current visual evidence, the score is provisional and
+the rubric's evidence caps apply.
 
-### 3. Parallel-implementation scan
-For every `struct X: View` / `ViewModifier` / new variant defined in feature code: name the closest existing primitive in `DesignSystem.swift`. If a primitive covers ~80%, this is a §5 parallel-ban violation. Recommend: extend the primitive with `style:` / `tone:` / `variant:` and migrate the call site.
+### 2. Run static gates
 
-### 4. Layout / rhythm / hierarchy review
-With the named reference open alongside the screen:
-- Section header weight + casing — match reference?
-- List row height + divider treatment — match reference?
-- Spacing rhythm (vertical) — uniform or jumpy?
-- Number alignment — `.monospacedDigit()` on dynamic numbers?
-- Empty state — explicit copy, or placeholder dash?
-- Sheet content — plain `VStack`, not `ScrollView { AppCard { ... } }`?
-- Toolbar buttons — iOS-native default weight?
-- Touch targets — ≥ 44×44pt?
+Check the target and changed shared code for:
 
-### 5. Fix-level classification (CLAUDE.md §6)
-For each finding, ask: would this same bug appear on sibling screens if I patched only this file?
+- Raw colours, fonts, spacing, radii, dividers, or banned glyphs
+- Non-canonical cards, buttons, lists, bars, fades, sheets, or toolbar chrome
+- New feature-local views/modifiers that duplicate an existing primitive
+- Dark-mode or landscape assumptions
+- “0 kg”, ambiguous placeholders, dead actions, and test scaffolding
+- Touch-target code that cannot reach 44×44 pt
 
-- **Atom-level** — token wrong (color, spacing, radius, font). Fix in `DesignSystem.swift`. One change, every screen benefits.
-- **Molecule-level** — shared component wrong (`AppCard`, `AppDividedList`, `AppPrimaryButton`, etc.). Fix in `DesignSystem.swift` molecule definition.
-- **Screen-only** — composition wrong on this screen alone (wrong atom chosen, wrong order). Fix in the feature file.
+Use `.claude/hooks/ui-banned-list.sh` as the mechanical source of truth. Do not
+weaken it to make a build pass.
 
-If a finding could be screen-only OR atom — prefer atom. Screen-only is the last resort, not the default.
+### 3. Score the frozen dimensions
 
-### 6. Verification plan
-Before declaring done, the next agent must:
-- Build + install + launch on iOS Simulator (per §7).
-- Screenshot the audited screen via `xcrun simctl io booted screenshot`.
-- Screenshot at least 2 sibling screens to confirm atom/molecule fixes haven't regressed anything else.
-- Compare against the named reference.
+Score system fidelity, product coherence and restraint, craft, Gym Test and UX
+judgment, and accessibility and verification using
+`docs/qa/design-evaluation/rubric.md`.
 
-If the user has waived verification (background/scheduled run — see `feedback_unit_background_verification_waiver.md`), state that explicitly and skip.
+For each dimension return:
 
-## Output format (use exactly)
+- Integer score
+- Evidence for what works
+- Defects with exact fixes and fix layer
+- One blind spot: what this pass may have missed
+
+Compute one weighted baseline. Do not round individual dimensions and do not
+inflate the baseline after applying fixes.
+
+### 4. Evaluate hard gates
+
+Mark every rubric gate PASS, FAIL, or UNVERIFIED. Any FAIL blocks the screen.
+Any UNVERIFIED keeps the scorecard provisional.
+
+### 5. Classify the fix level
+
+Ask whether sibling screens would retain the same defect after a local patch.
+
+- **Atom**: fix a token in `DesignSystem.swift`.
+- **Molecule/organism**: fix the canonical shared component.
+- **Screen**: fix composition unique to this screen. Use last.
+
+Run `component-reuse-check` before introducing a new SwiftUI view, modifier, or
+variant.
+
+### 6. Close the loop
+
+For build/fix/polish requests, apply cheap high-impact fixes at the correct
+layer, then re-check static gates. Keep the original baseline and list the work
+completed separately. For review-only requests, report findings without editing.
+
+Do not invoke simulator verification unless the user explicitly asks. When they
+do, use `ui-visual-verify`, re-check affected states, and compare states that
+should differ for byte-identical output.
+
+### 7. Remember without bloating
+
+For build/change tasks, save the scorecard as
+`docs/qa/design-evaluation/scorecards/YYYY-MM-DD-<screen>.md`. Update
+`lessons.md` only for a confirmed recurrence or a newly discovered evaluator
+blind spot. Do not promote a one-off finding into permanent rules.
+
+For review-only tasks, return the scorecard in chat unless the user asks for a
+file.
+
+## Scorecard format
 
 ```markdown
-# [Screen name] — page audit
+# [Screen] design scorecard
 
-**Anchor reference**: docs/references/ios-screens/<file>.png — borrowing [rhythm / hierarchy / density / specific element]
-**Sources consulted**: CLAUDE.md §[sections], DesignSystem.swift, [other docs]
+**Date**: YYYY-MM-DD
+**Mode**: blind | contextual
+**Status**: official | provisional
+**Evidence**: [render/screenshot paths or “code only”]
+**Anchor**: [reference and borrowed qualities]
 
-## Banned-token violations
-| File:Line | Violation | Fix |
-|---|---|---|
-| ... | chevron.right at row trailing | Use AppDisclosureIndicator or remove |
+## Baseline
+| Dimension | Weight | Score | Evidence | Top defect + exact fix | Fix layer | Blind spot |
+|---|---:|---:|---|---|---|---|
 
-## Parallel-implementation risks
-| File:Line | New struct/modifier | Closest existing primitive | Recommendation |
-|---|---|---|---|
+**Weighted baseline**: X.X/10
 
-## Atom/molecule fixes (system-level — fix here, every screen benefits)
-| Layer | File | Issue | Recommended change |
-|---|---|---|---|
-| atom  | DesignSystem.swift | AppSpacing.md is 12pt, ref shows 16pt rhythm | Bump to 16pt; check 3+ sibling screens after |
-| molecule | DesignSystem.swift (AppCard) | shadow too heavy vs ref | Soften to AppShadow.subtle |
-
-## Screen-only fixes (last resort)
-| File:Line | Issue | Recommended change |
+## Hard gates
+| Gate | PASS / FAIL / UNVERIFIED | Evidence |
 |---|---|---|
 
-## Layout / rhythm / hierarchy notes
-- [Concrete observations vs the named reference. Bullets, not paragraphs.]
+## Priority fixes
+1. [Highest-impact fix]
 
-## Verification plan
-1. Apply atom/molecule fixes first. Build.
-2. Screenshot [audited screen] + [2 named sibling screens].
-3. Compare against [reference file].
-4. Then apply screen-only fixes.
+## Opportunity pass
+- [0–3 conformant ways to raise the ceiling; not included in the score]
 
-## Reference gap
-[If `docs/references/` had no good anchor, say so. Suggest what reference image would close the gap, e.g. "Need a reference for stats-heavy detail screens — Apple Sports live game would be a fit."]
+## Work completed
+- [Fixes applied after the baseline, or “Review only”]
+
+## Carry forward
+- [Unresolved issue, owner/layer, next check]
 ```
 
-## What this skill does NOT do
+## Boundaries
 
-- Does not run the build or take screenshots itself — it produces the audit report. Verification is a separate step (see `xcode-bug-hunter` skill or §7 verification gates).
-- Does not auto-apply fixes. Recommendations only. The user or a follow-up turn applies them.
-- Does not audit business logic, data integrity, or crashes. That is `xcode-bug-hunter`'s job. Page-audit is purely visual + design-system.
-
-## Why this works
-
-Aesthetic drift is invisible at the diff level. The hook catches the mechanical banned list. This skill catches everything the hook can't — rhythm, hierarchy, fix-level, anchor adherence — by forcing a structured pass against the named reference and the design system in one place. CLAUDE.md §5 says "fail-closed: if a gate fails, fix it before proceeding"; this skill makes the gates explicit per screen.
+- Do not audit business logic beyond what affects the screen's user experience.
+- Do not claim visual verification from code.
+- Do not score accessibility or interaction as passed without relevant evidence.
+- Do not create a new design-system primitive without explicit user approval.

@@ -1,0 +1,73 @@
+Application, 0x10a0da440, pid: 87391, label: 'Unit' <App element pid: 87391>
+  Window, 0x10a0da580, {{0.0, 0.0}, {375.0, 667.0}} <AX element pid: 87391, elementOrHash.elementID: 4442720256.5>
+    Other, 0x10a0da6c0, {{0.0, 0.0}, {375.0, 667.0}} <AX element pid: 87391, elementOrHash.elementID: 4443212288.6>
+      Other, 0x10a0da800, {{0.0, 0.0}, {375.0, 667.0}} <AX element pid: 87391, elementOrHash.elementID: 4444723456.8>
+        Other, 0x10a0da940, {{0.0, 0.0}, {375.0, 667.0}} <AX element pid: 87391, elementOrHash.elementID: 4393453312.10>
+  Window (Main), 0x10a0daa80, {{0.0, 0.0}, {375.0, 667.0}} <AX element pid: 87391, elementOrHash.elementID: 4442719232.4>
+    Other, 0x10a0dabc0, {{0.0, 0.0}, {375.0, 667.0}} <AX element pid: 87391, elementOrHash.elementID: 4443211776.7>
+      Other, 0x10a0dad00, {{0.0, 0.0}, {375.0, 667.0}} <AX element pid: 87391, elementOrHash.elementID: 4444721536.9>
+        Other, 0x10a0dae40, {{0.0, 0.0}, {375.0, 667.0}} <AX element pid: 87391, elementOrHash.elementID: 4442718208.11>
+          Other, 0x10a0daf80, {{0.0, 0.0}, {375.0, 667.0}} <AX element pid: 87391, elementOrHash.elementID: 4589465312.12>
+            ScrollView, 0x10a0db0c0, {{0.0, 0.0}, {375.0, 557.0}} <AX element pid: 87391, elementOrHash.elementID: 4445437952.13>
+              Other, 0x10a0db200, {{0.0, 20.0}, {375.0, 1480.0}} <AX element pid: 87391, elementOrHash.elementID: 4443225600.16>
+                Image, 0x10a0db340, {{16.0, 44.0}, {48.0, 48.0}}, label: 'PaywallLogo' <AX element pid: 87391, elementOrHash.elementID: 4589455872.18>
+                StaticText, 0x10a0db480, {{68.0, 52.2}, {47.0, 31.5}}, label: 'Unit' <AX element pid: 87391, elementOrHash.elementID: 4589455712.19>
+                StaticText, 0x10a0db5c0, {{16.0, 116.0}, {289.0, 29.0}}, identifier: 'paywall-headline', label: 'Try all of Unit free for 7 days' <AX element pid: 87391, elementOrHash.elementID: 4589456032.20>
+                StaticText, 0x10a0db700, {{16.0, 153.0}, {339.0, 44.5}}, identifier: 'paywall-supporting-copy', label: 'Log workouts, follow your next target, and see whether Unit fits your training.' <AX element pid: 87391, elementOrHash.elementID: 4589456192.21>
+                Image, 0x10a0db840, {{175.5, 239.5}, {24.5, 24.5}}, identifier: 'checkmark.circle.fill', label: 'Selected', Selected <AX element pid: 87391, elementOrHash.elementID: 4589456352.22>
+                StaticText, 0x10a0db980, {{132.8, 270.0}, {109.5, 17.0}}, label: 'Program ready' <AX element pid: 87391, elementOrHash.elementID: 4589456512.23>
+                StaticText, 0x10a0dbac0, {{115.8, 295.0}, {143.5, 26.0}}, label: 'Combat Power' <AX element pid: 87391, elementOrHash.elementID: 4589456672.24>
+                StaticText, 0x10a0dbc00, {{49.2, 329.0}, {276.5, 19.5}}, label: 'Lower Power · Upper Power · Full Power' <AX element pid: 87391, elementOrHash.elementID: 4589456832.25>
+                StaticText, 0x10a0dbd40, {{16.0, 388.5}, {162.0, 22.5}}, label: 'Everything included' <AX element pid: 87391, elementOrHash.elementID: 4589456992.26>
+                Other, 0x10a0dbe80, {{40.0, 471.2}, {272.5, 22.5}}, identifier: 'paywall-feature-table', label: 'Next-workout targets, included in Unit' <AX element pid: 87391, elementOrHash.elementID: 4589457792.27>
+                  StaticText, 0x107235540, {{40.0, 471.2}, {171.5, 22.5}}, label: 'Next-workout targets' <AX element pid: 87391, elementOrHash.elementID: 4589457472.44>
+                  Image, 0x107235680, {{294.0, 473.5}, {18.5, 18.5}}, identifier: 'checkmark.circle.fill', label: 'Selected', Selected <AX element pid: 87391, elementOrHash.elementID: 4589457632.45>
+                Other, 0x107235a40, {{40.0, 520.2}, {272.5, 22.5}}, identifier: 'paywall-feature-table', label: 'One-tap set logging, included in Unit' <AX element pid: 87391, elementOrHash.elementID: 4589458272.28>
+                  StaticText, 0x107235cc0, {{40.0, 520.2}, {159.5, 22.5}}, label: 'One-tap set logging' <AX element pid: 87391, elementOrHash.elementID: 4589457952.46>
+                  Image, 0x107235e00, {{294.0, 522.5}, {18.5, 18.5}}, identifier: 'checkmark.circle.fill', label: 'Selected', Selected <AX element pid: 87391, elementOrHash.elementID: 4589458112.47>
+                Other, 0x107236080, {{40.0, 569.2}, {272.5, 22.5}}, identifier: 'paywall-feature-table', label: 'Last-time values, included in Unit' <AX element pid: 87391, elementOrHash.elementID: 4589458752.29>
+                  StaticText, 0x107235f40, {{40.0, 569.2}, {133.5, 22.5}}, label: 'Last-time values' <AX element pid: 87391, elementOrHash.elementID: 4589458432.48>
+                  Image, 0x1072361c0, {{294.0, 571.5}, {18.5, 18.5}}, identifier: 'checkmark.circle.fill', label: 'Selected', Selected <AX element pid: 87391, elementOrHash.elementID: 4589458592.49>
+                Other, 0x107236300, {{40.0, 617.5}, {272.5, 44.5}}, identifier: 'paywall-feature-table', label: 'Ready-made or pasted programs, included in Unit' <AX element pid: 87391, elementOrHash.elementID: 4589459232.30>
+                  StaticText, 0x107236580, {{40.0, 617.5}, {135.5, 44.5}}, label: 'Ready-made or pasted programs' <AX element pid: 87391, elementOrHash.elementID: 4589458912.50>
+                  Image, 0x1072366c0, {{294.0, 630.5}, {18.5, 18.5}}, identifier: 'checkmark.circle.fill', label: 'Selected', Selected <AX element pid: 87391, elementOrHash.elementID: 4589459072.51>
+                Other, 0x107236440, {{40.0, 687.8}, {272.5, 22.5}}, identifier: 'paywall-feature-table', label: 'Progress history, included in Unit' <AX element pid: 87391, elementOrHash.elementID: 4589459712.31>
+                  StaticText, 0x107236a80, {{40.0, 687.8}, {130.5, 22.5}}, label: 'Progress history' <AX element pid: 87391, elementOrHash.elementID: 4589459392.52>
+                  Image, 0x107236bc0, {{294.0, 690.0}, {18.5, 18.5}}, identifier: 'checkmark.circle.fill', label: 'Selected', Selected <AX element pid: 87391, elementOrHash.elementID: 4589459552.53>
+                Other, 0x107236940, {{40.0, 736.8}, {272.5, 22.5}}, identifier: 'paywall-feature-table', label: 'Lock Screen rest timer, included in Unit' <AX element pid: 87391, elementOrHash.elementID: 4589460192.32>
+                  StaticText, 0x107236d00, {{40.0, 736.8}, {181.0, 22.5}}, label: 'Lock Screen rest timer' <AX element pid: 87391, elementOrHash.elementID: 4589459872.54>
+                  Image, 0x1072370c0, {{294.0, 739.0}, {18.5, 18.5}}, identifier: 'checkmark.circle.fill', label: 'Selected', Selected <AX element pid: 87391, elementOrHash.elementID: 4589460032.55>
+                StaticText, 0x107237840, {{16.0, 796.0}, {115.5, 22.5}}, label: 'Choose a plan' <AX element pid: 87391, elementOrHash.elementID: 4589460352.33>
+                Other, 0x107236f80, {{16.0, 826.5}, {343.0, 95.0}}, identifier: 'paywall-plan-com.unit.weekly', label: 'Weekly, $2.99/week, Auto-renews weekly', value: Not selected <AX element pid: 87391, elementOrHash.elementID: 4589461152.34>
+                  Button, 0x107237ac0, {{16.0, 826.5}, {343.0, 95.0}}, label: 'Weekly, $2.99/week, Auto-renews weekly' <AX element pid: 87391, elementOrHash.elementID: 4589460992.56>
+                    StaticText, 0x107237e80, {{28.0, 838.5}, {46.0, 14.5}}, label: 'Weekly' <AX element pid: 87391, elementOrHash.elementID: 4589460512.60>
+                    StaticText, 0x107235180, {{28.0, 857.0}, {139.0, 31.5}}, label: '$2.99/week' <AX element pid: 87391, elementOrHash.elementID: 4589460672.61>
+                    StaticText, 0x1072352c0, {{28.0, 892.5}, {124.5, 17.0}}, label: 'Auto-renews weekly' <AX element pid: 87391, elementOrHash.elementID: 4589460832.62>
+                Other, 0x107237c00, {{16.0, 929.5}, {343.0, 95.0}}, identifier: 'paywall-plan-com.unit.monthly', label: 'Monthly, $4.99/month, 7 days free · then $4.99/month', value: Selected, Selected <AX element pid: 87391, elementOrHash.elementID: 4589462112.35>
+                  Button, 0x107237980, {{16.0, 929.5}, {343.0, 95.0}}, label: 'Monthly, $4.99/month, 7 days free · then $4.99/month' <AX element pid: 87391, elementOrHash.elementID: 4589461952.57>
+                    StaticText, 0x10a07c640, {{28.0, 941.5}, {53.5, 14.5}}, label: 'Monthly' <AX element pid: 87391, elementOrHash.elementID: 4589461312.63>
+                    Image, 0x10a07d680, {{331.5, 942.5}, {14.5, 14.5}}, identifier: 'checkmark.circle.fill', label: 'Selected', Selected <AX element pid: 87391, elementOrHash.elementID: 4589461792.64>
+                    StaticText, 0x10a07c780, {{28.0, 960.0}, {150.0, 31.5}}, label: '$4.99/month' <AX element pid: 87391, elementOrHash.elementID: 4589461472.65>
+                    StaticText, 0x10a07c8c0, {{28.0, 995.5}, {186.5, 17.0}}, label: '7 days free · then $4.99/month' <AX element pid: 87391, elementOrHash.elementID: 4589461632.66>
+                Other, 0x10a07ca00, {{16.0, 1032.5}, {343.0, 123.0}}, identifier: 'paywall-plan-com.unit.annual', label: 'Yearly, $29.99/year, Auto-renews yearly · $0.56/week, Save 72%', value: Not selected <AX element pid: 87391, elementOrHash.elementID: 4589463072.36>
+                  Button, 0x10a07cc80, {{16.0, 1032.5}, {343.0, 123.0}}, label: 'Save 72%, Yearly, $29.99/year, Auto-renews yearly · $0.56/week' <AX element pid: 87391, elementOrHash.elementID: 4589462912.58>
+                    StaticText, 0x10a07cf00, {{36.0, 1046.0}, {67.5, 17.0}}, label: 'Save 72%' <AX element pid: 87391, elementOrHash.elementID: 4589462272.67>
+                    StaticText, 0x10a07cdc0, {{28.0, 1072.5}, {46.0, 14.5}}, label: 'Yearly' <AX element pid: 87391, elementOrHash.elementID: 4589462432.68>
+                    StaticText, 0x10a07cb40, {{28.0, 1091.0}, {142.5, 31.5}}, label: '$29.99/year' <AX element pid: 87391, elementOrHash.elementID: 4589462592.69>
+                    StaticText, 0x10a07d040, {{28.0, 1126.5}, {202.0, 17.0}}, label: 'Auto-renews yearly · $0.56/week' <AX element pid: 87391, elementOrHash.elementID: 4589462752.70>
+                Other, 0x10a07d7c0, {{16.0, 1163.5}, {343.0, 95.0}}, identifier: 'paywall-plan-com.unit.lifetime', label: 'Lifetime, $44.99, One-time purchase', value: Not selected <AX element pid: 87391, elementOrHash.elementID: 4589463872.37>
+                  Button, 0x10a07d900, {{16.0, 1163.5}, {343.0, 95.0}}, label: 'Lifetime, $44.99, One-time purchase' <AX element pid: 87391, elementOrHash.elementID: 4589463712.59>
+                    StaticText, 0x10a07d540, {{28.0, 1175.5}, {61.0, 14.5}}, label: 'Lifetime' <AX element pid: 87391, elementOrHash.elementID: 4589463232.71>
+                    StaticText, 0x10a07da40, {{28.0, 1194.0}, {81.5, 31.5}}, label: '$44.99' <AX element pid: 87391, elementOrHash.elementID: 4589463392.72>
+                    StaticText, 0x10a07de00, {{28.0, 1229.5}, {117.5, 17.0}}, label: 'One-time purchase' <AX element pid: 87391, elementOrHash.elementID: 4589463552.73>
+                Button, 0x10a07df40, {{115.5, 1279.0}, {144.0, 19.5}}, label: 'What happens next?' <AX element pid: 87391, elementOrHash.elementID: 4589464032.38>
+                StaticText, 0x10a07dcc0, {{16.0, 1318.5}, {340.5, 51.0}}, label: 'After the free trial, the subscription auto-renews unless cancelled. Payment is charged to your Apple Account. You can manage or cancel in App Store settings.' <AX element pid: 87391, elementOrHash.elementID: 4589464192.39>
+                Button, 0x10a07e080, {{121.5, 1393.5}, {132.0, 19.5}}, label: 'Restore Purchases' <AX element pid: 87391, elementOrHash.elementID: 4589464352.40>
+                Link, 0x10a07e300, {{129.0, 1417.0}, {117.5, 19.5}}, label: 'Terms of Service' <AX element pid: 87391, elementOrHash.elementID: 4589464512.41>
+                Link, 0x10a07e440, {{138.5, 1440.5}, {98.0, 19.5}}, label: 'Privacy Policy' <AX element pid: 87391, elementOrHash.elementID: 4589464672.42>
+              Other, 0x10a07ea80, {{342.0, 20.0}, {30.0, 537.0}}, label: 'Vertical scroll bar, 3 pages', value: 0% <AX element pid: 87391, elementOrHash.elementID: 4444341760.17>
+                Other, 0x10a07ebc0, {{369.0, 23.0}, {3.0, 247.5}} <AX element pid: 87391, elementOrHash.elementID: 4393455552.43>
+              Other, 0x10a07ef80, {{342.0, 20.0}, {30.0, 537.0}}, label: 'Vertical scroll bar, 3 pages', value: 0% <AX element pid: 87391, elementOrHash.elementID: 4444341760.17>
+                Other, 0x10a07f5c0, {{369.0, 23.0}, {3.0, 247.5}} <AX element pid: 87391, elementOrHash.elementID: 4393455552.43>
+            StaticText, 0x10a07f700, {{52.2, 565.0}, {270.5, 34.0}}, label: '7 days free, then $4.99/month. Auto-renews unless cancelled.' <AX element pid: 87391, elementOrHash.elementID: 4589464992.14>
+            Button, 0x10a07f840, {{16.0, 603.0}, {343.0, 60.0}}, label: 'Start 7-day free trial' <AX element pid: 87391, elementOrHash.elementID: 4589465152.15>

@@ -1,32 +1,56 @@
-# Unit — Decision Log
+## 2026-08-04 — First-session program values are targets, not history
 
-> Append-only chronological record of decisions, scope overrides, and direction shifts.
-> One entry per decision. Newest at the top. Never edit or delete past entries — strike them through and write a new entry that supersedes.
+**Decision:** Sets, reps, and weights explicitly saved from a pasted, ready-made, or edited program persist into the first matching workout as a **Starting target**. Prefill precedence is: accepted progression target for the matching routine and exercise, latest valid completed session under the global fallback rules, explicit starting values for the current template/program, then the truly empty state. Planned values are never labelled **Last time** until the user has completed a real set.
 
-**What goes here:**
-- Scope decisions (added / cut / deferred)
-- Design system overrides (the user explicitly green-lit a deviation from `CLAUDE.md` §3 / §4)
-- Direction shifts (pivot, persona update, KPI change)
-- Bets that did or did not pay off (so we don't redo the same experiment)
-- Notable in-session course corrections that aren't captured elsewhere
+**Why:** Unit already persisted the planned value and resolved a `.planned` source, but the active-workout UI intentionally ignored that source and showed `Log first set`. Calling planned data “Last time” would repair the visibility bug by inventing history; distinguishing target from evidence keeps the one-tap Gym Test honest.
 
-**What does NOT go here:**
-- Per-task work logs — that's git history
-- Bug fixes — that's git history
-- Code review notes — that's PRs
-- Anything captured in `~/.claude/projects/.../memory/` (use the index there)
+**Implication:** `Bench Press 3x8-10 60` reviews as `3 × 8–10 at 60 kg`, opens the first workout at `60 kg × 8`, completes in one tap, and prefills subsequent sets through the existing within-session policy. This supersedes the presentation language in the 2026-06-09 planned-weight entry while preserving its persistence mechanism. `No history yet` appears only when all four prefill sources are unavailable.
 
-**Format:** `## YYYY-MM-DD — <one-line title>`, then 2–4 lines: *Decision*, *Why*, *Implication*. If superseded later, add `**SUPERSEDED by YYYY-MM-DD**` on the original.
+## 2026-08-04 — Seven-day introductory trial supersedes no-trial and eligible-user Weekly-default decisions
 
----
+**Decision:** Version 2.1 supports a seven-day Free introductory offer on Monthly (`com.unit.monthly`) and Yearly (`com.unit.annual`). Weekly and Lifetime have no trial. A new eligible customer defaults to Monthly; an ineligible customer retains the existing Weekly default. Unit remains a non-dismissible hard paywall after onboarding with no permanent free tier.
 
-## 2026-08-03 — Do not position Unit as an automated progression tracker
+**Why:** The trial lets a new customer test the complete progression-guided product without weakening the single paid-access boundary. Conditional StoreKit presentation prevents a marketing promise from appearing when Apple has not actually supplied the offer or the customer cannot redeem it.
 
-**Decision:** Keep automated progression out of Unit's visible App Store promise. The current v2.2 candidate is **`Unit: Gym Workout Log`** with **`Fast set and rep tracker`**; do not use “Progressive Overload” in the name, subtitle, or screenshot headlines until Unit actually recommends the next load or reps.
+**Implication:** This entry explicitly supersedes the active “no free trial” decision and the earlier rule that Weekly is the default for every customer. Trial language appears only when the selected product is auto-renewable, has a valid StoreKit introductory offer in Free mode, and Apple reports the customer eligible; eligibility alone is insufficient. The local StoreKit file contains the Monthly and Yearly offers for deterministic QA. The founder must still configure equivalent App Store Connect offers and confirm Apple’s sandbox purchase sheet displays the seven-day free period before calling the trial release-ready.
 
-**Why:** Alpha Progression defines the category expectation: its algorithm recommends weight, reps, and intensity for every set and adapts those targets over time. Unit deliberately does not do that. Unit remembers the previous workout; the user decides when to add weight.
+## 2026-08-04 — Progressive-overload positioning ships in version 2.1
 
-**Implication:** Position Unit as the fast, non-coaching workout logger. Keep “History is your coach” and “You decide when to add weight” explicit. Revisit this only if `ProgressionEngine` becomes a shipped product capability.
+**Decision:** Version 2.1, not a separate 2.2 release, contains the verified transparent double-progression feature and changes the App Store identity to `Unit: Progressive Overload` with subtitle `Gym Workout Log & Tracker`. The Home Screen name remains `Unit`. The canonical English metadata and screenshot plan now lead with the next-target promise while remaining beginner-inclusive through ready-made programs and pasted routines.
+
+**Why:** Version 2.0 is the live release. The progression feature now has unit, UI, small-screen, and accessibility verification, so delaying the feature and its honest positioning to an artificial 2.2 release no longer serves the experiment. Shipping the name before the feature would overpromise; shipping the feature under the old listing would fail to test the acquisition hypothesis.
+
+**Implication:** All active product and release documents use 2.1. The current candidate identity is **2.1 (65)** until a later build increment is required. The old App Store screenshots must be replaced with a progression-led English set. All five localized metadata files are stale again and must not be published. The one-week trial is implemented in the paywall and local StoreKit QA configuration, but the actual App Store Connect offer and Apple sandbox purchase sheet remain release gates under the superseding trial decision above.
+
+## 2026-08-03 — Transparent progression-guided logger supersedes pure logging
+
+**Decision:** Pure-logger positioning is superseded by a transparent progression-guided logger. Unit may recommend the smallest next-session change while preserving the user’s program and final control. The active workout must still pass the three-second Gym Test.
+
+**Why:** The first v2.2 progression MVP tests whether removing the recurring “What should I do differently from last time?” decision creates paid value without slowing set logging.
+
+**Implication:** Ship one opt-in double-progression rule with post-workout suggestions, explicit edit/acceptance, and accepted-target prefill. Do not restore cycles, failure counters, deload logic, recovery adaptation, or automatic program rewriting. The future App Store name and subtitle change only when the working feature ships.
+
+#### 2026-08-03
+- pivoting oluyor biraz
+- isim değişikliği olucak - progressive overload geliyor isme
+- workout log gym bunlar ikinci kısma gelicek
+- biraz feature eklemek gerekebilir
+	- bir tane gelicek simple af
+- progressive overload strip down etmem lazım en simple haline açıkçası ona göre simple featurelar ile başlamak buradan
+	- isim: unit: progressive overload
+	- subtitle: gym workout log & tracker
+	- keywords: rest timer - reps tracker - gym notebook - set tracker - barbell tracker
+
+**v2.1**
+- pivoting: new name etc & feature for progressive overload
+- feature request + patchnotes
+- 1 week free
+
+**todo**
+- update screenshots
+- first promise değişecek mi?
+	- simplest progressive overload tracker?
+
 
 ## 2026-07-27 — Version 2.1 release candidate advances to build 59
 

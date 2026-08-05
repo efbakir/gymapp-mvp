@@ -11,20 +11,20 @@ Unit is the gym notebook you already keep in your head — except it remembers e
 
 ## Positioning statement
 
-**For** intermediate-to-advanced lifters who already know their program,
-**who are frustrated** by trackers that are slower than paper or smarter than they need to be,
-**Unit is** a zero-friction logging tool
-**that** lets you log a set in under 3 seconds with one tap — no typing, no menus, no algorithms deciding for you.
+**For** beginner-to-experienced gym users who want a simple program to follow or already have their own,
+**who are frustrated** by trackers that are slower than paper or hide the next step behind complexity,
+**Unit is** a zero-friction, progression-guided logging tool
+**that** lets you log a set in under 3 seconds, then offers one transparent next target without taking control of the program.
 **Unlike** AI coaches (Fitbod, RP) or social trackers (Hevy, Strong),
-**Unit** respects your expertise, shows what you did last time, and gets out of the way.
+**Unit** shows what you did last time, explains the smallest next target, and leaves the final decision to you.
 
 ---
 
 ## The notebook gap
 
-The fitness app market is split between two camps: rigid AI coaches that impose algorithmic plans, and social trackers that bury logging under feeds and paywalls. Neither serves the lifter who already has a program and just wants to execute it fast.
+The fitness app market is split between rigid coaching systems and social trackers that bury logging under feeds and dashboards. Neither gives a gym user a quiet path from a program to fast logging and one understandable next target.
 
-These athletes often default to the Notes app or a paper notebook — not because those tools are better, but because every "pro" tracker adds friction that a simple list doesn't. Unit fills that gap: structured enough to track progress over time, fast enough to beat a notebook.
+People often default to the Notes app or a paper notebook because every tracker adds friction that a simple list does not. Unit fills that gap: choose a ready-made program or paste your own, track it faster than paper, and get a transparent next target after training.
 
 ---
 
@@ -32,7 +32,7 @@ These athletes often default to the Notes app or a paper notebook — not becaus
 
 1. **Log a set in one tap.** Last time pre-fills your weight and reps from last session. Just tap Done.
 2. **Your program, your way.** Import from Notes/WhatsApp, convert a past workout, or build from scratch. No mandatory cycles or rigid scheduling.
-3. **History is your coach.** See what you lifted last time. You decide when to add weight.
+3. **Know what changes next.** Configure a rep range once; after the workout Unit shows the exact next weight or rep target and why. Accept it, edit it, or ignore it.
 4. **Works offline, always.** Local-first. No account required. Your data stays on your device.
 5. **Invisible when you're lifting.** Auto rest timer on your Lock Screen. Haptic confirmation. The app does its job without demanding your attention.
 
@@ -40,10 +40,10 @@ These athletes often default to the Notes app or a paper notebook — not becaus
 
 ## What Unit is NOT
 
-- Not an AI coach. We don't tell you what to lift.
+- Not an AI coach. Unit does not generate programs or make black-box per-set decisions. Its optional double-progression suggestion is explicit and user-controlled.
 - Not a social platform. No feed, no likes, no sharing prompts.
-- Not a beginner's guide. We assume you know your way around a barbell.
-- Not subscription-locked at the core. Logging is not a premium feature.
+- Not a form-teaching product. Ready-made programs help beginners start, but Unit does not teach exercise technique.
+- Not a free logger. Onboarding is free; workout access follows the hard purchase gate in `docs/pricing.md`.
 
 ---
 
@@ -53,7 +53,7 @@ These athletes often default to the Notes app or a paper notebook — not becaus
 |----|-------|
 | Speak directly: "Log a set. One tap." | Hype: "Revolutionary AI-powered training" |
 | Be specific: "Under 3 seconds" | Be vague: "Fast and easy" |
-| Trust the lifter: "You decide when to progress" | Patronise: "We'll tell you what's best" |
+| Preserve control: "See the next target. Accept or edit it." | Patronise: "We'll tell you what's best" |
 | Name the problem: "Your tracker is slower than paper" | Attack competitors by name on the site |
 | Keep it short. Every word earns its place. | Write paragraphs where a sentence will do |
 

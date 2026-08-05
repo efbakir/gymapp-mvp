@@ -1,0 +1,5 @@
+Query chain:
+ →Find: Target Application 'app.unitlift'
+  ↪︎Find: Descendants matching type Any
+    ↪︎Find: Elements matching predicate '"paywall-feature-row-0" IN identifiers'
+      ↪︎Find: First Match

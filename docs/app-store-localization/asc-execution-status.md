@@ -1,6 +1,6 @@
-# ASC execution status — ALL FIVE LOCALES STALE FOR VERSION 2.1
+# ASC execution status — ALL FIVE LOCALES STALE AFTER PROGRESSION RENAME
 
-> Updated 2026-07-23. The English 2.1 positioning now includes ready-made programs and beginners. The existing de-DE, es-MX, pt-BR, fr-FR, and tr files derive from the retired experienced-lifter positioning. They are reference material only: **do not paste or publish any of them for 2.1.** Version 2.1 ships English-only until every translated field is regenerated and receives a native-speaker review.
+> Updated 2026-08-04. Canonical English now uses `Unit: Progressive Overload` / `Gym Workout Log & Tracker` and describes transparent next-target suggestions. The existing de-DE, es-MX, pt-BR, fr-FR, and tr files derive from retired names and positioning. They are reference material only: **do not paste or publish any of them for 2.1.** Version 2.1 ships English-only unless each field is regenerated from the current English source and reviewed again.
 
 ## Changed fields per locale (re-derivation, 2026-07-11)
 
