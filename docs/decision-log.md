@@ -1,3 +1,11 @@
+## 2026-08-05 — Paid access is disclosed before setup; speed-first remains a post-launch screenshot test
+
+**Decision:** The shared onboarding-carousel CTA area now shows `Paid plan required after setup. Prices and any eligible trial are shown before purchase.` directly beneath `Set up your program`. It adds no screen, modal, confirmation, tap, analytics event, StoreKit behavior, or eligibility claim. The 2.1 App Store screenshot order remains progression-first: next target, 3-second log, reps-then-weight, program setup, progress history, and Lock Screen timer.
+
+**Why:** A prospective customer should understand that setup ends at a paid-access boundary before investing time in a program. Inline secondary copy makes that requirement visible without reviving the removed price-disclosure screen or weakening the primary setup action. The first acquisition test should still measure the new progression promise; speed can be tested later without changing product behavior.
+
+**Implication:** After 2.1 is live and Apple reports enough traffic and confidence, Product Page Optimization may test a speed-first treatment by swapping screenshots 1 and 2 only. The existing verified binaries are reused; screenshots 3–6, name, subtitle, keywords, descriptions, pricing, and product behavior stay fixed. Record the result before adopting the treatment. Turkish UI localization, additional ASO keywords, social features, coaching, Apple Watch expansion, and broader discovery remain outside 2.1.
+
 ## 2026-08-05 — Version 2.1 completes the progression pivot with anonymous funnel analytics
 
 **Decision:** Version 2.1 advances to build **66**, replaces the three logger-led marketing slides with progression-led onboarding, and uses TelemetryDeck for a strict allowlist of anonymous product-usage events. Analytics are enabled by default with an immediate Settings opt-out. Supabase and CloudKit are not part of this release.

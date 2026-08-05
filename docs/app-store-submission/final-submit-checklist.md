@@ -9,6 +9,7 @@
 
 - **Trial is not release-ready yet.** The app supports a seven-day offer, but App Store Connect must carry the matching Monthly and Yearly offers and an Apple sandbox purchase sheet must confirm the free period before submission.
 - **No permanent free tier.** Unit remains a hard paywall after onboarding. Weekly and Lifetime have no introductory offer.
+- **Paid access is disclosed before setup.** The onboarding carousel shows `Paid plan required after setup. Prices and any eligible trial are shown before purchase.` directly beneath `Set up your program`; the CTA still opens weight-unit selection with no added step.
 - **No fake prices.** Every visible in-app price is StoreKit-derived. ASC product config is the only place prices exist.
 - **The app UI is English-only.** Do not claim or imply localization anywhere. Localized *metadata* is a separate, optional step (§8).
 - **Product IDs are immutable.** If any ASC screen asks you to create a product, you are on the wrong screen.
@@ -69,7 +70,9 @@ The description's paid-purchase paragraph and the two legal URLs are Guideline 3
 ## 7. Screenshot set
 
 - [ ] Upload the new English progression screenshot set defined in `docs/app-store-copy.md`.
+- [ ] Keep the canonical order: next target, 3-second log, reps-then-weight, program setup, progress history, Lock Screen timer.
 - [ ] Confirm the first screenshot proves the new progressive-overload promise.
+- [ ] Do not swap the first two screenshots for submission. Speed-first is the post-launch PPO treatment in `docs/app-store-assets/2.1/ppo-plan.md`.
 - [ ] Do not use screenshots from the Progression QA harness.
 
 ## 8. IAP / subscription attachment checklist
@@ -84,6 +87,7 @@ The description's paid-purchase paragraph and the two legal URLs are Guideline 3
 
 - [ ] Ship 2.1 English-only.
 - [ ] Do not paste or publish de-DE, es-MX, pt-BR, fr-FR, or tr. All five files are explicitly stale after the beginner-inclusive English rewrite.
+- [ ] Do not add Turkish UI localization or regenerate translations for 2.1.
 
 ## 10. Privacy / age rating / URLs
 
@@ -108,3 +112,5 @@ The description's paid-purchase paragraph and the two legal URLs are Guideline 3
 - [ ] Tag `v2.1-build66` points at the exact commit being archived.
 - [ ] Archive from clean tagged `main` only.
 - [ ] Marketing-site pricing and privacy copy matches the hard paywall, conditional seven-day offer, and anonymous-analytics disclosure in this build.
+
+Scope remains frozen for 2.1: no additional ASO keywords, social features, coaching, Apple Watch expansion, or broader discovery work.

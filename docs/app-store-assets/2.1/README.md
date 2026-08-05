@@ -25,3 +25,6 @@ Export contract:
 - English only for 2.1; do not reuse the stale localized metadata.
 
 The current Apple size reference is `https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications/`.
+
+After 2.1 is live, `ppo-plan.md` defines one future Product Page Optimization
+test that swaps only screenshots 1 and 2. It does not change this submission.
