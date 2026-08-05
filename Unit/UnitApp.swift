@@ -37,6 +37,7 @@ struct UnitApp: App {
     init() {
         let start = ContinuousClock.now
         self.sharedModelContainer = Self.makeSharedModelContainer()
+        UnitAnalytics.shared.configure()
 #if DEBUG
         if CommandLine.arguments.contains(Self.progressionContractUITestArgument) {
             do {
@@ -199,7 +200,7 @@ enum ProgressionContractUITestSeeder {
     private static let exerciseSeeds: [ExerciseSeed] = [
         ExerciseSeed(
             id: UUID(uuidString: "31000000-0000-0000-0000-000000000011")!,
-            name: "Increase Weight Press",
+            name: "Bench Press",
             currentWeightKg: 60,
             currentTargetReps: 10,
             completedWeightsKg: [60, 60, 60],
@@ -207,7 +208,7 @@ enum ProgressionContractUITestSeeder {
         ),
         ExerciseSeed(
             id: UUID(uuidString: "31000000-0000-0000-0000-000000000012")!,
-            name: "Add One Rep Row",
+            name: "Barbell Row",
             currentWeightKg: 40,
             currentTargetReps: 8,
             completedWeightsKg: [40, 40, 40],
@@ -215,7 +216,7 @@ enum ProgressionContractUITestSeeder {
         ),
         ExerciseSeed(
             id: UUID(uuidString: "31000000-0000-0000-0000-000000000013")!,
-            name: "Repeat Target Squat",
+            name: "Back Squat",
             currentWeightKg: 50,
             currentTargetReps: 9,
             completedWeightsKg: [50, 50, 50],
@@ -223,7 +224,7 @@ enum ProgressionContractUITestSeeder {
         ),
         ExerciseSeed(
             id: UUID(uuidString: "31000000-0000-0000-0000-000000000014")!,
-            name: "Mixed Weight Deadlift",
+            name: "Deadlift",
             currentWeightKg: 30,
             currentTargetReps: 8,
             completedWeightsKg: [30, 32.5, 30],
@@ -281,13 +282,13 @@ enum ProgressionContractUITestSeeder {
 
         let split = Split(
             id: splitID,
-            name: "Progression Contract",
+            name: "Strength Program",
             orderedTemplateIds: [templateID],
             createdAt: Date()
         )
         let template = DayTemplate(
             id: templateID,
-            name: "Progression QA",
+            name: "Upper A",
             splitId: split.id,
             orderedExerciseIds: exerciseIDs,
             lastPerformedDate: Date(),
@@ -348,7 +349,7 @@ enum ProgressionContractUITestSeeder {
 /// prove that the planned target survives a cold start before logging it.
 enum StartingTargetUITestSeeder {
     private static let programText = """
-    Progression Test
+    Upper A
 
     Bench Press 3x8-10 60
     Barbell Row 3x8-10 40
@@ -365,7 +366,7 @@ enum StartingTargetUITestSeeder {
         )
 
         let existingSplits = try modelContext.fetch(FetchDescriptor<Split>())
-        if let split = existingSplits.first(where: { $0.name == "Progression Test" }),
+        if let split = existingSplits.first(where: { $0.name == "Upper A" }),
            let templateID = split.orderedTemplateIds.first {
             ActiveSplitStore.setCurrent(split.id)
             TodayRoutineOverride.set(templateId: templateID)
@@ -391,7 +392,7 @@ enum StartingTargetUITestSeeder {
         try viewModel.commit(modelContext: modelContext)
 
         let splits = try modelContext.fetch(FetchDescriptor<Split>())
-        guard let split = splits.first(where: { $0.name == "Progression Test" }),
+        guard let split = splits.first(where: { $0.name == "Upper A" }),
               let templateID = split.orderedTemplateIds.first else {
             throw CocoaError(.coderValueNotFound)
         }

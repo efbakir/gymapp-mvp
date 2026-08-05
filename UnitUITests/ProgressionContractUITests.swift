@@ -22,7 +22,7 @@ final class ProgressionContractUITests: XCTestCase {
         app.launch()
 
         XCTAssertTrue(
-            app.staticTexts["Progression QA"].waitForExistence(timeout: 20),
+            app.staticTexts["Upper A"].waitForExistence(timeout: 20),
             "Seeded active workout did not open"
         )
         let finishWorkout = app.buttons[AppCopy.Workout.finishWorkout].firstMatch
@@ -76,7 +76,7 @@ final class ProgressionContractUITests: XCTestCase {
             "Repeat-previous decision was not shown"
         )
 
-        let editRepeatTarget = app.buttons["Edit next target for Repeat Target Squat"]
+        let editRepeatTarget = app.buttons["Edit next target for Back Squat"]
         scrollTo(editRepeatTarget, in: app)
         attachScreenshot(of: app, named: "04-repeat-target")
         tap(editRepeatTarget, "Edit repeat-target recommendation")
@@ -139,10 +139,10 @@ final class ProgressionContractUITests: XCTestCase {
             "Edited target did not survive relaunch"
         )
         for exerciseName in [
-            "Increase Weight Press",
-            "Add One Rep Row",
-            "Repeat Target Squat",
-            "Mixed Weight Deadlift"
+            "Bench Press",
+            "Barbell Row",
+            "Back Squat",
+            "Deadlift"
         ] {
             XCTAssertTrue(
                 button(in: app, containing: exerciseName).exists,
@@ -152,11 +152,11 @@ final class ProgressionContractUITests: XCTestCase {
         attachScreenshot(of: app, named: "06-accepted-targets-today")
 
         tap(app.tabBars.buttons["Programs"], "Programs tab")
-        let routine = button(in: app, containing: "Progression QA")
-        tap(routine, "Progression QA routine", timeout: 10)
+        let routine = button(in: app, containing: "Upper A")
+        tap(routine, "Upper A routine", timeout: 10)
         tap(
-            app.buttons["Edit target for Increase Weight Press"],
-            "Increase Weight Press target editor"
+            app.buttons["Edit target for Bench Press"],
+            "Bench Press target editor"
         )
         XCTAssertTrue(
             app.staticTexts[AppCopy.Workout.progressionLabel].waitForExistence(timeout: 8),
@@ -199,16 +199,16 @@ final class ProgressionContractUITests: XCTestCase {
         let completedSessionRow = app.buttons["history-session-row"].firstMatch
         tap(completedSessionRow, "completed progression session")
         XCTAssertTrue(
-            staticText(in: app, containing: "Increase Weight Press")
+            staticText(in: app, containing: "Bench Press")
                 .waitForExistence(timeout: 8),
             "Completed-session details did not open"
         )
         let exerciseProgress = button(
             in: app,
-            containing: "Increase Weight Press"
+            containing: "Bench Press"
         )
         scrollTo(exerciseProgress, in: app, maximumSwipes: 4)
-        tap(exerciseProgress, "Increase Weight Press progress")
+        tap(exerciseProgress, "Bench Press progress")
         XCTAssertTrue(
             staticText(in: app, containing: "Best set · 60 kg × 10")
                 .waitForExistence(timeout: 10),
@@ -273,7 +273,7 @@ final class ProgressionContractUITests: XCTestCase {
 
         let startWorkout = app.buttons[AppCopy.Workout.startWorkout]
         scrollTo(startWorkout, in: app)
-        tap(startWorkout, "Start first Progression Test workout")
+        tap(startWorkout, "Start first Upper A workout")
 
         XCTAssertTrue(
             app.staticTexts["Bench Press"].waitForExistence(timeout: 12),

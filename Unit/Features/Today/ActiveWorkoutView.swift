@@ -83,6 +83,8 @@ struct ActiveWorkoutView: View {
     /// Bound to `appToast(message:)` on the screen root; the watcher on
     /// `editingSetPayload` sets it to the hint copy and clears the AppStorage flag.
     @State private var setEditHintToast: String? = nil
+    @State private var didTrackWorkoutStart = false
+    @State private var noKeyboardSetCount = 0
     /// Plus / minus on the rest timer adjust by this many seconds (minimum rest stays 30s).
     private static let restTimerAdjustStepSeconds = 30
 
@@ -592,6 +594,10 @@ struct ActiveWorkoutView: View {
         }
         .onAppear {
             selectedExerciseIndex = nextIncompleteExerciseIndex
+            if !didTrackWorkoutStart {
+                didTrackWorkoutStart = true
+                UnitAnalytics.shared.track(.workoutStarted)
+            }
         }
         .onChange(of: sectionModels.count) { _, newValue in
             guard newValue > 0 else {
@@ -860,8 +866,11 @@ struct ActiveWorkoutView: View {
         exercise: Exercise,
         prefill: SetPrefill?
     ) {
+        guard !isLoggingSet else { return }
+
         if let prefill,
            prefill.source != .planned || exercise.isBodyweight || prefill.weight > 0 {
+            noKeyboardSetCount += 1
             completeSet(
                 exercise: exercise,
                 weight: prefill.weight,
@@ -1034,6 +1043,19 @@ struct ActiveWorkoutView: View {
             )
         }
         try? modelContext.save()
+        let completedSetCount = session.setEntries.filter {
+            $0.isCompleted && !$0.isWarmup
+        }.count
+        UnitAnalytics.shared.track(
+            .workoutCompleted(
+                duration: .value(for: Date().timeIntervalSince(session.date)),
+                setCount: .value(for: completedSetCount),
+                noKeyboardRatio: .value(
+                    prefilledSets: noKeyboardSetCount,
+                    completedSets: completedSetCount
+                )
+            )
+        )
         EngagementPromptTracker().recordCompletedWorkout(sessionID: session.id)
         onFinished?(session)
         workoutFinishedPhase &+= 1

@@ -28,6 +28,8 @@
 		A10000000000000000000010 /* RestTimerAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000010 /* RestTimerAttributes.swift */; };
 		A10000000000000000000011 /* WorkoutTargetFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000011 /* WorkoutTargetFormatter.swift */; };
 		A10000000000000000000012 /* TrainingWeekProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000012 /* TrainingWeekProgress.swift */; };
+		AN100000000000000000001 /* UnitAnalytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = AN200000000000000000001 /* UnitAnalytics.swift */; };
+		AN100000000000000000002 /* TelemetryDeck in Frameworks */ = {isa = PBXBuildFile; productRef = AN500000000000000000001 /* TelemetryDeck */; };
 		A1PROGDETAIL000000000001 /* ProgramDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2PROGDETAIL000000000001 /* ProgramDetailView.swift */; };
 		CC000000000000000000005 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000000000000000100005 /* SettingsView.swift */; };
 		CC000000000000000000006 /* ExerciseProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000000000000000100006 /* ExerciseProgressView.swift */; };
@@ -71,6 +73,7 @@
 		UT100000000000000000004 /* EngagementPromptTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UT200000000000000000004 /* EngagementPromptTrackerTests.swift */; };
 		UT100000000000000000005 /* EntitlementRefreshStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UT200000000000000000005 /* EntitlementRefreshStateTests.swift */; };
 		UT100000000000000000006 /* FeedbackPortalConfigurationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UT200000000000000000006 /* FeedbackPortalConfigurationTests.swift */; };
+		UT100000000000000000007 /* UnitAnalyticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UT200000000000000000007 /* UnitAnalyticsTests.swift */; };
 		UT100000000000000000001 /* OnboardingPaywallFlowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UT200000000000000000001 /* OnboardingPaywallFlowUITests.swift */; };
 		A1B2C3D4E5F60718293A4B5C /* ProgressionContractUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5D /* ProgressionContractUITests.swift */; };
 		UT100000000000000000002 /* Unit.storekit in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000013 /* Unit.storekit */; };
@@ -191,9 +194,11 @@
 		UI000000000000000000005 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
 		UI000000000000000000006 /* AppCopy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCopy.swift; sourceTree = "<group>"; };
 		UI000000000000000000007 /* EngagementPromptTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EngagementPromptTracker.swift; sourceTree = "<group>"; };
+		AN200000000000000000001 /* UnitAnalytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnitAnalytics.swift; sourceTree = "<group>"; };
 		UT200000000000000000004 /* EngagementPromptTrackerTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EngagementPromptTrackerTests.swift; sourceTree = "<group>"; };
 		UT200000000000000000005 /* EntitlementRefreshStateTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EntitlementRefreshStateTests.swift; sourceTree = "<group>"; };
 		UT200000000000000000006 /* FeedbackPortalConfigurationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FeedbackPortalConfigurationTests.swift; sourceTree = "<group>"; };
+		UT200000000000000000007 /* UnitAnalyticsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnitAnalyticsTests.swift; sourceTree = "<group>"; };
 		UT200000000000000000001 /* OnboardingPaywallFlowUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OnboardingPaywallFlowUITests.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F60718293A4B5D /* ProgressionContractUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProgressionContractUITests.swift; sourceTree = "<group>"; };
 		UT200000000000000000002 /* UnitUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = UnitUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -214,6 +219,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AN100000000000000000002 /* TelemetryDeck in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -243,6 +249,7 @@
 				UT200000000000000000004 /* EngagementPromptTrackerTests.swift */,
 				UT200000000000000000005 /* EntitlementRefreshStateTests.swift */,
 				UT200000000000000000006 /* FeedbackPortalConfigurationTests.swift */,
+				UT200000000000000000007 /* UnitAnalyticsTests.swift */,
 				165569863085B0817806842C /* ProgramImportParserTests.swift */,
 				165569863085B0817806842D /* ProgramImporterTests.swift */,
 			);
@@ -296,6 +303,7 @@
 				A20000000000000000000013 /* Unit.storekit */,
 				A20000000000000000000001 /* UnitApp.swift */,
 				A20000000000000000000002 /* ContentView.swift */,
+				AN300000000000000000001 /* Analytics */,
 				UI200000000000000000001 /* UI */,
 				A40000000000000000000004 /* Models */,
 				ECAT300000000000000000001 /* Data */,
@@ -305,6 +313,14 @@
 				FT200000000000000000002 /* Resources */,
 			);
 			path = Unit;
+			sourceTree = "<group>";
+		};
+		AN300000000000000000001 /* Analytics */ = {
+			isa = PBXGroup;
+			children = (
+				AN200000000000000000001 /* UnitAnalytics.swift */,
+			);
+			path = Analytics;
 			sourceTree = "<group>";
 		};
 		A40000000000000000000003 /* Products */ = {
@@ -522,6 +538,9 @@
 				WE800000000000000000002 /* PBXTargetDependency */,
 			);
 			name = Unit;
+			packageProductDependencies = (
+				AN500000000000000000001 /* TelemetryDeck */,
+			);
 			productName = Unit;
 			productReference = A20000000000000000000000 /* Unit.app */;
 			productType = "com.apple.product-type.application";
@@ -586,6 +605,9 @@
 			);
 			mainGroup = A40000000000000000000001;
 			productRefGroup = A40000000000000000000003 /* Products */;
+			packageReferences = (
+				AN400000000000000000001 /* XCRemoteSwiftPackageReference "SwiftSDK" */,
+			);
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -645,6 +667,7 @@
 			files = (
 				A10000000000000000000001 /* UnitApp.swift in Sources */,
 				A10000000000000000000002 /* ContentView.swift in Sources */,
+				AN100000000000000000001 /* UnitAnalytics.swift in Sources */,
 				A10000000000000000000003 /* Exercise.swift in Sources */,
 				ECAT100000000000000000001 /* ExerciseCatalog.swift in Sources */,
 				PTPL100000000000000000001 /* ProgramTemplate.swift in Sources */,
@@ -703,6 +726,7 @@
 				UT100000000000000000004 /* EngagementPromptTrackerTests.swift in Sources */,
 				UT100000000000000000005 /* EntitlementRefreshStateTests.swift in Sources */,
 				UT100000000000000000006 /* FeedbackPortalConfigurationTests.swift in Sources */,
+				UT100000000000000000007 /* UnitAnalyticsTests.swift in Sources */,
 				4BD7329FD7C1BC7DD8F91226 /* ProgramImportParserTests.swift in Sources */,
 				4BD7329FD7C1BC7DD8F91227 /* ProgramImporterTests.swift in Sources */,
 			);
@@ -757,7 +781,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 65;
+				CURRENT_PROJECT_VERSION = 66;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -781,7 +805,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 65;
+				CURRENT_PROJECT_VERSION = 66;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -915,7 +939,7 @@
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_ENTITLEMENTS = Unit/Unit.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 65;
+				CURRENT_PROJECT_VERSION = 66;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "";
 				ENABLE_PREVIEWS = YES;
@@ -955,7 +979,7 @@
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_ENTITLEMENTS = Unit/Unit.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 65;
+				CURRENT_PROJECT_VERSION = 66;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "";
 				ENABLE_PREVIEWS = YES;
@@ -991,7 +1015,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 65;
+				CURRENT_PROJECT_VERSION = 66;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1013,7 +1037,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 65;
+				CURRENT_PROJECT_VERSION = 66;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1037,7 +1061,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 65;
+				CURRENT_PROJECT_VERSION = 66;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = R2BR5SX98Y;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -1070,7 +1094,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 65;
+				CURRENT_PROJECT_VERSION = 66;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = R2BR5SX98Y;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -1147,6 +1171,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		AN400000000000000000001 /* XCRemoteSwiftPackageReference "SwiftSDK" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/TelemetryDeck/SwiftSDK";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.14.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		AN500000000000000000001 /* TelemetryDeck */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AN400000000000000000001 /* XCRemoteSwiftPackageReference "SwiftSDK" */;
+			productName = TelemetryDeck;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = A70000000000000000000001 /* Project object */;
 }

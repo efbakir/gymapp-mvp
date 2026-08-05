@@ -22,6 +22,7 @@ struct PaywallView: View {
     @Query(sort: \DayTemplate.name) private var templates: [DayTemplate]
     @State private var showingManageSubscriptions = false
     @State private var showsRenewalTimeline = false
+    @State private var didTrackView = false
     var onDismiss: () -> Void
 
     var body: some View {
@@ -48,6 +49,12 @@ struct PaywallView: View {
         }
         .task {
             await store.loadProducts()
+            guard !didTrackView else { return }
+            didTrackView = true
+            let eligibility = selectedTrial == nil
+                ? (store.hasCheckedIntroOfferEligibility ? "ineligible" : "unknown")
+                : "eligible"
+            UnitAnalytics.shared.track(.paywallViewed(trialEligibility: eligibility))
         }
         .onChange(of: store.isPurchased) { _, purchased in
             if purchased { onDismiss() }

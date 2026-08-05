@@ -1,0 +1,257 @@
+import Foundation
+import TelemetryDeck
+
+protocol AnalyticsTransport: AnyObject {
+    func initialize(appID: String)
+    func terminate()
+    func send(name: String, parameters: [String: String])
+}
+
+final class TelemetryDeckAnalyticsTransport: AnalyticsTransport {
+    func initialize(appID: String) {
+        let configuration = TelemetryDeck.Config(appID: appID)
+        configuration.sessionStatsEnabled = false
+        configuration.sendNewSessionBeganSignal = false
+        configuration.logHandler = nil
+        TelemetryDeck.initialize(config: configuration)
+    }
+
+    func terminate() {
+        TelemetryDeck.terminate()
+    }
+
+    func send(name: String, parameters: [String: String]) {
+        TelemetryDeck.signal(name, parameters: parameters)
+    }
+}
+
+enum AnalyticsDurationBucket: String, CaseIterable, Hashable {
+    case under15 = "under_15m"
+    case from15To30 = "15_30m"
+    case from30To60 = "30_60m"
+    case over60 = "over_60m"
+
+    static func value(for seconds: TimeInterval) -> Self {
+        switch max(0, seconds) {
+        case ..<900: .under15
+        case ..<1_800: .from15To30
+        case ..<3_600: .from30To60
+        default: .over60
+        }
+    }
+}
+
+enum AnalyticsSetCountBucket: String, CaseIterable, Hashable {
+    case from1To5 = "1_5"
+    case from6To10 = "6_10"
+    case from11To20 = "11_20"
+    case over20 = "over_20"
+
+    static func value(for count: Int) -> Self {
+        switch max(0, count) {
+        case ...5: .from1To5
+        case ...10: .from6To10
+        case ...20: .from11To20
+        default: .over20
+        }
+    }
+}
+
+enum AnalyticsNoKeyboardRatioBucket: String, CaseIterable, Hashable {
+    case none
+    case under50 = "under_50"
+    case from50To89 = "50_89"
+    case from90To99 = "90_99"
+    case all
+
+    static func value(prefilledSets: Int, completedSets: Int) -> Self {
+        guard completedSets > 0 else { return .none }
+        let ratio = Double(max(0, min(prefilledSets, completedSets))) / Double(completedSets)
+        switch ratio {
+        case 0: return .none
+        case ..<0.5: return .under50
+        case ..<0.9: return .from50To89
+        case ..<1: return .from90To99
+        default: return .all
+        }
+    }
+}
+
+enum AnalyticsProgressionOutcome: String, CaseIterable, Hashable {
+    case addWeight = "add_weight"
+    case addRep = "add_rep"
+    case repeatTarget = "repeat"
+    case unsupported
+}
+
+enum AnalyticsProgressionDecision: String, CaseIterable, Hashable {
+    case accept
+    case repeatTarget = "repeat"
+    case edit
+    case dismiss
+}
+
+enum AnalyticsFeedbackAction: String, CaseIterable, Hashable {
+    case book
+    case email
+    case dismiss
+    case portal
+}
+
+enum AnalyticsOnboardingSlide: String, CaseIterable, Hashable {
+    case nextTarget = "next_target"
+    case doubleProgression = "double_progression"
+    case oneTapLogging = "one_tap_logging"
+}
+
+enum UnitAnalyticsEvent {
+    case onboardingStarted
+    case onboardingSlideViewed(id: AnalyticsOnboardingSlide)
+    case weightUnitSelected(unit: String)
+    case programSourceSelected(source: String)
+    case programSetupCompleted(source: String)
+    case paywallViewed(trialEligibility: String)
+    case trialStarted(tier: String)
+    case purchaseCompleted(tier: String)
+    case workoutStarted
+    case workoutCompleted(duration: AnalyticsDurationBucket, setCount: AnalyticsSetCountBucket, noKeyboardRatio: AnalyticsNoKeyboardRatioBucket)
+    case progressionRecommendationShown(outcome: AnalyticsProgressionOutcome)
+    case progressionDecision(action: AnalyticsProgressionDecision, outcome: AnalyticsProgressionOutcome)
+    case feedbackAction(action: AnalyticsFeedbackAction)
+
+    static let allowedNames: Set<String> = [
+        "onboarding_started",
+        "onboarding_slide_viewed",
+        "weight_unit_selected",
+        "program_source_selected",
+        "program_setup_completed",
+        "paywall_viewed",
+        "trial_started",
+        "purchase_completed",
+        "workout_started",
+        "workout_completed",
+        "progression_recommendation_shown",
+        "progression_decision",
+        "feedback_action"
+    ]
+
+    var payload: (name: String, parameters: [String: String]) {
+        switch self {
+        case .onboardingStarted:
+            ("onboarding_started", [:])
+        case .onboardingSlideViewed(let id):
+            ("onboarding_slide_viewed", ["slide": id.rawValue])
+        case .weightUnitSelected(let unit):
+            ("weight_unit_selected", ["unit": unit == "lb" ? "lb" : "kg"])
+        case .programSourceSelected(let source):
+            ("program_source_selected", ["source": source == "paste" ? "paste" : "library"])
+        case .programSetupCompleted(let source):
+            ("program_setup_completed", ["source": source == "paste" ? "paste" : "library"])
+        case .paywallViewed(let trialEligibility):
+            ("paywall_viewed", ["trial_eligibility": Self.validTrialEligibility(trialEligibility)])
+        case .trialStarted(let tier):
+            ("trial_started", ["tier": Self.validTier(tier)])
+        case .purchaseCompleted(let tier):
+            ("purchase_completed", ["tier": Self.validTier(tier)])
+        case .workoutStarted:
+            ("workout_started", [:])
+        case .workoutCompleted(let duration, let setCount, let noKeyboardRatio):
+            (
+                "workout_completed",
+                [
+                    "duration": duration.rawValue,
+                    "set_count": setCount.rawValue,
+                    "no_keyboard_ratio": noKeyboardRatio.rawValue
+                ]
+            )
+        case .progressionRecommendationShown(let outcome):
+            ("progression_recommendation_shown", ["outcome": outcome.rawValue])
+        case .progressionDecision(let action, let outcome):
+            ("progression_decision", ["action": action.rawValue, "outcome": outcome.rawValue])
+        case .feedbackAction(let action):
+            ("feedback_action", ["action": action.rawValue])
+        }
+    }
+
+    private static func validTier(_ tier: String) -> String {
+        ["weekly", "monthly", "annual", "lifetime"].contains(tier) ? tier : "unknown"
+    }
+
+    private static func validTrialEligibility(_ value: String) -> String {
+        ["eligible", "ineligible"].contains(value) ? value : "unknown"
+    }
+}
+
+final class UnitAnalytics {
+    @MainActor
+    static let shared = UnitAnalytics()
+    static let enabledKey = "analytics.enabled"
+
+    private let defaults: UserDefaults
+    private let transport: AnalyticsTransport
+    private let appIDProvider: () -> String?
+    @MainActor private(set) var isConfigured = false
+
+    @MainActor
+    var isEnabled: Bool {
+        defaults.object(forKey: Self.enabledKey) == nil
+            ? true
+            : defaults.bool(forKey: Self.enabledKey)
+    }
+
+    @MainActor
+    init(
+        defaults: UserDefaults = .standard,
+        transport: AnalyticsTransport = TelemetryDeckAnalyticsTransport(),
+        appIDProvider: @escaping () -> String? = {
+            Bundle.main.object(forInfoDictionaryKey: "TelemetryDeckAppID") as? String
+        }
+    ) {
+        self.defaults = defaults
+        self.transport = transport
+        self.appIDProvider = appIDProvider
+    }
+
+    nonisolated deinit {}
+
+    @MainActor
+    func configure() {
+        guard isEnabled, let appID = validAppID else {
+            transport.terminate()
+            isConfigured = false
+            return
+        }
+        transport.initialize(appID: appID)
+        isConfigured = true
+    }
+
+    @MainActor
+    func setEnabled(_ enabled: Bool) {
+        defaults.set(enabled, forKey: Self.enabledKey)
+        if enabled {
+            configure()
+        } else {
+            transport.terminate()
+            isConfigured = false
+        }
+    }
+
+    @MainActor
+    func track(_ event: UnitAnalyticsEvent) {
+        guard isEnabled, isConfigured else { return }
+        let payload = event.payload
+        guard UnitAnalyticsEvent.allowedNames.contains(payload.name) else { return }
+        transport.send(name: payload.name, parameters: payload.parameters)
+    }
+
+    @MainActor
+    private var validAppID: String? {
+        guard let rawValue = appIDProvider()?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !rawValue.isEmpty,
+              !rawValue.contains("$("),
+              UUID(uuidString: rawValue) != nil else {
+            return nil
+        }
+        return rawValue
+    }
+}

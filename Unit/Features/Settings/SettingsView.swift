@@ -98,6 +98,7 @@ struct SettingsView: View {
     @State private var showingRestoreSuccess = false
     @State private var showingManageSubscriptions = false
     @State private var toastMessage: String?
+    @State private var analyticsEnabled = UnitAnalytics.shared.isEnabled
 
     init(showsCloseButton: Bool = true) {
         self.shouldShowCloseButton = showsCloseButton
@@ -192,16 +193,30 @@ struct SettingsView: View {
     @ViewBuilder
     private var preferencesSection: some View {
         SettingsSection(title: "Preferences", contentInset: AppSpacing.sm) {
-            AppListRow(title: "Weight unit") {
-                AppSegmentedControl(
-                    selection: Binding(
-                        get: { SettingsWeightUnit(rawValue: unitSystem) ?? .kg },
-                        set: { unitSystem = $0.rawValue }
-                    ),
-                    items: SettingsWeightUnit.allCases,
-                    title: { $0.rawValue }
-                )
+            AppDividedList(data: ["Weight unit", "Anonymous analytics"], id: \.self) { row in
+                if row == "Weight unit" {
+                    AppListRow(title: row) {
+                        AppSegmentedControl(
+                            selection: Binding(
+                                get: { SettingsWeightUnit(rawValue: unitSystem) ?? .kg },
+                                set: { unitSystem = $0.rawValue }
+                            ),
+                            items: SettingsWeightUnit.allCases,
+                            title: { $0.rawValue }
+                        )
+                    }
+                } else {
+                    AppListRow(title: row) {
+                        Toggle("", isOn: $analyticsEnabled)
+                            .labelsHidden()
+                            .tint(AppColor.accent)
+                            .accessibilityLabel("Anonymous analytics")
+                    }
+                }
             }
+        }
+        .onChange(of: analyticsEnabled) { _, enabled in
+            UnitAnalytics.shared.setEnabled(enabled)
         }
     }
 
@@ -308,6 +323,7 @@ struct SettingsView: View {
             return
         }
 
+        UnitAnalytics.shared.track(.feedbackAction(action: .portal))
         openURL(url) { accepted in
             if !accepted {
                 toastMessage = AppCopy.FeatureRequest.openError

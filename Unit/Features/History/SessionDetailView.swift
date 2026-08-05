@@ -26,6 +26,7 @@ struct SessionDetailView: View {
     @State private var editingRecommendationID: UUID?
     @State private var editingWeightText = ""
     @State private var editingTargetReps = 1
+    @State private var didTrackRecommendations = false
 
     private struct ProgressionRecommendationRow: Identifiable {
         let exerciseID: UUID
@@ -166,6 +167,7 @@ struct SessionDetailView: View {
         .onAppear {
             backfillAcceptedProgressionRecordsIfNeeded()
             presentFeedbackInvitationIfNeeded()
+            trackRecommendationsIfNeeded()
         }
     }
 
@@ -502,6 +504,12 @@ struct SessionDetailView: View {
 
         do {
             try modelContext.save()
+            UnitAnalytics.shared.track(
+                .progressionDecision(
+                    action: analyticsDecision(for: action),
+                    outcome: analyticsOutcome(for: reason)
+                )
+            )
             toastMessage = AppCopy.Workout.targetsSaved
         } catch {
             modelContext.rollback()
@@ -697,10 +705,12 @@ struct SessionDetailView: View {
                         toastMessage = AppCopy.Engagement.linkError
                         return
                     }
+                    UnitAnalytics.shared.track(.feedbackAction(action: .email))
                     open(url)
                 }
 
                 Button(AppCopy.Engagement.noThanks) {
+                    UnitAnalytics.shared.track(.feedbackAction(action: .dismiss))
                     withAnimation(.appState) {
                         showsFeedbackInvitation = false
                     }
@@ -719,10 +729,12 @@ struct SessionDetailView: View {
     private var feedbackBookingButton: some View {
         if progressionRecommendations.isEmpty {
             AppPrimaryButton(AppCopy.Engagement.bookCall) {
+                UnitAnalytics.shared.track(.feedbackAction(action: .book))
                 open(EngagementPromptTracker.bookingURL)
             }
         } else {
             AppGhostButton(AppCopy.Engagement.bookCall) {
+                UnitAnalytics.shared.track(.feedbackAction(action: .book))
                 open(EngagementPromptTracker.bookingURL)
             }
         }
@@ -740,6 +752,34 @@ struct SessionDetailView: View {
             if !accepted {
                 toastMessage = AppCopy.Engagement.linkError
             }
+        }
+    }
+
+    private func trackRecommendationsIfNeeded() {
+        guard !didTrackRecommendations else { return }
+        didTrackRecommendations = true
+        let outcomes = Set(progressionRecommendations.map {
+            analyticsOutcome(for: $0.record.recommendationReason)
+        })
+        for outcome in outcomes {
+            UnitAnalytics.shared.track(.progressionRecommendationShown(outcome: outcome))
+        }
+    }
+
+    private func analyticsOutcome(for reason: DoubleProgressionReason?) -> AnalyticsProgressionOutcome {
+        switch reason {
+        case .allSetsReachedTop: .addWeight
+        case .addARep: .addRep
+        case .repeatTarget: .repeatTarget
+        case nil: .unsupported
+        }
+    }
+
+    private func analyticsDecision(for action: ProgressionDecisionAction) -> AnalyticsProgressionDecision {
+        switch action {
+        case .usedSuggestion: .accept
+        case .repeatedPreviousTarget: .repeatTarget
+        case .edited: .edit
         }
     }
 }

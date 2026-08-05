@@ -289,8 +289,8 @@ enum AppCopy {
     /// the controls don't already show. The first-person rule bans corporate
     /// "we" — it does not require "my"/"I'll" in UI labels.
     enum Onboarding {
-        static let splashTagline = "Your gym workout log."
-        static let splashCTA = "Add program"
+        static let splashTagline = "Progressive overload, made simple."
+        static let splashCTA = "Set up your program"
         static let unitTitle = "Choose weight unit"
         static let unitSubtitle = "You can change this later in Settings."
         static let methodTitle = "Add program"

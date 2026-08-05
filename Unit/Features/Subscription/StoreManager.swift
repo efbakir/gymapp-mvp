@@ -265,6 +265,15 @@ final class StoreManager {
             case .lifetime: false
             }
         }
+
+        var analyticsValue: String {
+            switch self {
+            case .weekly: "weekly"
+            case .monthly: "monthly"
+            case .annual: "annual"
+            case .lifetime: "lifetime"
+            }
+        }
     }
 
     nonisolated static let weeklyProductID = Tier.weekly.rawValue
@@ -561,6 +570,10 @@ final class StoreManager {
                 let transaction = try checkVerified(verification)
                 if let tier = Tier(rawValue: transaction.productID) {
                     confirmEntitlement(tier)
+                    if presentation(for: tier)?.trial != nil {
+                        UnitAnalytics.shared.track(.trialStarted(tier: tier.analyticsValue))
+                    }
+                    UnitAnalytics.shared.track(.purchaseCompleted(tier: tier.analyticsValue))
                 }
                 await transaction.finish()
             case .userCancelled:

@@ -257,6 +257,7 @@ struct OnboardingView: View {
     @State private var commitError: Bool = false
     @State private var didLoadPreferences = false
     @State private var isCommitting: Bool = false
+    @State private var didTrackOnboardingStart = false
 
     var body: some View {
         // Single `NavigationStack` wraps the whole flow so each step's
@@ -279,6 +280,10 @@ struct OnboardingView: View {
             Text("Try again in a moment.")
         }
         .onAppear {
+            if !didTrackOnboardingStart {
+                didTrackOnboardingStart = true
+                UnitAnalytics.shared.track(.onboardingStarted)
+            }
             guard !didLoadPreferences else { return }
             vm.unitSystem = storedUnitSystem
             OnboardingPreferences.load(into: vm)
@@ -295,9 +300,12 @@ struct OnboardingView: View {
     private func stepView(_ step: OnboardingStep) -> some View {
         switch step {
         case .splash:
-            OnboardingSplashView {
-                push(.unitPicker)
-            }
+            OnboardingSplashView(
+                onSlideViewed: { id in
+                    UnitAnalytics.shared.track(.onboardingSlideViewed(id: id))
+                },
+                onGetStarted: { push(.unitPicker) }
+            )
 
         case .unitPicker:
             OnboardingUnitPickerView(
@@ -307,6 +315,7 @@ struct OnboardingView: View {
                 onSelect: { unit in
                     let shouldAutoAdvance = !vm.hasSelectedUnit
                     vm.unitSystem = unit
+                    UnitAnalytics.shared.track(.weightUnitSelected(unit: unit))
                     vm.hasSelectedUnit = true
                     persistProgress()
                     if shouldAutoAdvance {
@@ -325,6 +334,9 @@ struct OnboardingView: View {
                 onSelect: { method in
                     let shouldAutoAdvance = !vm.hasSelectedImportMethod
                     vm.importMethod = method
+                    UnitAnalytics.shared.track(
+                        .programSourceSelected(source: method == .paste ? "paste" : "library")
+                    )
                     vm.hasSelectedImportMethod = true
                     persistProgress()
                     if shouldAutoAdvance {
@@ -441,6 +453,9 @@ struct OnboardingView: View {
         isCommitting = true
         do {
             try vm.commit(modelContext: modelContext)
+            UnitAnalytics.shared.track(
+                .programSetupCompleted(source: vm.importMethod == .paste ? "paste" : "library")
+            )
             storedUnitSystem = vm.unitSystem
             OnboardingPreferences.clear()
             onCompletion()

@@ -2,20 +2,17 @@
 //  OnboardingSplashView.swift
 //  Unit
 //
-//  Screen 1 — standalone opener, then carousel; no data collected:
-//    1. Opener — logo + "Welcome to Unit" + "Your gym workout log."
+//  Screen 1 — standalone opener, then progression-led carousel:
+//    1. Opener — logo + "Welcome to Unit" + the progression promise.
 //       No CTA, no dots, auto-advances after the brand beat.
 //    2. Carousel — 3 auto-advancing value slides that teach what Unit does
 //       *before* the post-onboarding paywall (decision-log 2026-06-16: "the
 //       onboarding has to teach value before the wall"). Founder-approved
-//       wedges (decision-log 2026-06-09 "Last time" + day-one paste import;
-//       PRODUCT.md "No account. Works offline."). Calm/expert/honest, first-
-//       person / Unit-as-subject — never the "transform your training" three-
-//       feature-grid trap PRODUCT.md §Anti-references bans. Value, never price
-//       (the price-disclosure splash was removed 2026-06-18).
+//       contract: previous evidence → next target → one-tap logging. Calm,
+//       transparent, and outcome-first; value, never price.
 //
-//  Each slide renders one required, approved screenshot asset. There is no
-//  icon-only fallback in the shipping path (DEV-44).
+//  Each slide renders production-token UI rather than competitor artwork or a
+//  QA-harness screenshot.
 //
 
 import SwiftUI
@@ -23,6 +20,7 @@ import SwiftUI
 struct OnboardingSplashView: View {
     var showsDismiss: Bool = false
     var onDismiss: (() -> Void)?
+    var onSlideViewed: ((AnalyticsOnboardingSlide) -> Void)?
     var onGetStarted: () -> Void
 
     private enum Phase { case opener, carousel }
@@ -51,6 +49,7 @@ struct OnboardingSplashView: View {
     /// Keeps the opener mounted through its exit animation, then unmounts it once
     /// the lift-away has played so it leaves the view hierarchy.
     @State private var openerVisible = true
+    @State private var viewedSlideIDs: Set<AnalyticsOnboardingSlide> = []
 
     private let slides = MarketingSlide.all
 
@@ -108,6 +107,7 @@ struct OnboardingSplashView: View {
                 // the now-invisible opener once the lift-away has played.
                 openerLeaving = true
                 withAnimation(reduceMotion ? nil : .appEnter) { phase = .carousel }
+                recordVisibleSlide()
                 try? await Task.sleep(for: .seconds(reduceMotion ? 0.2 : 0.65))
                 if Task.isCancelled { return }
                 openerVisible = false
@@ -123,9 +123,21 @@ struct OnboardingSplashView: View {
                 try? await Task.sleep(for: .seconds(interval))
                 if Task.isCancelled || phase != .carousel { return }
                 withAnimation(.appEnter) { selection = (selection + 1) % slides.count }
+                recordVisibleSlide()
                 interval = Self.slideInterval
             }
         }
+        .onChange(of: selection) { _, _ in
+            guard phase == .carousel else { return }
+            recordVisibleSlide()
+        }
+    }
+
+    private func recordVisibleSlide() {
+        guard slides.indices.contains(selection) else { return }
+        let analyticsID = slides[selection].analyticsID
+        guard viewedSlideIDs.insert(analyticsID).inserted else { return }
+        onSlideViewed?(analyticsID)
     }
 
     private var carousel: some View {
@@ -270,32 +282,41 @@ private struct ParallaxEntry: ViewModifier {
 /// primitive) — kept file-private alongside the splash, same as the existing
 /// precedent. Copy lives here so the founder can redline one list.
 private struct MarketingSlide: Identifiable {
-    let id = UUID()
-    /// Required asset name in `Assets.xcassets`.
-    var imageName: String
+    var analyticsID: AnalyticsOnboardingSlide
+    var id: String { analyticsID.rawValue }
+    var visual: MarketingSlideVisual
     var headline: String
     var subline: String
 
     static let all: [MarketingSlide] = [
         MarketingSlide(
-            imageName: "MarketingShotLogging",
-            headline: "3 seconds, back under the bar",
-            subline: "Last session’s weight and reps are ready to confirm."
+            analyticsID: .nextTarget,
+            visual: .nextTarget,
+            headline: "Know what to do next",
+            subline: "After every workout, Unit suggests one clear target for next time."
         ),
         MarketingSlide(
-            imageName: "MarketingShotProgram",
-            headline: "Paste your program, start lifting",
-            subline: "Your working numbers are ready from day one."
+            analyticsID: .doubleProgression,
+            visual: .doubleProgression,
+            headline: "Build reps, then weight",
+            subline: "Reach the top of your range, then move up by the smallest increase."
         ),
         MarketingSlide(
-            imageName: "MarketingShotPrivacy",
-            headline: "No account. Works offline.",
-            subline: "Your training stays on your iPhone."
+            analyticsID: .oneTapLogging,
+            visual: .oneTapLogging,
+            headline: "Log every set in one tap",
+            subline: "Your target and last session are ready before each set."
         ),
     ]
 }
 
-/// Renders a single carousel slide: screenshot over headline + subline.
+private enum MarketingSlideVisual {
+    case nextTarget
+    case doubleProgression
+    case oneTapLogging
+}
+
+/// Renders a single carousel slide: production UI over headline + subline.
 /// File-private, splash-only — not a reusable molecule.
 private struct MarketingSlideView: View {
     let slide: MarketingSlide
@@ -318,8 +339,8 @@ private struct MarketingSlideView: View {
                 VStack(spacing: 0) {
                     Spacer(minLength: AppSpacing.lg)
 
-                    MarketingSlideImage(
-                        imageName: slide.imageName,
+                    MarketingSlideArtwork(
+                        visual: slide.visual,
                         maxHeight: imageMaxHeight
                     )
                         .padding(.horizontal, AppSpacing.md)
@@ -351,22 +372,85 @@ private struct MarketingSlideView: View {
     }
 }
 
-/// Screenshot frame for a feature slide. Renders the required named asset
-/// clipped to the card squircle.
-/// File-private — there is no existing image-frame primitive to extend, and this
-/// is one-screen marketing chrome, not a general molecule.
-private struct MarketingSlideImage: View {
-    let imageName: String
+/// Small production-token compositions that teach the real Unit interaction
+/// without using a QA harness or competitor artwork.
+private struct MarketingSlideArtwork: View {
+    let visual: MarketingSlideVisual
     let maxHeight: CGFloat
 
     var body: some View {
-        Image(imageName)
-            .resizable()
-            .interpolation(.high)
-            .scaledToFit()
-            .frame(maxHeight: maxHeight)
-            .clipShape(RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous))
+        AppCard {
+            switch visual {
+            case .nextTarget:
+                VStack(alignment: .leading, spacing: AppSpacing.md) {
+                    previewEvidence(label: "LAST TIME", value: "60 kg · 10, 10, 10")
+                    AppDivider()
+                    previewEvidence(label: "NEXT TARGET", value: "62.5 kg · 8", primary: true)
+                    Text("All sets reached the top of your range.")
+                        .font(AppFont.caption.font)
+                        .foregroundStyle(AppColor.textSecondary)
+                }
+            case .doubleProgression:
+                VStack(alignment: .leading, spacing: AppSpacing.md) {
+                    previewStep(label: "BUILD REPS", value: "60 kg · 8 → 9 → 10")
+                    HStack(spacing: AppSpacing.sm) {
+                        AppIcon.forward.image(size: 18, weight: .semibold)
+                        Text("Every set reached 10")
+                            .font(AppFont.caption.font)
+                    }
+                    .foregroundStyle(AppColor.textSecondary)
+                    previewStep(label: "ADD WEIGHT", value: "62.5 kg · 8")
+                }
+            case .oneTapLogging:
+                VStack(alignment: .leading, spacing: AppSpacing.md) {
+                    HStack(spacing: AppSpacing.xs) {
+                        AppTag(text: "SET 1", style: .accent)
+                        AppTag(text: "2", style: .muted)
+                        AppTag(text: "3", style: .muted)
+                    }
+                    Text("Bench Press")
+                        .font(AppFont.title.font)
+                        .foregroundStyle(AppColor.textPrimary)
+                    Text("60 kg × 8")
+                        .appFont(.numericDisplay)
+                        .foregroundStyle(AppColor.textPrimary)
+                        .monospacedDigit()
+                    Text("Last time · 60 kg × 7")
+                        .font(AppFont.caption.font)
+                        .foregroundStyle(AppColor.textSecondary)
+                    AppPrimaryButton("Complete set") { }
+                }
+            }
+        }
+        .frame(maxWidth: 520)
+        .frame(maxHeight: maxHeight)
+        .allowsHitTesting(false)
             .accessibilityHidden(true)
+    }
+
+    private func previewEvidence(label: String, value: String, primary: Bool = false) -> some View {
+        VStack(alignment: .leading, spacing: AppSpacing.xs) {
+            Text(label)
+                .appCapsLabel(.overline)
+                .foregroundStyle(AppColor.textSecondary)
+            Text(value)
+                .font(primary ? AppFont.title.font : AppFont.body.font)
+                .foregroundStyle(AppColor.textPrimary)
+                .monospacedDigit()
+        }
+    }
+
+    private func previewStep(label: String, value: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: AppSpacing.md) {
+            Text(label)
+                .appCapsLabel(.overline)
+                .foregroundStyle(AppColor.textSecondary)
+                .frame(width: 92, alignment: .leading)
+            Text(value)
+                .font(AppFont.body.font)
+                .foregroundStyle(AppColor.textPrimary)
+                .monospacedDigit()
+        }
     }
 }
 

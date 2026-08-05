@@ -214,16 +214,21 @@ struct OnboardingProgramPreviewView: View {
     private func prescriptionText(for exercise: OnboardingExercise) -> String {
         let prescription: String
         if let progression = exercise.progressionConfiguration {
-            prescription = WorkoutTargetFormatter.repRangeDisplay(
+            let range = WorkoutTargetFormatter.repRangeDisplay(
                 setCount: exercise.plannedSets,
                 lowerRepBound: progression.lowerRepBound,
                 upperRepBound: progression.upperRepBound
             ) ?? ""
+            let increment = WorkoutTargetFormatter.weightIncrementDisplay(
+                progression.weightIncrementKg
+            ) ?? ""
+            prescription = [range, increment].filter { !$0.isEmpty }.joined(separator: " · ")
         } else {
-            prescription = WorkoutTargetFormatter.setRepDisplay(
+            let fixed = WorkoutTargetFormatter.setRepDisplay(
                 setCount: exercise.plannedSets,
                 reps: exercise.plannedReps
             ) ?? ""
+            prescription = fixed.isEmpty ? "Tracking only" : "\(fixed) · Tracking only"
         }
         return exercise.plannedWeightKg.map { $0 > 0 ? "\(prescription) at" : prescription }
             ?? prescription
