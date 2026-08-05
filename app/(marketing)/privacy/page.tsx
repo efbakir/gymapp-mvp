@@ -9,7 +9,7 @@ import {
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description:
-    "Unit privacy policy. Your workout data stays on your device. No account, no analytics, no tracking. Local-first iOS gym logger.",
+    "Unit privacy policy. Workout details stay on your device. Limited anonymous product analytics can be disabled in Settings.",
   alternates: { canonical: "/privacy" },
 }
 
@@ -32,6 +32,7 @@ export default function PrivacyPage() {
             <ul>
               <li><a href="#summary">Summary</a></li>
               <li><a href="#data-storage">Data storage</a></li>
+              <li><a href="#analytics">Anonymous analytics</a></li>
               <li><a href="#data-not-collected">Data I do not collect</a></li>
               <li><a href="#feature-requests">Feature requests</a></li>
               <li><a href="#purchases">Purchases</a></li>
@@ -46,9 +47,45 @@ export default function PrivacyPage() {
 
           <h2 id="summary">Summary</h2>
           <p>
-            Unit is designed with privacy as a default. Your workout data stays
-            on your device. I do not collect or transmit your workout data, use
-            analytics, or require a Unit account.
+            Unit is designed with privacy as a default. Your raw workout data
+            stays on your device and Unit does not require an account. Unit sends
+            limited anonymous product-usage events to help me understand where
+            setup or workout flows fail. You can disable analytics in Settings.
+          </p>
+
+          <h2 id="analytics">Anonymous Analytics</h2>
+          <p>
+            Unit uses TelemetryDeck for limited product analytics. Analytics are
+            enabled by default and can be disabled at any time under Settings
+            → Anonymous analytics. Disabling the toggle stops future analytics
+            events immediately. Unit remains fully functional offline and when
+            analytics are disabled or unavailable.
+          </p>
+          <p>
+            TelemetryDeck processes these events for Unit under its privacy
+            safeguards. You can read the TelemetryDeck privacy FAQ at{" "}
+            <a
+              href="https://telemetrydeck.com/docs/guides/privacy-faq/"
+              rel="noreferrer"
+              target="_blank"
+            >
+              telemetrydeck.com
+            </a>.
+          </p>
+          <p>
+            Events describe product interactions using controlled categories
+            and broad buckets, such as which onboarding slide was viewed,
+            whether a program was pasted or selected, whether a trial or
+            purchase completed, a broad workout-duration or set-count range,
+            and whether a progression suggestion was accepted, repeated, or
+            edited. These events are not linked to your identity and are not
+            used for advertising or tracking across apps or websites.
+          </p>
+          <p>
+            Analytics never include exercise names, program text, weights,
+            repetitions, notes, bodyweight, email addresses, exact workout
+            timestamps, raw workout identifiers, calendar details, or StoreKit
+            receipts.
           </p>
 
           <h2 id="data-storage">Data Storage</h2>
@@ -73,9 +110,9 @@ export default function PrivacyPage() {
           <ul>
             <li>I do not collect your name, email address, or contact information through the App</li>
             <li>I do not collect workout data or training history</li>
-            <li>I do not use analytics or tracking frameworks</li>
+            <li>I do not use advertising identifiers, fingerprinting, or session replay</li>
             <li>I do not use advertising SDKs</li>
-            <li>Unit does not automatically send personal data to third parties</li>
+            <li>I do not use analytics for cross-app or cross-website tracking</li>
           </ul>
 
           <h2 id="feature-requests">Feature Requests</h2>
@@ -102,9 +139,11 @@ export default function PrivacyPage() {
 
           <h2 id="purchases">Purchases</h2>
           <p>
-            Unit offers in-app purchases processed entirely by Apple through the
-            App Store. I do not receive or store your payment information.
-            Purchase records are managed by your Apple ID.
+            Unit offers in-app purchases processed by Apple through the App
+            Store. I do not receive or store your payment information or
+            StoreKit receipt. Unit may send an anonymous event containing only
+            the selected subscription tier and whether a verified trial or
+            purchase completed. Purchase records are managed by your Apple ID.
           </p>
 
           <h2 id="healthkit">HealthKit</h2>

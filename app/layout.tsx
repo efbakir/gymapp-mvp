@@ -29,9 +29,9 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: { default: "Unit: Gym Workout Log for iPhone", template: "%s | Unit" },
+  title: { default: "Unit: Progressive Overload for iPhone", template: "%s | Unit" },
   description:
-    "Unit is a fast, local-first iOS gym tracker and workout log. Log a set in 3 seconds. Every set opens with what you did last time. No AI, no social, no account.",
+    "Unit is the simple progressive overload tracker for iPhone. Log in one tap, then get one clear target for next time. No AI, no social, no account.",
   metadataBase: new URL(SITE_URL),
   alternates: { canonical: "/" },
   openGraph: {
@@ -39,17 +39,17 @@ export const metadata: Metadata = {
     locale: "en_US",
     siteName: "Unit",
     url: `${SITE_URL}/`,
-    title: "Unit: Gym Workout Log for iPhone",
+    title: "Unit: Progressive Overload for iPhone",
     description:
-      "Fast iOS gym tracker. Log a set in 3 seconds. Every set opens with what you did last time. Local-first, no account, no AI.",
+      "Simple progressive overload tracker for iPhone. Log in one tap, then get one clear target for next time.",
     images: [
-      { url: "/opengraph-image", width: 1200, height: 630, alt: "Unit: Gym Workout Log" },
+      { url: "/opengraph-image", width: 1200, height: 630, alt: "Unit: Progressive Overload" },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Unit: Gym Workout Log for iPhone",
-    description: "Fast iOS gym tracker. Log a set in 3 seconds. No AI, no social, no account.",
+    title: "Unit: Progressive Overload for iPhone",
+    description: "Simple progressive overload tracker. Log in one tap, then get one clear target for next time.",
     images: ["/opengraph-image"],
   },
   robots: { index: true, follow: true },

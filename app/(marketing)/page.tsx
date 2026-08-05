@@ -13,7 +13,7 @@ import { SITE_URL } from "@/lib/site"
 
 export const metadata: Metadata = {
   description:
-    "Unit is a fast, local-first iOS gym tracker and workout log. Log a set in 3 seconds. Every set opens with what you did last time. No AI, no social, no account.",
+    "Unit is the simple progressive overload tracker for iPhone. Log in one tap, then get one clear target for next time. No AI, no social, no account.",
   alternates: { canonical: "/" },
 }
 
@@ -36,7 +36,7 @@ const faqs = [
   {
     question: "Does Unit work offline?",
     answer:
-      "Yes. All your data is stored locally on your device. No internet connection needed, no account required.",
+      "Yes. Your workout data is stored locally and logging needs no connection or account. Optional anonymous product analytics never block the app.",
   },
   {
     question: "How do I import my program?",
@@ -67,7 +67,7 @@ const softwareLd = {
   applicationCategory: "HealthApplication",
   operatingSystem: "iOS",
   description:
-    "Fast iOS gym tracker and workout log. Log a set in under 3 seconds. Every set opens with what you did last time. Local-first, no account, no AI.",
+    "Simple progressive overload tracker for iPhone. Log in one tap, then get one clear target for next time.",
   url: `${SITE_URL}/`,
   keywords:
     "gym tracker, workout log, lifting log, strength log, last session values, rest timer, local-first, no account",
@@ -330,8 +330,8 @@ export default function LandingPage() {
             Log a set in 3 seconds.
           </h2>
           <p className="text-lg leading-snug mb-unit-xl text-unit-text-secondary max-w-xl mx-auto">
-            One tap per set. Everything stays on your phone. The notebook,
-            upgraded.
+            One tap per set. Raw workout details stay on your phone. The
+            notebook, upgraded.
           </p>
           <div className="flex flex-col items-center gap-unit-lg">
             <AppStoreBadge href={APP_STORE_URL} />

@@ -154,7 +154,7 @@ tests, release build, and physical-device checks pass, stop and ship 2.1.
   375 × 667. Twelve cover onboarding/paywall states and two cover the complete
   starting-target/progression contract, including a cold relaunch and History.
 - The final **Release build succeeded** for Unit and `UnitWidgetExtension` and
-  identifies itself as **2.1 (65)**.
+  identifies itself as **2.1 (66)**.
 - A clean launch of that Release binary on iPhone 17, iOS 26.3.1 produced no
   Unit-owned crash, migration/decoding failure, constraint warning, duplicate
   action, or repeated-Liquid-Glass-update log entry.

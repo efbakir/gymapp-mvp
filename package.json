@@ -9,7 +9,9 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:app-store-english": "node scripts/validate-app-store-english.mjs",
+    "build:app-store-screenshots": "node scripts/build-app-store-screenshots.mjs"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",

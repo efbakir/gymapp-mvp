@@ -1,3 +1,11 @@
+## 2026-08-05 — Version 2.1 completes the progression pivot with anonymous funnel analytics
+
+**Decision:** Version 2.1 advances to build **66**, replaces the three logger-led marketing slides with progression-led onboarding, and uses TelemetryDeck for a strict allowlist of anonymous product-usage events. Analytics are enabled by default with an immediate Settings opt-out. Supabase and CloudKit are not part of this release.
+
+**Why:** Unit needs to measure the complete onboarding → paywall → verified trial/purchase → workout → recommendation funnel without building accounts or transmitting workout content. CloudKit is user-private sync rather than founder analytics; Supabase would add identity, database, policy, and deletion scope that the 2.1 hypothesis does not need.
+
+**Implication:** Raw workout details remain on-device and Unit remains fully functional offline or without analytics configuration. Analytics may contain only controlled enums and broad duration/set/no-keyboard buckets; never exercise names, program text, weights, reps, notes, bodyweight, email, timestamps, raw identifiers, or receipts. App Store privacy answers declare anonymous Product Interaction and Purchase History data as not linked and not used for tracking. The active English screenshot order is progression target, 3-second log, reps-then-weight, program setup, progress history, and Lock Screen timer. All non-English metadata remains stale.
+
 ## 2026-08-04 — First-session program values are targets, not history
 
 **Decision:** Sets, reps, and weights explicitly saved from a pasted, ready-made, or edited program persist into the first matching workout as a **Starting target**. Prefill precedence is: accepted progression target for the matching routine and exercise, latest valid completed session under the global fallback rules, explicit starting values for the current template/program, then the truly empty state. Planned values are never labelled **Last time** until the user has completed a real set.
@@ -20,7 +28,7 @@
 
 **Why:** Version 2.0 is the live release. The progression feature now has unit, UI, small-screen, and accessibility verification, so delaying the feature and its honest positioning to an artificial 2.2 release no longer serves the experiment. Shipping the name before the feature would overpromise; shipping the feature under the old listing would fail to test the acquisition hypothesis.
 
-**Implication:** All active product and release documents use 2.1. The current candidate identity is **2.1 (65)** until a later build increment is required. The old App Store screenshots must be replaced with a progression-led English set. All five localized metadata files are stale again and must not be published. The one-week trial is implemented in the paywall and local StoreKit QA configuration, but the actual App Store Connect offer and Apple sandbox purchase sheet remain release gates under the superseding trial decision above.
+**Implication:** All active product and release documents use 2.1. The 2026-08-05 decision advances the candidate from 2.1 (65) to **2.1 (66)**. The old App Store screenshots must be replaced with a progression-led English set. All five localized metadata files are stale again and must not be published. The one-week trial is implemented in the paywall and local StoreKit QA configuration, but the actual App Store Connect offer and Apple sandbox purchase sheet remain release gates under the superseding trial decision above.
 
 ## 2026-08-03 — Transparent progression-guided logger supersedes pure logging
 

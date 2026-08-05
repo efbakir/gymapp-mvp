@@ -1,4 +1,4 @@
-# Final submit checklist — Unit v2.1 (build 65)
+# Final submit checklist — Unit v2.1 (build 66)
 
 > The ASC handoff package. Copy fields are paste-exact; the introductory offers require the founder actions in §4 before submission.
 > Updated 2026-08-04 for the progression-guided v2.1 release. Companions: `docs/pricing.md` (pricing truth) and `docs/release-qa.md` (device gauntlet).
@@ -18,8 +18,8 @@
 | Field | Value | Verified |
 |---|---|---|
 | Marketing version | **2.1** | `MARKETING_VERSION = 2.1` in all 8 pbxproj configs |
-| Build | **65** | `CURRENT_PROJECT_VERSION = 65` in all 8 pbxproj configs |
-| Archive source | tagged `main` | clean tree, local `main` equals `origin/main`, tag `v2.1-build65` points at the archived commit |
+| Build | **66** | `CURRENT_PROJECT_VERSION = 66` in all 8 pbxproj configs |
+| Archive source | tagged `main` | clean tree, local `main` equals `origin/main`, tag `v2.1-build66` points at the archived commit |
 
 ## 2. App name
 
@@ -78,7 +78,7 @@ The description's paid-purchase paragraph and the two legal URLs are Guideline 3
 - [ ] Features → Subscriptions → `unit-pro` group exists with the 3 auto-renewables (§3 IDs and prices exact) and the §4 offers.
 - [ ] Each product has an English display name + description and a **review screenshot** (one capture of `PaywallView` covers all).
 - [ ] App Store tab → version 2.1 → In-App Purchases and Subscriptions → **attach Weekly, Monthly, Yearly** (+ Lifetime if configured).
-- [ ] Build 65 attached to the version.
+- [ ] Build 66 attached to the version.
 
 ## 9. Localization
 
@@ -87,7 +87,9 @@ The description's paid-purchase paragraph and the two legal URLs are Guideline 3
 
 ## 10. Privacy / age rating / URLs
 
-- [ ] App Privacy: **"Data Not Collected"** (matches `Unit/PrivacyInfo.xcprivacy` — UserDefaults only, reason CA92.1).
+- [ ] App Privacy: declare **Product Interaction** and **Purchase History** for analytics; both are not linked to identity and not used for tracking. Do not declare workout content.
+- [ ] TelemetryDeck app identifier is supplied through the private `TELEMETRYDECK_APP_ID` build setting and verified in the archive; it is not committed to source.
+- [ ] Settings → Anonymous analytics disables future events immediately.
 - [ ] Age rating: **4+** (all questionnaire categories None/No).
 - [ ] Encryption: **No** (`ITSAppUsesNonExemptEncryption = false` in Info.plist).
 - [ ] Privacy Policy URL: `https://unitlift.app/privacy` — returns 200.
@@ -101,8 +103,8 @@ The description's paid-purchase paragraph and the two legal URLs are Guideline 3
 - [ ] StoreKit sandbox QA — every step in `docs/pricing.md` §StoreKit sandbox verification checklist, on this exact build, with sandbox Apple IDs.
 - [ ] Apple's purchase sheet confirms the seven-day free period and correct renewal price for Monthly and Yearly; do not infer this from the in-app paywall alone.
 - [ ] `docs/release-qa.md` gauntlet run on device.
-- [ ] Xcode Settings shows **Version 2.1 (65)**.
+- [ ] Xcode Settings shows **Version 2.1 (66)**.
 - [ ] `git status --short` is empty and local `main` equals `origin/main`.
-- [ ] Tag `v2.1-build65` points at the exact commit being archived.
+- [ ] Tag `v2.1-build66` points at the exact commit being archived.
 - [ ] Archive from clean tagged `main` only.
-- [ ] Known site inconsistency (not an archive blocker, fix before marketing push): `app/(marketing)/compare/data.ts` still says "Core logging is free forever. Pro is $4.99/mo or $29.99/yr." in 3 rows, and `app/(marketing)/page.tsx` has one "Free. No account. No ads." eyebrow. Both contradict the hard paywall on the live site.
+- [ ] Marketing-site pricing and privacy copy matches the hard paywall, conditional seven-day offer, and anonymous-analytics disclosure in this build.

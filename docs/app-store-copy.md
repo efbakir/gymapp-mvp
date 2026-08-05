@@ -45,7 +45,7 @@ For exercises with a rep range, Unit can suggest one clear target after your wor
 • Automatic rest timer on the Lock Screen
 • Workout history and personal records
 
-No account. No ads. No social feed. Your training stays on your iPhone.
+No account. No ads. No social feed. Raw workout details stay on your iPhone. Unit sends limited anonymous product-usage events to help improve the app. Analytics are not linked to your identity, are not used for tracking, and can be disabled in Settings.
 
 Unit requires a paid purchase after setup. Weekly, monthly, and yearly auto-renewing subscriptions are available. Eligible new customers may receive a 7-day free introductory trial on Monthly or Yearly when Apple confirms the offer. Weekly and optional Lifetime have no trial. Prices and offer details are shown in the app before purchase.
 
@@ -82,8 +82,8 @@ The old screenshot set does not support the new App Store name. Capture and uplo
 2. `Log a set in 3 seconds` — active workout with accepted target and Last time.
 3. `Increase reps, then weight` — transparent rep range and smallest available increase.
 4. `Choose a program or paste yours` — beginner-inclusive setup paths.
-5. `Rest timer on your Lock Screen` — verified Live Activity.
-6. `Your training stays on your iPhone` — History/local-first proof.
+5. `See every step forward` — exercise progress and history.
+6. `Rest timer on your Lock Screen` — verified Live Activity.
 
 Screenshots must use production data and names, not the Progression QA harness.
 
@@ -107,7 +107,7 @@ Engagement prompts in version 2.1 count only workouts completed after installing
 
 Trial text is conditional: the selected product must be an auto-renewable subscription with a valid StoreKit Free introductory offer, and Apple must report the customer eligible. Eligibility alone does not produce a trial claim. The selected billed amount remains visible directly above the CTA; trial duration, post-trial price, auto-renewal, and cancel-via-App-Store copy appear on the paywall. Ineligible customers receive the standard subscription disclosure with no trial text.
 
-The app does not collect, transmit, or store any personal data. All workout data lives on-device via SwiftData. The PrivacyInfo manifest declares only UserDefaults (reason CA92.1 — app functionality). Privacy is verifiable offline: post-subscription, put the device in airplane mode and every feature still works.
+Raw workout details remain on-device via SwiftData. Unit sends a small allowlist of anonymous product-interaction and purchase-state events through TelemetryDeck. Events contain only controlled categories and buckets; they never contain exercise names, program text, weights, reps, notes, bodyweight, email, exact workout times, identifiers, or StoreKit receipts. Analytics are not linked to identity, are not used for tracking, and can be disabled immediately in Settings → Anonymous analytics. Unit remains fully functional offline and when analytics configuration is unavailable.
 
 If you have questions during review, please email support@unitlift.app.
 ```
