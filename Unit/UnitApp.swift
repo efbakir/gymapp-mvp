@@ -26,12 +26,57 @@ struct UnitApp: App {
     private static let uiTestingArgument = "-ui-testing"
     private static let uiTestingResetArgument = "-ui-testing-reset"
     private static let uiTestingSeedTwoCompletedWorkoutsArgument = "-ui-testing-seed-engagement-two"
+    private static let progressionContractUITestArgument = "-ui-testing-progression-contract"
+    private static let startingTargetUITestArgument = "-ui-testing-starting-target"
+#if DEBUG
+    private static let combatPowerSmokeTestArgument = "-smoke-test-combat-power"
+#endif
     var sharedModelContainer: ModelContainer
 
     @MainActor
     init() {
         let start = ContinuousClock.now
         self.sharedModelContainer = Self.makeSharedModelContainer()
+#if DEBUG
+        if CommandLine.arguments.contains(Self.progressionContractUITestArgument) {
+            do {
+                try ProgressionContractUITestSeeder.seed(
+                    in: sharedModelContainer.mainContext
+                )
+                Self.logger.info("Progression contract UI-test seed ready")
+            } catch {
+                Self.logger.error(
+                    "Progression contract UI-test seed failed: \(String(describing: error), privacy: .public)"
+                )
+            }
+        }
+        if CommandLine.arguments.contains(Self.startingTargetUITestArgument) {
+            do {
+                try StartingTargetUITestSeeder.seed(
+                    in: sharedModelContainer.mainContext
+                )
+                Self.logger.info("Starting-target UI-test seed ready")
+            } catch {
+                Self.logger.error(
+                    "Starting-target UI-test seed failed: \(String(describing: error), privacy: .public)"
+                )
+            }
+        }
+        if CommandLine.arguments.contains(Self.combatPowerSmokeTestArgument) {
+            do {
+                let result = try CombatPowerSmokeTestSeeder.seed(
+                    in: sharedModelContainer.mainContext
+                )
+                Self.logger.info(
+                    "Combat Power smoke seed ready: \(result.completedSessionCount, privacy: .public) completed sessions, active split \(result.splitID.uuidString, privacy: .public)"
+                )
+            } catch {
+                Self.logger.error(
+                    "Combat Power smoke seed failed: \(String(describing: error), privacy: .public)"
+                )
+            }
+        }
+#endif
         Self.logger.info("Launch: ModelContainer ready in \(ContinuousClock.now - start, privacy: .public)")
     }
 
@@ -124,6 +169,540 @@ struct UnitApp: App {
 enum PersistenceRecoveryState {
     static let noticeKey = "unit.persistenceRecoveryNotice"
 }
+
+#if DEBUG
+/// A deterministic, isolated progression journey for UI automation. The
+/// launch is deliberately parked at a fully logged, unfinished workout so the
+/// test reaches post-workout recommendations through the real Finish action.
+/// Stable IDs make relaunches idempotent: accepted or edited targets are never
+/// recalculated or replaced by the seeder.
+enum ProgressionContractUITestSeeder {
+    private static let splitID = UUID(
+        uuidString: "31000000-0000-0000-0000-000000000001"
+    )!
+    private static let templateID = UUID(
+        uuidString: "31000000-0000-0000-0000-000000000002"
+    )!
+    private static let sessionID = UUID(
+        uuidString: "31000000-0000-0000-0000-000000000003"
+    )!
+
+    private struct ExerciseSeed {
+        let id: UUID
+        let name: String
+        let currentWeightKg: Double
+        let currentTargetReps: Int
+        let completedWeightsKg: [Double]
+        let completedReps: [Int]
+    }
+
+    private static let exerciseSeeds: [ExerciseSeed] = [
+        ExerciseSeed(
+            id: UUID(uuidString: "31000000-0000-0000-0000-000000000011")!,
+            name: "Increase Weight Press",
+            currentWeightKg: 60,
+            currentTargetReps: 10,
+            completedWeightsKg: [60, 60, 60],
+            completedReps: [10, 10, 10]
+        ),
+        ExerciseSeed(
+            id: UUID(uuidString: "31000000-0000-0000-0000-000000000012")!,
+            name: "Add One Rep Row",
+            currentWeightKg: 40,
+            currentTargetReps: 8,
+            completedWeightsKg: [40, 40, 40],
+            completedReps: [8, 8, 8]
+        ),
+        ExerciseSeed(
+            id: UUID(uuidString: "31000000-0000-0000-0000-000000000013")!,
+            name: "Repeat Target Squat",
+            currentWeightKg: 50,
+            currentTargetReps: 9,
+            completedWeightsKg: [50, 50, 50],
+            completedReps: [9, 8, 9]
+        ),
+        ExerciseSeed(
+            id: UUID(uuidString: "31000000-0000-0000-0000-000000000014")!,
+            name: "Mixed Weight Deadlift",
+            currentWeightKg: 30,
+            currentTargetReps: 8,
+            completedWeightsKg: [30, 32.5, 30],
+            completedReps: [8, 8, 8]
+        )
+    ]
+
+    @MainActor
+    static func seed(in modelContext: ModelContext) throws {
+        UserDefaults.standard.set("kg", forKey: "unitSystem")
+        // Open the launch gate immediately while StoreKitTest restores the
+        // matching transaction owned by the UI test process.
+        UserDefaults.standard.set(
+            StoreManager.Tier.weekly.rawValue,
+            forKey: "storeManager.lastKnownEntitlement"
+        )
+
+        let splits = try modelContext.fetch(FetchDescriptor<Split>())
+        if splits.contains(where: { $0.id == splitID }) {
+            ActiveSplitStore.setCurrent(splitID)
+            TodayRoutineOverride.set(templateId: templateID)
+            return
+        }
+
+        let exerciseIDs = exerciseSeeds.map(\.id)
+        let progressionStates = Dictionary(
+            uniqueKeysWithValues: exerciseSeeds.map { seed in
+                (
+                    seed.id,
+                    ExerciseProgressionState(
+                        lowerRepBound: 8,
+                        upperRepBound: 10,
+                        weightIncrementKg: 2.5,
+                        currentAcceptedTargetWeightKg: seed.currentWeightKg,
+                        currentAcceptedTargetReps: seed.currentTargetReps,
+                        sourceWorkoutSessionID: nil,
+                        lastAcceptedReason: nil
+                    )
+                )
+            }
+        )
+        let plannedSets = Dictionary(
+            uniqueKeysWithValues: exerciseSeeds.map { ($0.id, 3) }
+        )
+        let plannedReps = Dictionary(
+            uniqueKeysWithValues: exerciseSeeds.map {
+                ($0.id, $0.currentTargetReps)
+            }
+        )
+        let plannedWeights = Dictionary(
+            uniqueKeysWithValues: exerciseSeeds.map {
+                ($0.id, $0.currentWeightKg)
+            }
+        )
+
+        let split = Split(
+            id: splitID,
+            name: "Progression Contract",
+            orderedTemplateIds: [templateID],
+            createdAt: Date()
+        )
+        let template = DayTemplate(
+            id: templateID,
+            name: "Progression QA",
+            splitId: split.id,
+            orderedExerciseIds: exerciseIDs,
+            lastPerformedDate: Date(),
+            scheduledWeekday: Calendar.current.component(.weekday, from: Date()),
+            plannedSetsByExerciseId: plannedSets,
+            plannedRepsByExerciseId: plannedReps,
+            plannedWeightByExerciseId: plannedWeights,
+            progressionStateByExerciseId: progressionStates
+        )
+        modelContext.insert(split)
+        modelContext.insert(template)
+
+        let exercises = exerciseSeeds.map { seed in
+            Exercise(
+                id: seed.id,
+                displayName: seed.name,
+                isBodyweight: false,
+                muscleGroup: .fullBody,
+                equipment: .barbell
+            )
+        }
+        for exercise in exercises {
+            modelContext.insert(exercise)
+        }
+
+        let session = WorkoutSession(
+            id: sessionID,
+            date: Date(),
+            templateId: template.id,
+            isCompleted: false
+        )
+        modelContext.insert(session)
+
+        for seed in exerciseSeeds {
+            for setIndex in seed.completedReps.indices {
+                let entry = SetEntry(
+                    sessionId: session.id,
+                    exerciseId: seed.id,
+                    weight: seed.completedWeightsKg[setIndex],
+                    reps: seed.completedReps[setIndex],
+                    isWarmup: false,
+                    isCompleted: true,
+                    setIndex: setIndex
+                )
+                entry.session = session
+                modelContext.insert(entry)
+            }
+        }
+
+        ActiveSplitStore.setCurrent(split.id)
+        TodayRoutineOverride.set(templateId: template.id)
+        try modelContext.save()
+    }
+}
+
+/// Runs the real paste → onboarding model → SwiftData commit pipeline for the
+/// first-session regression journey. Relaunches are idempotent, so the test can
+/// prove that the planned target survives a cold start before logging it.
+enum StartingTargetUITestSeeder {
+    private static let programText = """
+    Progression Test
+
+    Bench Press 3x8-10 60
+    Barbell Row 3x8-10 40
+    Back Squat 3x8-10 50
+    Deadlift 3x8-10 30
+    """
+
+    @MainActor
+    static func seed(in modelContext: ModelContext) throws {
+        UserDefaults.standard.set("kg", forKey: "unitSystem")
+        UserDefaults.standard.set(
+            StoreManager.Tier.weekly.rawValue,
+            forKey: "storeManager.lastKnownEntitlement"
+        )
+
+        let existingSplits = try modelContext.fetch(FetchDescriptor<Split>())
+        if let split = existingSplits.first(where: { $0.name == "Progression Test" }),
+           let templateID = split.orderedTemplateIds.first {
+            ActiveSplitStore.setCurrent(split.id)
+            TodayRoutineOverride.set(templateId: templateID)
+            return
+        }
+
+        let parsed = ProgramImportParser.parseWithWarnings(
+            programText,
+            defaultUnit: "kg"
+        )
+        guard !parsed.days.isEmpty else {
+            throw CocoaError(.coderReadCorrupt)
+        }
+
+        let viewModel = OnboardingViewModel()
+        viewModel.importMethod = .paste
+        viewModel.unitSystem = "kg"
+        viewModel.applyImportedProgram(parsed.days)
+        viewModel.dayWeekdays = Array(
+            repeating: Calendar.current.component(.weekday, from: Date()),
+            count: viewModel.dayCount
+        )
+        try viewModel.commit(modelContext: modelContext)
+
+        let splits = try modelContext.fetch(FetchDescriptor<Split>())
+        guard let split = splits.first(where: { $0.name == "Progression Test" }),
+              let templateID = split.orderedTemplateIds.first else {
+            throw CocoaError(.coderValueNotFound)
+        }
+        ActiveSplitStore.setCurrent(split.id)
+        TodayRoutineOverride.set(templateId: templateID)
+    }
+}
+
+struct CombatPowerSmokeTestSeedResult: Equatable {
+    let splitID: UUID
+    let completedSessionCount: Int
+}
+
+/// One-time developer seed for testing the real Combat Power program on a
+/// physical phone. It is launch-argument gated, idempotent, and additive: it
+/// never deletes the lifter's existing programs or history.
+enum CombatPowerSmokeTestSeeder {
+    private static let programID = UUID(
+        uuidString: "00000000-0000-0000-0000-000000000011"
+    )!
+
+    private struct ProgressionSeed {
+        let lowerRepBound: Int
+        let upperRepBound: Int
+        let weightIncrementKg: Double
+    }
+
+    private struct ExerciseHistorySeed {
+        let weightsKg: [Double]
+        let reps: [Int]
+        let note: String
+        let progression: ProgressionSeed?
+
+        init(
+            weightsKg: [Double],
+            reps: [Int],
+            note: String = "",
+            progression: ProgressionSeed? = nil
+        ) {
+            precondition(weightsKg.count == 4 && reps.count == 4)
+            self.weightsKg = weightsKg
+            self.reps = reps
+            self.note = note
+            self.progression = progression
+        }
+    }
+
+    private static let histories: [String: ExerciseHistorySeed] = [
+        "Back Squat (BB)": .init(
+            weightsKg: [90, 90, 90, 92.5],
+            reps: [5, 6, 7, 5],
+            progression: .init(lowerRepBound: 5, upperRepBound: 7, weightIncrementKg: 2.5)
+        ),
+        "Squat Jump": .init(weightsKg: [0, 0, 0, 0], reps: [5, 5, 5, 5]),
+        "Romanian DL": .init(
+            weightsKg: [70, 70, 70, 72.5],
+            reps: [6, 7, 8, 8],
+            progression: .init(lowerRepBound: 6, upperRepBound: 8, weightIncrementKg: 2.5)
+        ),
+        "Rotational Med Ball Wall Throw": .init(
+            weightsKg: [6, 6, 6, 8],
+            reps: [6, 7, 8, 6],
+            note: "Per side",
+            progression: .init(lowerRepBound: 6, upperRepBound: 8, weightIncrementKg: 2)
+        ),
+        "Push-Up Plus": .init(weightsKg: [0, 0, 0, 0], reps: [15, 15, 15, 15]),
+        "Bench Press": .init(
+            weightsKg: [70, 70, 70, 72.5],
+            reps: [5, 6, 7, 7],
+            progression: .init(lowerRepBound: 5, upperRepBound: 7, weightIncrementKg: 2.5)
+        ),
+        "Plyo Push-Up": .init(weightsKg: [0, 0, 0, 0], reps: [6, 6, 6, 6]),
+        "Weighted Pull-Up": .init(
+            weightsKg: [10, 10, 10, 12.5],
+            reps: [5, 6, 7, 5],
+            progression: .init(lowerRepBound: 5, upperRepBound: 7, weightIncrementKg: 2.5)
+        ),
+        "OHP (BB)": .init(
+            weightsKg: [40, 40, 40, 42.5],
+            reps: [5, 6, 7, 7],
+            progression: .init(lowerRepBound: 5, upperRepBound: 7, weightIncrementKg: 2.5)
+        ),
+        "Iso Plate Hold": .init(
+            weightsKg: [10, 10, 12.5, 12.5],
+            reps: [1, 1, 1, 1],
+            note: "30 sec hold"
+        ),
+        "Lateral Raise (DB)": .init(
+            weightsKg: [8, 8, 8, 8],
+            reps: [12, 13, 14, 15],
+            progression: .init(lowerRepBound: 12, upperRepBound: 15, weightIncrementKg: 1)
+        ),
+        "Rice Bucket": .init(
+            weightsKg: [0, 0, 0, 0],
+            reps: [1, 1, 1, 1],
+            note: "2–3 rounds"
+        ),
+        "Trap Bar Deadlift": .init(
+            weightsKg: [120, 120, 120, 125],
+            reps: [5, 6, 7, 5],
+            progression: .init(lowerRepBound: 5, upperRepBound: 7, weightIncrementKg: 5)
+        ),
+        "Broad Jump": .init(weightsKg: [0, 0, 0, 0], reps: [3, 3, 3, 3]),
+        "DB Snatch": .init(
+            weightsKg: [20, 20, 20, 22.5],
+            reps: [3, 4, 5, 5],
+            note: "Per side",
+            progression: .init(lowerRepBound: 3, upperRepBound: 5, weightIncrementKg: 2.5)
+        ),
+        "Close-Grip Bench": .init(
+            weightsKg: [60, 60, 60, 62.5],
+            reps: [8, 9, 10, 8],
+            progression: .init(lowerRepBound: 8, upperRepBound: 10, weightIncrementKg: 2.5)
+        ),
+        "Neck Training": .init(
+            weightsKg: [0, 0, 0, 0],
+            reps: [10, 10, 10, 10],
+            note: "Each direction"
+        )
+    ]
+
+    @MainActor
+    static func seed(
+        in modelContext: ModelContext,
+        now: Date = Date(),
+        calendar sourceCalendar: Calendar = .current
+    ) throws -> CombatPowerSmokeTestSeedResult {
+        guard let program = ProgramCatalog.all.first(where: { $0.id == programID }) else {
+            preconditionFailure("Combat Power must remain in ProgramCatalog.")
+        }
+
+        let split = try existingCompleteSplit(for: program, in: modelContext)
+            ?? ProgramImporter.importProgram(program, into: modelContext)
+        let allTemplates = try modelContext.fetch(FetchDescriptor<DayTemplate>())
+        let templates = program.days.compactMap { day in
+            allTemplates.first {
+                $0.splitId == split.id && normalized($0.displayName) == normalized(day.name)
+            }
+        }
+        guard templates.count == program.days.count else {
+            preconditionFailure("Imported Combat Power templates are incomplete.")
+        }
+
+        let allExercises = try modelContext.fetch(FetchDescriptor<Exercise>())
+        let exerciseByID = Dictionary(uniqueKeysWithValues: allExercises.map { ($0.id, $0) })
+        var calendar = sourceCalendar
+        calendar.firstWeekday = 2
+        let today = calendar.startOfDay(for: now)
+        let currentWeekStart = calendar.date(
+            from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: today)
+        ) ?? today
+        let firstTrainingDay = calendar.date(
+            byAdding: .day,
+            value: -28,
+            to: currentWeekStart
+        ) ?? currentWeekStart
+        split.createdAt = firstTrainingDay
+
+        let existingSessions = try modelContext.fetch(FetchDescriptor<WorkoutSession>())
+        var completedSessionCount = 0
+
+        for weekIndex in 0..<4 {
+            for dayIndex in program.days.indices {
+                let day = program.days[dayIndex]
+                let template = templates[dayIndex]
+                let weekdayOffset = max((day.weekday ?? 2) - 2, 0)
+                let dayOffset = ((weekIndex - 4) * 7) + weekdayOffset
+                let sessionDay = calendar.date(
+                    byAdding: .day,
+                    value: dayOffset,
+                    to: currentWeekStart
+                ) ?? firstTrainingDay
+                let sessionDate = calendar.date(
+                    byAdding: .hour,
+                    value: 18,
+                    to: sessionDay
+                ) ?? sessionDay
+                let sessionID = smokeSessionID(weekIndex: weekIndex, dayIndex: dayIndex)
+
+                if existingSessions.contains(where: { $0.id == sessionID }) {
+                    completedSessionCount += 1
+                    template.lastPerformedDate = sessionDate
+                    continue
+                }
+
+                let session = WorkoutSession(
+                    id: sessionID,
+                    date: sessionDate,
+                    templateId: template.id,
+                    isCompleted: true
+                )
+                modelContext.insert(session)
+
+                for (itemIndex, item) in day.items.enumerated() {
+                    guard template.orderedExerciseIds.indices.contains(itemIndex),
+                          let exercise = exerciseByID[template.orderedExerciseIds[itemIndex]] else {
+                        continue
+                    }
+                    let history = histories[item.exerciseName]
+                        ?? ExerciseHistorySeed(
+                            weightsKg: [0, 0, 0, 0],
+                            reps: Array(repeating: item.repTarget, count: 4)
+                        )
+
+                    for setIndex in 0..<item.setCount {
+                        let entry = SetEntry(
+                            sessionId: session.id,
+                            exerciseId: exercise.id,
+                            weight: history.weightsKg[weekIndex],
+                            reps: history.reps[weekIndex],
+                            rir: weekIndex < 2 ? 2 : 1,
+                            isWarmup: false,
+                            isCompleted: true,
+                            setIndex: setIndex,
+                            note: setIndex == 0 ? history.note : ""
+                        )
+                        entry.session = session
+                        modelContext.insert(entry)
+                    }
+                }
+
+                template.lastPerformedDate = sessionDate
+                completedSessionCount += 1
+            }
+        }
+
+        configureProgression(
+            program: program,
+            templates: templates,
+            exerciseByID: exerciseByID
+        )
+        ActiveSplitStore.setCurrent(split.id)
+        try modelContext.save()
+
+        return CombatPowerSmokeTestSeedResult(
+            splitID: split.id,
+            completedSessionCount: completedSessionCount
+        )
+    }
+
+    @MainActor
+    private static func existingCompleteSplit(
+        for program: ProgramTemplate,
+        in modelContext: ModelContext
+    ) throws -> Split? {
+        let splits = try modelContext.fetch(FetchDescriptor<Split>())
+        let templates = try modelContext.fetch(FetchDescriptor<DayTemplate>())
+        return splits.first { split in
+            guard normalized(split.name) == normalized(program.name) else { return false }
+            let splitDayNames = split.orderedTemplateIds.compactMap { templateID in
+                templates.first(where: { $0.id == templateID })?.displayName
+            }
+            return splitDayNames.map(normalized) == program.days.map { normalized($0.name) }
+        }
+    }
+
+    @MainActor
+    private static func configureProgression(
+        program: ProgramTemplate,
+        templates: [DayTemplate],
+        exerciseByID: [UUID: Exercise]
+    ) {
+        for dayIndex in program.days.indices {
+            let day = program.days[dayIndex]
+            let template = templates[dayIndex]
+            for (itemIndex, item) in day.items.enumerated() {
+                guard template.orderedExerciseIds.indices.contains(itemIndex),
+                      let history = histories[item.exerciseName],
+                      let progression = history.progression else {
+                    continue
+                }
+                let exerciseID = template.orderedExerciseIds[itemIndex]
+                guard exerciseByID[exerciseID] != nil else { continue }
+                let latestWeight = history.weightsKg[3]
+                let latestReps = history.reps[3]
+                template.setPlannedSets(item.setCount, for: exerciseID)
+                template.setPlannedReps(latestReps, for: exerciseID)
+                template.setPlannedWeight(latestWeight, for: exerciseID)
+                template.setProgressionState(
+                    ExerciseProgressionState(
+                        lowerRepBound: progression.lowerRepBound,
+                        upperRepBound: progression.upperRepBound,
+                        weightIncrementKg: progression.weightIncrementKg,
+                        currentAcceptedTargetWeightKg: latestWeight,
+                        currentAcceptedTargetReps: latestReps,
+                        sourceWorkoutSessionID: nil,
+                        lastAcceptedReason: nil
+                    ),
+                    for: exerciseID
+                )
+            }
+        }
+    }
+
+    private static func smokeSessionID(weekIndex: Int, dayIndex: Int) -> UUID {
+        let ordinal = (weekIndex * 3) + dayIndex + 1
+        return UUID(
+            uuidString: String(
+                format: "20000000-0000-0000-0000-%012d",
+                ordinal
+            )
+        )!
+    }
+
+    private static func normalized(_ value: String) -> String {
+        value
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+    }
+}
+#endif
 
 enum PreviewSampleData {
     private static let splitName = "4-Day Strength"

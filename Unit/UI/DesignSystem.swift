@@ -719,8 +719,8 @@ extension View {
 /// glyph; let context + tap target convey navigation (HIG).
 /// Use `.tappable` (default) for interactive rows — gets 44pt minHeight and a
 /// hit-testable content shape. Use `.display` for read-only catalog rows inside
-/// a shared card — compact vertical breathing and no 44pt floor so multi-row
-/// catalog blocks pack tighter without going cramped. Use `.cardListContent`
+/// a shared card — balanced 12pt vertical breathing and no 44pt floor so
+/// multi-row catalog blocks stay comfortably scannable. Use `.cardListContent`
 /// only inside `AppCardList`; the list owns the row insets and minimum height,
 /// while `AppListRow` supplies the icon + text hierarchy.
 enum AppListRowStyle {
@@ -767,6 +767,15 @@ struct AppListRow<Trailing: View>: View {
                     Text(subtitle)
                         .font(AppFont.muted.font)
                         .foregroundStyle(AppFont.muted.color)
+                } else if style == .display {
+                    // Read-only program rows reserve the real subtitle line so
+                    // titles and targets keep one consistent scanning rhythm.
+                    // Hidden text still follows Dynamic Type without adding an
+                    // accessibility announcement or imposing a clipping height.
+                    Text("Reserved detail")
+                        .font(AppFont.muted.font)
+                        .hidden()
+                        .accessibilityHidden(true)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -790,7 +799,7 @@ struct AppListRow<Trailing: View>: View {
         case .tappable:
             return AppSpacing.lg
         case .display:
-            return AppSpacing.sm
+            return AppSpacing.smd
         case .cardListContent:
             return 0
         }
@@ -854,9 +863,10 @@ struct AppListRowValueLabel: View {
 /// unit sit together on a light inset fill (`cardRowFill`, the Milk recess used
 /// for anything nested inside an `AppCard`, not the darker `controlBackground`
 /// stepper gray that read as too dark on the white preview card). The fill alone
-/// carries the input affordance; no border is needed. Keeping the suffix inside
-/// the box makes "82 kg" read as one value instead of a label floating detached
-/// to the right.
+/// is deliberately reinforced by a pencil cue because the same field also sits
+/// directly on sheet backgrounds where the recess can be visually subtle.
+/// Keeping the suffix and edit cue inside the box makes "82 kg" read as one
+/// editable value instead of static text floating detached to the right.
 ///
 /// Empty state shows no placeholder digit: no em dash (a banned placeholder,
 /// §4) and no bare "0" (reads as a real entered value, the sibling of the
@@ -866,6 +876,7 @@ struct AppListRowValueLabel: View {
 struct AppInlineWeightField: View {
     @Binding var text: String
     let unitSuffix: String
+    var accessibilityLabel: String = "Weight"
     @FocusState private var isFocused: Bool
 
     var body: some View {
@@ -878,16 +889,20 @@ struct AppInlineWeightField: View {
                 .font(AppFont.body.font)
                 .foregroundStyle(AppColor.textPrimary)
                 .frame(maxWidth: .infinity)
-                .accessibilityLabel("Weight")
+                .accessibilityLabel(accessibilityLabel)
                 .accessibilityValue(text.isEmpty ? "Empty, \(unitSuffix)" : "\(text) \(unitSuffix)")
 
             Text(unitSuffix)
                 .font(AppFont.caption.font)
                 .foregroundStyle(AppColor.textSecondary)
                 .accessibilityHidden(true)
+
+            AppIcon.edit.image(size: 14, weight: .semibold)
+                .foregroundStyle(isFocused ? AppColor.accent : AppColor.textSecondary)
+                .accessibilityHidden(true)
         }
         .padding(.horizontal, AppSpacing.sm)
-        .frame(width: 80)
+        .frame(width: 104)
         .frame(minHeight: 48)
         .background(
             RoundedRectangle(cornerRadius: AppRadius.sm, style: .continuous)
@@ -895,12 +910,26 @@ struct AppInlineWeightField: View {
         )
         .contentShape(Rectangle())
         .onTapGesture { isFocused = true }
+        .accessibilityHint("Double tap to edit")
+        .toolbar {
+            if isFocused {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button(AppCopy.Nav.done) {
+                        isFocused = false
+                    }
+                }
+            }
+        }
     }
 }
 
 /// − / value / + stepper — compact rounded control with 44pt hit targets.
-/// Used for set counts, rest-duration seconds, reps, etc. Value is a pre-formatted
-/// string (monospaced digits) so callers own unit rendering ("12 reps" vs "12").
+/// Used for set counts, rest-duration seconds, reps, etc. Compact values use
+/// the medium body baseline so editable numbers do not compete with labels;
+/// prominent values retain the bold workout-numeric hierarchy. Value is a
+/// pre-formatted string (monospaced digits) so callers own unit rendering
+/// ("12 reps" vs "12").
 struct AppStepper: View {
     enum Size {
         case compact
@@ -955,7 +984,7 @@ struct AppStepper: View {
 
     private var valueFont: AppFont {
         switch size {
-        case .compact: return .sectionHeader
+        case .compact: return .body
         case .prominent: return .numericDisplay
         }
     }
@@ -1838,7 +1867,7 @@ struct ProductTopBar: View {
 }
 
 /// Set-step tracker inside `WorkoutCommandCard`. Renders the current set as a
-/// filled capsule ("Set 2"), completed/failed sets as compact `kgxrep` chips, and
+/// filled capsule ("Set 2"), completed/failed sets as readable `kg × rep` chips, and
 /// upcoming sets as numbered circles. Used only in active workout flows.
 struct SetProgressIndicator: View {
     struct Step: Identifiable {
@@ -1875,17 +1904,7 @@ struct SetProgressIndicator: View {
 
         var chipText: String? {
             guard let reps, let weightText, !weightText.isEmpty else { return nil }
-            // Uppercase the weight token so the unit (`kg`, `lb`) reads as
-            // all-caps inside the chip — matches the all-caps `SET N` pill
-            // sitting beside it (`stepIndicator` mono semibold cap-style).
-            // Digits are unaffected by `.uppercased()`. The literal `x`
-            // separator stays lowercase per the lifter's spec: only the
-            // unit converts, not the multiplier glyph. `BW` is already
-            // uppercase so it round-trips cleanly. Applying this at the
-            // string layer (not via `.textCase(.uppercase)` on the
-            // SwiftUI Text) is what lets us case the unit without also
-            // casing the `x` between weight and reps.
-            return "\(weightText.uppercased())x\(reps)"
+            return "\(weightText) × \(reps)"
         }
     }
 
@@ -2206,6 +2225,9 @@ struct RestTimerControl: View {
 /// the established title/subtitle hierarchy used by library and detail lists.
 /// `compactInline` is reserved for recessed, capped previews: body-size title on
 /// the left, body-size metadata on the right, and a 44pt interaction floor.
+/// `identityFirst` gives the title the full row width, then places the complete
+/// target and optional evidence beneath it. Use it when truncating the subject
+/// would make a compact metric meaningless (Today exercise previews).
 ///
 /// `isEmptyHint = true` softens the data line (caption font + secondary color)
 /// for cold-start rows like "No prior sets".
@@ -2213,14 +2235,18 @@ struct PreviewListRow: View {
     enum Layout {
         case stacked
         case compactInline
+        case identityFirst
     }
 
     let title: String
     let subtitle: String
+    var supportingText: String? = nil
     var isEmptyHint: Bool = false
     var layout: Layout = .stacked
 
     @ScaledMetric(relativeTo: .body) private var compactRowHeight: CGFloat = 44
+    @ScaledMetric(relativeTo: .body) private var compactTwoLineRowHeight: CGFloat = 64
+    @ScaledMetric(relativeTo: .body) private var identityFirstRowHeight: CGFloat = 80
 
     @ViewBuilder
     var body: some View {
@@ -2243,7 +2269,7 @@ struct PreviewListRow: View {
             .accessibilityLabel(accessibilityLabel)
 
         case .compactInline:
-            HStack(alignment: .firstTextBaseline, spacing: AppSpacing.sm) {
+            HStack(alignment: supportingText == nil ? .firstTextBaseline : .top, spacing: AppSpacing.sm) {
                 Text(title)
                     .font(AppFont.body.font)
                     .foregroundStyle(AppColor.textPrimary)
@@ -2252,15 +2278,60 @@ struct PreviewListRow: View {
 
                 Spacer(minLength: 0)
 
-                Text(subtitle)
-                    .font(AppFont.body.font)
-                    .foregroundStyle(AppColor.textSecondary)
-                    .monospacedDigit()
-                    .lineLimit(1)
-                    .layoutPriority(1)
+                VStack(alignment: .trailing, spacing: AppSpacing.xxs) {
+                    Text(subtitle)
+                        .font(AppFont.body.font)
+                        .foregroundStyle(AppColor.textSecondary)
+                        .monospacedDigit()
+                        .multilineTextAlignment(.trailing)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    if let supportingText, !supportingText.isEmpty {
+                        Text(supportingText)
+                            .font(AppFont.caption.font)
+                            .foregroundStyle(AppColor.textSecondary)
+                            .monospacedDigit()
+                            .multilineTextAlignment(.trailing)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .layoutPriority(1)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .frame(minHeight: compactRowHeight)
+            .frame(minHeight: supportingText == nil ? compactRowHeight : compactTwoLineRowHeight)
+            .contentShape(Rectangle())
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(accessibilityLabel)
+
+        case .identityFirst:
+            VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                Text(title)
+                    .font(AppFont.sectionHeader.font)
+                    .foregroundStyle(AppColor.textPrimary)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Text(subtitle)
+                    .font(subtitleFont)
+                    .foregroundStyle(
+                        isEmptyHint ? AppColor.textSecondary : AppColor.textPrimary
+                    )
+                    .monospacedDigit()
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                if let supportingText, !supportingText.isEmpty {
+                    Text(supportingText)
+                        .font(AppFont.caption.font)
+                        .foregroundStyle(AppColor.textSecondary)
+                        .monospacedDigit()
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(minHeight: identityFirstRowHeight, alignment: .topLeading)
             .contentShape(Rectangle())
             .accessibilityElement(children: .combine)
             .accessibilityLabel(accessibilityLabel)
@@ -2272,30 +2343,49 @@ struct PreviewListRow: View {
     }
 
     private var accessibilityLabel: String {
-        [title, subtitle].joined(separator: ", ")
+        [title, subtitle, supportingText]
+            .compactMap { $0 }
+            .joined(separator: ", ")
     }
 }
 
 /// Scrollable, capped-height container for `PreviewListRow`s — used on Today hero
 /// and in program active-card previews. Content up to `visibleItemLimit` is shown
-/// in full. Overflow reveals half of the next row, flashes the native indicator,
+/// in full. Overflow reveals the next row, flashes the native indicator,
 /// and uses the canonical soft scroll edge so the affordance does not depend on
 /// the transient indicator alone.
 struct PreviewListContainer<Content: View>: View {
     let itemCount: Int
     let visibleItemLimit: Int
+    var usesTwoLineRows: Bool = false
     @ViewBuilder let content: () -> Content
 
     @ScaledMetric(relativeTo: .body) private var rowHeight: CGFloat = 44
+    @ScaledMetric(relativeTo: .body) private var twoLineRowHeight: CGFloat = 80
 
     private var overflows: Bool {
         itemCount > visibleItemLimit
     }
 
+    /// Expanded rows can grow beyond their scaled estimate when a long name
+    /// wraps. Keep their inner scroll available so Dynamic Type never turns
+    /// the viewport cap into clipping.
+    private var canScroll: Bool {
+        overflows || usesTwoLineRows
+    }
+
     private var viewportHeight: CGFloat {
         let visibleRows = min(max(itemCount, 0), max(visibleItemLimit, 0))
-        let fullRowsHeight = CGFloat(visibleRows) * rowHeight
-        let overflowPeekHeight = overflows ? rowHeight / 2 : 0
+        let resolvedRowHeight = usesTwoLineRows ? twoLineRowHeight : rowHeight
+        let fullRowsHeight = CGFloat(visibleRows) * resolvedRowHeight
+        let overflowPeekHeight: CGFloat
+        if overflows {
+            overflowPeekHeight = usesTwoLineRows
+                ? resolvedRowHeight / 4
+                : resolvedRowHeight / 2
+        } else {
+            overflowPeekHeight = 0
+        }
         return (AppSpacing.sm * 2) + fullRowsHeight + overflowPeekHeight
     }
 
@@ -2308,9 +2398,9 @@ struct PreviewListContainer<Content: View>: View {
             .padding(.horizontal, AppSpacing.md)
             .padding(.vertical, AppSpacing.sm)
         }
-        .scrollDisabled(!overflows)
-        .scrollIndicators(overflows ? .visible : .hidden)
-        .scrollIndicatorsFlash(onAppear: overflows)
+        .scrollDisabled(!canScroll)
+        .scrollIndicators(canScroll ? .visible : .hidden)
+        .scrollIndicatorsFlash(onAppear: canScroll)
         .scrollBounceBehavior(.basedOnSize)
         .frame(maxWidth: .infinity)
         .frame(maxHeight: viewportHeight)
@@ -2364,14 +2454,11 @@ struct AppCard<Content: View>: View {
     }
 }
 
-/// Tap-to-advance option tile used by onboarding step screens that ask the
-/// lifter to pick one path (unit, import method, etc.). A leading 40pt icon
-/// bubble (`AppIconCircle` on `accentSoft` surface), a centered title row,
-/// and an optional trailing accent badge. Auto-presses via the canonical
-/// `ScaleButtonStyle`, fires a selection haptic at press time, and holds
-/// the action by 50ms so a couple frames of press-state dim register before
-/// the step-swap slide takes over — kept below the ~100ms perceptible-delay
-/// threshold so it never reads as latency.
+/// Selectable option tile used by onboarding steps that ask the lifter to pick
+/// one path (unit, import method, program, etc.). A leading 40pt icon bubble is
+/// optional; title, subtitle, selected state, and optional badge all share the
+/// same card treatment. The caller decides whether selection auto-advances or
+/// waits for a CTA.
 ///
 /// This was previously `OnboardingOptionCard` in
 /// `Unit/Features/Onboarding/OnboardingImportMethodView.swift`. Promoted to
@@ -2386,8 +2473,12 @@ struct AppOptionTileCard: View {
     var icon: AppIcon? = nil
     var iconText: String? = nil
     let title: String
+    var subtitle: String? = nil
     var badge: String? = nil
+    var isSelected: Bool = false
     let action: () -> Void
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// Re-entrancy guard. While the 50ms press-visibility hold is running,
     /// a second tap should no-op rather than queueing another navigation.
@@ -2403,9 +2494,18 @@ struct AppOptionTileCard: View {
                     iconBubble
                 }
 
-                Text(title)
-                    .font(AppFont.sectionHeader.font)
-                    .foregroundStyle(AppColor.textPrimary)
+                VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                    Text(title)
+                        .font(AppFont.sectionHeader.font)
+                        .foregroundStyle(AppColor.textPrimary)
+
+                    if let subtitle {
+                        Text(subtitle)
+                            .font(AppFont.muted.font)
+                            .foregroundStyle(AppColor.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
 
                 Spacer(minLength: 0)
 
@@ -2413,7 +2513,7 @@ struct AppOptionTileCard: View {
                     AppTag(text: badge, style: .accent, layout: .compactCapsule)
                 }
             }
-            .appCardStyle()
+            .appCardStyle(isSelected: isSelected)
         }
         // Press feedback (opacity dim + brightness shift + scale) is the
         // canonical system-level treatment on `ScaleButtonStyle`. Every
@@ -2422,6 +2522,8 @@ struct AppOptionTileCard: View {
         // tap. Don't override here — fix at `ScaleButtonStyle` and the
         // whole product moves.
         .buttonStyle(ScaleButtonStyle())
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .animation(reduceMotion ? nil : .appPress, value: isSelected)
     }
 
     private func handleTap() {
@@ -2487,6 +2589,7 @@ struct AppSelectableTierCard: View {
     let sublabel: String
     var badge: String? = nil
     let isSelected: Bool
+    var isEnabled: Bool = true
     let action: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -2499,6 +2602,7 @@ struct AppSelectableTierCard: View {
                 // compact height and leave room for legal copy + CTA.
                 if let badge {
                     AppTag(text: badge, style: .accent, layout: .compactCapsule)
+                        .fixedSize(horizontal: true, vertical: true)
                 }
 
                 // Eyebrow + price + sublabel grouped so the outer VStack's
@@ -2508,62 +2612,56 @@ struct AppSelectableTierCard: View {
                 VStack(alignment: .leading, spacing: AppSpacing.xs) {
                     Text(label)
                         .appCapsLabel(.smallLabel)
-                        .foregroundStyle(AppColor.textSecondary)
+                        .foregroundStyle(isEnabled ? AppColor.textSecondary : AppColor.textDisabled)
 
                     Text(price)
                         .font(AppFont.productHeading.font)
                         .tracking(AppFont.productHeading.tracking)
-                        .foregroundStyle(AppColor.textPrimary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.6)
-                        .allowsTightening(true)
+                        .foregroundStyle(isEnabled ? AppColor.textPrimary : AppColor.textDisabled)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
 
                     Text(sublabel)
                         .font(AppFont.muted.font)
-                        .foregroundStyle(AppColor.textSecondary)
-                        .lineLimit(2)
-                        .minimumScaleFactor(0.65)
+                        .foregroundStyle(isEnabled ? AppColor.textSecondary : AppColor.textDisabled)
                         .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.vertical, AppSpacing.smd)
             .padding(.horizontal, AppSpacing.smd)
-            .background(isSelected ? AppColor.accentSoft : AppColor.cardBackground)
-            // Selection check pins to the card corner so it sits in the same
-            // spot on every card — with a badge above the eyebrow it used to
-            // ride the eyebrow row and read as misaligned.
-            .overlay(alignment: .topTrailing) {
-                if isSelected {
-                    AppIcon.checkmarkFilled.image(size: 14, weight: .semibold)
-                        .foregroundStyle(AppColor.accent)
-                        .padding(AppSpacing.smd)
-                        .accessibilityHidden(true)
-                }
-            }
-            // 1.5pt accent border on selected — a second WCAG-friendly cue
-            // beyond the tinted fill, so users with reduced color
-            // discrimination (or who have just glanced at the card from
-            // across the room) can still tell which tier is selected.
-            .overlay(
-                RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous)
-                    .strokeBorder(
-                        isSelected ? AppColor.accent : Color.clear,
-                        lineWidth: 1.5
-                    )
+            .appCardStyle(
+                contentInset: 0,
+                cornerRadius: AppRadius.md,
+                isSelected: isSelected
             )
-            .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
         }
         .buttonStyle(ScaleButtonStyle())
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilitySummary)
+        .accessibilityValue(isSelected ? "Selected" : "Not selected")
+        .accessibilityHint(isEnabled ? "Select this plan" : "This plan is unavailable")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
+        // Apply disabled state to the final combined accessibility element,
+        // not only the button's child tree. VoiceOver and XCTest must both
+        // announce unavailable products as non-interactive.
+        .disabled(!isEnabled)
+        // Animate only this card's selected chrome. Wrapping `action()` in
+        // `withAnimation` leaked the transaction into the entire paywall,
+        // momentarily reflowing the sticky CTA and clipping it on iPhone SE
+        // when trial context changed.
+        .animation(reduceMotion ? nil : .appPress, value: isSelected)
     }
 
     private func handleTap() {
-        // Selection animation matches every other ScaleButtonStyle press in
-        // the app — Reduce Motion clamps to a still selection transition.
-        withAnimation(reduceMotion ? nil : .appPress) {
-            action()
-        }
+        action()
+    }
+
+    private var accessibilitySummary: String {
+        [label, price, sublabel, badge]
+            .compactMap { $0 }
+            .joined(separator: ", ")
     }
 }
 
@@ -2670,6 +2768,69 @@ struct AppSessionHighlightCard<Trailing: View, BelowContent: View>: View {
                 }
             }
         }
+    }
+}
+
+/// Compact two-column feature matrix used by purchase surfaces that unlock one
+/// complete product rather than a permanent free tier. The label column is
+/// allowed to wrap at Dynamic Type sizes; the fixed status column preserves
+/// scan alignment without shrinking feature identity.
+struct AppFeatureAccessTable: View {
+    let rows: [String]
+
+    var body: some View {
+        AppCard(contentInset: 0, verticalInset: 0) {
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(alignment: .firstTextBaseline, spacing: AppSpacing.md) {
+                    Text("Included")
+                        .appCapsLabel(.smallLabel)
+                        .foregroundStyle(AppColor.textSecondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    Text("Unit")
+                        .appCapsLabel(.smallLabel)
+                        .foregroundStyle(AppColor.textSecondary)
+                        .frame(width: statusColumnWidth, alignment: .center)
+                }
+                .padding(.horizontal, AppSpacing.lg)
+                .padding(.vertical, AppSpacing.smd)
+                .accessibilityHidden(true)
+
+                ForEach(Array(rows.enumerated()), id: \.offset) { index, label in
+                    AppDivider()
+                    featureRow(label)
+                        .accessibilityIdentifier("paywall-feature-row-\(index)")
+                }
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("paywall-feature-table")
+    }
+
+    private var statusColumnWidth: CGFloat {
+        AppSpacing.xxl + AppSpacing.md
+    }
+
+    private func featureRow(_ label: String) -> some View {
+        HStack(alignment: .center, spacing: AppSpacing.md) {
+            Text(label)
+                .font(AppFont.body.font)
+                .foregroundStyle(AppColor.textPrimary)
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .layoutPriority(1)
+
+            AppIcon.checkmarkFilled.image(size: 18, weight: .semibold)
+                .foregroundStyle(AppColor.accent)
+                .frame(width: statusColumnWidth, alignment: .center)
+                .accessibilityHidden(true)
+        }
+        .padding(.horizontal, AppSpacing.lg)
+        .padding(.vertical, AppSpacing.smd)
+        .frame(minHeight: 48)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(label), included in Unit")
     }
 }
 
@@ -3135,6 +3296,11 @@ private struct AppCardRowChrome: ViewModifier {
             .padding(.horizontal, AppSpacing.lg)
             .frame(minWidth: 0, maxWidth: .infinity, minHeight: 52, alignment: .leading)
             .padding(.vertical, verticalInset)
+            // The row chrome sits outside caller-owned Button/NavigationLink
+            // labels. Declare the final padded rectangle as the hit-test
+            // shape so blank space between leading and trailing content is
+            // tappable, not just the rendered glyphs.
+            .contentShape(Rectangle())
     }
 }
 
@@ -3578,7 +3744,9 @@ struct WorkoutCommandCard: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(ScaleButtonStyle())
-                .accessibilityLabel("Adjust weight and reps")
+                .accessibilityLabel(
+                    "Adjust weight and reps, \(Self.voiceOverLabel(forMetric: metricValue))"
+                )
             }
         } else {
             metricValueText
@@ -3958,9 +4126,10 @@ struct AppSheetScreen<Content: View>: View {
 
 /// Reusable bottom sheet for editing a routine's working set target. Keeps
 /// template-edit and onboarding-style set/reps controls on the same sheet,
-/// type, spacing, range, and stepper behavior. The edited exercise is the
-/// centered subject beneath the native sheet title; both target controls are
-/// centered in equal-width columns so the composition stays balanced.
+/// type, spacing, range, and stepper behavior. The edited exercise leads the
+/// content, while compact rows group sets and reps into one scannable target.
+/// A rep range reads as one progression concept instead of three equally loud
+/// columns of controls.
 struct AppSetRepEditorSheet: View {
     static let defaultSets: Int = 3
     static let defaultReps: Int = 8
@@ -3971,20 +4140,30 @@ struct AppSetRepEditorSheet: View {
     var subject: String? = nil
     let setRange: ClosedRange<Int>
     let repRange: ClosedRange<Int>
-    let onSave: (_ sets: Int, _ reps: Int) -> Void
+    let onSave: (_ sets: Int, _ reps: Int, _ progression: DoubleProgressionConfiguration?) -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @AppStorage("unitSystem") private var unitSystem = "kg"
     @State private var sets: Int
     @State private var reps: Int
+    @State private var progressionEnabled: Bool
+    @State private var lowerReps: Int
+    @State private var upperReps: Int
+    @State private var incrementText: String
 
     init(
         title: String = AppCopy.Workout.editTarget,
         subject: String? = nil,
         initialSets: Int = Self.defaultSets,
         initialReps: Int = Self.defaultReps,
+        initialProgression: DoubleProgressionConfiguration? = nil,
         setRange: ClosedRange<Int> = Self.defaultSetRange,
         repRange: ClosedRange<Int> = Self.defaultRepRange,
-        onSave: @escaping (_ sets: Int, _ reps: Int) -> Void
+        onSave: @escaping (
+            _ sets: Int,
+            _ reps: Int,
+            _ progression: DoubleProgressionConfiguration?
+        ) -> Void
     ) {
         self.title = title
         self.subject = subject
@@ -3993,60 +4172,132 @@ struct AppSetRepEditorSheet: View {
         self.onSave = onSave
         _sets = State(initialValue: Self.clamped(initialSets, to: setRange))
         _reps = State(initialValue: Self.clamped(initialReps, to: repRange))
+        _progressionEnabled = State(initialValue: initialProgression != nil)
+        _lowerReps = State(initialValue: Self.clamped(
+            initialProgression?.lowerRepBound ?? initialReps,
+            to: repRange
+        ))
+        _upperReps = State(initialValue: Self.clamped(
+            initialProgression?.upperRepBound ?? min(initialReps + 2, repRange.upperBound),
+            to: repRange
+        ))
+
+        let storedUnit = UserDefaults.standard.string(forKey: "unitSystem") ?? "kg"
+        let defaultIncrementKg = storedUnit == "lb" ? 5 / 2.20462 : 2.5
+        let incrementKg = initialProgression?.weightIncrementKg ?? defaultIncrementKg
+        let displayIncrement = storedUnit == "lb" ? incrementKg * 2.20462 : incrementKg
+        _incrementText = State(initialValue: displayIncrement.weightString)
     }
 
     var body: some View {
         AppSheetScreen(
             title: title,
-            primaryButton: PrimaryButtonConfig(label: AppCopy.Workout.saveChanges, action: commit),
+            primaryButton: PrimaryButtonConfig(
+                label: AppCopy.Workout.saveChanges,
+                isEnabled: canSave,
+                action: commit
+            ),
             dismissLabel: AppCopy.Nav.cancel,
             dismissActionPlacement: .cancellation,
             onDismissAction: { dismiss() }
         ) {
-            VStack(alignment: .center, spacing: AppSpacing.xl) {
+            VStack(alignment: .leading, spacing: AppSpacing.lg) {
                 if let subject, !subject.isEmpty {
                     Text(subject)
                         .appFont(.productHeading)
                         .foregroundStyle(AppColor.textPrimary)
-                        .multilineTextAlignment(.center)
+                        .multilineTextAlignment(.leading)
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
-                ViewThatFits(in: .horizontal) {
-                    HStack(spacing: AppSpacing.md) {
-                        targetStepper(label: AppCopy.Workout.targetSetsLabel, value: $sets, range: setRange)
-                        targetStepper(label: AppCopy.Workout.targetRepsLabel, value: $reps, range: repRange)
+                SettingsSection(title: AppCopy.Workout.targetLabel) {
+                    targetRow(
+                        label: AppCopy.Workout.targetSetsLabel,
+                        value: $sets,
+                        range: setRange
+                    )
+
+                    AppDivider()
+
+                    if progressionEnabled {
+                        Text(AppCopy.Workout.repRangeLabel)
+                            .font(AppFont.sectionHeader.font)
+                            .foregroundStyle(AppColor.textPrimary)
+
+                        targetRow(
+                            label: AppCopy.Workout.lowerRepsLabel,
+                            value: $lowerReps,
+                            range: repRange.lowerBound...upperReps
+                        )
+
+                        AppDivider()
+
+                        targetRow(
+                            label: AppCopy.Workout.upperRepsLabel,
+                            value: $upperReps,
+                            range: lowerReps...repRange.upperBound
+                        )
+                    } else {
+                        targetRow(
+                            label: AppCopy.Workout.targetRepsLabel,
+                            value: $reps,
+                            range: repRange
+                        )
+                    }
+                }
+
+                SettingsSection(title: AppCopy.Workout.progressionLabel, contentInset: AppSpacing.sm) {
+                    AppListRow(
+                        title: AppCopy.Workout.progressionToggleLabel,
+                        subtitle: AppCopy.Workout.progressionExplanation
+                    ) {
+                        Toggle("", isOn: $progressionEnabled)
+                            .labelsHidden()
+                            .tint(AppColor.accent)
+                            .frame(minWidth: 44, minHeight: 44)
+                            .accessibilityLabel(AppCopy.Workout.progressionToggleLabel)
                     }
 
-                    VStack(spacing: AppSpacing.md) {
-                        targetStepper(label: AppCopy.Workout.targetSetsLabel, value: $sets, range: setRange)
-                        targetStepper(label: AppCopy.Workout.targetRepsLabel, value: $reps, range: repRange)
+                    if progressionEnabled {
+                        AppDivider()
+
+                        AppListRow(
+                            title: AppCopy.Workout.weightIncrementLabel,
+                            subtitle: AppCopy.Workout.weightIncrementExplanation
+                        ) {
+                            AppInlineWeightField(
+                                text: $incrementText,
+                                unitSuffix: unitSystem,
+                                accessibilityLabel: AppCopy.Workout.weightIncrementLabel
+                            )
+                        }
                     }
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .center)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .presentationDetents([.medium, .large])
         .appBottomSheetChrome()
     }
 
     @ViewBuilder
-    private func targetStepper(
+    private func targetRow(
         label: String,
         value: Binding<Int>,
         range: ClosedRange<Int>
     ) -> some View {
         let currentValue = value.wrappedValue
 
-        VStack(alignment: .center, spacing: AppSpacing.smd) {
+        HStack(spacing: AppSpacing.md) {
             Text(label)
-                .appFont(.sectionHeader)
+                .font(AppFont.body.font)
                 .foregroundStyle(AppColor.textPrimary)
-                .frame(maxWidth: .infinity, alignment: .center)
+
+            Spacer(minLength: 0)
 
             AppStepper(
                 value: "\(currentValue)",
-                size: .prominent,
+                size: .compact,
                 minimumValueWidth: AppSpacing.xl,
                 isDecrementEnabled: currentValue > range.lowerBound,
                 isIncrementEnabled: currentValue < range.upperBound,
@@ -4057,14 +4308,44 @@ struct AppSetRepEditorSheet: View {
                     value.wrappedValue = Self.clamped(currentValue + 1, to: range)
                 }
             )
-            .frame(maxWidth: .infinity, alignment: .center)
         }
-        .frame(minWidth: 0, maxWidth: .infinity, alignment: .center)
+        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
     }
 
     private func commit() {
-        onSave(sets, reps)
+        let savedReps = progressionEnabled
+            ? min(max(reps, lowerReps), upperReps)
+            : reps
+        onSave(sets, savedReps, progressionConfiguration)
         dismiss()
+    }
+
+    private var canSave: Bool {
+        !progressionEnabled || progressionConfiguration != nil
+    }
+
+    private var progressionConfiguration: DoubleProgressionConfiguration? {
+        guard progressionEnabled,
+              lowerReps >= repRange.lowerBound,
+              upperReps >= lowerReps,
+              upperReps <= repRange.upperBound,
+              let displayIncrement = Double(
+                incrementText.replacingOccurrences(of: ",", with: ".")
+              ),
+              displayIncrement.isFinite,
+              displayIncrement > 0 else {
+            return nil
+        }
+
+        let incrementKg = unitSystem == "lb"
+            ? displayIncrement / 2.20462
+            : displayIncrement
+        return DoubleProgressionConfiguration(
+            workingSetCount: sets,
+            lowerRepBound: lowerReps,
+            upperRepBound: upperReps,
+            weightIncrementKg: incrementKg
+        )
     }
 
     private static func clamped(_ value: Int, to range: ClosedRange<Int>) -> Int {
@@ -4514,6 +4795,10 @@ struct AppScreen<Content: View>: View {
             .padding(.top, AppSpacing.sm)
             .padding(.horizontal, AppSpacing.md)
             .padding(.bottom, AppSpacing.xs)
+            // Bottom chrome must never donate its CTA height to the scroll
+            // view on short devices or when context copy changes line count.
+            // Keep the full button and its rounded lower edge on-screen.
+            .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: maxContentWidth)
             .frame(maxWidth: .infinity)
             .background(AppScreenChromeBackground(surface: chromeSurface))
@@ -4555,14 +4840,33 @@ struct AppScreen<Content: View>: View {
     /// nav-bar backdrop's scroll-driven reveal.
     @ViewBuilder
     private var topScrollFade: some View {
-        if usesOuterScroll, customHeader != nil || !hidesNavigationBar || showsNativeNavigationBar {
+        // A hidden navigation bar still leaves the status bar above scrolling
+        // content. Apply the same canonical fade there so layout changes (for
+        // example a shorter selected paywall card) cannot leave text colliding
+        // with the clock or carrier label.
+        if usesOuterScroll {
             LinearGradient(
-                colors: [chromeSurface, chromeSurface.opacity(0)],
+                colors: hidesNavigationBar && customHeader == nil
+                    ? [chromeSurface, chromeSurface, chromeSurface.opacity(0)]
+                    : [chromeSurface, chromeSurface.opacity(0)],
                 startPoint: .top,
                 endPoint: .bottom
             )
-            .frame(height: AppSpacing.lg)
-            .opacity(chromeBackdropVisible ? 1 : 0)
+            .frame(
+                height: hidesNavigationBar && customHeader == nil
+                    ? AppSpacing.xxl
+                    : AppSpacing.lg
+            )
+            .offset(
+                y: hidesNavigationBar && customHeader == nil
+                    ? -AppSpacing.md
+                    : 0
+            )
+            .opacity(
+                hidesNavigationBar && customHeader == nil
+                    ? 1
+                    : (chromeBackdropVisible ? 1 : 0)
+            )
             .animation(.appState, value: chromeBackdropVisible)
             .allowsHitTesting(false)
         }
@@ -4710,16 +5014,35 @@ extension View {
     }
 
     /// Canonical card chrome applied as a modifier — matches `AppCard`'s defaults
-    /// so both entry points are a single source of truth. Pass `AppSpacing.sm`
-    /// when the wrapped content already owns 16pt horizontal padding (e.g.
-    /// `AppListRow`) so 8 + 16 composes to the canonical 24pt visual offset.
-    func appCardStyle(contentInset: CGFloat = AppSpacing.lg) -> some View {
+    /// so both entry points are a single source of truth. `isSelected` adds the
+    /// shared accent-soft fill, accent border, and checkmark used by every
+    /// selectable card, including onboarding choices and paywall tiers.
+    func appCardStyle(
+        contentInset: CGFloat = AppSpacing.lg,
+        cornerRadius: CGFloat = AppRadius.lg,
+        isSelected: Bool = false
+    ) -> some View {
         self
             .padding(contentInset)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(AppColor.cardBackground)
-            .clipShape(RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous))
-            .modifier(AppCardElevation())
+            .background(isSelected ? AppColor.accentSoft : AppColor.cardBackground)
+            .overlay(alignment: .topTrailing) {
+                if isSelected {
+                    AppIcon.checkmarkFilled.image(size: 14, weight: .semibold)
+                        .foregroundStyle(AppColor.accent)
+                        .padding(AppSpacing.smd)
+                        .accessibilityHidden(true)
+                }
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .strokeBorder(
+                        isSelected ? AppColor.accent : Color.clear,
+                        lineWidth: 1.5
+                    )
+            }
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+            .modifier(AppCardElevation(cornerRadius: cornerRadius))
     }
 
     /// Native `List` row chrome for plain searchable lists that still need

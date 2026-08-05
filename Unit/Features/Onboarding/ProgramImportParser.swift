@@ -509,6 +509,7 @@ enum ProgramImportParser {
         var name: String
         var sets: Int?
         var reps: Int?
+        var repRange: ClosedRange<Int>?
         var weightKg: Double?
         var durationSeconds: Int?
         var distanceMeters: Double?
@@ -548,6 +549,7 @@ enum ProgramImportParser {
         // sets×reps so we don't read `3x40` as 3 sets of 40 reps.
         var sets: Int?
         var reps: Int?
+        var repRange: ClosedRange<Int>?
         var durationSeconds: Int?
         var distanceMeters: Double?
         var weightKg: Double?
@@ -576,11 +578,13 @@ enum ProgramImportParser {
         if sets == nil, reps == nil, let r = matchSetsXRepsVerbose(remaining) {
             sets = r.sets
             reps = r.reps
+            repRange = r.repRange
             remaining = r.remaining
         }
         if sets == nil, reps == nil, let r = matchSetsOfReps(remaining) {
             sets = r.sets
             reps = r.reps
+            repRange = r.repRange
             remaining = r.remaining
         }
 
@@ -600,13 +604,8 @@ enum ProgramImportParser {
         if sets == nil, reps == nil, let r = matchSetsTimesReps(remaining) {
             sets = r.sets
             reps = r.reps
+            repRange = r.repRange
             remaining = r.remaining
-            // Strip the rep-range upper bound when present (`4x8-12 60kg`
-            // → after consuming `4x8`, drop the `-12` so it doesn't leak
-            // into the name or get mis-read as a weight by the bare-number
-            // fallback). Bounded to `\d{1,3}` so unrelated dashes elsewhere
-            // in the line stay intact.
-            remaining = stripRepRangeUpperBound(remaining)
         }
 
         // 7. "4 sets" / "8 reps" word-form (fallback for verbose lines that
@@ -745,6 +744,7 @@ enum ProgramImportParser {
             name: titleCaseName(remaining),
             sets: sets,
             reps: reps,
+            repRange: repRange,
             weightKg: weightKg,
             durationSeconds: durationSeconds,
             distanceMeters: distanceMeters,
@@ -814,6 +814,7 @@ enum ProgramImportParser {
                 name: tokenized.name,
                 sets: sets,
                 reps: reps,
+                repRange: tokenized.repRange,
                 weightKg: tokenized.weightKg,
                 note: note
             )
@@ -1012,15 +1013,13 @@ enum ProgramImportParser {
         static let setsRepsTimesWeight =
             #"\b(\d{1,2})\s*[x×]\s*(\d{1,3})\s*[x×]\s*(\d{1,4}(?:[.,]\d+)?)\b"#
 
-        /// "X sets of Y reps" word form — caught as one match instead of two
-        /// (`matchSetsAlone` + `matchRepsAlone`) so the `of` connector doesn't
-        /// survive cleanup and leak into the exercise name. Case-insensitive.
-        static let setsOfReps = #"(?i)\b(\d{1,2})\s*sets?\s+of\s+(\d{1,3})\s*reps?\b"#
+        /// "X sets of Y–Z reps" word form — caught as one match instead of
+        /// two so the connector and optional range stay intact.
+        static let setsOfReps = #"(?i)\b(\d{1,2})\s*sets?\s+of\s+(\d{1,3})(?:\s*[-–—]\s*(\d{1,3}))?\s*reps?\b"#
 
-        /// Verbose ChatGPT-style "X sets x Y reps" — `\d sets x \d reps`.
-        /// Same goal as `setsOfReps`: catch both numbers in one match so the
-        /// `sets` and `reps` words don't survive cleanup.
-        static let setsXReps = #"(?i)\b(\d{1,2})\s*sets?\s*[x×]\s*(\d{1,3})\s*reps?\b"#
+        /// Verbose ChatGPT-style "X sets x Y–Z reps". The optional range
+        /// accepts ASCII hyphen, en dash, and em dash.
+        static let setsXReps = #"(?i)\b(\d{1,2})\s*sets?\s*[x×]\s*(\d{1,3})(?:\s*[-–—]\s*(\d{1,3}))?\s*reps?\b"#
     }
 
     // MARK: - Match helpers — per-stage pattern extractors
@@ -1092,23 +1091,41 @@ enum ProgramImportParser {
     /// Verbose "X sets x Y reps" — `4 sets x 8 reps`, common in ChatGPT
     /// programs. Caught as one match so `sets` and `reps` connector words
     /// don't survive cleanup and leak into the exercise name.
-    private static func matchSetsXRepsVerbose(_ line: String) -> (sets: Int, reps: Int, remaining: String)? {
+    private static func matchSetsXRepsVerbose(
+        _ line: String
+    ) -> (sets: Int, reps: Int, repRange: ClosedRange<Int>?, remaining: String)? {
         guard let match = firstMatch(in: line, pattern: Regex.setsXReps),
               let setVal = Int(match[1]),
               let repVal = Int(match[2]) else { return nil }
+        let repRange = validatedRepRange(lowerBound: repVal, upperBoundText: match.count > 3 ? match[3] : nil)
         let remaining = replacingFirst(in: line, match: match[0])
-        return (setVal, repVal, collapseWhitespace(remaining))
+        return (setVal, repVal, repRange, collapseWhitespace(remaining))
     }
 
     /// "X sets of Y reps" — `4 sets of 8 reps`, common in coach notes.
     /// Same intent as `matchSetsXRepsVerbose`: consume the connector word
     /// (`of`) along with the two numbers so it doesn't survive cleanup.
-    private static func matchSetsOfReps(_ line: String) -> (sets: Int, reps: Int, remaining: String)? {
+    private static func matchSetsOfReps(
+        _ line: String
+    ) -> (sets: Int, reps: Int, repRange: ClosedRange<Int>?, remaining: String)? {
         guard let match = firstMatch(in: line, pattern: Regex.setsOfReps),
               let setVal = Int(match[1]),
               let repVal = Int(match[2]) else { return nil }
+        let repRange = validatedRepRange(lowerBound: repVal, upperBoundText: match.count > 3 ? match[3] : nil)
         let remaining = replacingFirst(in: line, match: match[0])
-        return (setVal, repVal, collapseWhitespace(remaining))
+        return (setVal, repVal, repRange, collapseWhitespace(remaining))
+    }
+
+    private static func validatedRepRange(
+        lowerBound: Int,
+        upperBoundText: String?
+    ) -> ClosedRange<Int>? {
+        guard let upperBoundText,
+              let upperBound = Int(upperBoundText),
+              upperBound >= lowerBound else {
+            return nil
+        }
+        return lowerBound...upperBound
     }
 
     /// Wendler-style slash rep scheme: `5/3/1`, `8/6/4`, `12/10/8`. The
@@ -1124,19 +1141,27 @@ enum ProgramImportParser {
         return (parts.count, topReps, match[0] + " scheme", collapseWhitespace(remaining))
     }
 
-    /// Strips the upper bound of a rep range that survived `matchSetsTimesReps`.
-    /// `4x8-12 60kg` parses as sets=4 reps=8 and leaves `-12 60kg` behind; this
-    /// runs before any bare-number weight matcher so the upper bound never
-    /// leaks into the name or gets mis-read as a weight. The hyphen must be
-    /// adjacent to whitespace or the end of a previous token — bounded
-    /// strictly so `Pull-up` and other hyphenated names stay intact.
-    private static func stripRepRangeUpperBound(_ line: String) -> String {
-        let pattern = #"\s*-\s*\d{1,3}\b"#
-        let stripped = replacingMatches(in: line, pattern: pattern, with: " ")
-        return collapseWhitespace(stripped)
-    }
+    private static func matchSetsTimesReps(
+        _ line: String
+    ) -> (sets: Int, reps: Int, repRange: ClosedRange<Int>?, remaining: String)? {
+        // Capture the complete range first. Doing this as one token prevents
+        // the upper bound from being discarded or mistaken for a bare weight.
+        let rangePattern = #"\b(\d{1,2})\s*[x×]\s*(\d{1,3})\s*[-–—]\s*(\d{1,3})\b"#
+        if let rangeMatch = firstMatch(in: line, pattern: rangePattern),
+           let setVal = Int(rangeMatch[1]),
+           let lowerRepVal = Int(rangeMatch[2]),
+           let upperRepVal = Int(rangeMatch[3]),
+           upperRepVal >= lowerRepVal {
+            let remaining = replacingFirst(in: line, match: rangeMatch[0])
+                .trimmingCharacters(in: .whitespaces)
+            return (
+                setVal,
+                lowerRepVal,
+                lowerRepVal...upperRepVal,
+                collapseWhitespace(remaining)
+            )
+        }
 
-    private static func matchSetsTimesReps(_ line: String) -> (sets: Int, reps: Int, remaining: String)? {
         // Plain `NxM` not followed by a duration / distance / weight unit.
         // Negative lookahead would be cleanest but NSRegularExpression's
         // lookahead support is limited; instead we match the broad pattern
@@ -1161,7 +1186,7 @@ enum ProgramImportParser {
         }
 
         let remaining = replacingFirst(in: line, match: match[0]).trimmingCharacters(in: .whitespaces)
-        return (setVal, repVal, collapseWhitespace(remaining))
+        return (setVal, repVal, nil, collapseWhitespace(remaining))
     }
 
     private static func matchSetsAlone(_ line: String) -> (sets: Int, remaining: String)? {
@@ -1339,7 +1364,10 @@ enum ProgramImportParser {
         // Match `— note text` or `– note text` at the end of the line —
         // captures everything after the dash. Already space-padded by
         // sanitizeLines so the dash is a discrete token.
-        let pattern = #"\s+[—–]\s+(.+)$"#
+        // A rep range (`3 × 8–10`) also contains an en dash. Only treat the
+        // dash as a prose-note separator when the trailing content starts
+        // with text, not a number.
+        let pattern = #"\s+[—–]\s+([^\d\s].*)$"#
         guard let m = firstMatch(in: line, pattern: pattern) else { return (line, nil) }
         let note = m[1].trimmingCharacters(in: .whitespaces)
         let remaining = replacingFirst(in: line, match: m[0])

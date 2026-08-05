@@ -31,6 +31,8 @@
 		A1PROGDETAIL000000000001 /* ProgramDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2PROGDETAIL000000000001 /* ProgramDetailView.swift */; };
 		CC000000000000000000005 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000000000000000100005 /* SettingsView.swift */; };
 		CC000000000000000000006 /* ExerciseProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000000000000000100006 /* ExerciseProgressView.swift */; };
+		DPENG100000000000000001 /* DoubleProgressionEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = DPENG200000000000000001 /* DoubleProgressionEngine.swift */; };
+		DPTST100000000000000001 /* DoubleProgressionEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DPTST200000000000000001 /* DoubleProgressionEngineTests.swift */; };
 		DBE02AEB864A65860041BAC2 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B4994CEC26AC15587254F6D4 /* Foundation.framework */; };
 		ECAT100000000000000000001 /* ExerciseCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECAT200000000000000000001 /* ExerciseCatalog.swift */; };
 		EWK100000000000000000001 /* EarlierWeekCatchup.swift in Sources */ = {isa = PBXBuildFile; fileRef = EWK200000000000000000001 /* EarlierWeekCatchup.swift */; };
@@ -56,6 +58,8 @@
 		PLDT100000000000000000001 /* ProgramLibraryDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PLDT200000000000000000001 /* ProgramLibraryDetailView.swift */; };
 		PLIB100000000000000000001 /* ProgramLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PLIB200000000000000000001 /* ProgramLibraryView.swift */; };
 		PRV100000000000000000001 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = PRV000000000000000000001 /* PrivacyInfo.xcprivacy */; };
+		PSTST100000000000000001 /* ProgressionPersistenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = PSTST200000000000000001 /* ProgressionPersistenceTests.swift */; };
+		PSTST100000000000000002 /* Unit-v2.1.store in Resources */ = {isa = PBXBuildFile; fileRef = PSTST200000000000000002 /* Unit-v2.1.store */; };
 		PTPL100000000000000000001 /* ProgramTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = PTPL200000000000000000001 /* ProgramTemplate.swift */; };
 		QKS100000000000000000001 /* FreestyleSessionSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = QKS200000000000000000001 /* FreestyleSessionSupport.swift */; };
 		SUB100000000000000000001 /* StoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = SUB000000000000000000001 /* StoreManager.swift */; };
@@ -68,6 +72,7 @@
 		UT100000000000000000005 /* EntitlementRefreshStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UT200000000000000000005 /* EntitlementRefreshStateTests.swift */; };
 		UT100000000000000000006 /* FeedbackPortalConfigurationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UT200000000000000000006 /* FeedbackPortalConfigurationTests.swift */; };
 		UT100000000000000000001 /* OnboardingPaywallFlowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UT200000000000000000001 /* OnboardingPaywallFlowUITests.swift */; };
+		A1B2C3D4E5F60718293A4B5C /* ProgressionContractUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5D /* ProgressionContractUITests.swift */; };
 		UT100000000000000000002 /* Unit.storekit in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000013 /* Unit.storekit */; };
 		UT100000000000000000003 /* AppCopy.swift in Sources */ = {isa = PBXBuildFile; fileRef = UI000000000000000000006 /* AppCopy.swift */; };
 		WE100000000000000000001 /* RestTimerLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000001 /* RestTimerLiveActivity.swift */; };
@@ -148,6 +153,8 @@
 		B4994CEC26AC15587254F6D4 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		CC000000000000000100005 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		CC000000000000000100006 /* ExerciseProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseProgressView.swift; sourceTree = "<group>"; };
+		DPENG200000000000000001 /* DoubleProgressionEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoubleProgressionEngine.swift; sourceTree = "<group>"; };
+		DPTST200000000000000001 /* DoubleProgressionEngineTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DoubleProgressionEngineTests.swift; sourceTree = "<group>"; };
 		ECAT200000000000000000001 /* ExerciseCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseCatalog.swift; sourceTree = "<group>"; };
 		EWK200000000000000000001 /* EarlierWeekCatchup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EarlierWeekCatchup.swift; sourceTree = "<group>"; };
 		FD3F6404A55923CE345F9422 /* UnitTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = UnitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -174,6 +181,8 @@
 		PLDT200000000000000000001 /* ProgramLibraryDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramLibraryDetailView.swift; sourceTree = "<group>"; };
 		PLIB200000000000000000001 /* ProgramLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramLibraryView.swift; sourceTree = "<group>"; };
 		PRV000000000000000000001 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		PSTST200000000000000001 /* ProgressionPersistenceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProgressionPersistenceTests.swift; sourceTree = "<group>"; };
+		PSTST200000000000000002 /* Unit-v2.1.store */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Unit-v2.1.store"; sourceTree = "<group>"; };
 		PTPL200000000000000000001 /* ProgramTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramTemplate.swift; sourceTree = "<group>"; };
 		QKS200000000000000000001 /* FreestyleSessionSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FreestyleSessionSupport.swift; sourceTree = "<group>"; };
 		SUB000000000000000000001 /* StoreManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreManager.swift; sourceTree = "<group>"; };
@@ -186,6 +195,7 @@
 		UT200000000000000000005 /* EntitlementRefreshStateTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EntitlementRefreshStateTests.swift; sourceTree = "<group>"; };
 		UT200000000000000000006 /* FeedbackPortalConfigurationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FeedbackPortalConfigurationTests.swift; sourceTree = "<group>"; };
 		UT200000000000000000001 /* OnboardingPaywallFlowUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OnboardingPaywallFlowUITests.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B5D /* ProgressionContractUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProgressionContractUITests.swift; sourceTree = "<group>"; };
 		UT200000000000000000002 /* UnitUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = UnitUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		WE000000000000000000001 /* UnitWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = UnitWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		WRMP200000000000000000001 /* WarmupGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WarmupGenerator.swift; sourceTree = "<group>"; };
@@ -227,6 +237,9 @@
 		053CD7431C0798E4C1207409 /* UnitTests */ = {
 			isa = PBXGroup;
 			children = (
+				DPTST200000000000000001 /* DoubleProgressionEngineTests.swift */,
+				PSTST200000000000000001 /* ProgressionPersistenceTests.swift */,
+				PSTST300000000000000001 /* Fixtures */,
 				UT200000000000000000004 /* EngagementPromptTrackerTests.swift */,
 				UT200000000000000000005 /* EntitlementRefreshStateTests.swift */,
 				UT200000000000000000006 /* FeedbackPortalConfigurationTests.swift */,
@@ -239,9 +252,18 @@
 		541C84E52F5B815D00D0DB57 /* Engine */ = {
 			isa = PBXGroup;
 			children = (
+				DPENG200000000000000001 /* DoubleProgressionEngine.swift */,
 				WRMP200000000000000000001 /* WarmupGenerator.swift */,
 			);
 			path = Engine;
+			sourceTree = "<group>";
+		};
+		PSTST300000000000000001 /* Fixtures */ = {
+			isa = PBXGroup;
+			children = (
+				PSTST200000000000000002 /* Unit-v2.1.store */,
+			);
+			path = Fixtures;
 			sourceTree = "<group>";
 		};
 		5CD29B9EF3A2BA51B2BB2BF2 /* iOS */ = {
@@ -459,6 +481,7 @@
 			isa = PBXGroup;
 			children = (
 				UT200000000000000000001 /* OnboardingPaywallFlowUITests.swift */,
+				A1B2C3D4E5F60718293A4B5D /* ProgressionContractUITests.swift */,
 			);
 			path = UnitUITests;
 			sourceTree = "<group>";
@@ -579,6 +602,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				PSTST100000000000000002 /* Unit-v2.1.store in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -629,6 +653,7 @@
 				PLIB100000000000000000001 /* ProgramLibraryView.swift in Sources */,
 				PLDT100000000000000000001 /* ProgramLibraryDetailView.swift in Sources */,
 				WRMP100000000000000000001 /* WarmupGenerator.swift in Sources */,
+				DPENG100000000000000001 /* DoubleProgressionEngine.swift in Sources */,
 				A10000000000000000000004 /* DayTemplate.swift in Sources */,
 				A10000000000000000000005 /* WorkoutSession.swift in Sources */,
 				A10000000000000000000006 /* SetEntry.swift in Sources */,
@@ -673,6 +698,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DPTST100000000000000001 /* DoubleProgressionEngineTests.swift in Sources */,
+				PSTST100000000000000001 /* ProgressionPersistenceTests.swift in Sources */,
 				UT100000000000000000004 /* EngagementPromptTrackerTests.swift in Sources */,
 				UT100000000000000000005 /* EntitlementRefreshStateTests.swift in Sources */,
 				UT100000000000000000006 /* FeedbackPortalConfigurationTests.swift in Sources */,
@@ -686,6 +713,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				UT100000000000000000001 /* OnboardingPaywallFlowUITests.swift in Sources */,
+				A1B2C3D4E5F60718293A4B5C /* ProgressionContractUITests.swift in Sources */,
 				UT100000000000000000003 /* AppCopy.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -729,7 +757,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 59;
+				CURRENT_PROJECT_VERSION = 65;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -753,7 +781,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 59;
+				CURRENT_PROJECT_VERSION = 65;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -887,7 +915,7 @@
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_ENTITLEMENTS = Unit/Unit.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 59;
+				CURRENT_PROJECT_VERSION = 65;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "";
 				ENABLE_PREVIEWS = YES;
@@ -927,7 +955,7 @@
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_ENTITLEMENTS = Unit/Unit.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 59;
+				CURRENT_PROJECT_VERSION = 65;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "";
 				ENABLE_PREVIEWS = YES;
@@ -963,7 +991,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 59;
+				CURRENT_PROJECT_VERSION = 65;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -985,7 +1013,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 59;
+				CURRENT_PROJECT_VERSION = 65;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1009,7 +1037,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 59;
+				CURRENT_PROJECT_VERSION = 65;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = R2BR5SX98Y;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -1042,7 +1070,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 59;
+				CURRENT_PROJECT_VERSION = 65;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = R2BR5SX98Y;
 				GENERATE_INFOPLIST_FILE = YES;

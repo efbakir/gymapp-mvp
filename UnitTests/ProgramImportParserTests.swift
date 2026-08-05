@@ -34,6 +34,84 @@ final class WorkoutTargetFormatterTests: XCTestCase {
         XCTAssertNil(WorkoutTargetFormatter.setRepCompact(setCount: 4, reps: 0))
     }
 
+    func testProgressionDisplayFormattingUsesCanonicalSpacing() {
+        let defaults = UserDefaults.standard
+        let previousUnit = defaults.string(forKey: "unitSystem")
+        defer {
+            if let previousUnit {
+                defaults.set(previousUnit, forKey: "unitSystem")
+            } else {
+                defaults.removeObject(forKey: "unitSystem")
+            }
+        }
+        defaults.set("kg", forKey: "unitSystem")
+
+        XCTAssertEqual(
+            WorkoutTargetFormatter.setRepDisplay(setCount: 3, reps: 8),
+            "3 × 8"
+        )
+        XCTAssertEqual(
+            WorkoutTargetFormatter.repRangeDisplay(
+                setCount: 3,
+                lowerRepBound: 8,
+                upperRepBound: 10
+            ),
+            "3 × 8–10"
+        )
+        XCTAssertEqual(
+            WorkoutTargetFormatter.weightIncrementDisplay(2.5),
+            "+2.5 kg"
+        )
+        XCTAssertEqual(
+            WorkoutTargetFormatter.progressionConfigurationDisplay(
+                setCount: 3,
+                lowerRepBound: 8,
+                upperRepBound: 10,
+                weightIncrementKg: 2.5
+            ),
+            "3 × 8–10 · +2.5 kg"
+        )
+
+        defaults.set("lb", forKey: "unitSystem")
+        XCTAssertEqual(
+            WorkoutTargetFormatter.weightIncrementDisplay(5 / 2.20462),
+            "+5 lb"
+        )
+
+        XCTAssertNil(WorkoutTargetFormatter.setRepDisplay(setCount: 0, reps: 8))
+        XCTAssertNil(
+            WorkoutTargetFormatter.repRangeDisplay(
+                setCount: 3,
+                lowerRepBound: 10,
+                upperRepBound: 8
+            )
+        )
+        XCTAssertNil(WorkoutTargetFormatter.weightIncrementDisplay(0))
+    }
+
+    func testHistoryVolumeFormattingUsesStableEnglishSeparators() {
+        XCTAssertEqual(
+            WorkoutTargetFormatter.volumeDisplay(
+                volumeKg: 1_800,
+                unitSystem: "kg"
+            ),
+            "1,800 kg·reps"
+        )
+        XCTAssertEqual(
+            WorkoutTargetFormatter.volumeDisplay(
+                volumeKg: 1_000,
+                unitSystem: "lb"
+            ),
+            "2,204.6 lb·reps"
+        )
+        XCTAssertEqual(
+            WorkoutTargetFormatter.groupedCountDisplay(1_234),
+            "1,234"
+        )
+        XCTAssertNil(WorkoutTargetFormatter.groupedNumberDisplay(.infinity))
+        XCTAssertNil(WorkoutTargetFormatter.volumeDisplay(volumeKg: -1, unitSystem: "kg"))
+    }
+
     func testExplicitZeroLoggedSetFormatsAsBodyweight() {
         XCTAssertEqual(
             WorkoutTargetFormatter.setMetricText(
@@ -62,6 +140,41 @@ final class WorkoutTargetFormatterTests: XCTestCase {
                 weightKg: nil,
                 isBodyweight: false
             )
+        )
+    }
+
+    func testBodyweightWeightFieldNamesAddedLoadAndUnit() {
+        XCTAssertEqual(
+            AppCopy.Workout.weightLabel(isBodyweight: true, unitSystem: "kg"),
+            "Added weight (kg)"
+        )
+        XCTAssertEqual(
+            AppCopy.Workout.weightLabel(isBodyweight: true, unitSystem: "lb"),
+            "Added weight (lb)"
+        )
+        XCTAssertEqual(
+            WorkoutTargetFormatter.weightInputSuffix(
+                displayWeight: 10,
+                isBodyweight: true,
+                unitSystem: "kg"
+            ),
+            "kg"
+        )
+        XCTAssertEqual(
+            WorkoutTargetFormatter.weightInputSuffix(
+                displayWeight: 25,
+                isBodyweight: true,
+                unitSystem: "lb"
+            ),
+            "lb"
+        )
+        XCTAssertEqual(
+            WorkoutTargetFormatter.weightInputSuffix(
+                displayWeight: nil,
+                isBodyweight: true,
+                unitSystem: "kg"
+            ),
+            "BW"
         )
     }
 }
@@ -341,6 +454,9 @@ final class ProgramImportParserTests: XCTestCase {
         XCTAssertTrue(OnboardingViewModel.isBodyweightExercise(named: "Band Pull Aparts"))
         XCTAssertTrue(OnboardingViewModel.isBodyweightExercise(named: "Face Pull"))
         XCTAssertTrue(OnboardingViewModel.isBodyweightExercise(named: "Neck Extension"))
+        XCTAssertTrue(OnboardingViewModel.isBodyweightExercise(named: "Squat Jump"))
+        XCTAssertTrue(OnboardingViewModel.isBodyweightExercise(named: "Plyo Push-Up"))
+        XCTAssertTrue(OnboardingViewModel.isBodyweightExercise(named: "Push-Up Plus"))
 
         // Sanity: still false on actual weighted lifts.
         XCTAssertFalse(OnboardingViewModel.isBodyweightExercise(named: "Barbell Deadlift"))
@@ -443,13 +559,74 @@ final class ProgramImportParserTests: XCTestCase {
 
     /// Bug 1: `Bench 4x8-12 60kg` (rep range upper bound) used to leak the
     /// upper bound into the exercise name as "Bench -12".
-    func testFailureCase_RepRange_UpperBoundStripped() {
+    func testFailureCase_RepRange_PreservedWithoutLeakingIntoName() {
         let result = ProgramImportParser.parse("Bench 4x8-12 60kg", defaultUnit: "kg")
         let ex = result.first?.exercises.first
         XCTAssertEqual(ex?.name, "Bench")
         XCTAssertEqual(ex?.sets, 4)
         XCTAssertEqual(ex?.reps, 8)
+        XCTAssertEqual(ex?.repRange, 8...12)
         XCTAssertEqual(ex?.weightKg ?? 0, 60, accuracy: 0.01)
+    }
+
+    func testPastedUnicodeRepRangeConfiguresProgressionAutomatically() {
+        let result = ProgramImportParser.parse("Bench Press 3 × 8–10", defaultUnit: "kg")
+        let exercise = result.first?.exercises.first
+        XCTAssertEqual(exercise?.repRange, 8...10)
+
+        let viewModel = OnboardingViewModel()
+        viewModel.applyImportedProgram(result)
+        let progression = viewModel.dayExercises.first?.first?.progressionConfiguration
+        XCTAssertEqual(progression?.workingSetCount, 3)
+        XCTAssertEqual(progression?.lowerRepBound, 8)
+        XCTAssertEqual(progression?.upperRepBound, 10)
+        XCTAssertEqual(progression?.weightIncrementKg ?? -1, 2.5, accuracy: 0.000_001)
+    }
+
+    func testVerboseRepRangesPreserveAsciiEnDashAndEmDash() {
+        let prescriptions = [
+            "3 sets x 8-10 reps",
+            "3 sets × 8–10 reps",
+            "3 sets x 8—10 reps",
+            "3 sets of 8-10 reps",
+            "3 sets of 8–10 reps",
+            "3 sets of 8—10 reps"
+        ]
+
+        for prescription in prescriptions {
+            let result = ProgramImportParser.parse(
+                "Bench Press \(prescription)",
+                defaultUnit: "kg"
+            )
+            let exercise = result.first?.exercises.first
+            XCTAssertEqual(exercise?.name, "Bench Press", prescription)
+            XCTAssertEqual(exercise?.sets, 3, prescription)
+            XCTAssertEqual(exercise?.reps, 8, prescription)
+            XCTAssertEqual(exercise?.repRange, 8...10, prescription)
+        }
+    }
+
+    func testPastedRepRangeUsesFivePoundDefaultInPoundMode() {
+        let result = ProgramImportParser.parse("Bench Press 3x8-10", defaultUnit: "lb")
+        let viewModel = OnboardingViewModel()
+        viewModel.unitSystem = "lb"
+        viewModel.applyImportedProgram(result)
+
+        let progression = viewModel.dayExercises.first?.first?.progressionConfiguration
+        XCTAssertEqual(
+            progression?.weightIncrementKg ?? -1,
+            5 / 2.20462,
+            accuracy: 0.000_001
+        )
+    }
+
+    func testPastedFixedRepTargetDoesNotEnableProgression() {
+        let result = ProgramImportParser.parse("Bench Press 3 × 8", defaultUnit: "kg")
+        XCTAssertNil(result.first?.exercises.first?.repRange)
+
+        let viewModel = OnboardingViewModel()
+        viewModel.applyImportedProgram(result)
+        XCTAssertNil(viewModel.dayExercises.first?.first?.progressionConfiguration)
     }
 
     /// Bug 2: `Bench 5x5 @ 80%` (percentage of 1RM) used to be read as
@@ -487,6 +664,7 @@ final class ProgramImportParserTests: XCTestCase {
         XCTAssertEqual(ex?.name, "Bench")
         XCTAssertEqual(ex?.sets, 4)
         XCTAssertEqual(ex?.reps, 8)
+        XCTAssertNil(ex?.repRange)
     }
 
     /// Bug 5: `Squat 4x8x60` (triple-x notation) used to produce name
@@ -595,11 +773,11 @@ final class ProgramImportParserTests: XCTestCase {
                       "Free-text coach notes should surface as a noisyLines warning, not drop silently")
     }
 
-    // MARK: - Weight seed path (parser weight → first-session "Last time" ghost)
+    // MARK: - Weight seed path (parser weight → first-session starting target)
 
     // The parser already extracts `weightKg` (see the table / explicit-unit
     // tests above). These verify the weight survives the rest of the chain —
-    // import → onboarding state → DayTemplate → first-session ghost — instead
+    // import → onboarding state → DayTemplate → first-session target — instead
     // of being silently discarded the way it was before this fix.
 
     /// A pasted weight round-trips through the DayTemplate planned-weight map
@@ -636,7 +814,7 @@ final class ProgramImportParserTests: XCTestCase {
                        "Pasted weight must reach onboarding state, not be discarded")
     }
 
-    /// The first-session ghost (`.planned` source) is seeded from the pasted
+    /// The first-session target (`.planned` source) is seeded from the pasted
     /// weight when one exists. (kg user → no conversion.)
     func testWeightSeed_Prefill_SeedsPlannedWeight() {
         UserDefaults.standard.set("kg", forKey: "unitSystem")
@@ -651,7 +829,7 @@ final class ProgramImportParserTests: XCTestCase {
         )
         XCTAssertEqual(prefill?.source, .planned)
         XCTAssertEqual(prefill?.weight ?? -1, 100, accuracy: 0.01,
-                       "First-session ghost should show the seeded weight")
+                       "First-session target should use the seeded weight")
         XCTAssertEqual(prefill?.reps, 5)
     }
 
@@ -693,7 +871,7 @@ final class ProgramImportParserTests: XCTestCase {
 
     /// Triple-`x` notation respects the lifter's unit: `4x8x135` for an lb
     /// user is 135 lb, stored as ~61.2 kg (not 135 kg). Regression guard for
-    /// the unit bug that only surfaced once the weight reached the ghost.
+    /// the unit bug that only surfaced once the weight reached the target.
     func testWeightSeed_TripleX_RespectsLbDefaultUnit() {
         let kg = ProgramImportParser.parse("Squat 4x8x135", defaultUnit: "lb")
             .first?.exercises.first?.weightKg ?? 0

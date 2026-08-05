@@ -4,7 +4,8 @@
 //
 //  Hard paywall presented after onboarding, before first workout log.
 //  Weekly, Monthly, Yearly subscriptions plus optional Lifetime purchase.
-//  No free trial. No dismissal.
+//  Eligible Monthly and Yearly products may carry a StoreKit-confirmed
+//  introductory trial. No dismissal.
 //  Pricing authority: docs/pricing.md.
 //
 
@@ -100,10 +101,20 @@ struct PaywallView: View {
                 .padding(.top, AppSpacing.lg)
                 .appScreenEnter(index: 1)
 
+            VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                Text("Everything included")
+                    .font(AppFont.sectionHeader.font)
+                    .foregroundStyle(AppColor.textPrimary)
+
+                AppFeatureAccessTable(rows: AppCopy.Paywall.includedFeatures)
+            }
+            .padding(.top, AppSpacing.lg)
+            .appScreenEnter(index: 2)
+
             if hasNoLoadedProducts {
                 loadFailureBanner
                     .padding(.top, AppSpacing.lg)
-                    .appScreenEnter(index: 2)
+                    .appScreenEnter(index: 3)
             } else {
                 VStack(alignment: .leading, spacing: AppSpacing.sm) {
                     Text(AppCopy.Paywall.choosePlan)
@@ -113,7 +124,7 @@ struct PaywallView: View {
                     tierSelector
                 }
                 .padding(.top, AppSpacing.lg)
-                .appScreenEnter(index: 2)
+                .appScreenEnter(index: 3)
 
                 if store.hasAttemptedProductLoad && hasMissingRequiredProducts && !store.isLoading {
                     partialLoadBanner
@@ -122,17 +133,17 @@ struct PaywallView: View {
 
                 timelineTrigger
                     .padding(.top, AppSpacing.sm)
-                    .appScreenEnter(index: 3)
+                    .appScreenEnter(index: 4)
 
                 subscriptionDisclosure
                     .padding(.top, AppSpacing.sm)
-                    .appScreenEnter(index: 3)
+                    .appScreenEnter(index: 4)
             }
 
             footer
                 .padding(.top, AppSpacing.lg)
                 .padding(.bottom, AppSpacing.lg)
-                .appScreenEnter(index: 3)
+                .appScreenEnter(index: 4)
         }
     }
 
@@ -167,7 +178,7 @@ struct PaywallView: View {
     }
 
     private var purchaseHeader: some View {
-        VStack(spacing: 0) {
+        VStack(alignment: .leading, spacing: AppSpacing.lg) {
             HStack(spacing: AppSpacing.xs) {
                 Image("PaywallLogo")
                     .resizable()
@@ -187,30 +198,37 @@ struct PaywallView: View {
                     .foregroundStyle(AppColor.textPrimary)
             }
 
-            VStack(spacing: AppSpacing.sm) {
-                HStack(spacing: AppSpacing.xs) {
-                    ForEach(0..<5, id: \.self) { _ in
-                        AppIcon.starFilled.image(size: AppSpacing.md, weight: .semibold)
-                            .foregroundStyle(AppColor.accent)
-                    }
-                }
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel(AppCopy.Paywall.reviewStars)
-
-                Text(AppCopy.Paywall.reviewQuote)
-                    .font(AppFont.caption.font)
+            VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                Text(paywallHeadline)
+                    .appFont(.largeTitle)
                     .foregroundStyle(AppColor.textPrimary)
-                    .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("paywall-headline")
 
-                Text(AppCopy.Paywall.reviewAttribution)
-                    .font(AppFont.muted.font)
+                Text(paywallSupportingCopy)
+                    .font(AppFont.body.font)
                     .foregroundStyle(AppColor.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("paywall-supporting-copy")
             }
-            .padding(.top, AppSpacing.lg)
         }
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.top, AppSpacing.sm)
+    }
+
+    private var selectedTrial: StorePlanPresentation.Trial? {
+        store.presentation(for: store.selectedTier)?.trial
+    }
+
+    private var paywallHeadline: String {
+        guard let selectedTrial else { return AppCopy.Paywall.standardHeadline }
+        return AppCopy.Paywall.trialHeadline(selectedTrial.durationText)
+    }
+
+    private var paywallSupportingCopy: String {
+        selectedTrial == nil
+            ? AppCopy.Paywall.standardSupportingCopy
+            : AppCopy.Paywall.trialSupportingCopy
     }
 
     private var programSummaryCard: some View {
@@ -307,8 +325,8 @@ struct PaywallView: View {
         guard !store.isPurchased else { return nil }
         return PrimaryButtonConfig(
             label: ctaTitle,
-            isEnabled: store.selectedProduct != nil,
-            isLoading: store.isLoading,
+            isEnabled: store.selectedProduct != nil && !store.isBusy,
+            isLoading: store.isLoading || store.isPurchasing,
             disabledReason: ctaDisabledReason,
             contextLabel: selectedPurchaseContext,
             action: { Task { await store.purchase() } }
@@ -320,6 +338,10 @@ struct PaywallView: View {
             return "Subscribe to continue"
         }
 
+        if let selectedTrial {
+            return AppCopy.Paywall.startFreeTrial(selectedTrial.adjectiveText)
+        }
+
         switch store.selectedTier {
         case .weekly: return AppCopy.Paywall.subscribeWeekly
         case .monthly: return AppCopy.Paywall.subscribeMonthly
@@ -329,6 +351,9 @@ struct PaywallView: View {
     }
 
     private var ctaDisabledReason: String? {
+        if store.isPurchasePending {
+            return AppCopy.Paywall.pendingPurchaseContext
+        }
         if hasNoLoadedProducts {
             return "Subscriptions couldn't load. Try again."
         }
@@ -339,12 +364,17 @@ struct PaywallView: View {
     }
 
     private var selectedPurchaseContext: String? {
-        guard store.selectedProduct != nil else { return nil }
-        let price = priceText(for: store.selectedTier)
-        if store.selectedTier == .lifetime {
-            return AppCopy.Paywall.lifetimePurchaseContext(price)
+        guard let presentation = store.presentation(for: store.selectedTier) else { return nil }
+        if let trial = presentation.trial {
+            return AppCopy.Paywall.trialPurchaseContext(
+                duration: trial.durationText,
+                billedPrice: presentation.billedPriceText
+            )
         }
-        return AppCopy.Paywall.subscriptionPurchaseContext(price)
+        if store.selectedTier == .lifetime {
+            return AppCopy.Paywall.lifetimePurchaseContext(presentation.displayPrice)
+        }
+        return AppCopy.Paywall.subscriptionPurchaseContext(presentation.billedPriceText)
     }
 
     // MARK: - Tier Selector
@@ -364,20 +394,14 @@ struct PaywallView: View {
                 sublabel: sublabel(for: tier),
                 badge: badgeText(for: tier),
                 isSelected: store.selectedTier == tier,
-                action: { store.selectedTier = tier }
+                isEnabled: store.product(for: tier) != nil,
+                action: { store.selectTier(tier) }
             )
+            .accessibilityIdentifier("paywall-plan-\(tier.rawValue)")
         }
     }
 
     private var visibleTiers: [StoreManager.Tier] {
-        if store.hasAttemptedProductLoad {
-            var loadedTiers = StoreManager.requiredTiers.filter { store.product(for: $0) != nil }
-            if store.product(for: .lifetime) != nil {
-                loadedTiers.append(.lifetime)
-            }
-            return loadedTiers
-        }
-
         var tiers = StoreManager.requiredTiers
         if store.product(for: .lifetime) != nil {
             tiers.append(.lifetime)
@@ -410,11 +434,19 @@ struct PaywallView: View {
     }
 
     private func priceText(for tier: StoreManager.Tier) -> String {
-        if let billedPrice = billedPriceText(for: tier) { return billedPrice }
+        if let presentation = store.presentation(for: tier) {
+            return presentation.billedPriceText
+        }
         return store.hasAttemptedProductLoad ? "Unavailable" : "Loading…"
     }
 
     private func sublabel(for tier: StoreManager.Tier) -> String {
+        if tier == store.selectedTier,
+           let presentation = store.presentation(for: tier),
+           let trial = presentation.trial {
+            return "\(trial.durationText) free · then \(presentation.billedPriceText)"
+        }
+
         switch tier {
         case .weekly: return "Auto-renews weekly"
         case .monthly:
@@ -450,7 +482,7 @@ struct PaywallView: View {
         // docs/pricing.md ladder roles: yearly is the best-value tier and the
         // only badged card — one chip on the upsell target, never on the
         // pre-selected default (a badge on the selected card sells nothing).
-        guard tier == .annual else { return nil }
+        guard tier == .annual, store.product(for: tier) != nil else { return nil }
         return annualSavingsBadgeText ?? "Best value"
     }
 
@@ -482,50 +514,12 @@ struct PaywallView: View {
         return ctaPlanName(for: activeTier)
     }
 
-    private func billedPriceText(for tier: StoreManager.Tier) -> String? {
-        guard let product = store.product(for: tier) else { return nil }
-        guard tier.isSubscription, product.subscription != nil else {
-            return product.displayPrice
-        }
-        return "\(product.displayPrice)/\(billingUnitText(for: product, fallbackTier: tier))"
-    }
-
-    private func billingUnitText(for product: Product, fallbackTier: StoreManager.Tier) -> String {
-        guard let period = product.subscription?.subscriptionPeriod else {
-            return fallbackBillingUnitText(for: fallbackTier)
-        }
-
-        let unit: String
-        switch period.unit {
-        case .day:
-            unit = period.value == 1 ? "day" : "days"
-        case .week:
-            unit = period.value == 1 ? "week" : "weeks"
-        case .month:
-            unit = period.value == 1 ? "month" : "months"
-        case .year:
-            unit = period.value == 1 ? "year" : "years"
-        @unknown default:
-            return fallbackBillingUnitText(for: fallbackTier)
-        }
-
-        return period.value == 1 ? unit : "\(period.value) \(unit)"
-    }
-
-    private func fallbackBillingUnitText(for tier: StoreManager.Tier) -> String {
-        switch tier {
-        case .weekly: return "week"
-        case .monthly: return "month"
-        case .annual: return "year"
-        case .lifetime: return "one-time"
-        }
-    }
-
     // MARK: - Subscription Disclosure
     //
     // Apple Guideline 3.1.2(b): the purchase surface must disclose
     // subscription title, period, auto-renewal language, and how to cancel.
-    // No trial language — hard paywall, no free trial (docs/pricing.md).
+    // Trial language appears only when `StorePlanPresentation.trial` proves a
+    // configured free offer and current-customer eligibility.
 
     private var subscriptionDisclosure: some View {
         Text(disclosureCopy)
@@ -538,6 +532,9 @@ struct PaywallView: View {
     private var disclosureCopy: String {
         if store.selectedTier == .lifetime {
             return "Lifetime is a one-time purchase. Subscriptions auto-renew unless cancelled. Payment is charged to your Apple Account. You can manage or cancel your subscription in App Store settings."
+        }
+        if selectedTrial != nil {
+            return "After the free trial, the subscription auto-renews unless cancelled. Payment is charged to your Apple Account. You can manage or cancel in App Store settings."
         }
         return "Subscriptions auto-renew unless cancelled. Payment is charged to your Apple Account. You can manage or cancel your subscription in App Store settings."
     }
@@ -597,7 +594,9 @@ struct PaywallView: View {
 
     private var renewalTimelineSheet: some View {
         AppSheetScreen(
-            title: AppCopy.Paywall.timelineTitle,
+            title: selectedTrial == nil
+                ? AppCopy.Paywall.timelineTitle
+                : AppCopy.Paywall.trialTimelineTitle,
             dismissLabel: AppCopy.Nav.done,
             dismissActionPlacement: .confirmation,
             onDismissAction: { showsRenewalTimeline = false },
@@ -619,6 +618,52 @@ struct PaywallView: View {
 
     @ViewBuilder
     private func timelineRow(at index: Int) -> some View {
+        if let selectedTrial {
+            trialTimelineRow(at: index, trial: selectedTrial)
+        } else {
+            standardTimelineRow(at: index)
+        }
+    }
+
+    @ViewBuilder
+    private func trialTimelineRow(
+        at index: Int,
+        trial: StorePlanPresentation.Trial
+    ) -> some View {
+        switch index {
+        case 0:
+            AppListRow(
+                title: AppCopy.Paywall.trialTimelineTodayTitle,
+                subtitle: AppCopy.Paywall.trialTimelineTodayMessage,
+                leadingIcon: .bolt,
+                style: .cardListContent
+            )
+        case 1:
+            AppListRow(
+                title: AppCopy.Paywall.trialTimelineDurationTitle(trial.durationText),
+                subtitle: AppCopy.Paywall.trialTimelineDurationMessage,
+                leadingIcon: .checkmarkFilled,
+                style: .cardListContent
+            )
+        case 2:
+            AppListRow(
+                title: AppCopy.Paywall.trialTimelineBeforeRenewalTitle,
+                subtitle: AppCopy.Paywall.trialTimelineBeforeRenewalMessage,
+                leadingIcon: .settingsOutline,
+                style: .cardListContent
+            )
+        default:
+            AppListRow(
+                title: AppCopy.Paywall.trialTimelineAfterTitle,
+                subtitle: AppCopy.Paywall.trialTimelineAfterMessage,
+                leadingIcon: .calendarClock,
+                style: .cardListContent
+            )
+        }
+    }
+
+    @ViewBuilder
+    private func standardTimelineRow(at index: Int) -> some View {
         switch index {
         case 0:
             AppListRow(
@@ -678,23 +723,35 @@ struct PaywallView: View {
     }
 
     private var restoreButton: some View {
-        Button("Restore Purchases") {
+        Button {
             Task { await store.restore() }
+        } label: {
+            Text("Restore Purchases")
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
         }
-        .disabled(store.isLoading)
+        .disabled(store.isBusy)
     }
 
     @ViewBuilder
     private var termsLink: some View {
         if let termsURL = AppCopy.Legal.termsOfServiceURL {
-            Link(AppCopy.Legal.termsOfService, destination: termsURL)
+            Link(destination: termsURL) {
+                Text(AppCopy.Legal.termsOfService)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
+            }
         }
     }
 
     @ViewBuilder
     private var privacyLink: some View {
         if let privacyURL = AppCopy.Legal.privacyPolicyURL {
-            Link(AppCopy.Legal.privacyPolicy, destination: privacyURL)
+            Link(destination: privacyURL) {
+                Text(AppCopy.Legal.privacyPolicy)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
+            }
         }
     }
 

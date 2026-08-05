@@ -9,6 +9,25 @@ import Foundation
 
 enum WorkoutTargetFormatter {
 
+    private static let englishNumberLocale = Locale(identifier: "en_US")
+
+    /// Unit token beside the active set-entry weight field. Bodyweight means
+    /// `BW` only while added load is blank or zero; a positive external load
+    /// keeps the user's chosen kg/lb meaning.
+    static func weightInputSuffix(
+        displayWeight: Double?,
+        isBodyweight: Bool,
+        unitSystem: String
+    ) -> String? {
+        if isBodyweight {
+            if let displayWeight, displayWeight > 0 {
+                return unitSystem
+            }
+            return AppCopy.Workout.bodyweightAbbrev
+        }
+        return displayWeight == 0 ? AppCopy.Workout.bodyweightAbbrev : nil
+    }
+
     /// Format a weight value with the user's preferred unit label (spaced, for labels and sentences).
     static func weightDisplay(_ kg: Double) -> String {
         let unit = UserDefaults.standard.string(forKey: "unitSystem") ?? "kg"
@@ -33,6 +52,86 @@ enum WorkoutTargetFormatter {
     static func setRepCompact(setCount: Int, reps: Int) -> String? {
         guard setCount > 0, reps > 0 else { return nil }
         return "\(setCount)x\(reps)"
+    }
+
+    /// Canonical readable sets-and-reps prescription (`3 × 8`). Use on
+    /// program, Today, and configuration surfaces where clarity outranks the
+    /// dense logging shorthand provided by `setRepCompact`.
+    static func setRepDisplay(setCount: Int, reps: Int) -> String? {
+        guard setCount > 0, reps > 0 else { return nil }
+        return "\(setCount) × \(reps)"
+    }
+
+    /// Canonical readable double-progression range (`3 × 8–10`).
+    static func repRangeDisplay(
+        setCount: Int,
+        lowerRepBound: Int,
+        upperRepBound: Int
+    ) -> String? {
+        guard setCount > 0,
+              lowerRepBound > 0,
+              upperRepBound >= lowerRepBound else {
+            return nil
+        }
+        return "\(setCount) × \(lowerRepBound)–\(upperRepBound)"
+    }
+
+    /// Canonical positive equipment increment (`+2.5 kg`, `+5 lb`).
+    static func weightIncrementDisplay(_ weightIncrementKg: Double) -> String? {
+        guard weightIncrementKg.isFinite, weightIncrementKg > 0 else {
+            return nil
+        }
+        return "+\(weightDisplay(weightIncrementKg))"
+    }
+
+    /// Canonical grouped number for Unit's English workout copy. Keeping the
+    /// decimal point and thousands separator stable avoids ambiguous evidence
+    /// such as `1.800 kg·reps` when the device language is English but its
+    /// region uses a comma decimal separator.
+    static func groupedNumberDisplay(_ value: Double) -> String? {
+        guard value.isFinite, value >= 0 else { return nil }
+        return value.formatted(
+            .number
+                .locale(englishNumberLocale)
+                .grouping(.automatic)
+                .precision(.fractionLength(0...1))
+        )
+    }
+
+    static func groupedCountDisplay(_ value: Int) -> String? {
+        guard value >= 0 else { return nil }
+        return value.formatted(
+            .number
+                .locale(englishNumberLocale)
+                .grouping(.automatic)
+        )
+    }
+
+    /// Canonical total-volume evidence (`1,800 kg·reps`). The supplied value
+    /// remains kilograms internally and is converted exactly once for pounds.
+    static func volumeDisplay(volumeKg: Double, unitSystem: String) -> String? {
+        guard volumeKg.isFinite, volumeKg >= 0 else { return nil }
+        let displayVolume = unitSystem == "lb" ? volumeKg * 2.20462 : volumeKg
+        guard let number = groupedNumberDisplay(displayVolume) else { return nil }
+        return "\(number) \(unitSystem)·reps"
+    }
+
+    /// One shared progression-configuration summary, e.g.
+    /// `3 × 8–10 · +2.5 kg`.
+    static func progressionConfigurationDisplay(
+        setCount: Int,
+        lowerRepBound: Int,
+        upperRepBound: Int,
+        weightIncrementKg: Double
+    ) -> String? {
+        guard let range = repRangeDisplay(
+            setCount: setCount,
+            lowerRepBound: lowerRepBound,
+            upperRepBound: upperRepBound
+        ), let increment = weightIncrementDisplay(weightIncrementKg) else {
+            return nil
+        }
+        return "\(range) · \(increment)"
     }
 
     /// Canonical inline load: `setxrepxkg` when set count is known (`> 0`), else `kgxrep` or `BWxrep`.
@@ -84,6 +183,70 @@ enum WorkoutTargetFormatter {
     ) -> String? {
         _ = bodyweightLabel
         return compactLoadText(sets: setCount, reps: reps, weightKg: weightKg, isBodyweight: isBodyweight)
+    }
+
+    /// Complete, sentence-friendly prescription for progression surfaces.
+    /// Automatic progression requires external load, so every valid result
+    /// includes both the amount and the user's preferred unit.
+    static func completeTargetText(
+        weightKg: Double,
+        setCount: Int,
+        reps: Int
+    ) -> String? {
+        guard weightKg.isFinite, weightKg > 0, setCount > 0, reps > 0 else {
+            return nil
+        }
+        return "\(setCount) × \(reps) at \(weightDisplay(weightKg))"
+    }
+
+    /// Exact completed working-set evidence. Uniform work uses the same
+    /// sentence shape as a prescription; varying reps or loads retain their
+    /// real sequence instead of implying every set matched the final set.
+    static func completedPerformanceText(
+        weightsKg: [Double],
+        reps: [Int],
+        isBodyweight: Bool
+    ) -> String? {
+        guard !weightsKg.isEmpty,
+              weightsKg.count == reps.count,
+              weightsKg.allSatisfy({ $0.isFinite && $0 >= 0 }),
+              reps.allSatisfy({ $0 > 0 }) else {
+            return nil
+        }
+
+        let firstWeight = weightsKg[0]
+        let firstReps = reps[0]
+        let uniformWeight = weightsKg.allSatisfy {
+            abs($0 - firstWeight) <= 0.000_1
+        }
+        let uniformReps = reps.allSatisfy { $0 == firstReps }
+
+        if uniformWeight, uniformReps {
+            if firstWeight > 0 {
+                return completeTargetText(
+                    weightKg: firstWeight,
+                    setCount: reps.count,
+                    reps: firstReps
+                )
+            }
+            if isBodyweight {
+                return "\(reps.count) × \(firstReps) at BW"
+            }
+            return nil
+        }
+
+        let repSequence = reps.map(String.init).joined(separator: "/")
+        if uniformWeight {
+            if firstWeight > 0 {
+                return "\(weightDisplay(firstWeight)) · \(repSequence) reps"
+            }
+            return isBodyweight ? "BW · \(repSequence) reps" : nil
+        }
+
+        let weightSequence = weightsKg.map { weightKg in
+            weightKg > 0 ? weightDisplay(weightKg) : "BW"
+        }.joined(separator: "/")
+        return "\(weightSequence) · \(repSequence) reps"
     }
 
     static func volumeText(setCount: Int, reps: Int) -> String? {

@@ -26,16 +26,19 @@ struct ExerciseTarget: Identifiable {
     let id = UUID()
     let exerciseName: String
     let displayTarget: String
+    let supportingText: String?
     /// True when `displayTarget` is empty-state copy (not a reps/sets metric).
     let isEmptyHint: Bool
 
     init(
         exerciseName: String,
         displayTarget: String,
+        supportingText: String? = nil,
         isEmptyHint: Bool = false
     ) {
         self.exerciseName = exerciseName
         self.displayTarget = displayTarget
+        self.supportingText = supportingText
         self.isEmptyHint = isEmptyHint
     }
 }
@@ -62,6 +65,7 @@ struct TodayView: View {
     @Environment(\.appTabSelection) private var appTabSelection
     @Environment(\.requestReview) private var requestReview
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     @Query(sort: \DayTemplate.name) private var templates: [DayTemplate]
     @Query(sort: \Split.name) private var splits: [Split]
@@ -217,6 +221,10 @@ struct TodayView: View {
         .appNavigationBarChrome()
     }
 
+    private var todayPreviewVisibleItemLimit: Int {
+        dynamicTypeSize.isAccessibilitySize ? 1 : 3
+    }
+
     private func routinePickerAllowed(for state: TodayDashboardState) -> Bool {
         switch state {
         case .readyToday, .restDay:
@@ -293,15 +301,17 @@ struct TodayView: View {
                    let template = templates.first(where: { $0.id == context.templateId }) {
                     PreviewListContainer(
                         itemCount: context.previewTargets.count,
-                        visibleItemLimit: 8
+                        visibleItemLimit: todayPreviewVisibleItemLimit,
+                        usesTwoLineRows: true
                     ) {
                         ForEach(Array(context.previewTargets.enumerated()), id: \.offset) { _, target in
                             NavigationLink(value: template) {
                                 PreviewListRow(
                                     title: target.exerciseName,
                                     subtitle: target.displayTarget,
+                                    supportingText: target.supportingText,
                                     isEmptyHint: target.isEmptyHint,
-                                    layout: .compactInline
+                                    layout: .identityFirst
                                 )
                             }
                             .buttonStyle(ScaleButtonStyle())
@@ -363,6 +373,12 @@ struct TodayView: View {
 
     private func saveStaleSession(_ session: WorkoutSession) {
         session.isCompleted = true
+        if let template = templates.first(where: { $0.id == session.templateId }) {
+            session.captureProgressionRecords(
+                template: template,
+                exercises: exercises
+            )
+        }
         try? modelContext.save()
         EngagementPromptTracker().recordCompletedWorkout(sessionID: session.id)
         // Land on SessionDetailView via the existing completedSessionDetail path.
@@ -658,6 +674,24 @@ final class TodayDashboardViewModel {
                 return nil
             }
 
+            if let acceptedTarget = template.progressionState(for: exerciseID)?.acceptedTarget,
+               let setCount = template.plannedSets(for: exerciseID),
+               let displayTarget = WorkoutTargetFormatter.completeTargetText(
+                   weightKg: acceptedTarget.weightKg,
+                   setCount: setCount,
+                   reps: acceptedTarget.reps
+               ) {
+                return ExerciseTarget(
+                    exerciseName: exercise.displayName,
+                    displayTarget: displayTarget,
+                    supportingText: lastTimePreviewText(
+                        for: exercise,
+                        sessions: sessions
+                    ),
+                    isEmptyHint: false
+                )
+            }
+
             // Cold-start: planned target if onboarding set one, else explicit empty copy.
             guard let ghostSession = sessions.first(where: { session in
                 session.isCompleted &&
@@ -677,7 +711,10 @@ final class TodayDashboardViewModel {
             }
 
             let setCount = max(lastSets.count, 1)
-            let displayTarget = WorkoutTargetFormatter.setRepCompact(setCount: setCount, reps: representative.reps)
+            let displayTarget = WorkoutTargetFormatter.setRepDisplay(
+                setCount: setCount,
+                reps: representative.reps
+            )
                 ?? "\(representative.reps)"
 
             return ExerciseTarget(
@@ -693,7 +730,46 @@ final class TodayDashboardViewModel {
               let reps = template.plannedReps(for: exerciseID), reps > 0 else {
             return nil
         }
-        return WorkoutTargetFormatter.setRepCompact(setCount: sets, reps: reps)
+        if let weightKg = template.plannedWeight(for: exerciseID),
+           let completeTarget = WorkoutTargetFormatter.completeTargetText(
+               weightKg: weightKg,
+               setCount: sets,
+               reps: reps
+           ) {
+            return completeTarget
+        }
+        return WorkoutTargetFormatter.setRepDisplay(setCount: sets, reps: reps)
+    }
+
+    private func lastTimePreviewText(
+        for exercise: Exercise,
+        sessions: [WorkoutSession]
+    ) -> String? {
+        guard let latestSession = sessions.first(where: { session in
+            session.isCompleted
+                && session.setEntries.contains(where: {
+                    $0.exerciseId == exercise.id
+                        && $0.isCompleted
+                        && !$0.isWarmup
+                })
+        }) else {
+            return nil
+        }
+        let sets = latestSession.setEntries
+            .filter {
+                $0.exerciseId == exercise.id
+                    && $0.isCompleted
+                    && !$0.isWarmup
+            }
+            .sorted { $0.setIndex < $1.setIndex }
+        guard let performance = WorkoutTargetFormatter.completedPerformanceText(
+            weightsKg: sets.map(\.weight),
+            reps: sets.map(\.reps),
+            isBodyweight: exercise.isBodyweight
+        ) else {
+            return nil
+        }
+        return "Last time · \(performance)"
     }
 }
 
@@ -740,7 +816,7 @@ private struct TodayRoutinePickSheet: View {
         HStack(alignment: .center, spacing: AppSpacing.md) {
             VStack(alignment: .leading, spacing: AppSpacing.xs) {
                 Text(template.displayName)
-                    .font(AppFont.productAction.font)
+                    .font(AppFont.sectionHeader.font)
                     .foregroundStyle(AppColor.textPrimary)
                     .multilineTextAlignment(.leading)
 

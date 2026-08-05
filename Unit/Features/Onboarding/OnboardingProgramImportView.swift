@@ -77,7 +77,6 @@ struct OnboardingProgramImportView: View {
             // title/subtitle space for the input + sticky CTA and gate the
             // keyboard toolbar so its Done control cannot linger after focus.
             usesOuterScroll: false,
-            showsKeyboardDismissToolbar: isEditorFocused,
             condensesHeader: isEditorFocused
         ) {
             VStack(alignment: .leading, spacing: AppSpacing.md) {

@@ -10,15 +10,19 @@ import SwiftUI
 struct OnboardingImportMethodView: View {
     var progressStep: Int
     var progressTotal: Int
+    var selectedMethod: OnboardingViewModel.ImportMethod?
     var onSelect: (OnboardingViewModel.ImportMethod) -> Void
+    var onContinue: () -> Void
     var onBack: () -> Void
 
     var body: some View {
         OnboardingShell(
             title: AppCopy.Onboarding.methodTitle,
             subtitle: AppCopy.Onboarding.methodSubtitle,
+            ctaEnabled: selectedMethod != nil,
             progressStep: progressStep,
             progressTotal: progressTotal,
+            onContinue: onContinue,
             onBack: onBack
         ) {
             VStack(spacing: AppSpacing.sm) {
@@ -30,12 +34,17 @@ struct OnboardingImportMethodView: View {
                 // existing sessions which a brand-new v2 install never has.
                 AppOptionTileCard(
                     icon: .clipboard,
-                    title: AppCopy.Onboarding.methodPasteOption
+                    title: AppCopy.Onboarding.methodPasteOption,
+                    isSelected: selectedMethod == .paste
                 ) {
                     onSelect(.paste)
                 }
 
-                AppOptionTileCard(icon: .list, title: AppCopy.Onboarding.methodLibraryOption) {
+                AppOptionTileCard(
+                    icon: .list,
+                    title: AppCopy.Onboarding.methodLibraryOption,
+                    isSelected: selectedMethod == .library
+                ) {
                     onSelect(.library)
                 }
             }
@@ -44,5 +53,12 @@ struct OnboardingImportMethodView: View {
 }
 
 #Preview {
-    OnboardingImportMethodView(progressStep: 2, progressTotal: 4, onSelect: { _ in }, onBack: {})
+    OnboardingImportMethodView(
+        progressStep: 2,
+        progressTotal: 4,
+        selectedMethod: .library,
+        onSelect: { _ in },
+        onContinue: {},
+        onBack: {}
+    )
 }

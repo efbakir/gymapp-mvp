@@ -183,7 +183,7 @@ struct ExercisesListView: View {
     private func confirmDelete(_ pending: PendingExerciseDeletion) {
         let allTemplates = (try? modelContext.fetch(FetchDescriptor<DayTemplate>())) ?? []
         for template in allTemplates where template.orderedExerciseIds.contains(pending.exerciseId) {
-            template.orderedExerciseIds.removeAll { $0 == pending.exerciseId }
+            template.removeExerciseAndCaptureState(pending.exerciseId)
         }
         if let exercise = exercises.first(where: { $0.id == pending.exerciseId }) {
             if pending.hasHistory {
@@ -406,12 +406,11 @@ struct ExerciseDetailView: View {
                 id: session.id,
                 sessionDate: session.date,
                 templateName: templateName(for: session.templateId),
-                topSetText: WorkoutTargetFormatter.actualText(
+                topSetText: WorkoutTargetFormatter.milestoneText(
                     weightKg: topSet.weight,
-                    setCount: 1,
                     reps: topSet.reps,
                     isBodyweight: exercise.isBodyweight
-                ),
+                ) ?? "\(topSet.reps) reps",
                 bestReps: topSet.reps,
                 estimatedOneRM: topOneRM,
                 totalVolume: totalVolume

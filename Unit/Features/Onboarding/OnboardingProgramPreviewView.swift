@@ -174,7 +174,7 @@ struct OnboardingProgramPreviewView: View {
                         .multilineTextAlignment(.leading)
 
                     HStack(spacing: AppSpacing.xxs) {
-                        Text("\(exercise.plannedSets)×\(exercise.plannedReps)")
+                        Text(prescriptionText(for: exercise))
                             .font(AppFont.caption.font)
                             .foregroundStyle(AppColor.textSecondary)
                             .monospacedDigit()
@@ -209,6 +209,24 @@ struct OnboardingProgramPreviewView: View {
 
             weightField(dayIndex: dayIndex, exercise: exercise)
         }
+    }
+
+    private func prescriptionText(for exercise: OnboardingExercise) -> String {
+        let prescription: String
+        if let progression = exercise.progressionConfiguration {
+            prescription = WorkoutTargetFormatter.repRangeDisplay(
+                setCount: exercise.plannedSets,
+                lowerRepBound: progression.lowerRepBound,
+                upperRepBound: progression.upperRepBound
+            ) ?? ""
+        } else {
+            prescription = WorkoutTargetFormatter.setRepDisplay(
+                setCount: exercise.plannedSets,
+                reps: exercise.plannedReps
+            ) ?? ""
+        }
+        return exercise.plannedWeightKg.map { $0 > 0 ? "\(prescription) at" : prescription }
+            ?? prescription
     }
 
     @ViewBuilder

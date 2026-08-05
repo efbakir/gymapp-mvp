@@ -18,6 +18,7 @@
 //
 
 import XCTest
+import SwiftData
 @testable import Unit
 
 /// Swift 6 strict concurrency: `ProgramItem`, `ProgramImporter`,
@@ -315,4 +316,360 @@ final class ProgramImporterTests: XCTestCase {
             }
         }
     }
+
+    func testCombatPowerProgramPreservesScheduleAndContrastOrder() throws {
+        let program = try XCTUnwrap(
+            ProgramCatalog.all.first {
+                $0.id == UUID(uuidString: "00000000-0000-0000-0000-000000000011")
+            }
+        )
+
+        XCTAssertEqual(program.name, "Combat Power")
+        XCTAssertEqual(program.daysPerWeek, 3)
+        XCTAssertEqual(program.days.map(\.name), ["Lower Power", "Upper Power", "Full Power"])
+        XCTAssertEqual(program.days.map(\.weekday), [2, 4, 6])
+        XCTAssertEqual(
+            program.days[0].items.map(\.exerciseName),
+            [
+                "Back Squat (BB)",
+                "Squat Jump",
+                "Romanian DL",
+                "Rotational Med Ball Wall Throw",
+                "Push-Up Plus"
+            ]
+        )
+        XCTAssertEqual(
+            program.days[1].items.prefix(2).map(\.exerciseName),
+            ["Bench Press", "Plyo Push-Up"]
+        )
+        XCTAssertEqual(
+            program.days[2].items.prefix(2).map(\.exerciseName),
+            ["Trap Bar Deadlift", "Broad Jump"]
+        )
+        XCTAssertEqual(program.days[2].items.map(\.setCount), [3, 3, 3, 3, 2])
+        XCTAssertEqual(program.days[2].items.map(\.repTarget), [5, 3, 3, 8, 10])
+        XCTAssertTrue(program.description.contains("open-mat Friday"))
+    }
+
+    func testCombatPowerExercisesResolveThroughCatalog() throws {
+        let program = try XCTUnwrap(ProgramCatalog.all.first { $0.name == "Combat Power" })
+
+        for item in program.days.flatMap(\.items) {
+            XCTAssertNotNil(
+                ExerciseCatalog.lookup(item.exerciseName),
+                "Missing catalog metadata for \(item.exerciseName)"
+            )
+        }
+    }
+
+    func testCombatPowerUsesOnlyItsExplicitProgressionContract() throws {
+        let program = try XCTUnwrap(ProgramCatalog.all.first { $0.name == "Combat Power" })
+        let viewModel = OnboardingViewModel()
+        viewModel.applyPickedProgram(program)
+        let expected = combatPowerProgressionContract
+
+        for exercise in viewModel.dayExercises.flatMap({ $0 }) {
+            guard let expectedProgression = expected[exercise.name] else {
+                XCTAssertNil(
+                    exercise.progressionConfiguration,
+                    "Fixed catalog item \(exercise.name) must remain fixed"
+                )
+                continue
+            }
+            let progression = try XCTUnwrap(exercise.progressionConfiguration)
+            XCTAssertEqual(progression.lowerRepBound, expectedProgression.range.lowerBound)
+            XCTAssertEqual(progression.upperRepBound, expectedProgression.range.upperBound)
+            XCTAssertEqual(
+                progression.weightIncrementKg,
+                expectedProgression.incrementKg,
+                accuracy: 0.000_001
+            )
+        }
+    }
+
+    func testCatalogProgressionRequiresExplicitItemRangeAndIncrement() throws {
+        let expected = combatPowerProgressionContract
+
+        for program in ProgramCatalog.all {
+            for item in program.days.flatMap(\.items) {
+                if program.name == "Combat Power",
+                   let expectedProgression = expected[item.exerciseName] {
+                    XCTAssertEqual(item.repRange, expectedProgression.range)
+                    XCTAssertEqual(
+                        item.weightIncrementKg ?? -1,
+                        expectedProgression.incrementKg,
+                        accuracy: 0.000_001
+                    )
+                    XCTAssertEqual(item.repTarget, expectedProgression.range.lowerBound)
+                    XCTAssertNotNil(ProgramImporter.progressionConfiguration(for: item))
+                } else {
+                    XCTAssertNil(
+                        item.repRange,
+                        "\(program.name) / \(item.exerciseName) invents a rep range"
+                    )
+                    XCTAssertNil(
+                        item.weightIncrementKg,
+                        "\(program.name) / \(item.exerciseName) invents an increment"
+                    )
+                    XCTAssertNil(ProgramImporter.progressionConfiguration(for: item))
+                }
+            }
+        }
+    }
+
+    func testInvalidExplicitCatalogIncrementDoesNotConfigureProgression() {
+        let item = ProgramItem(
+            exerciseName: "Bench Press",
+            setCount: 3,
+            repTarget: 8,
+            repRange: 8...10,
+            weightIncrementKg: 0
+        )
+
+        XCTAssertNil(ProgramImporter.progressionConfiguration(for: item))
+    }
+
+    func testDirectCatalogImportPersistsOnlyExplicitCombatPowerProgression() throws {
+        let program = try XCTUnwrap(ProgramCatalog.all.first { $0.name == "Combat Power" })
+        let container = try ModelContainer(
+            for: Split.self,
+            Exercise.self,
+            DayTemplate.self,
+            WorkoutSession.self,
+            SetEntry.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+
+        let split = ProgramImporter.importProgram(program, into: container.mainContext)
+        let importedTemplates = try container.mainContext.fetch(FetchDescriptor<DayTemplate>())
+            .filter { $0.splitId == split.id }
+        let expected = combatPowerProgressionContract
+
+        for day in program.days {
+            let importedTemplate = try XCTUnwrap(
+                importedTemplates.first { $0.displayName == day.name }
+            )
+            XCTAssertEqual(importedTemplate.orderedExerciseIds.count, day.items.count)
+
+            for (index, item) in day.items.enumerated() {
+                let exerciseID = importedTemplate.orderedExerciseIds[index]
+                let state = importedTemplate.progressionState(for: exerciseID)
+                guard let expectedProgression = expected[item.exerciseName] else {
+                    XCTAssertNil(state, "Fixed item \(item.exerciseName) received progression")
+                    continue
+                }
+                let progressionState = try XCTUnwrap(state)
+                XCTAssertEqual(progressionState.lowerRepBound, expectedProgression.range.lowerBound)
+                XCTAssertEqual(progressionState.upperRepBound, expectedProgression.range.upperBound)
+                XCTAssertEqual(
+                    progressionState.weightIncrementKg,
+                    expectedProgression.incrementKg,
+                    accuracy: 0.000_001
+                )
+            }
+        }
+    }
+
+    func testPastedRepRangePersistsIntoSavedRoutine() throws {
+        let container = try ModelContainer(
+            for: Split.self,
+            Exercise.self,
+            DayTemplate.self,
+            WorkoutSession.self,
+            SetEntry.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let viewModel = OnboardingViewModel()
+        viewModel.importMethod = .paste
+        viewModel.applyImportedProgram([
+            ImportedProgramDay(
+                name: "Push",
+                exercises: [
+                    ImportedProgramExercise(
+                        name: "Bench Press",
+                        sets: 3,
+                        reps: 8,
+                        repRange: 8...10,
+                        weightKg: 60
+                    )
+                ]
+            )
+        ])
+
+        try viewModel.commit(modelContext: container.mainContext)
+
+        let template = try XCTUnwrap(
+            container.mainContext.fetch(FetchDescriptor<DayTemplate>()).first
+        )
+        let exerciseID = try XCTUnwrap(template.orderedExerciseIds.first)
+        let state = try XCTUnwrap(template.progressionState(for: exerciseID))
+        XCTAssertEqual(state.lowerRepBound, 8)
+        XCTAssertEqual(state.upperRepBound, 10)
+        XCTAssertEqual(state.currentAcceptedTargetReps, 8)
+        XCTAssertNil(state.sourceWorkoutSessionID)
+    }
+
+    func testPastedFixedRepsPersistWithoutProgression() throws {
+        let container = try ModelContainer(
+            for: Split.self,
+            Exercise.self,
+            DayTemplate.self,
+            WorkoutSession.self,
+            SetEntry.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let viewModel = OnboardingViewModel()
+        viewModel.importMethod = .paste
+        viewModel.applyImportedProgram(
+            ProgramImportParser.parse("Bench Press 3x8", defaultUnit: "kg")
+        )
+
+        try viewModel.commit(modelContext: container.mainContext)
+
+        let template = try XCTUnwrap(
+            container.mainContext.fetch(FetchDescriptor<DayTemplate>()).first
+        )
+        let exerciseID = try XCTUnwrap(template.orderedExerciseIds.first)
+        XCTAssertNil(template.progressionState(for: exerciseID))
+    }
+
+    func testPastedWeightedBodyweightRangePersistsProgression() throws {
+        let container = try ModelContainer(
+            for: Split.self,
+            Exercise.self,
+            DayTemplate.self,
+            WorkoutSession.self,
+            SetEntry.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let viewModel = OnboardingViewModel()
+        viewModel.importMethod = .paste
+        viewModel.applyImportedProgram(
+            ProgramImportParser.parse(
+                "Weighted Pull-Up 4 × 5–7 +10 kg",
+                defaultUnit: "kg"
+            )
+        )
+
+        try viewModel.commit(modelContext: container.mainContext)
+
+        let template = try XCTUnwrap(
+            container.mainContext.fetch(FetchDescriptor<DayTemplate>()).first
+        )
+        let exerciseID = try XCTUnwrap(template.orderedExerciseIds.first)
+        let exercise = try XCTUnwrap(
+            container.mainContext.fetch(FetchDescriptor<Exercise>()).first {
+                $0.id == exerciseID
+            }
+        )
+        let state = try XCTUnwrap(template.progressionState(for: exerciseID))
+
+        XCTAssertTrue(exercise.isBodyweight)
+        XCTAssertEqual(
+            template.plannedWeight(for: exerciseID) ?? -1,
+            10,
+            accuracy: 0.000_001
+        )
+        XCTAssertEqual(state.lowerRepBound, 5)
+        XCTAssertEqual(state.upperRepBound, 7)
+        XCTAssertEqual(state.currentAcceptedTargetReps, 5)
+    }
+
+    private var combatPowerProgressionContract: [
+        String: (range: ClosedRange<Int>, incrementKg: Double)
+    ] {
+        [
+            "Back Squat (BB)": (5...7, 2.5),
+            "Romanian DL": (6...8, 2.5),
+            "Rotational Med Ball Wall Throw": (6...8, 2),
+            "Bench Press": (5...7, 2.5),
+            "Weighted Pull-Up": (5...7, 2.5),
+            "OHP (BB)": (5...7, 2.5),
+            "Lateral Raise (DB)": (12...15, 1),
+            "Trap Bar Deadlift": (5...7, 5),
+            "DB Snatch": (3...5, 2.5),
+            "Close-Grip Bench": (8...10, 2.5)
+        ]
+    }
+
+#if DEBUG
+    func testCombatPowerSmokeSeedCreatesFourCompleteWeeksAndIsIdempotent() throws {
+        let originalActiveSplitID = UserDefaults.standard.string(
+            forKey: ActiveSplitStore.defaultsKey
+        )
+        defer {
+            if let originalActiveSplitID {
+                UserDefaults.standard.set(
+                    originalActiveSplitID,
+                    forKey: ActiveSplitStore.defaultsKey
+                )
+            } else {
+                UserDefaults.standard.removeObject(forKey: ActiveSplitStore.defaultsKey)
+            }
+        }
+
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(
+            for: Split.self,
+            Exercise.self,
+            DayTemplate.self,
+            WorkoutSession.self,
+            SetEntry.self,
+            configurations: configuration
+        )
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try XCTUnwrap(TimeZone(secondsFromGMT: 0))
+        calendar.firstWeekday = 2
+        let now = try XCTUnwrap(
+            calendar.date(
+                from: DateComponents(year: 2026, month: 8, day: 3, hour: 12)
+            )
+        )
+
+        let firstResult = try CombatPowerSmokeTestSeeder.seed(
+            in: container.mainContext,
+            now: now,
+            calendar: calendar
+        )
+        let secondResult = try CombatPowerSmokeTestSeeder.seed(
+            in: container.mainContext,
+            now: now,
+            calendar: calendar
+        )
+
+        let splits = try container.mainContext.fetch(FetchDescriptor<Split>())
+        let templates = try container.mainContext.fetch(FetchDescriptor<DayTemplate>())
+        let sessions = try container.mainContext.fetch(FetchDescriptor<WorkoutSession>())
+        let entries = try container.mainContext.fetch(FetchDescriptor<SetEntry>())
+        let split = try XCTUnwrap(splits.first { $0.id == firstResult.splitID })
+        let templateIDs = Set(split.orderedTemplateIds)
+        let smokeSessions = sessions.filter { templateIDs.contains($0.templateId) }
+        let smokeTemplates = templates.filter { $0.splitId == split.id }
+
+        XCTAssertEqual(firstResult.completedSessionCount, 12)
+        XCTAssertEqual(secondResult, firstResult)
+        XCTAssertEqual(split.name, "Combat Power")
+        XCTAssertEqual(ActiveSplitStore.currentId(), split.id)
+        XCTAssertEqual(smokeTemplates.count, 3)
+        XCTAssertEqual(smokeSessions.count, 12)
+        XCTAssertTrue(smokeSessions.allSatisfy(\.isCompleted))
+        XCTAssertEqual(entries.count, 208)
+        XCTAssertEqual(
+            smokeTemplates.reduce(0) { partialResult, template in
+                partialResult + template.progressionStateByExerciseId.count
+            },
+            10
+        )
+
+        let sessionDays = smokeSessions.map { calendar.startOfDay(for: $0.date) }
+        XCTAssertEqual(
+            sessionDays.min(),
+            calendar.date(from: DateComponents(year: 2026, month: 7, day: 6))
+        )
+        XCTAssertEqual(
+            sessionDays.max(),
+            calendar.date(from: DateComponents(year: 2026, month: 7, day: 31))
+        )
+    }
+#endif
 }

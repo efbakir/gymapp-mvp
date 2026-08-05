@@ -74,11 +74,23 @@ enum ProgramImporter {
             var plannedSets: [UUID: Int] = [:]
             var plannedReps: [UUID: Int] = [:]
             var plannedWeights: [UUID: Double] = [:]
+            var progressionPlan: [UUID: ExerciseProgressionState] = [:]
             for item in day.items {
                 let exercise = resolveExercise(named: item.exerciseName)
                 exerciseIds.append(exercise.id)
                 if item.setCount > 0 { plannedSets[exercise.id] = item.setCount }
                 if item.repTarget > 0 { plannedReps[exercise.id] = item.repTarget }
+                if let configuration = progressionConfiguration(for: item) {
+                    progressionPlan[exercise.id] = ExerciseProgressionState(
+                        lowerRepBound: configuration.lowerRepBound,
+                        upperRepBound: configuration.upperRepBound,
+                        weightIncrementKg: configuration.weightIncrementKg,
+                        currentAcceptedTargetWeightKg: nil,
+                        currentAcceptedTargetReps: configuration.lowerRepBound,
+                        sourceWorkoutSessionID: nil,
+                        lastAcceptedReason: nil
+                    )
+                }
                 if let weight = startingWeight(for: item, oneRMs: oneRMs) {
                     // Multiple items on the same day may reference the same
                     // exercise (e.g. 5/3/1 BBB has both main 5/3/1 work AND
@@ -102,7 +114,8 @@ enum ProgramImporter {
                 scheduledWeekday: day.weekday ?? 0,
                 plannedSetsByExerciseId: plannedSets,
                 plannedRepsByExerciseId: plannedReps,
-                plannedWeightByExerciseId: plannedWeights
+                plannedWeightByExerciseId: plannedWeights,
+                progressionStateByExerciseId: progressionPlan
             )
             context.insert(dayTemplate)
             dayTemplates.append(dayTemplate)
@@ -144,5 +157,30 @@ enum ProgramImporter {
     static func floorToPlate(_ value: Double, grain: Double) -> Double {
         guard grain > 0 else { return value }
         return (value / grain).rounded(.down) * grain
+    }
+
+    /// Returns progression only when the catalog item contains a complete,
+    /// explicit range and increment. Fixed prescriptions remain fixed; no
+    /// range or equipment-specific increment is derived here.
+    static func progressionConfiguration(
+        for item: ProgramItem
+    ) -> DoubleProgressionConfiguration? {
+        guard item.setCount > 0,
+              let repRange = item.repRange,
+              repRange.lowerBound >= 1,
+              repRange.upperBound > repRange.lowerBound,
+              item.repTarget == repRange.lowerBound,
+              let weightIncrementKg = item.weightIncrementKg,
+              weightIncrementKg.isFinite,
+              weightIncrementKg > 0 else {
+            return nil
+        }
+
+        return DoubleProgressionConfiguration(
+            workingSetCount: item.setCount,
+            lowerRepBound: repRange.lowerBound,
+            upperRepBound: repRange.upperBound,
+            weightIncrementKg: weightIncrementKg
+        )
     }
 }

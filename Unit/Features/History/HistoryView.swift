@@ -93,13 +93,12 @@ struct SessionExerciseSnapshot: Identifiable {
         sets.contains { $0.isPR }
     }
 
-    /// Exercise summary via `WorkoutTargetFormatter` compact `setxrepxkg` style.
+    /// Exercise summary via the same readable evidence format used by
+    /// progression cards (`3 × 8 at 60 kg`, or an exact per-set sequence).
     var previewPerformanceText: String? {
-        guard let representativeSet = sets.first else { return nil }
-        return WorkoutTargetFormatter.actualText(
-            weightKg: representativeSet.actualWeight,
-            setCount: max(sets.count, 1),
-            reps: representativeSet.actualReps,
+        WorkoutTargetFormatter.completedPerformanceText(
+            weightsKg: sets.map(\.actualWeight),
+            reps: sets.map(\.actualReps),
             isBodyweight: isBodyweight
         )
     }
@@ -270,7 +269,11 @@ struct RecentSessionsView: View {
         .sheet(item: $selectedPayload, onDismiss: {
             selectedDate = nil
         }) { payload in
-            SessionSummarySheet(payload: payload)
+            SessionSummarySheet(
+                payload: payload,
+                sessions: sessions,
+                templates: templates
+            )
                 .presentationDetents([.medium, .large])
                 .appBottomSheetChrome()
         }
@@ -377,13 +380,21 @@ struct RecentSessionsView: View {
                                 .padding(.horizontal, AppSpacing.xs)
 
                             AppCardList(section.sessions) { snapshot in
-                                Button {
-                                    selectedPayload = SelectedSessionsPayload(date: snapshot.date, sessions: [snapshot])
-                                } label: {
+                                if let session = sessions.first(where: { $0.id == snapshot.id }) {
+                                    NavigationLink {
+                                        SessionDetailView(
+                                            session: session,
+                                            templateName: snapshot.templateName
+                                        )
+                                    } label: {
+                                        historySessionRow(for: snapshot)
+                                            .contentShape(Rectangle())
+                                    }
+                                    .accessibilityIdentifier("history-session-row")
+                                    .buttonStyle(ScaleButtonStyle())
+                                } else {
                                     historySessionRow(for: snapshot)
                                 }
-                                .accessibilityIdentifier("history-session-row")
-                                .buttonStyle(ScaleButtonStyle())
                             }
                         }
                     }
@@ -648,6 +659,8 @@ private struct EarlierWeekRoutineRow: View {
 
 struct SessionSummarySheet: View {
     let payload: SelectedSessionsPayload
+    let sessions: [WorkoutSession]
+    let templates: [DayTemplate]
 
     @Environment(\.dismiss) private var dismiss
 
@@ -665,7 +678,11 @@ struct SessionSummarySheet: View {
         ) {
             VStack(alignment: .leading, spacing: AppSpacing.md) {
                 ForEach(payload.sessions) { snapshot in
-                    SessionSummaryCard(snapshot: snapshot)
+                    SessionSummaryCard(
+                        snapshot: snapshot,
+                        sessions: sessions,
+                        templates: templates
+                    )
                 }
             }
         }
@@ -674,6 +691,8 @@ struct SessionSummarySheet: View {
 
 private struct SessionSummaryCard: View {
     let snapshot: SessionSnapshot
+    let sessions: [WorkoutSession]
+    let templates: [DayTemplate]
 
     var body: some View {
         AppSessionHighlightCard(
@@ -697,8 +716,26 @@ private struct SessionSummaryCard: View {
                 }
 
                 AppDividedList(snapshot.exercises) { exercise in
-                    SessionExerciseSummary(exercise: exercise)
-                        .appCardRowChrome()
+                    if snapshot.state == .completed {
+                        NavigationLink {
+                            ExerciseProgressView(
+                                exerciseId: exercise.id,
+                                exerciseName: exercise.name,
+                                isBodyweight: exercise.isBodyweight,
+                                sessions: sessions,
+                                templates: templates
+                            )
+                        } label: {
+                            SessionExerciseSummary(exercise: exercise)
+                                .appCardRowChrome()
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityHint("Opens progress history for \(exercise.name)")
+                    } else {
+                        SessionExerciseSummary(exercise: exercise)
+                            .appCardRowChrome()
+                    }
                 }
             }
         }
@@ -800,12 +837,11 @@ struct SessionExerciseSummary: View {
     }
 
     private func actualText(for set: SessionSetSnapshot) -> String {
-        WorkoutTargetFormatter.actualText(
+        WorkoutTargetFormatter.milestoneText(
             weightKg: set.actualWeight,
-            setCount: 1,
             reps: set.actualReps,
             isBodyweight: exercise.isBodyweight
-        )
+        ) ?? "\(set.actualReps) reps"
     }
 }
 

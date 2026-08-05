@@ -30,10 +30,13 @@ enum ExerciseCatalog {
         .init(displayName: "Pec Dec", aliases: ["Pec Deck", "Pectec"], isBodyweight: false, muscleGroup: .chest, equipment: .machine),
         .init(displayName: "Cable Crossover", aliases: ["Cable Fly"], isBodyweight: false, muscleGroup: .chest, equipment: .cable),
         .init(displayName: "Push-Up", aliases: ["Pushup"], isBodyweight: true, muscleGroup: .chest, equipment: .bodyweight),
+        .init(displayName: "Push-Up Plus", aliases: ["Serratus Push-Up", "Stable Push-Up Plus"], isBodyweight: true, muscleGroup: .chest, equipment: .bodyweight),
+        .init(displayName: "Plyo Push-Up", aliases: ["Plyometric Push-Up"], isBodyweight: true, muscleGroup: .chest, equipment: .bodyweight),
         .init(displayName: "Weighted Dips", aliases: ["Dips"], isBodyweight: false, muscleGroup: .chest, equipment: .bodyweight),
 
         // MARK: Back
         .init(displayName: "Deadlift (Conv)", aliases: ["Conventional Deadlift", "Deadlift"], isBodyweight: false, muscleGroup: .back, equipment: .barbell),
+        .init(displayName: "Trap Bar Deadlift", aliases: ["Trap-Bar Deadlift", "Hex Bar Deadlift"], isBodyweight: false, muscleGroup: .back, equipment: .barbell),
         .init(displayName: "Bent Over Row (BB)", aliases: ["Barbell Row"], isBodyweight: false, muscleGroup: .back, equipment: .barbell),
         .init(displayName: "Pendlay Row", aliases: [], isBodyweight: false, muscleGroup: .back, equipment: .barbell),
         .init(displayName: "T-Bar Row", aliases: [], isBodyweight: false, muscleGroup: .back, equipment: .barbell),
@@ -107,13 +110,18 @@ enum ExerciseCatalog {
         // MARK: Forearms
         .init(displayName: "Wrist Curl", aliases: [], isBodyweight: false, muscleGroup: .forearms, equipment: .dumbbell),
         .init(displayName: "Reverse Curl", aliases: [], isBodyweight: false, muscleGroup: .forearms, equipment: .barbell),
+        .init(displayName: "Iso Plate Hold", aliases: ["Plate Hold", "Isometric Plate Hold"], isBodyweight: false, muscleGroup: .forearms, equipment: .other),
+        .init(displayName: "Rice Bucket", aliases: ["Rice Bucket Drill"], isBodyweight: false, muscleGroup: .forearms, equipment: .other),
 
         // MARK: Full body / conditioning
         .init(displayName: "Kettlebell Swing", aliases: ["KB Swing"], isBodyweight: false, muscleGroup: .fullBody, equipment: .kettlebell),
         .init(displayName: "DB Snatch", aliases: [], isBodyweight: false, muscleGroup: .fullBody, equipment: .dumbbell),
         .init(displayName: "Clean & Press", aliases: [], isBodyweight: false, muscleGroup: .fullBody, equipment: .barbell),
+        .init(displayName: "Squat Jump", aliases: ["Jump Squat"], isBodyweight: true, muscleGroup: .fullBody, equipment: .bodyweight),
+        .init(displayName: "Rotational Med Ball Wall Throw", aliases: ["Med-Ball Rotational Wall Throw", "Rotational Wall Throw"], isBodyweight: false, muscleGroup: .fullBody, equipment: .other),
         .init(displayName: "Broad Jump", aliases: [], isBodyweight: true, muscleGroup: .fullBody, equipment: .bodyweight),
-        .init(displayName: "Box Jump", aliases: [], isBodyweight: true, muscleGroup: .fullBody, equipment: .bodyweight)
+        .init(displayName: "Box Jump", aliases: [], isBodyweight: true, muscleGroup: .fullBody, equipment: .bodyweight),
+        .init(displayName: "Neck Training", aliases: ["Neck", "Neck Flexion and Extension"], isBodyweight: true, muscleGroup: .fullBody, equipment: .bodyweight)
     ]
 
     private static func normalize(_ value: String) -> String {

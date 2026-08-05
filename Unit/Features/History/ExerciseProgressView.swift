@@ -2,7 +2,7 @@
 //  ExerciseProgressView.swift
 //  Unit
 //
-//  Exercise-focused progress: PR stat, weight timeline chart, per-session delta list.
+//  Exercise-focused progress: weight, reps, volume, and chronological sessions.
 //
 
 import Charts
@@ -15,13 +15,26 @@ struct ExerciseProgressView: View {
     let sessions: [WorkoutSession]
     let templates: [DayTemplate]
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AppStorage("unitSystem") private var unitSystem = "kg"
+    @State private var selectedMetric: ProgressMetric
+    @State private var selectedChartDate: Date?
+
+    private enum ProgressMetric: String, CaseIterable, Identifiable {
+        case weight = "Weight"
+        case reps = "Reps"
+        case volume = "Volume"
+
+        var id: String { rawValue }
+    }
 
     struct SessionPoint: Identifiable {
         let id: UUID
         let date: Date
         let weight: Double
         let reps: Int
+        let maxReps: Int
+        let volumeKg: Double
+        let totalReps: Int
         let templateId: UUID
     }
 
@@ -37,16 +50,46 @@ struct ExerciseProgressView: View {
         return f
     }()
 
+    init(
+        exerciseId: UUID,
+        exerciseName: String,
+        isBodyweight: Bool,
+        sessions: [WorkoutSession],
+        templates: [DayTemplate]
+    ) {
+        self.exerciseId = exerciseId
+        self.exerciseName = exerciseName
+        self.isBodyweight = isBodyweight
+        self.sessions = sessions
+        self.templates = templates
+        _selectedMetric = State(initialValue: isBodyweight ? .reps : .weight)
+    }
+
     // Best set per completed session (highest weight, then reps)
     private var sessionPoints: [SessionPoint] {
         sessions
             .filter(\.isCompleted)
             .compactMap { session -> SessionPoint? in
-                let best = session.setEntries
+                let workingSets = session.setEntries
                     .filter { $0.exerciseId == exerciseId && $0.isCompleted && !$0.isWarmup }
-                    .max { lhs, rhs in lhs.weight == rhs.weight ? lhs.reps < rhs.reps : lhs.weight < rhs.weight }
+                let best = workingSets.max {
+                    lhs, rhs in lhs.weight == rhs.weight
+                        ? lhs.reps < rhs.reps
+                        : lhs.weight < rhs.weight
+                }
                 guard let best else { return nil }
-                return SessionPoint(id: session.id, date: session.date, weight: best.weight, reps: best.reps, templateId: session.templateId)
+                return SessionPoint(
+                    id: session.id,
+                    date: session.date,
+                    weight: best.weight,
+                    reps: best.reps,
+                    maxReps: workingSets.map(\.reps).max() ?? best.reps,
+                    volumeKg: workingSets.reduce(0) {
+                        $0 + ($1.weight * Double($1.reps))
+                    },
+                    totalReps: workingSets.reduce(0) { $0 + $1.reps },
+                    templateId: session.templateId
+                )
             }
             .sorted { $0.date < $1.date }
     }
@@ -76,7 +119,7 @@ struct ExerciseProgressView: View {
                         .transition(.opacity)
                 }
 
-                if sessionPoints.count > 1 {
+                if !sessionPoints.isEmpty {
                     chartCard
                 }
 
@@ -99,25 +142,23 @@ struct ExerciseProgressView: View {
     // MARK: - PR Card
 
     private func prCard(pr: SessionPoint) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: AppSpacing.md) {
-            VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                Text("Best set")
+        VStack(alignment: .leading, spacing: AppSpacing.sm) {
+            Text(bestSetEvidence(for: pr))
+                .font(AppFont.title.font)
+                .foregroundStyle(AppColor.textPrimary)
+                .monospacedDigit()
+                .contentTransition(.numericText())
+
+            Text(totalVolumeEvidence(for: pr))
+                .font(AppFont.body.font)
+                .foregroundStyle(AppColor.textSecondary)
+                .monospacedDigit()
+
+            if !isBodyweight, let epley1RM {
+                Text("Estimated 1RM · \(WorkoutTargetFormatter.weightDisplay(epley1RM))")
                     .font(AppFont.caption.font)
                     .foregroundStyle(AppColor.textSecondary)
-                Text(WorkoutTargetFormatter.actualText(weightKg: pr.weight, setCount: 1, reps: pr.reps, isBodyweight: isBodyweight))
-                    .font(AppFont.title.font)
                     .monospacedDigit()
-                    .contentTransition(.numericText())
-            }
-            Spacer(minLength: 0)
-            VStack(alignment: .trailing, spacing: AppSpacing.xs) {
-                Text(isBodyweight ? "Best reps" : "Est. 1RM")
-                    .font(AppFont.caption.font)
-                    .foregroundStyle(AppColor.textSecondary)
-                Text(isBodyweight ? "\(pr.reps)" : WorkoutTargetFormatter.weightDisplay(epley1RM ?? pr.weight))
-                    .font(AppFont.title.font)
-                    .monospacedDigit()
-                    .contentTransition(.numericText())
             }
         }
         .appCardStyle()
@@ -129,60 +170,170 @@ struct ExerciseProgressView: View {
     /// near-identical weights still render labelled axes. Without this, Charts
     /// collapses the Y range to a single value and the axis labels disappear.
     private var chartYDomain: ClosedRange<Double> {
-        let weights = sessionPoints.map(chartValue)
-        guard let lo = weights.min(), let hi = weights.max() else { return 0...1 }
+        let values = sessionPoints.map(metricValue)
+        guard let lo = values.min(), let hi = values.max() else { return 0...1 }
         let span = hi - lo
-        let pad = max(span * 0.15, 5)
+        let minimumPad = selectedMetric == .weight ? 5.0 : 1.0
+        let pad = max(span * 0.15, minimumPad)
         return max(0, lo - pad)...(hi + pad)
     }
 
-    private var chartCard: some View {
-        SettingsSection(title: isBodyweight ? "Reps over time" : "Weight over time") {
-            Chart(sessionPoints) { point in
-                LineMark(
-                    x: .value("Date", point.date),
-                    y: .value(isBodyweight ? "Reps" : "Weight (kg)", chartValue(for: point))
-                )
-                .interpolationMethod(.monotone)
-                .foregroundStyle(AppColor.textPrimary)
-                .lineStyle(StrokeStyle(lineWidth: 2))
+    /// Keep short histories fully labelled. Longer histories show evenly
+    /// distributed dates, while chart selection exposes every session.
+    private var chartXAxisDates: [Date] {
+        let dates = sessionPoints.map(\.date)
+        let maximumLabelCount = 4
+        guard dates.count > maximumLabelCount else { return dates }
 
-                PointMark(
-                    x: .value("Date", point.date),
-                    y: .value(isBodyweight ? "Reps" : "Weight (kg)", chartValue(for: point))
-                )
-                .foregroundStyle(AppColor.textPrimary)
-                .symbolSize(30)
-            }
-            .chartXAxis {
-                // `.automatic(desiredCount: 4)` lets Charts pick the stride based
-                // on available width and data range — months at iPhone-SE width
-                // with 6 months of data, quarters/years for multi-year history.
-                // Fixes the prior crowding when 12+ month labels collided on
-                // narrow widths under a hardcoded `.stride(by: .month)`.
-                AxisMarks(values: .automatic(desiredCount: 4)) { _ in
-                    AxisValueLabel(format: .dateTime.month(.abbreviated))
-                        .font(AppFont.caption.font)
-                        .foregroundStyle(AppColor.textSecondary)
-                }
-            }
-            .chartYAxis {
-                AxisMarks { _ in
-                    AxisValueLabel()
-                        .font(AppFont.caption.font)
-                        .foregroundStyle(AppColor.textSecondary)
-                    AxisGridLine()
-                        .foregroundStyle(AppColor.border.opacity(0.4))
-                }
-            }
-            .chartYScale(domain: chartYDomain)
-            .frame(minHeight: 160)
-            .appAnimation(.appReveal, value: exerciseName, reduceMotion: reduceMotion)
+        let lastIndex = dates.count - 1
+        return (0..<maximumLabelCount).map { position in
+            let progress = Double(position) / Double(maximumLabelCount - 1)
+            let index = Int((Double(lastIndex) * progress).rounded())
+            return dates[index]
         }
     }
 
-    private func chartValue(for point: SessionPoint) -> Double {
-        isBodyweight ? Double(point.reps) : point.weight
+    private var selectedChartPoint: SessionPoint? {
+        guard let selectedChartDate else { return nil }
+        return sessionPoints.min { lhs, rhs in
+            abs(lhs.date.timeIntervalSince(selectedChartDate))
+                < abs(rhs.date.timeIntervalSince(selectedChartDate))
+        }
+    }
+
+    private var chartReadoutPoint: SessionPoint? {
+        selectedChartPoint ?? sessionPoints.last
+    }
+
+    private var chartCard: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.sm) {
+            AppSegmentedControl(
+                selection: $selectedMetric,
+                items: ProgressMetric.allCases,
+                title: { $0.rawValue }
+            )
+
+            SettingsSection(title: metricSectionTitle) {
+                if let point = chartReadoutPoint {
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(selectedChartDate == nil
+                            ? "Latest · \(chartDateText(for: point.date))"
+                            : chartDateText(for: point.date))
+                            .foregroundStyle(AppColor.textSecondary)
+
+                        Spacer(minLength: AppSpacing.sm)
+
+                        Text(chartReadoutValue(for: point))
+                            .foregroundStyle(AppColor.textPrimary)
+                    }
+                    .font(AppFont.caption.font)
+                    .monospacedDigit()
+                    .accessibilityElement(children: .combine)
+                }
+
+                Chart(sessionPoints) { point in
+                    LineMark(
+                        x: .value("Date", point.date),
+                        y: .value(metricAxisLabel, metricValue(for: point))
+                    )
+                    .interpolationMethod(.monotone)
+                    .foregroundStyle(AppColor.textPrimary)
+                    .lineStyle(StrokeStyle(lineWidth: 2))
+
+                    PointMark(
+                        x: .value("Date", point.date),
+                        y: .value(metricAxisLabel, metricValue(for: point))
+                    )
+                    .foregroundStyle(AppColor.textPrimary)
+                    .symbolSize(30)
+
+                    if let selectedChartPoint, selectedChartPoint.id == point.id {
+                        RuleMark(x: .value("Selected date", selectedChartPoint.date))
+                            .foregroundStyle(AppColor.textSecondary.opacity(0.5))
+                    }
+                }
+                .chartXAxis {
+                    AxisMarks(values: chartXAxisDates) { _ in
+                        AxisGridLine()
+                            .foregroundStyle(AppColor.border.opacity(0.4))
+                        AxisTick()
+                            .foregroundStyle(AppColor.border)
+                        AxisValueLabel(format: .dateTime.month(.abbreviated).day())
+                            .font(AppFont.caption.font)
+                            .foregroundStyle(AppColor.textSecondary)
+                    }
+                }
+                .chartYAxis {
+                    AxisMarks { _ in
+                        AxisValueLabel()
+                            .font(AppFont.caption.font)
+                            .foregroundStyle(AppColor.textSecondary)
+                        AxisGridLine()
+                            .foregroundStyle(AppColor.border.opacity(0.4))
+                    }
+                }
+                .chartXScale(
+                    range: .plotDimension(
+                        startPadding: AppSpacing.smd,
+                        endPadding: AppSpacing.smd
+                    )
+                )
+                .chartXSelection(value: $selectedChartDate)
+                .chartYScale(domain: chartYDomain)
+                .frame(minHeight: 160)
+
+                Text("Tap or drag for exact values.")
+                    .font(AppFont.caption.font)
+                    .foregroundStyle(AppColor.textSecondary)
+            }
+        }
+    }
+
+    private var metricSectionTitle: String {
+        switch selectedMetric {
+        case .weight: return "Weight over time"
+        case .reps: return "Reps over time"
+        case .volume: return "Volume per session"
+        }
+    }
+
+    private var metricAxisLabel: String {
+        switch selectedMetric {
+        case .weight:
+            return "Weight (\(unitSystem))"
+        case .reps:
+            return "Reps"
+        case .volume:
+            return isBodyweight ? "Total reps" : "Volume (\(unitSystem)·reps)"
+        }
+    }
+
+    private func metricValue(for point: SessionPoint) -> Double {
+        switch selectedMetric {
+        case .weight:
+            return unitSystem == "lb" ? point.weight * 2.20462 : point.weight
+        case .reps:
+            return Double(point.maxReps)
+        case .volume:
+            if isBodyweight { return Double(point.totalReps) }
+            return unitSystem == "lb" ? point.volumeKg * 2.20462 : point.volumeKg
+        }
+    }
+
+    private func chartDateText(for date: Date) -> String {
+        date.formatted(.dateTime.month(.abbreviated).day())
+    }
+
+    private func chartReadoutValue(for point: SessionPoint) -> String {
+        switch selectedMetric {
+        case .weight:
+            if isBodyweight && point.weight <= 0 { return "BW" }
+            return WorkoutTargetFormatter.weightDisplay(point.weight)
+        case .reps:
+            return "\(point.maxReps) reps"
+        case .volume:
+            return volumeText(for: point)
+        }
     }
 
     // MARK: - Session list
@@ -218,8 +369,18 @@ struct ExerciseProgressView: View {
             }
             Spacer(minLength: 0)
             VStack(alignment: .trailing, spacing: AppSpacing.xxs) {
-                Text(WorkoutTargetFormatter.actualText(weightKg: point.weight, setCount: 1, reps: point.reps, isBodyweight: isBodyweight))
+                Text(
+                    WorkoutTargetFormatter.milestoneText(
+                        weightKg: point.weight,
+                        reps: point.reps,
+                        isBodyweight: isBodyweight
+                    ) ?? "\(point.reps) reps"
+                )
                     .font(AppFont.body.font)
+                    .monospacedDigit()
+                Text(volumeText(for: point))
+                    .font(AppFont.caption.font)
+                    .foregroundStyle(AppColor.textSecondary)
                     .monospacedDigit()
                 if let d = delta {
                     if d > 0 {
@@ -243,5 +404,35 @@ struct ExerciseProgressView: View {
             .fixedSize(horizontal: true, vertical: false)
         }
         .accessibilityElement(children: .combine)
+    }
+
+    private func volumeText(for point: SessionPoint) -> String {
+        if isBodyweight {
+            return "\(point.totalReps) total reps"
+        }
+        return WorkoutTargetFormatter.volumeDisplay(
+            volumeKg: point.volumeKg,
+            unitSystem: unitSystem
+        ) ?? "—"
+    }
+
+    private func bestSetEvidence(for point: SessionPoint) -> String {
+        if isBodyweight {
+            return "Best set · \(point.reps) reps"
+        }
+        return "Best set · \(WorkoutTargetFormatter.weightDisplay(point.weight)) × \(point.reps)"
+    }
+
+    private func totalVolumeEvidence(for point: SessionPoint) -> String {
+        if isBodyweight {
+            let reps = WorkoutTargetFormatter.groupedCountDisplay(point.totalReps)
+                ?? "\(point.totalReps)"
+            return "Total reps · \(reps)"
+        }
+        let volume = WorkoutTargetFormatter.volumeDisplay(
+            volumeKg: point.volumeKg,
+            unitSystem: unitSystem
+        ) ?? "—"
+        return "Total volume · \(volume)"
     }
 }

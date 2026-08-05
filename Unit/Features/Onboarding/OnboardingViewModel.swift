@@ -23,10 +23,10 @@ struct OnboardingExercise: Identifiable, Equatable, Hashable, Codable {
     var name: String
     var plannedSets: Int = OnboardingExercise.defaultPlannedSets
     var plannedReps: Int = OnboardingExercise.defaultPlannedReps
-    /// First-session weight seed (kg), carried from
-    /// `ImportedProgramExercise.weightKg`. Becomes the "Last time" ghost
-    /// weight on the very first session so a pasted program's numbers aren't
-    /// discarded. `nil` when the paste carried no weight — the field stays
+    /// First-session starting target (kg), carried from
+    /// `ImportedProgramExercise.weightKg`. It remains explicitly planned—not
+    /// mislabeled as history—so a pasted program's numbers aren't discarded.
+    /// `nil` when the paste carried no weight — the field stays
     /// blank, exactly as before. `Optional<Double>` decodes via
     /// `decodeIfPresent`, so onboarding drafts persisted before this field
     /// existed migrate to `nil` cleanly (no stored-data migration needed).
@@ -62,6 +62,9 @@ struct OnboardingExercise: Identifiable, Equatable, Hashable, Codable {
     /// before this field existed — same no-migration pattern as
     /// `plannedWeightKg`; `nil` reads as "not defaulted".
     var usedDefaultSetsReps: Bool? = nil
+    /// Present only when the source explicitly supports progressive overload:
+    /// a pasted rep range or an eligible ready-made program item.
+    var progressionConfiguration: DoubleProgressionConfiguration? = nil
 }
 
 struct ImportedProgramExercise: Identifiable, Equatable {
@@ -69,6 +72,9 @@ struct ImportedProgramExercise: Identifiable, Equatable {
     var name: String
     var sets: Int?
     var reps: Int?
+    /// Full pasted range (`8...10`). A single target such as `3×8` remains
+    /// nil and therefore fixed unless the user enables progression later.
+    var repRange: ClosedRange<Int>? = nil
     var weightKg: Double?
     /// Free-form parser note — assembled by `ProgramImportParser.Normalizer`
     /// from per-side / duration / distance / intent / paren-form-cue
@@ -109,11 +115,15 @@ final class OnboardingViewModel {
     enum SetupPath { case build }
     var setupPath: SetupPath = .build
 
-    enum ImportMethod {
+    enum ImportMethod: Equatable {
         case paste
         case library
     }
     var importMethod: ImportMethod = .library
+    /// Distinguishes the default value above from a choice the lifter has
+    /// explicitly made. Returning to the step keeps the chosen card selected
+    /// and switches navigation from auto-advance to the sticky CTA.
+    var hasSelectedImportMethod = false
 
     /// Raw text in the paste step's editor. Lives on the viewmodel (not as
     /// view-local `@State`) so step swaps through `OnboardingFlow` — which
@@ -142,6 +152,9 @@ final class OnboardingViewModel {
 
     /// "kg" or "lb". Written to AppStorage("unitSystem") after commit.
     var unitSystem: String = "kg"
+    /// `unitSystem` has a parser-safe default, but the onboarding card should
+    /// not read as chosen until the lifter taps it.
+    var hasSelectedUnit = false
 
     // MARK: Split
 
@@ -361,14 +374,33 @@ final class OnboardingViewModel {
             var setsPlan: [UUID: Int] = [:]
             var repsPlan: [UUID: Int] = [:]
             var weightPlan: [UUID: Double] = [:]
+            var progressionPlan: [UUID: ExerciseProgressionState] = [:]
             for onbEx in dayOnbExs {
-                guard let resolvedId = exerciseMap[onbEx.id]?.id else { continue }
+                guard let resolvedExercise = exerciseMap[onbEx.id] else { continue }
+                let resolvedId = resolvedExercise.id
                 setsPlan[resolvedId] = onbEx.plannedSets
                 repsPlan[resolvedId] = onbEx.plannedReps
                 // Only seed a real, positive weight — a 0 or absent paste
                 // weight leaves the field blank so the ghost reads as "no
                 // weight yet", not "0 kg".
                 if let w = onbEx.plannedWeightKg, w > 0 { weightPlan[resolvedId] = w }
+                // Preserve every explicit imported rep range. Bodyweight
+                // movements may still use added external load (for example,
+                // weighted pull-ups); the finish-time evaluator distinguishes
+                // those from unsupported bodyweight-only sessions using the
+                // weights the lifter actually completed.
+                if let configuration = onbEx.progressionConfiguration,
+                   configuration.isValid {
+                    progressionPlan[resolvedId] = ExerciseProgressionState(
+                        lowerRepBound: configuration.lowerRepBound,
+                        upperRepBound: configuration.upperRepBound,
+                        weightIncrementKg: configuration.weightIncrementKg,
+                        currentAcceptedTargetWeightKg: nil,
+                        currentAcceptedTargetReps: configuration.lowerRepBound,
+                        sourceWorkoutSessionID: nil,
+                        lastAcceptedReason: nil
+                    )
+                }
             }
             let resolvedWeekday: Int = {
                 guard !useFlexibleSchedule,
@@ -383,7 +415,8 @@ final class OnboardingViewModel {
                 scheduledWeekday: resolvedWeekday,
                 plannedSetsByExerciseId: setsPlan,
                 plannedRepsByExerciseId: repsPlan,
-                plannedWeightByExerciseId: weightPlan
+                plannedWeightByExerciseId: weightPlan,
+                progressionStateByExerciseId: progressionPlan
             )
             modelContext.insert(tmpl)
             templateIds.append(tmpl.id)
@@ -412,7 +445,8 @@ extension OnboardingViewModel {
         let bodyweightKeywords = [
             "pull up", "chin up", "push up", "dip", "plank", "hanging leg raise",
             "ab wheel rollout", "sit up", "crunch", "mountain climber", "burpee",
-            "bodyweight squat",
+            "bodyweight squat", "squat jump", "broad jump", "plyo push up",
+            "push up plus",
             // Vocab expansion — these all reliably default to BW in real
             // programs (`Inverted Row 3x12`, `Band Pull Aparts 3x20`,
             // `Face Pull 4x15`, `Neck Extension 2x20`). The lifter can
@@ -454,14 +488,25 @@ extension OnboardingViewModel {
 
         dayExercises = Array(sanitizedDays.prefix(dayCount).map { day in
             day.exercises.map { exercise in
-                OnboardingExercise(
+                let plannedSets = clampPlannedSets(exercise.sets ?? OnboardingExercise.defaultPlannedSets)
+                let plannedReps = clampPlannedReps(exercise.reps ?? OnboardingExercise.defaultPlannedReps)
+                let progressionConfiguration = exercise.repRange.map { range in
+                    DoubleProgressionConfiguration(
+                        workingSetCount: plannedSets,
+                        lowerRepBound: range.lowerBound,
+                        upperRepBound: range.upperBound,
+                        weightIncrementKg: unitSystem == "lb" ? 5 / 2.20462 : 2.5
+                    )
+                }
+                return OnboardingExercise(
                     name: exercise.name,
-                    plannedSets: clampPlannedSets(exercise.sets ?? OnboardingExercise.defaultPlannedSets),
-                    plannedReps: clampPlannedReps(exercise.reps ?? OnboardingExercise.defaultPlannedReps),
+                    plannedSets: plannedSets,
+                    plannedReps: plannedReps,
                     plannedWeightKg: exercise.weightKg,
                     note: exercise.note ?? "",
                     originalLine: exercise.originalLine ?? "",
-                    usedDefaultSetsReps: exercise.sets == nil || exercise.reps == nil
+                    usedDefaultSetsReps: exercise.sets == nil || exercise.reps == nil,
+                    progressionConfiguration: progressionConfiguration
                 )
             }
         })
@@ -489,13 +534,15 @@ extension OnboardingViewModel {
 
         dayExercises = Array(templateDays.prefix(dayCount).map { day in
             day.items.map { item in
-                OnboardingExercise(
+                let progressionConfiguration = ProgramImporter.progressionConfiguration(for: item)
+                return OnboardingExercise(
                     name: item.exerciseName,
                     plannedSets: clampPlannedSets(item.setCount > 0 ? item.setCount : OnboardingExercise.defaultPlannedSets),
                     plannedReps: clampPlannedReps(item.repTarget > 0 ? item.repTarget : OnboardingExercise.defaultPlannedReps),
                     plannedWeightKg: nil,
                     note: item.notes ?? "",
-                    originalLine: ""
+                    originalLine: "",
+                    progressionConfiguration: progressionConfiguration
                 )
             }
         })

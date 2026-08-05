@@ -113,6 +113,7 @@ struct ActiveWorkoutView: View {
                 for: exercise.id,
                 currentSession: session,
                 sessions: sessions,
+                acceptedProgressionTarget: template?.progressionState(for: exercise.id)?.acceptedTarget,
                 plannedReps: template?.plannedReps(for: exercise.id),
                 plannedWeightKg: template?.plannedWeight(for: exercise.id)
             )
@@ -213,7 +214,7 @@ struct ActiveWorkoutView: View {
                 progressSteps: progressSteps(for: section),
                 exerciseName: section.exercise.displayName,
                 metricValue: metricValue(for: section),
-                metricSupportingText: nil,
+                metricSupportingText: metricSupportingText(for: section),
                 metricIsHint: metricIsPlaceholder(for: section),
                 metricIsGhost: metricIsGhost(for: section),
                 state: workoutCommandCardState(for: section),
@@ -256,9 +257,24 @@ struct ActiveWorkoutView: View {
 
     private func metricValue(for section: WorkoutExerciseSectionModel) -> String {
         if let lastValues = lastLoggedValues(for: section.exercise.id) {
-            return WorkoutTargetFormatter.setMetricText(
+            return WorkoutTargetFormatter.milestoneText(
                 weightKg: lastValues.weight,
                 reps: lastValues.reps,
+                isBodyweight: section.exercise.isBodyweight
+            ) ?? emptyMetricPlaceholder()
+        }
+        if let prefill = section.prefill,
+           prefill.source == .acceptedProgression {
+            return WorkoutTargetFormatter.completeTargetText(
+                weightKg: prefill.weight,
+                setCount: section.plannedSetCount,
+                reps: prefill.reps
+            ) ?? emptyMetricPlaceholder()
+        }
+        if hasUsableStartingTarget(section), let prefill = section.prefill {
+            return WorkoutTargetFormatter.milestoneText(
+                weightKg: prefill.weight,
+                reps: prefill.reps,
                 isBodyweight: section.exercise.isBodyweight
             ) ?? emptyMetricPlaceholder()
         }
@@ -270,13 +286,46 @@ struct ActiveWorkoutView: View {
 
     private func metricIsPlaceholder(for section: WorkoutExerciseSectionModel) -> Bool {
         if lastLoggedValues(for: section.exercise.id) != nil { return false }
+        if section.prefill?.source == .acceptedProgression { return false }
+        if hasUsableStartingTarget(section) { return false }
         if section.lastActualText != nil { return false }
         return true
     }
 
     private func metricIsGhost(for section: WorkoutExerciseSectionModel) -> Bool {
         if lastLoggedValues(for: section.exercise.id) != nil { return false }
+        if section.prefill?.source == .acceptedProgression { return false }
+        if hasUsableStartingTarget(section) { return false }
         return section.lastActualText != nil
+    }
+
+    private func hasUsableStartingTarget(_ section: WorkoutExerciseSectionModel) -> Bool {
+        guard let prefill = section.prefill,
+              prefill.source == .planned,
+              prefill.reps > 0 else {
+            return false
+        }
+        return prefill.weight > 0 || section.exercise.isBodyweight
+    }
+
+    /// Identifies first-session planned values without pretending they are
+    /// workout history. Accepted targets retain their prior-session evidence.
+    private func metricSupportingText(
+        for section: WorkoutExerciseSectionModel
+    ) -> String? {
+        if section.entries.isEmpty, hasUsableStartingTarget(section) {
+            return AppCopy.Workout.startingTargetLabel
+        }
+
+        guard section.entries.isEmpty,
+              section.prefill?.source == .acceptedProgression,
+              let lastActualText = section.lastActualText else {
+            return nil
+        }
+        if lastActualText.hasPrefix("Last ") {
+            return "Last time · \(lastActualText.dropFirst(5))"
+        }
+        return "Last time · \(lastActualText)"
     }
 
     /// All-time best working set for `exerciseID`, drawn from completed prior sessions
@@ -625,7 +674,7 @@ struct ActiveWorkoutView: View {
         HStack(alignment: .center, spacing: AppSpacing.md) {
             VStack(alignment: .leading, spacing: AppSpacing.xs) {
                 Text(section.exercise.displayName)
-                    .font(AppFont.productAction.font)
+                    .font(AppFont.sectionHeader.font)
                     .foregroundStyle(isDone ? AppColor.textSecondary : AppColor.textPrimary)
                     .multilineTextAlignment(.leading)
 
@@ -633,6 +682,7 @@ struct ActiveWorkoutView: View {
                     Text(subtitle)
                         .font(AppFont.caption.font)
                         .foregroundStyle(isDone ? AppColor.textDisabled : AppColor.textSecondary)
+                        .monospacedDigit()
                 }
             }
 
@@ -686,7 +736,7 @@ struct ActiveWorkoutView: View {
                 state = .completed
                 reps = entry.reps
                 if entry.weight > 0 {
-                    weightText = WorkoutTargetFormatter.weightCompact(entry.weight)
+                    weightText = WorkoutTargetFormatter.weightDisplay(entry.weight)
                 } else {
                     weightText = "BW"
                 }
@@ -761,14 +811,11 @@ struct ActiveWorkoutView: View {
             .filter { $0.exerciseId == exercise.id && $0.isCompleted && !$0.isWarmup }
             .sorted { $0.setIndex < $1.setIndex }
 
-        return sets.last.map {
-            WorkoutTargetFormatter.lastText(
-                weightKg: $0.weight,
-                setCount: sets.count,
-                reps: $0.reps,
-                isBodyweight: exercise.isBodyweight
-            )
-        }
+        return WorkoutTargetFormatter.completedPerformanceText(
+            weightsKg: sets.map(\.weight),
+            reps: sets.map(\.reps),
+            isBodyweight: exercise.isBodyweight
+        ).map { "Last \($0)" }
     }
 
     private func toggleRestTimer() {
@@ -980,6 +1027,12 @@ struct ActiveWorkoutView: View {
     private func finishWorkout() {
         restTimer.stop()
         session.isCompleted = true
+        if let template {
+            session.captureProgressionRecords(
+                template: template,
+                exercises: exercises
+            )
+        }
         try? modelContext.save()
         EngagementPromptTracker().recordCompletedWorkout(sessionID: session.id)
         onFinished?(session)
@@ -1137,7 +1190,12 @@ private struct AdjustResultSheet: View {
     }
 
     private var parsedDisplayWeight: Double? {
-        Double(weightText.replacingOccurrences(of: ",", with: "."))
+        guard let value = Double(
+            weightText.replacingOccurrences(of: ",", with: ".")
+        ), value.isFinite else {
+            return nil
+        }
+        return value
     }
 
     /// SetEntry stores kilograms regardless of the user's display unit.
@@ -1176,12 +1234,14 @@ private struct AdjustResultSheet: View {
         return false
     }
 
-    /// A planned value is not logged history. The cold-start sheet intentionally
-    /// leaves weight blank and puts the cursor there, even when an imported
-    /// routine carried a planned weight behind the "Log first set" hint.
+    /// A complete starting target is immediately usable. Only genuinely empty
+    /// first-session weight input receives focus.
     private var shouldAutofocusWeight: Bool {
         guard case .log(let prefill) = mode else { return false }
-        return prefill == nil || prefill?.source == .planned
+        guard let prefill else { return true }
+        return prefill.source == .planned
+            && prefill.weight <= 0
+            && !isBodyweight
     }
 
     private var primaryLabel: String {
@@ -1233,9 +1293,7 @@ private struct AdjustResultSheet: View {
                         text: $weightText,
                         keyboardType: .decimalPad,
                         field: .weight,
-                        suffix: (isBodyweight || hasExplicitZeroWeight)
-                            ? AppCopy.Workout.bodyweightAbbrev
-                            : nil
+                        suffix: weightInputSuffix
                     )
 
                     manualInputField(
@@ -1304,7 +1362,7 @@ private struct AdjustResultSheet: View {
             switch mode {
             case .log(let prefill):
                 if let prefill {
-                    if prefill.source != .planned {
+                    if prefill.source != .planned || prefill.weight > 0 {
                         weightText = seedWeightText(prefill.weight)
                     }
                     repsText = "\(prefill.reps)"
@@ -1327,6 +1385,14 @@ private struct AdjustResultSheet: View {
             await Task.yield()
             focusedField = .weight
         }
+    }
+
+    private var weightInputSuffix: String? {
+        WorkoutTargetFormatter.weightInputSuffix(
+            displayWeight: hasExplicitZeroWeight ? 0 : parsedDisplayWeight,
+            isBodyweight: isBodyweight,
+            unitSystem: unitSystem
+        )
     }
 
     @ViewBuilder
@@ -1352,7 +1418,7 @@ private struct AdjustResultSheet: View {
 
                 if let suffix {
                     Text(suffix)
-                        .font(AppFont.productAction.font)
+                        .appFont(.caption)
                         .foregroundStyle(AppColor.textSecondary)
                 }
             }
@@ -1406,8 +1472,9 @@ private struct SetCountPickerSheet: View {
 }
 
 struct SetPrefill {
-    enum Source {
+    enum Source: Equatable {
         case currentSession
+        case acceptedProgression
         case priorSession
         case planned
     }
@@ -1431,6 +1498,7 @@ final class ActiveWorkoutViewModel {
         for exerciseID: UUID,
         currentSession: WorkoutSession,
         sessions: [WorkoutSession],
+        acceptedProgressionTarget: DoubleProgressionTarget? = nil,
         plannedReps: Int? = nil,
         plannedWeightKg: Double? = nil
     ) -> SetPrefill? {
@@ -1443,6 +1511,17 @@ final class ActiveWorkoutViewModel {
                 weight: currentLast.weight,
                 reps: currentLast.reps,
                 source: .currentSession
+            )
+        }
+
+        if let acceptedProgressionTarget,
+           acceptedProgressionTarget.weightKg.isFinite,
+           acceptedProgressionTarget.weightKg > 0,
+           acceptedProgressionTarget.reps > 0 {
+            return SetPrefill(
+                weight: acceptedProgressionTarget.weightKg,
+                reps: acceptedProgressionTarget.reps,
+                source: .acceptedProgression
             )
         }
 
@@ -1459,10 +1538,10 @@ final class ActiveWorkoutViewModel {
         }
 
         if let plannedReps, plannedReps > 0 {
-            // First session: seed weight from a pasted program when present
-            // (the "Last time" ghost on day one), else 0 (blank). The parser
-            // stores kg; the logging pipeline (SetEntry / SetPrefill weight)
-            // is in the lifter's display unit, so convert kg → display here.
+            // First session: use a pasted/program starting weight when present,
+            // otherwise retain the editable reps-only empty-weight state.
+            // Values remain canonical kilograms through persistence and logging;
+            // conversion happens only at formatter and input boundaries.
             let seededKg = plannedWeightKg ?? 0
             return SetPrefill(weight: seededKg, reps: plannedReps, source: .planned)
         }

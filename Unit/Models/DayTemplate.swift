@@ -8,6 +8,15 @@
 import Foundation
 import SwiftData
 
+struct DayTemplateExerciseStateSnapshot: Equatable {
+    let exerciseID: UUID
+    let index: Int
+    let plannedSets: Int?
+    let plannedReps: Int?
+    let plannedWeightKg: Double?
+    let progressionState: ExerciseProgressionState?
+}
+
 @Model
 final class Split {
     var id: UUID
@@ -88,12 +97,15 @@ final class DayTemplate {
     /// Per-exercise planned rep count, used as the first-session ghost before any
     /// real history exists. JSON-encoded `[exerciseId.uuidString: Int]`.
     var plannedRepsByExerciseIdData: Data?
-    /// Per-exercise planned weight (kg), used as the first-session "Last time"
-    /// ghost before any real history exists — seeded from the weights in a
+    /// Per-exercise planned weight (kg), used as the first-session starting
+    /// target before any real history exists — seeded from weights in a
     /// pasted program so day-one sets aren't blank. JSON-encoded
     /// `[exerciseId.uuidString: Double]`. Optional/additive: pre-existing
     /// templates decode to `[:]` and behave exactly as before (blank weight).
     var plannedWeightByExerciseIdData: Data?
+    /// Optional v2.1 double-progression state keyed by exercise ID. Existing or
+    /// corrupt stores decode to an empty map and remain unconfigured.
+    var progressionStateByExerciseIdData: Data?
 
     init(
         id: UUID = UUID(),
@@ -104,7 +116,8 @@ final class DayTemplate {
         scheduledWeekday: Int = 0,
         plannedSetsByExerciseId: [UUID: Int] = [:],
         plannedRepsByExerciseId: [UUID: Int] = [:],
-        plannedWeightByExerciseId: [UUID: Double] = [:]
+        plannedWeightByExerciseId: [UUID: Double] = [:],
+        progressionStateByExerciseId: [UUID: ExerciseProgressionState] = [:]
     ) {
         self.id = id
         self.name = name
@@ -115,6 +128,7 @@ final class DayTemplate {
         self.plannedSetsByExerciseIdData = Self.encodePlanMap(plannedSetsByExerciseId)
         self.plannedRepsByExerciseIdData = Self.encodePlanMap(plannedRepsByExerciseId)
         self.plannedWeightByExerciseIdData = Self.encodeWeightMap(plannedWeightByExerciseId)
+        self.progressionStateByExerciseIdData = Self.encodeProgressionMap(progressionStateByExerciseId)
     }
 
     /// Strips "Day N · " prefix if present, returning just the routine name.
@@ -152,9 +166,17 @@ final class DayTemplate {
         set { plannedWeightByExerciseIdData = Self.encodeWeightMap(newValue) }
     }
 
+    var progressionStateByExerciseId: [UUID: ExerciseProgressionState] {
+        get { Self.decodeProgressionMap(progressionStateByExerciseIdData) }
+        set { progressionStateByExerciseIdData = Self.encodeProgressionMap(newValue) }
+    }
+
     func plannedSets(for exerciseId: UUID) -> Int? { plannedSetsByExerciseId[exerciseId] }
     func plannedReps(for exerciseId: UUID) -> Int? { plannedRepsByExerciseId[exerciseId] }
     func plannedWeight(for exerciseId: UUID) -> Double? { plannedWeightByExerciseId[exerciseId] }
+    func progressionState(for exerciseId: UUID) -> ExerciseProgressionState? {
+        progressionStateByExerciseId[exerciseId]
+    }
 
     func setPlannedSets(_ value: Int?, for exerciseId: UUID) {
         var map = plannedSetsByExerciseId
@@ -172,6 +194,73 @@ final class DayTemplate {
         var map = plannedWeightByExerciseId
         if let value { map[exerciseId] = value } else { map.removeValue(forKey: exerciseId) }
         plannedWeightByExerciseId = map
+    }
+
+    func setProgressionState(_ value: ExerciseProgressionState?, for exerciseId: UUID) {
+        var map = progressionStateByExerciseId
+        if let value { map[exerciseId] = value } else { map.removeValue(forKey: exerciseId) }
+        progressionStateByExerciseId = map
+    }
+
+    /// Applies one user-approved absolute target to the routine. This mutates
+    /// only the in-memory model; the caller owns the surrounding save/rollback
+    /// transaction so a group of recommendations commits atomically.
+    @MainActor
+    @discardableResult
+    func acceptProgressionRecommendation(
+        _ recommendation: DoubleProgressionRecommendation,
+        for exerciseID: UUID
+    ) -> Bool {
+        guard let state = progressionState(for: exerciseID),
+              state.configuration(workingSetCount: 1).isValid,
+              recommendation.target.weightKg.isFinite,
+              recommendation.target.weightKg > 0,
+              recommendation.target.reps >= state.lowerRepBound,
+              recommendation.target.reps <= state.upperRepBound else {
+            return false
+        }
+
+        let accepted = DoubleProgressionEngine.accepting(recommendation, into: state)
+        setProgressionState(accepted, for: exerciseID)
+        setPlannedReps(recommendation.target.reps, for: exerciseID)
+        setPlannedWeight(recommendation.target.weightKg, for: exerciseID)
+        return true
+    }
+
+    /// Removes one routine exercise and every per-exercise value as one model
+    /// operation. The returned snapshot is sufficient for an exact Undo.
+    @discardableResult
+    func removeExerciseAndCaptureState(_ exerciseID: UUID) -> DayTemplateExerciseStateSnapshot? {
+        var ids = orderedExerciseIds
+        guard let index = ids.firstIndex(of: exerciseID) else { return nil }
+
+        let snapshot = DayTemplateExerciseStateSnapshot(
+            exerciseID: exerciseID,
+            index: index,
+            plannedSets: plannedSets(for: exerciseID),
+            plannedReps: plannedReps(for: exerciseID),
+            plannedWeightKg: plannedWeight(for: exerciseID),
+            progressionState: progressionState(for: exerciseID)
+        )
+
+        ids.remove(at: index)
+        orderedExerciseIds = ids
+        setPlannedSets(nil, for: exerciseID)
+        setPlannedReps(nil, for: exerciseID)
+        setPlannedWeight(nil, for: exerciseID)
+        setProgressionState(nil, for: exerciseID)
+        return snapshot
+    }
+
+    func restoreExerciseState(_ snapshot: DayTemplateExerciseStateSnapshot) {
+        var ids = orderedExerciseIds.filter { $0 != snapshot.exerciseID }
+        let safeIndex = min(max(snapshot.index, 0), ids.count)
+        ids.insert(snapshot.exerciseID, at: safeIndex)
+        orderedExerciseIds = ids
+        setPlannedSets(snapshot.plannedSets, for: snapshot.exerciseID)
+        setPlannedReps(snapshot.plannedReps, for: snapshot.exerciseID)
+        setPlannedWeight(snapshot.plannedWeightKg, for: snapshot.exerciseID)
+        setProgressionState(snapshot.progressionState, for: snapshot.exerciseID)
     }
 
     private static func encodePlanMap(_ map: [UUID: Int]) -> Data? {
@@ -202,6 +291,23 @@ final class DayTemplate {
             return [:]
         }
         var result: [UUID: Double] = [:]
+        for (key, value) in decoded {
+            if let uuid = UUID(uuidString: key) { result[uuid] = value }
+        }
+        return result
+    }
+
+    private static func encodeProgressionMap(_ map: [UUID: ExerciseProgressionState]) -> Data? {
+        let stringKeyed = Dictionary(uniqueKeysWithValues: map.map { ($0.key.uuidString, $0.value) })
+        return try? JSONEncoder().encode(stringKeyed)
+    }
+
+    private static func decodeProgressionMap(_ data: Data?) -> [UUID: ExerciseProgressionState] {
+        guard let data,
+              let decoded = try? JSONDecoder().decode([String: ExerciseProgressionState].self, from: data) else {
+            return [:]
+        }
+        var result: [UUID: ExerciseProgressionState] = [:]
         for (key, value) in decoded {
             if let uuid = UUID(uuidString: key) { result[uuid] = value }
         }

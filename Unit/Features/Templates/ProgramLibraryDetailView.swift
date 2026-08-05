@@ -35,7 +35,8 @@ struct ProgramLibraryDetailView: View {
                         AppDividedList(day.items) { item in
                             AppListRow(
                                 title: item.exerciseName,
-                                value: WorkoutTargetFormatter.setRepCompact(setCount: item.setCount, reps: item.repTarget) ?? "",
+                                value: prescriptionText(for: item),
+                                subtitle: item.notes,
                                 style: .display
                             )
                         }
@@ -59,6 +60,20 @@ struct ProgramLibraryDetailView: View {
             Text("Adds the program to your list. Missing exercises are created automatically.")
         }
         .tint(AppColor.accent)
+    }
+
+    private func prescriptionText(for item: ProgramItem) -> String {
+        guard let repRange = item.repRange else {
+            return WorkoutTargetFormatter.setRepDisplay(
+                setCount: item.setCount,
+                reps: item.repTarget
+            ) ?? ""
+        }
+        return WorkoutTargetFormatter.repRangeDisplay(
+            setCount: item.setCount,
+            lowerRepBound: repRange.lowerBound,
+            upperRepBound: repRange.upperBound
+        ) ?? ""
     }
 
     private var headerBlock: some View {

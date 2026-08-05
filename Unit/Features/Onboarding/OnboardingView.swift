@@ -30,6 +30,9 @@ enum OnboardingPreferencesKeys {
     static let dayWeekdays = "onboarding.dayWeekdays"
     static let useFlexibleSchedule = "onboarding.useFlexibleSchedule"
     static let importMethod = "onboarding.importMethod"
+    static let hasSelectedImportMethod = "onboarding.hasSelectedImportMethod"
+    static let hasSelectedUnit = "onboarding.hasSelectedUnit"
+    static let unitSystem = "onboarding.unitSystem"
     static let pickedProgramID = "onboarding.pickedProgramID"
     static let dayExercises = "onboarding.dayExercises"
     static let pastedProgramText = "onboarding.pastedProgramText"
@@ -55,6 +58,12 @@ enum OnboardingPreferences {
         defaults.set(viewModel.dayWeekdays, forKey: OnboardingPreferencesKeys.dayWeekdays)
         defaults.set(viewModel.useFlexibleSchedule, forKey: OnboardingPreferencesKeys.useFlexibleSchedule)
         defaults.set(rawImportMethod(from: viewModel.importMethod), forKey: OnboardingPreferencesKeys.importMethod)
+        defaults.set(
+            viewModel.hasSelectedImportMethod,
+            forKey: OnboardingPreferencesKeys.hasSelectedImportMethod
+        )
+        defaults.set(viewModel.hasSelectedUnit, forKey: OnboardingPreferencesKeys.hasSelectedUnit)
+        defaults.set(viewModel.unitSystem, forKey: OnboardingPreferencesKeys.unitSystem)
         if let pickedProgramID = viewModel.pickedProgram?.id.uuidString {
             defaults.set(pickedProgramID, forKey: OnboardingPreferencesKeys.pickedProgramID)
         } else {
@@ -86,6 +95,9 @@ enum OnboardingPreferences {
             OnboardingPreferencesKeys.dayWeekdays,
             OnboardingPreferencesKeys.useFlexibleSchedule,
             OnboardingPreferencesKeys.importMethod,
+            OnboardingPreferencesKeys.hasSelectedImportMethod,
+            OnboardingPreferencesKeys.hasSelectedUnit,
+            OnboardingPreferencesKeys.unitSystem,
             OnboardingPreferencesKeys.pickedProgramID,
             OnboardingPreferencesKeys.dayExercises,
             OnboardingPreferencesKeys.pastedProgramText,
@@ -124,6 +136,21 @@ enum OnboardingPreferences {
 
         if let rawMethod = defaults.string(forKey: OnboardingPreferencesKeys.importMethod) {
             viewModel.importMethod = importMethod(from: rawMethod)
+        }
+
+        if defaults.object(forKey: OnboardingPreferencesKeys.hasSelectedImportMethod) != nil {
+            viewModel.hasSelectedImportMethod = defaults.bool(
+                forKey: OnboardingPreferencesKeys.hasSelectedImportMethod
+            )
+        }
+
+        if defaults.object(forKey: OnboardingPreferencesKeys.hasSelectedUnit) != nil {
+            viewModel.hasSelectedUnit = defaults.bool(forKey: OnboardingPreferencesKeys.hasSelectedUnit)
+        }
+
+        if let unitSystem = defaults.string(forKey: OnboardingPreferencesKeys.unitSystem),
+           unitSystem == "kg" || unitSystem == "lb" {
+            viewModel.unitSystem = unitSystem
         }
 
         if viewModel.importMethod == .library,
@@ -276,10 +303,17 @@ struct OnboardingView: View {
             OnboardingUnitPickerView(
                 progressStep: 1,
                 progressTotal: totalRequiredSteps,
+                selectedUnit: vm.hasSelectedUnit ? vm.unitSystem : nil,
                 onSelect: { unit in
+                    let shouldAutoAdvance = !vm.hasSelectedUnit
                     vm.unitSystem = unit
-                    push(.importMethod)
+                    vm.hasSelectedUnit = true
+                    persistProgress()
+                    if shouldAutoAdvance {
+                        push(.importMethod)
+                    }
                 },
+                onContinue: { push(.importMethod) },
                 onBack: pop
             )
 
@@ -287,15 +321,17 @@ struct OnboardingView: View {
             OnboardingImportMethodView(
                 progressStep: 2,
                 progressTotal: totalRequiredSteps,
+                selectedMethod: vm.hasSelectedImportMethod ? vm.importMethod : nil,
                 onSelect: { method in
+                    let shouldAutoAdvance = !vm.hasSelectedImportMethod
                     vm.importMethod = method
-                    switch method {
-                    case .library:
-                        push(.libraryPicker)
-                    case .paste:
-                        push(.programImport)
+                    vm.hasSelectedImportMethod = true
+                    persistProgress()
+                    if shouldAutoAdvance {
+                        continueFromImportMethod()
                     }
                 },
+                onContinue: continueFromImportMethod,
                 onBack: pop
             )
 
@@ -311,10 +347,18 @@ struct OnboardingView: View {
             OnboardingLibraryPickerView(
                 progressStep: 3,
                 progressTotal: totalRequiredSteps,
+                selectedProgramID: vm.pickedProgram?.id,
                 onPick: { template in
-                    vm.applyPickedProgram(template)
-                    push(.schedule)
+                    let shouldAutoAdvance = vm.pickedProgram == nil
+                    if vm.pickedProgram?.id != template.id {
+                        vm.applyPickedProgram(template)
+                    }
+                    persistProgress()
+                    if shouldAutoAdvance {
+                        push(.schedule)
+                    }
                 },
+                onContinue: { push(.schedule) },
                 onBack: pop
             )
 
@@ -352,6 +396,15 @@ struct OnboardingView: View {
 
     private var exercisesProgressStep: Int { totalRequiredSteps }
 
+    private func continueFromImportMethod() {
+        switch vm.importMethod {
+        case .library:
+            push(.libraryPicker)
+        case .paste:
+            push(.programImport)
+        }
+    }
+
     // MARK: - Step navigation
 
     private func push(_ next: OnboardingStep) {
@@ -361,6 +414,10 @@ struct OnboardingView: View {
         // Snapshot on every transition: a quit-and-relaunch (notably mid-paste,
         // after the Vision OCR parse populated the viewmodel) restores the
         // user's work on the next entry instead of dropping them at splash.
+        OnboardingPreferences.save(from: vm, currentStep: step, history: history)
+    }
+
+    private func persistProgress() {
         OnboardingPreferences.save(from: vm, currentStep: step, history: history)
     }
 

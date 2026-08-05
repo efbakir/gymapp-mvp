@@ -29,8 +29,8 @@ enum AppCopy {
         static let addExercise = "Add exercise"
         /// Bodyweight abbreviation — shown in catalog rows, set tiles, ghost subtitles.
         static let bodyweightAbbrev = "BW"
-        // Warm-up reminder + guidance sheet removed 2026-07-13 (Not v1):
-        // Unit is history, not instructions — no coaching in the hot loop.
+        // Warm-up reminder + guidance sheet removed 2026-07-13:
+        // Progression guidance stays post-workout — no coaching in the hot loop.
         /// Empty-state title shown when a freestyle session has no exercises yet.
         static let addFirstExerciseTitle = "Add your first exercise"
         /// Subtitle paired with `addFirstExerciseTitle`.
@@ -42,18 +42,51 @@ enum AppCopy {
         /// Title for the reusable routine-target editor sheet.
         static let editTarget = "Edit target"
         /// Labels inside the routine-target editor sheet.
+        static let targetLabel = "Target"
+        static let startingTargetLabel = "Starting target"
         static let targetSetsLabel = "Sets"
         static let targetRepsLabel = "Reps"
+        static let progressionLabel = "Progressive overload"
+        static let progressionToggleLabel = "Increase reps, then weight"
+        static let progressionExplanation = "Reach the top of the range on every set to add weight. Otherwise, build reps."
+        static let repRangeLabel = "Rep range"
+        static let lowerRepsLabel = "Start"
+        static let upperRepsLabel = "Top"
+        static let weightIncrementLabel = "Smallest available increase"
+        static let weightIncrementExplanation = "Use the smallest weight jump available for this exercise."
+        static let nextTimeTitle = "Next time"
+        static let lastResultLabel = "Last time"
+        static let nextTargetLabel = "Next target"
+        static let suggestedForNextTime = "Suggested for next time"
+        static let acceptedForNextTime = "Accepted for next time"
+        static let repeatingForNextTime = "Repeating next time"
+        static let editedForNextTime = "Edited for next time"
+        static let noAutomaticTarget = "No automatic target"
+        static let useThisTarget = "Use this target"
+        static let repeatPreviousTarget = "Repeat previous target"
+        static let edit = "Edit"
+        static let editNextTarget = "Edit next target"
+        static let targetsSaved = "Next targets saved"
+        static let targetsSaveFailed = "Targets weren’t saved. Try again."
+        static let allSetsReachedTopReason = "All sets reached the top of your range."
+        static let addARepReason = "Keep the weight and add a rep."
+        static let repeatTargetReason = "Repeat it or edit the target."
+        static let chooseTargetManually = "Choose your next target manually."
+        static let mixedWeightsUnavailable = "Your working-set weights were different."
+        static let incompleteSetsUnavailable = "Not all configured working sets were completed."
+        static let invalidIncrementUnavailable = "Set the smallest available weight increase for this exercise."
+        static let bodyweightUnavailable = "Automatic progression currently requires an added external weight."
+        static let invalidDataUnavailable = "Unit couldn’t safely calculate a target from this session."
 
         /// Field caption above the weight input in `AdjustResultSheet`. The unit
         /// is read from `@AppStorage("unitSystem")` so a lifter in lb sees
         /// "Weight (lb)" — previously a hardcoded "Weight (kg)" leaked the
         /// developer-default unit into the most-used set-logging surface.
-        /// Bodyweight exercises drop the unit suffix: the value is optional
-        /// added load, so "Weight" alone reads cleaner than "Weight (kg)" on
-        /// an empty field that may stay empty.
+        /// Bodyweight exercises store only added external load in this field.
+        /// Naming that meaning explicitly avoids making `10 kg` look like the
+        /// lifter's bodyweight while preserving the existing storage model.
         static func weightLabel(isBodyweight: Bool, unitSystem: String) -> String {
-            if isBodyweight { return "Weight" }
+            if isBodyweight { return "Added weight (\(unitSystem))" }
             return "Weight (\(unitSystem))"
         }
 
@@ -284,6 +317,12 @@ enum AppCopy {
     /// wording, Restore/Terms/Privacy, and failure states are compliance
     /// copy and live in the view untouched by minimal-language passes.
     enum Paywall {
+        static func trialHeadline(_ duration: String) -> String {
+            "Try all of Unit free for \(duration)"
+        }
+        static let trialSupportingCopy = "Log workouts, follow your next target, and see whether Unit fits your training."
+        static let standardHeadline = "Unlock Unit"
+        static let standardSupportingCopy = "Fast workout logging with one clear target for next time."
         static let programReady = "Program ready"
         static let programFallbackTitle = "Your program"
         static func programDayCount(_ count: Int) -> String {
@@ -294,12 +333,31 @@ enum AppCopy {
         static let subscribeMonthly = "Subscribe monthly"
         static let subscribeYearly = "Subscribe yearly"
         static let buyLifetime = "Buy Lifetime"
+        static func startFreeTrial(_ adjectiveDuration: String) -> String {
+            "Start \(adjectiveDuration) free trial"
+        }
+        static func trialPurchaseContext(
+            duration: String,
+            billedPrice: String
+        ) -> String {
+            "\(duration) free, then \(billedPrice). Auto-renews unless cancelled."
+        }
         static func subscriptionPurchaseContext(_ price: String) -> String {
-            "\(price) · Auto-renews"
+            "\(price). Auto-renews unless cancelled."
         }
         static func lifetimePurchaseContext(_ price: String) -> String {
-            "\(price) · One-time purchase"
+            "\(price). One-time purchase."
         }
+        static let pendingPurchaseContext = "Purchase pending approval."
+
+        static let includedFeatures = [
+            "Next-workout targets",
+            "One-tap set logging",
+            "Last-time values",
+            "Ready-made or pasted programs",
+            "Progress history",
+            "Lock Screen rest timer"
+        ]
 
         // Renewal-transparency sheet ("what happens next" timeline). One
         // quiet trigger line on the paywall; the sheet answers the
@@ -315,6 +373,18 @@ enum AppCopy {
         static let timelineCancelMessage = "Cancel in App Store settings. Access lasts through the paid period."
         static let timelineRenewalTitle = "Renewal"
         static let timelineRenewalMessage = "Auto-renews at the price shown until you cancel."
+
+        static let trialTimelineTitle = "Your free trial"
+        static let trialTimelineTodayTitle = "Today"
+        static let trialTimelineTodayMessage = "Everything unlocks immediately."
+        static func trialTimelineDurationTitle(_ duration: String) -> String {
+            "For \(duration)"
+        }
+        static let trialTimelineDurationMessage = "Use every Unit feature for free."
+        static let trialTimelineBeforeRenewalTitle = "Before renewal"
+        static let trialTimelineBeforeRenewalMessage = "Cancel anytime in App Store settings."
+        static let trialTimelineAfterTitle = "After the trial"
+        static let trialTimelineAfterMessage = "Renews at the displayed price unless cancelled."
 
         // Social proof — a real, published five-star App Store review
         // (Türkiye storefront, v1.0, 2026-06-09: "Yıllardır aradığım gym

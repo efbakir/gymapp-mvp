@@ -1,0 +1,425 @@
+//
+//  ProgressionContractUITests.swift
+//  UnitUITests
+//
+//  Deterministic release-gate journey for the v2.2 progression information
+//  contract: post-workout outcomes → explicit decisions → cold relaunch →
+//  configuration → accepted target in the next workout.
+//
+
+
+import XCTest
+
+@MainActor
+final class ProgressionContractUITests: XCTestCase {
+
+    override func setUpWithError() throws {
+        continueAfterFailure = false
+    }
+
+    func testProgressionContract_outcomesActionsPersistenceAndNextWorkout() throws {
+        var app = makeApp(reset: true)
+        app.launch()
+
+        XCTAssertTrue(
+            app.staticTexts["Progression QA"].waitForExistence(timeout: 20),
+            "Seeded active workout did not open"
+        )
+        let finishWorkout = app.buttons[AppCopy.Workout.finishWorkout].firstMatch
+        XCTAssertTrue(
+            finishWorkout.waitForExistence(timeout: 12),
+            "Seeded workout is not ready to finish"
+        )
+        assertNoProgressionDecisionUI(in: app)
+        attachScreenshot(of: app, named: "01-progression-ready-to-finish")
+        tap(finishWorkout, "ready-to-finish workout")
+
+        let finishConfirmation = app.alerts.firstMatch.buttons[AppCopy.Workout.finishWorkout]
+        tap(finishConfirmation, "finish confirmation")
+
+        XCTAssertTrue(
+            app.staticTexts[AppCopy.Workout.nextTimeTitle].waitForExistence(timeout: 15),
+            "Post-workout progression section did not appear"
+        )
+        XCTAssertTrue(
+            staticText(in: app, containing: "3 × 8 at 62.5 kg").exists,
+            "Increase-weight target is incomplete or incorrect"
+        )
+        XCTAssertTrue(
+            staticText(in: app, containing: "Every set reached the top of your 8–10 range").exists,
+            "Increase-weight explanation is missing"
+        )
+        attachScreenshot(of: app, named: "02-increase-weight")
+
+        let useFirstSuggestion = button(
+            in: app,
+            containing: AppCopy.Workout.useThisTarget
+        )
+        scrollTo(useFirstSuggestion, in: app)
+        tap(useFirstSuggestion, "Use this target — increase weight")
+        XCTAssertTrue(
+            staticText(in: app, containing: AppCopy.Workout.acceptedForNextTime)
+                .waitForExistence(timeout: 8),
+            "Accepted state did not replace the pending action"
+        )
+
+        let repeatPrevious = button(
+            in: app,
+            containing: AppCopy.Workout.repeatPreviousTarget
+        )
+        scrollTo(repeatPrevious, in: app)
+        attachScreenshot(of: app, named: "03-increase-reps")
+        tap(repeatPrevious, "Repeat previous target — add-rep recommendation")
+        XCTAssertTrue(
+            staticText(in: app, containing: AppCopy.Workout.repeatingForNextTime)
+                .waitForExistence(timeout: 8),
+            "Repeat-previous decision was not shown"
+        )
+
+        let editRepeatTarget = app.buttons["Edit next target for Repeat Target Squat"]
+        scrollTo(editRepeatTarget, in: app)
+        attachScreenshot(of: app, named: "04-repeat-target")
+        tap(editRepeatTarget, "Edit repeat-target recommendation")
+        XCTAssertTrue(
+            app.staticTexts[AppCopy.Workout.editNextTarget].waitForExistence(timeout: 8),
+            "Recommendation edit sheet did not open"
+        )
+        tap(app.buttons["Increase"].firstMatch, "Increase edited target reps")
+        tap(app.buttons[AppCopy.Workout.saveChanges], "Save edited recommendation")
+        XCTAssertTrue(
+            staticText(in: app, containing: AppCopy.Workout.editedForNextTime)
+                .waitForExistence(timeout: 8),
+            "Edited decision was not shown"
+        )
+        XCTAssertTrue(
+            staticText(in: app, containing: "3 × 10 at 50 kg").exists,
+            "Edited complete target was not shown"
+        )
+
+        let mixedWeightExplanation = staticText(
+            in: app,
+            containing: AppCopy.Workout.mixedWeightsUnavailable
+        )
+        scrollTo(mixedWeightExplanation, in: app)
+        XCTAssertTrue(
+            mixedWeightExplanation.exists,
+            "Mixed working-set weights did not explain why automation is unavailable"
+        )
+        XCTAssertTrue(
+            staticText(in: app, containing: AppCopy.Workout.noAutomaticTarget).exists,
+            "Unavailable state heading is missing"
+        )
+        XCTAssertFalse(
+            button(in: app, containing: AppCopy.Workout.repeatPreviousTarget).exists,
+            "Accepted and unavailable rows must not keep stale repeat actions"
+        )
+        attachScreenshot(of: app, named: "05-mixed-weight-unavailable")
+
+        // Cold relaunch against the same dedicated store. The launch seeder is
+        // idempotent and must not recreate the workout or replace decisions.
+        app.terminate()
+        app = makeApp()
+        app.launch()
+
+        XCTAssertTrue(
+            app.staticTexts["Today"].waitForExistence(timeout: 20),
+            "Relaunch did not return to Today"
+        )
+        XCTAssertTrue(
+            staticText(in: app, containing: "3 × 8 at 62.5 kg")
+                .waitForExistence(timeout: 12),
+            "Accepted increase-weight target did not survive relaunch"
+        )
+        XCTAssertTrue(
+            staticText(in: app, containing: "3 × 8 at 40 kg").exists,
+            "Repeated previous target did not survive relaunch"
+        )
+        XCTAssertTrue(
+            staticText(in: app, containing: "3 × 10 at 50 kg").exists,
+            "Edited target did not survive relaunch"
+        )
+        for exerciseName in [
+            "Increase Weight Press",
+            "Add One Rep Row",
+            "Repeat Target Squat",
+            "Mixed Weight Deadlift"
+        ] {
+            XCTAssertTrue(
+                button(in: app, containing: exerciseName).exists,
+                "Today lost the complete exercise identity for \(exerciseName)"
+            )
+        }
+        attachScreenshot(of: app, named: "06-accepted-targets-today")
+
+        tap(app.tabBars.buttons["Programs"], "Programs tab")
+        let routine = button(in: app, containing: "Progression QA")
+        tap(routine, "Progression QA routine", timeout: 10)
+        tap(
+            app.buttons["Edit target for Increase Weight Press"],
+            "Increase Weight Press target editor"
+        )
+        XCTAssertTrue(
+            app.staticTexts[AppCopy.Workout.progressionLabel].waitForExistence(timeout: 8),
+            "Progressive overload configuration is missing"
+        )
+        XCTAssertTrue(
+            app.staticTexts[AppCopy.Workout.weightIncrementLabel].exists,
+            "Smallest-available-increase label is missing"
+        )
+        XCTAssertTrue(
+            app.staticTexts[AppCopy.Workout.weightIncrementExplanation].exists,
+            "Smallest-available-increase helper is missing"
+        )
+        XCTAssertTrue(
+            app.textFields[AppCopy.Workout.weightIncrementLabel].exists,
+            "Smallest available increase is not an editable field"
+        )
+        scrollTo(
+            app.staticTexts[AppCopy.Workout.weightIncrementExplanation],
+            in: app,
+            maximumSwipes: 4
+        )
+        attachScreenshot(of: app, named: "07-progression-configuration")
+
+        // Template detail intentionally hides the tab bar. Relaunching is the
+        // real cold-start path and avoids coupling this contract test to the
+        // navigation stack's synthesized back-button label.
+        app.terminate()
+        app = makeApp()
+        app.launch()
+        XCTAssertTrue(
+            app.staticTexts["Today"].waitForExistence(timeout: 20),
+            "Today did not return after the configuration relaunch"
+        )
+
+        // The same completed-session evidence must stay readable in History:
+        // sentence-friendly set formatting, explicit volume units, and an
+        // exact day on the chart rather than repeated month-only labels.
+        tap(app.buttons[AppCopy.Nav.history], "History")
+        let completedSessionRow = app.buttons["history-session-row"].firstMatch
+        tap(completedSessionRow, "completed progression session")
+        XCTAssertTrue(
+            staticText(in: app, containing: "Increase Weight Press")
+                .waitForExistence(timeout: 8),
+            "Completed-session details did not open"
+        )
+        let exerciseProgress = button(
+            in: app,
+            containing: "Increase Weight Press"
+        )
+        scrollTo(exerciseProgress, in: app, maximumSwipes: 4)
+        tap(exerciseProgress, "Increase Weight Press progress")
+        XCTAssertTrue(
+            staticText(in: app, containing: "Best set · 60 kg × 10")
+                .waitForExistence(timeout: 10),
+            "History did not explain the best set with readable units"
+        )
+        XCTAssertTrue(
+            staticText(in: app, containing: "Total volume · 1,800 kg·reps").exists,
+            "History did not label total volume clearly"
+        )
+        let expectedChartDate = Date().formatted(
+            .dateTime.month(.abbreviated).day()
+        )
+        XCTAssertTrue(
+            staticText(in: app, containing: expectedChartDate).exists,
+            "History chart did not expose an exact date"
+        )
+        attachScreenshot(of: app, named: "09-history-evidence")
+        tap(app.navigationBars.buttons.firstMatch, "back to session details")
+        tap(app.navigationBars.buttons.firstMatch, "back to History")
+        tap(app.navigationBars.buttons.firstMatch, "back to Today")
+
+        let startNextWorkout = app.buttons[AppCopy.Workout.startWorkout]
+        scrollTo(startNextWorkout, in: app)
+        tap(startNextWorkout, "Start next workout", timeout: 10)
+        XCTAssertTrue(
+            staticText(in: app, containing: "3 × 8 at 62.5 kg")
+                .waitForExistence(timeout: 10),
+            "Accepted complete target is not prefilled in the next workout"
+        )
+        XCTAssertTrue(
+            staticText(in: app, containing: "Last time · 3 × 10 at 60 kg").exists,
+            "The next workout lost the prior-session evidence"
+        )
+        assertNoProgressionDecisionUI(in: app)
+        attachScreenshot(of: app, named: "08-accepted-target-next-workout")
+    }
+
+    func testPastedStartingTargetSurvivesRelaunchAndLogsInOneTap() throws {
+        var app = makeStartingTargetApp(reset: true)
+        app.launch()
+
+        XCTAssertTrue(
+            app.staticTexts["Today"].waitForExistence(timeout: 20),
+            "Starting-target seed did not reach Today"
+        )
+        XCTAssertTrue(
+            staticText(in: app, containing: "3 × 8 at 60 kg")
+                .waitForExistence(timeout: 12),
+            "Today did not show the pasted Bench Press starting target"
+        )
+
+        // Reopen before the first workout: the target must come from SwiftData,
+        // not transient onboarding state or an idempotent test reseed.
+        app.terminate()
+        app = makeStartingTargetApp()
+        app.launch()
+        XCTAssertTrue(
+            staticText(in: app, containing: "3 × 8 at 60 kg")
+                .waitForExistence(timeout: 20),
+            "The pasted starting target did not survive a cold relaunch"
+        )
+
+        let startWorkout = app.buttons[AppCopy.Workout.startWorkout]
+        scrollTo(startWorkout, in: app)
+        tap(startWorkout, "Start first Progression Test workout")
+
+        XCTAssertTrue(
+            app.staticTexts["Bench Press"].waitForExistence(timeout: 12),
+            "Bench Press did not open first"
+        )
+        XCTAssertTrue(
+            staticText(in: app, containing: "60 kg × 8").exists,
+            "The first active set did not show the usable 60 kg × 8 target"
+        )
+        XCTAssertTrue(
+            app.staticTexts[AppCopy.Workout.startingTargetLabel].exists,
+            "The planned value was not identified as a starting target"
+        )
+        XCTAssertFalse(
+            staticText(in: app, containing: "Last time").exists,
+            "A first-session target must not be mislabeled as workout history"
+        )
+        XCTAssertFalse(
+            app.buttons[AppCopy.Workout.logMetricHint].exists,
+            "Log first set must only appear when no usable target exists"
+        )
+        attachScreenshot(of: app, named: "09-first-session-starting-target")
+
+        tap(app.buttons[AppCopy.Workout.completeSet], "Complete the prefilled first set")
+
+        XCTAssertTrue(
+            app.descendants(matching: .any).matching(
+                NSPredicate(format: "label CONTAINS %@", "Set 1, completed")
+            ).firstMatch.waitForExistence(timeout: 8),
+            "The one-tap action did not record the first set"
+        )
+        XCTAssertTrue(
+            staticText(in: app, containing: "60 kg × 8").exists,
+            "The next set did not retain the within-session 60 kg × 8 prefill"
+        )
+        XCTAssertTrue(
+            app.buttons.containing(
+                NSPredicate(format: "label CONTAINS %@", "running")
+            ).firstMatch.waitForExistence(timeout: 8),
+            "The normal rest timer did not begin after one-tap completion"
+        )
+        attachScreenshot(of: app, named: "10-first-session-set-completed")
+    }
+
+    // MARK: - Helpers
+
+    private func makeApp(reset: Bool = false) -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "-ui-testing",
+            "-ui-testing-progression-contract"
+        ]
+        if reset {
+            app.launchArguments.append("-ui-testing-reset")
+        }
+        return app
+    }
+
+    private func makeStartingTargetApp(reset: Bool = false) -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "-ui-testing",
+            "-ui-testing-starting-target"
+        ]
+        if reset {
+            app.launchArguments.append("-ui-testing-reset")
+        }
+        return app
+    }
+
+    private func button(in app: XCUIApplication, containing text: String) -> XCUIElement {
+        app.buttons.containing(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
+    }
+
+    private func staticText(in app: XCUIApplication, containing text: String) -> XCUIElement {
+        app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
+    }
+
+    private func tap(
+        _ element: XCUIElement,
+        _ name: String,
+        timeout: TimeInterval = 8
+    ) {
+        XCTAssertTrue(element.waitForExistence(timeout: timeout), "\(name) not found")
+        XCTAssertTrue(element.isHittable, "\(name) exists but is not hittable")
+        element.tap()
+    }
+
+    private func scrollTo(
+        _ element: XCUIElement,
+        in app: XCUIApplication,
+        maximumSwipes: Int = 8
+    ) {
+        var remaining = maximumSwipes
+        while remaining > 0 && (!element.exists || !element.isHittable) {
+            let shouldScrollDown = element.exists
+                && element.frame.maxY < app.frame.midY
+            let startY = shouldScrollDown ? 0.34 : 0.66
+            let endY = shouldScrollDown ? 0.58 : 0.42
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: startY))
+                .press(
+                    forDuration: 0.01,
+                    thenDragTo: app.coordinate(
+                        withNormalizedOffset: CGVector(dx: 0.5, dy: endY)
+                    )
+                )
+            remaining -= 1
+        }
+        XCTAssertTrue(element.exists, "Element did not appear after scrolling")
+        XCTAssertTrue(element.isHittable, "Element is still not hittable after scrolling")
+    }
+
+    private func attachScreenshot(of app: XCUIApplication, named name: String) {
+        let attachment = XCTAttachment(screenshot: app.screenshot())
+        attachment.name = name
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+
+    private func assertNoProgressionDecisionUI(in app: XCUIApplication) {
+        XCTAssertFalse(
+            button(in: app, containing: AppCopy.Workout.useThisTarget).exists,
+            "Use-this-target must not interrupt active logging"
+        )
+        XCTAssertFalse(
+            button(in: app, containing: AppCopy.Workout.repeatPreviousTarget).exists,
+            "Repeat-previous must not interrupt active logging"
+        )
+        XCTAssertEqual(
+            app.buttons.matching(
+                NSPredicate(format: "label BEGINSWITH %@", "Edit next target")
+            ).count,
+            0,
+            "Edit-target controls must not interrupt active logging"
+        )
+        XCTAssertFalse(app.staticTexts[AppCopy.Workout.nextTimeTitle].exists)
+        XCTAssertFalse(app.staticTexts[AppCopy.Workout.suggestedForNextTime].exists)
+        XCTAssertFalse(app.staticTexts[AppCopy.Workout.noAutomaticTarget].exists)
+        XCTAssertFalse(
+            staticText(in: app, containing: "Every set reached the top").exists
+        )
+        XCTAssertFalse(
+            staticText(in: app, containing: AppCopy.Workout.addARepReason).exists
+        )
+        XCTAssertFalse(
+            staticText(in: app, containing: AppCopy.Workout.repeatTargetReason).exists
+        )
+    }
+}

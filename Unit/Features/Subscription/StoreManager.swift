@@ -29,12 +29,229 @@ struct EntitlementRefreshState {
     }
 }
 
+/// A StoreKit-independent snapshot of a subscription period. Keeping this
+/// small value testable lets the paywall prove that every duration and billing
+/// label came from StoreKit metadata instead of a view-level assumption.
+struct StoreSubscriptionPeriodSnapshot: Equatable, Sendable {
+    enum Unit: Equatable, Sendable {
+        case day
+        case week
+        case month
+        case year
+        case other
+    }
+
+    let unit: Unit
+    let value: Int
+
+    init(unit: Unit, value: Int) {
+        self.unit = unit
+        self.value = value
+    }
+
+    init(_ period: Product.SubscriptionPeriod) {
+        switch period.unit {
+        case .day: unit = .day
+        case .week: unit = .week
+        case .month: unit = .month
+        case .year: unit = .year
+        @unknown default: unit = .other
+        }
+        value = period.value
+    }
+
+    var billingText: String? {
+        guard value > 0 else { return nil }
+        let unitText: String
+        switch unit {
+        case .day: unitText = value == 1 ? "day" : "days"
+        case .week: unitText = value == 1 ? "week" : "weeks"
+        case .month: unitText = value == 1 ? "month" : "months"
+        case .year: unitText = value == 1 ? "year" : "years"
+        case .other: return nil
+        }
+        return value == 1 ? unitText : "\(value) \(unitText)"
+    }
+}
+
+struct StoreIntroductoryOfferSnapshot: Equatable, Sendable {
+    enum PaymentMode: Equatable, Sendable {
+        case freeTrial
+        case payAsYouGo
+        case payUpFront
+        case other
+    }
+
+    let paymentMode: PaymentMode
+    let period: StoreSubscriptionPeriodSnapshot
+    let periodCount: Int
+}
+
+struct StoreProductSnapshot: Equatable, Sendable {
+    let isAutoRenewable: Bool
+    let displayPrice: String
+    let renewalPeriod: StoreSubscriptionPeriodSnapshot?
+    let introductoryOffer: StoreIntroductoryOfferSnapshot?
+
+    init(
+        isAutoRenewable: Bool,
+        displayPrice: String,
+        renewalPeriod: StoreSubscriptionPeriodSnapshot?,
+        introductoryOffer: StoreIntroductoryOfferSnapshot?
+    ) {
+        self.isAutoRenewable = isAutoRenewable
+        self.displayPrice = displayPrice
+        self.renewalPeriod = renewalPeriod
+        self.introductoryOffer = introductoryOffer
+    }
+
+    init(product: Product) {
+        let subscription = product.subscription
+        let offer = subscription?.introductoryOffer
+        isAutoRenewable = product.type == .autoRenewable
+        displayPrice = product.displayPrice
+        renewalPeriod = subscription.map { StoreSubscriptionPeriodSnapshot($0.subscriptionPeriod) }
+        introductoryOffer = offer.map {
+            StoreIntroductoryOfferSnapshot(
+                paymentMode: Self.paymentMode(for: $0.paymentMode),
+                period: StoreSubscriptionPeriodSnapshot($0.period),
+                periodCount: $0.periodCount
+            )
+        }
+    }
+
+    private static func paymentMode(
+        for mode: Product.SubscriptionOffer.PaymentMode
+    ) -> StoreIntroductoryOfferSnapshot.PaymentMode {
+        if mode == .freeTrial { return .freeTrial }
+        if mode == .payAsYouGo { return .payAsYouGo }
+        if mode == .payUpFront { return .payUpFront }
+        return .other
+    }
+}
+
+/// The only trial decision consumed by `PaywallView`. A non-nil `trial`
+/// proves all five required conditions: auto-renewable product, configured
+/// offer, free-trial payment mode, eligible customer, and valid duration.
+struct StorePlanPresentation: Equatable, Sendable {
+    struct Trial: Equatable, Sendable {
+        let durationText: String
+        let adjectiveText: String
+    }
+
+    let displayPrice: String
+    let billingPeriodText: String?
+    let trial: Trial?
+
+    var billedPriceText: String {
+        guard let billingPeriodText else { return displayPrice }
+        return "\(displayPrice)/\(billingPeriodText)"
+    }
+
+    static func resolve(
+        snapshot: StoreProductSnapshot,
+        isEligibleForIntroOffer: Bool
+    ) -> StorePlanPresentation {
+        let billingPeriod = snapshot.renewalPeriod?.billingText
+        let trial: Trial?
+
+        if snapshot.isAutoRenewable,
+           isEligibleForIntroOffer,
+           let offer = snapshot.introductoryOffer,
+           offer.paymentMode == .freeTrial {
+            trial = resolvedTrial(for: offer)
+        } else {
+            trial = nil
+        }
+
+        return StorePlanPresentation(
+            displayPrice: snapshot.displayPrice,
+            billingPeriodText: billingPeriod,
+            trial: trial
+        )
+    }
+
+    private static func resolvedTrial(
+        for offer: StoreIntroductoryOfferSnapshot
+    ) -> Trial? {
+        guard offer.period.value > 0, offer.periodCount > 0 else { return nil }
+        let (periods, overflow) = offer.period.value.multipliedReportingOverflow(
+            by: offer.periodCount
+        )
+        guard !overflow, periods > 0 else { return nil }
+
+        let value: Int
+        let singular: String
+        let plural: String
+        switch offer.period.unit {
+        case .day:
+            value = periods
+            singular = "day"
+            plural = "days"
+        case .week:
+            let result = periods.multipliedReportingOverflow(by: 7)
+            guard !result.overflow, result.partialValue > 0 else { return nil }
+            value = result.partialValue
+            singular = "day"
+            plural = "days"
+        case .month:
+            value = periods
+            singular = "month"
+            plural = "months"
+        case .year:
+            value = periods
+            singular = "year"
+            plural = "years"
+        case .other:
+            return nil
+        }
+
+        let unit = value == 1 ? singular : plural
+        return Trial(
+            durationText: "\(value) \(unit)",
+            adjectiveText: "\(value)-\(singular)"
+        )
+    }
+}
+
+/// Serializes purchase attempts independently of product loading/restores.
+/// A pending Ask-to-Buy/SCA result deliberately keeps the gate closed until a
+/// verified transaction arrives through `Transaction.updates`.
+struct PurchaseAttemptState: Equatable, Sendable {
+    enum Phase: Equatable, Sendable {
+        case idle
+        case purchasing
+        case pending
+    }
+
+    private(set) var phase: Phase = .idle
+
+    var blocksNewAttempt: Bool { phase != .idle }
+    var isPurchasing: Bool { phase == .purchasing }
+    var isPending: Bool { phase == .pending }
+
+    mutating func begin() -> Bool {
+        guard phase == .idle else { return false }
+        phase = .purchasing
+        return true
+    }
+
+    mutating func markPending() {
+        guard phase == .purchasing else { return }
+        phase = .pending
+    }
+
+    mutating func finish() {
+        phase = .idle
+    }
+}
+
 @MainActor
 @Observable
 final class StoreManager {
     // MARK: - Product IDs
 
-    enum Tier: String, CaseIterable, Identifiable, Sendable {
+    enum Tier: String, CaseIterable, Hashable, Identifiable, Sendable {
         case weekly = "com.unit.weekly"
         case monthly = "com.unit.monthly"
         case annual = "com.unit.annual"
@@ -81,6 +298,42 @@ final class StoreManager {
     /// and corrects the state whenever it completes.
     nonisolated private static let entitlementGateTimeout: Duration = .seconds(5)
 
+#if DEBUG
+    /// The progression contract UI journey validates app behavior, not App
+    /// Store infrastructure. Keep that isolated test deterministic and avoid
+    /// presenting a real Apple Account prompt on the simulator.
+    nonisolated private static let progressionContractUITestArgument =
+        "-ui-testing-progression-contract"
+    nonisolated private static let startingTargetUITestArgument =
+        "-ui-testing-starting-target"
+    nonisolated private static let purchaseSuccessUITestArgument =
+        "-ui-testing-purchase-success"
+    nonisolated private static let purchaseCancelledUITestArgument =
+        "-ui-testing-purchase-cancelled"
+    nonisolated private static let purchasePendingUITestArgument =
+        "-ui-testing-purchase-pending"
+    nonisolated private static let purchaseUnverifiedUITestArgument =
+        "-ui-testing-purchase-unverified"
+    nonisolated private static let restoreSuccessUITestArgument =
+        "-ui-testing-restore-success"
+    nonisolated private static let introEligibleUITestArgument =
+        "-ui-testing-intro-eligible"
+    nonisolated private static let introIneligibleUITestArgument =
+        "-ui-testing-intro-ineligible"
+    nonisolated private static let skipInitialEntitlementUITestArgument =
+        "-ui-testing-skip-initial-entitlement"
+    nonisolated private static let partialProductsUITestArgument =
+        "-ui-testing-partial-products"
+    nonisolated private static let productLoadFailsOnceUITestArgument =
+        "-ui-testing-product-load-fails-once"
+    /// Xcode's off-device StoreKit test service cannot reliably synthesize a
+    /// non-consumable purchase. Model the already-verified Lifetime state at
+    /// the entitlement boundary so the hard-gate behavior stays deterministic
+    /// without weakening production transaction verification.
+    nonisolated private static let lifetimeOwnerUITestArgument =
+        "-ui-testing-lifetime-owner"
+#endif
+
     // MARK: - State
 
     var products: [String: Product] = [:]
@@ -97,16 +350,47 @@ final class StoreManager {
     /// "No purchases to restore." after a benign restore call.
     var infoMessage: String?
 
-    /// Currently selected tier in the paywall. Default = Weekly.
-    var selectedTier: Tier = .weekly
+    /// Introductory-offer eligibility is a subscription-group property. Keep
+    /// the answer separate from offer metadata so eligibility alone can never
+    /// create trial copy.
+    private(set) var introOfferEligibilityByGroupID: [String: Bool] = [:]
+    private(set) var hasCheckedIntroOfferEligibility = false
+    private(set) var planSelection = PaywallPlanSelectionState()
+    private(set) var purchaseAttempt = PurchaseAttemptState()
+
+    var selectedTier: Tier { planSelection.selectedTier }
+    var isPurchasing: Bool { purchaseAttempt.isPurchasing }
+    var isPurchasePending: Bool { purchaseAttempt.isPending }
+    var isBusy: Bool { isLoading || purchaseAttempt.blocksNewAttempt }
 
     private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "app.unitlift", category: "StoreManager")
     @ObservationIgnored nonisolated(unsafe) private var transactionListener: Task<Void, Never>?
     @ObservationIgnored private var entitlementRefreshState = EntitlementRefreshState()
+    @ObservationIgnored private var productLoadAttemptCount = 0
 
     // MARK: - Init
 
     init() {
+#if DEBUG
+        if CommandLine.arguments.contains(Self.lifetimeOwnerUITestArgument) {
+            activeTier = .lifetime
+            isPurchased = true
+            hasCheckedEntitlement = true
+            return
+        }
+        if CommandLine.arguments.contains(Self.progressionContractUITestArgument) {
+            activeTier = .weekly
+            isPurchased = true
+            hasCheckedEntitlement = true
+            return
+        }
+        if CommandLine.arguments.contains(Self.startingTargetUITestArgument) {
+            activeTier = .weekly
+            isPurchased = true
+            hasCheckedEntitlement = true
+            return
+        }
+#endif
         guard !ProcessInfo.processInfo.isSwiftUIPreview else { return }
         if let cached = UserDefaults.standard.string(forKey: Self.lastKnownEntitlementKey) {
             activeTier = Tier(rawValue: cached)
@@ -114,8 +398,17 @@ final class StoreManager {
             hasCheckedEntitlement = true
         }
         transactionListener = listenForTransactions()
+#if DEBUG
+        if CommandLine.arguments.contains(Self.skipInitialEntitlementUITestArgument) {
+            hasCheckedEntitlement = true
+        } else {
+            Task { await checkEntitlement() }
+            Task { await releaseEntitlementGateAfterTimeout() }
+        }
+#else
         Task { await checkEntitlement() }
         Task { await releaseEntitlementGateAfterTimeout() }
+#endif
     }
 
     /// Nonisolated for the same back-deploy-shim SIGABRT as
@@ -134,6 +427,24 @@ final class StoreManager {
 
     var selectedProduct: Product? { product(for: selectedTier) }
 
+    func presentation(for tier: Tier) -> StorePlanPresentation? {
+        guard let product = product(for: tier) else { return nil }
+        let eligible: Bool
+        if let groupID = product.subscription?.subscriptionGroupID {
+            eligible = introOfferEligibilityByGroupID[groupID] == true
+        } else {
+            eligible = false
+        }
+        return StorePlanPresentation.resolve(
+            snapshot: StoreProductSnapshot(product: product),
+            isEligibleForIntroOffer: eligible
+        )
+    }
+
+    func selectTier(_ tier: Tier) {
+        planSelection.selectByUser(tier)
+    }
+
     // MARK: - Load Products
 
     @MainActor
@@ -143,22 +454,65 @@ final class StoreManager {
             return
         }
         isLoading = true
+        productLoadAttemptCount += 1
         defer {
             isLoading = false
             hasAttemptedProductLoad = true
         }
 
         do {
-            let loaded = try await Product.products(for: Self.allProductIDs)
-            products = Dictionary(uniqueKeysWithValues: loaded.map { ($0.id, $0) })
-            let selectableTiers = Self.requiredTiers + [Tier.lifetime]
-            if selectedProduct == nil,
-               let firstAvailableTier = selectableTiers.first(where: { product(for: $0) != nil }) {
-                selectedTier = firstAvailableTier
+#if DEBUG
+            if CommandLine.arguments.contains(Self.productLoadFailsOnceUITestArgument),
+               productLoadAttemptCount == 1 {
+                logger.error("Simulated first product-load failure for UI testing.")
+                return
             }
+#endif
+            var loaded = try await Product.products(for: Self.allProductIDs)
+#if DEBUG
+            if CommandLine.arguments.contains(Self.partialProductsUITestArgument) {
+                loaded.removeAll { $0.id == Tier.monthly.rawValue }
+            }
+#endif
+            products = Dictionary(uniqueKeysWithValues: loaded.map { ($0.id, $0) })
+            await loadIntroOfferEligibility(for: loaded)
+            applyInitialPlanSelection()
         } catch {
             logger.error("Failed to load products: \(error.localizedDescription)")
         }
+    }
+
+    private func loadIntroOfferEligibility(for loadedProducts: [Product]) async {
+        let groupIDs = Set(loadedProducts.compactMap { $0.subscription?.subscriptionGroupID })
+        var resolved: [String: Bool] = [:]
+        for groupID in groupIDs {
+#if DEBUG
+            if CommandLine.arguments.contains(Self.introEligibleUITestArgument) {
+                resolved[groupID] = true
+                continue
+            }
+            if CommandLine.arguments.contains(Self.introIneligibleUITestArgument) {
+                resolved[groupID] = false
+                continue
+            }
+#endif
+            resolved[groupID] = await Product.SubscriptionInfo.isEligibleForIntroOffer(
+                for: groupID
+            )
+        }
+        introOfferEligibilityByGroupID = resolved
+        hasCheckedIntroOfferEligibility = true
+    }
+
+    private func applyInitialPlanSelection() {
+        let availableTiers = Set(
+            (Self.requiredTiers + [Tier.lifetime]).filter { product(for: $0) != nil }
+        )
+        let monthlyHasEligibleTrial = presentation(for: .monthly)?.trial != nil
+        planSelection.applyInitialDefault(
+            availableTiers: availableTiers,
+            monthlyHasEligibleTrial: monthlyHasEligibleTrial
+        )
     }
 
     // MARK: - Purchase
@@ -171,10 +525,34 @@ final class StoreManager {
     @MainActor
     func purchase(tier: Tier) async {
         guard let product = product(for: tier) else { return }
-        guard !isLoading else { return }
+        guard !isLoading, purchaseAttempt.begin() else { return }
+        defer {
+            if purchaseAttempt.isPurchasing {
+                purchaseAttempt.finish()
+            }
+        }
         purchaseError = nil
-        isLoading = true
-        defer { isLoading = false }
+#if DEBUG
+        // Command-line UI tests on iOS 26.3.1 incorrectly route local
+        // StoreKit purchases to a real Apple Account prompt. Keep the release
+        // gate deterministic while still requiring the live local product and
+        // exercising the paywall CTA → entitlement → root-unlock path.
+        if CommandLine.arguments.contains(Self.purchaseSuccessUITestArgument) {
+            confirmEntitlement(tier)
+            return
+        }
+        if CommandLine.arguments.contains(Self.purchaseCancelledUITestArgument) {
+            return
+        }
+        if CommandLine.arguments.contains(Self.purchasePendingUITestArgument) {
+            purchaseAttempt.markPending()
+            return
+        }
+        if CommandLine.arguments.contains(Self.purchaseUnverifiedUITestArgument) {
+            purchaseError = "Purchase couldn't be verified. No access was granted."
+            return
+        }
+#endif
 
         do {
             let result = try await product.purchase()
@@ -188,11 +566,7 @@ final class StoreManager {
             case .userCancelled:
                 break
             case .pending:
-                // Ask-to-buy / SCA / parental approval. The entitlement will
-                // arrive via the transaction listener once the parent approves;
-                // we don't need to surface anything here. Phase 2: revisit
-                // with a "Pending approval" message if support requests it.
-                break
+                purchaseAttempt.markPending()
             @unknown default:
                 break
             }
@@ -206,11 +580,21 @@ final class StoreManager {
 
     @MainActor
     func restore() async {
-        guard !isLoading else { return }
+        guard !isBusy else { return }
         purchaseError = nil
         infoMessage = nil
         isLoading = true
         defer { isLoading = false }
+#if DEBUG
+        // Xcode's local AppStore.sync() can wait forever after SKTestSession
+        // creates an off-device transaction. Exercise the visible restore
+        // action at the same verified-entitlement boundary; release builds
+        // always continue through Apple's sync and verification path below.
+        if CommandLine.arguments.contains(Self.restoreSuccessUITestArgument) {
+            confirmEntitlement(.monthly)
+            return
+        }
+#endif
         do {
             try await AppStore.sync()
             await checkEntitlement()
@@ -313,6 +697,7 @@ final class StoreManager {
     // MARK: - Verification
 
     private func confirmEntitlement(_ tier: Tier) {
+        purchaseAttempt.finish()
         entitlementRefreshState.recordAuthoritativeChange()
         activeTier = tier
         isPurchased = true
@@ -321,6 +706,7 @@ final class StoreManager {
     }
 
     private func clearEntitlement() {
+        purchaseAttempt.finish()
         entitlementRefreshState.recordAuthoritativeChange()
         activeTier = nil
         isPurchased = false
@@ -354,6 +740,36 @@ final class StoreManager {
 
     private func logUnverifiedTransaction(productID: String, error: Error) {
         logger.error("Transaction update skipped, failed verification: \(productID, privacy: .public) — \(error.localizedDescription, privacy: .public)")
+    }
+}
+
+/// Keeps the async eligibility result from undoing a choice the user already
+/// made. Eligible new customers default to Monthly; everyone else keeps the
+/// existing Weekly default whenever it is available.
+struct PaywallPlanSelectionState: Equatable, Sendable {
+    private(set) var selectedTier: StoreManager.Tier = .weekly
+    private(set) var hasUserSelectedTier = false
+
+    mutating func selectByUser(_ tier: StoreManager.Tier) {
+        selectedTier = tier
+        hasUserSelectedTier = true
+    }
+
+    mutating func applyInitialDefault(
+        availableTiers: Set<StoreManager.Tier>,
+        monthlyHasEligibleTrial: Bool
+    ) {
+        guard !hasUserSelectedTier else { return }
+
+        if monthlyHasEligibleTrial, availableTiers.contains(.monthly) {
+            selectedTier = .monthly
+        } else if availableTiers.contains(.weekly) {
+            selectedTier = .weekly
+        } else if let firstAvailable = StoreManager.requiredTiers.first(where: {
+            availableTiers.contains($0)
+        }) ?? (availableTiers.contains(.lifetime) ? .lifetime : nil) {
+            selectedTier = firstAvailable
+        }
     }
 }
 

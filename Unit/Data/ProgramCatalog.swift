@@ -2,7 +2,7 @@
 //  ProgramCatalog.swift
 //  Unit
 //
-//  Ten curated starter programs. Each program references exercises from
+//  Curated starter programs. Each program references exercises from
 //  ExerciseCatalog by displayName/alias — ProgramImporter resolves these to
 //  real Exercise models on import.
 //
@@ -20,7 +20,8 @@ enum ProgramCatalog {
         dumbbellPPL,
         arnoldSplit,
         nSuns531,
-        phul
+        phul,
+        combatPower
     ]
 
     /// Recognizes an imported catalog program from its ordered day and exercise
@@ -493,6 +494,42 @@ enum ProgramCatalog {
                 ProgramItem(exerciseName: "Bulgarian Split Squat", setCount: 3, repTarget: 10),
                 ProgramItem(exerciseName: "Leg Extension", setCount: 4, repTarget: 12),
                 ProgramItem(exerciseName: "Seated Calf Raise", setCount: 4, repTarget: 15)
+            ])
+        ]
+    )
+
+    // MARK: - 11. Combat Power (Advanced, Mixed, 3 days)
+    private static let combatPower = ProgramTemplate(
+        id: UUID(uuidString: "00000000-0000-0000-0000-000000000011")!,
+        name: "Combat Power",
+        level: .advanced,
+        goal: .mixed,
+        daysPerWeek: 3,
+        summary: "Three power-focused sessions with contrast pairs and combat-sport durability work.",
+        description: "A Monday, Wednesday and Friday strength-and-power plan for combat athletes. Main lifts are paired with an explosive movement. On an open-mat Friday, complete only Trap Bar Deadlift and Broad Jump, then skip the remaining work.",
+        days: [
+            ProgramDay(id: UUID(), name: "Lower Power", weekday: 2, items: [
+                ProgramItem(exerciseName: "Back Squat (BB)", setCount: 3, repTarget: 5, repRange: 5...7, weightIncrementKg: 2.5, notes: "Contrast: follow each set with Squat Jump."),
+                ProgramItem(exerciseName: "Squat Jump", setCount: 3, repTarget: 5, notes: "Perform after each Back Squat set."),
+                ProgramItem(exerciseName: "Romanian DL", setCount: 3, repTarget: 6, repRange: 6...8, weightIncrementKg: 2.5),
+                ProgramItem(exerciseName: "Rotational Med Ball Wall Throw", setCount: 3, repTarget: 6, repRange: 6...8, weightIncrementKg: 2, notes: "6 reps per side."),
+                ProgramItem(exerciseName: "Push-Up Plus", setCount: 3, repTarget: 15, notes: "Serratus finisher.")
+            ]),
+            ProgramDay(id: UUID(), name: "Upper Power", weekday: 4, items: [
+                ProgramItem(exerciseName: "Bench Press", setCount: 4, repTarget: 5, repRange: 5...7, weightIncrementKg: 2.5, notes: "Contrast: follow each set with Plyo Push-Up."),
+                ProgramItem(exerciseName: "Plyo Push-Up", setCount: 3, repTarget: 6, notes: "Perform after each Bench Press set."),
+                ProgramItem(exerciseName: "Weighted Pull-Up", setCount: 4, repTarget: 5, repRange: 5...7, weightIncrementKg: 2.5),
+                ProgramItem(exerciseName: "OHP (BB)", setCount: 3, repTarget: 5, repRange: 5...7, weightIncrementKg: 2.5),
+                ProgramItem(exerciseName: "Iso Plate Hold", setCount: 3, repTarget: 1, notes: "One timed hold per set; pair with Lateral Raise."),
+                ProgramItem(exerciseName: "Lateral Raise (DB)", setCount: 3, repTarget: 12, repRange: 12...15, weightIncrementKg: 1, notes: "LME pairing; adjust reps if needed."),
+                ProgramItem(exerciseName: "Rice Bucket", setCount: 3, repTarget: 1, notes: "Complete 2–3 rounds.")
+            ]),
+            ProgramDay(id: UUID(), name: "Full Power", weekday: 6, items: [
+                ProgramItem(exerciseName: "Trap Bar Deadlift", setCount: 3, repTarget: 5, repRange: 5...7, weightIncrementKg: 5, notes: "Conventional deadlift is an alternative. Contrast with Broad Jump."),
+                ProgramItem(exerciseName: "Broad Jump", setCount: 3, repTarget: 3, notes: "Perform after each deadlift set."),
+                ProgramItem(exerciseName: "DB Snatch", setCount: 3, repTarget: 3, repRange: 3...5, weightIncrementKg: 2.5, notes: "3 reps per side."),
+                ProgramItem(exerciseName: "Close-Grip Bench", setCount: 3, repTarget: 8, repRange: 8...10, weightIncrementKg: 2.5),
+                ProgramItem(exerciseName: "Neck Training", setCount: 2, repTarget: 10, notes: "10 reps in each direction.")
             ])
         ]
     )

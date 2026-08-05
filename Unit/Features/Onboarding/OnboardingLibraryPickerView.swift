@@ -4,11 +4,9 @@
 //
 //  Library path's first screen (Phase B-3). Shows the full starter-program
 //  catalog (`ProgramCatalog.all`, the same list the in-app program library
-//  renders) with the SAME filter + row treatment the in-app `ProgramLibraryView`
-//  already uses (Level / Goal / Days dropdown chips above an `AppCardList` of
-//  `PreviewListRow`s), so the onboarding picker and the post-paywall program
-//  library read as one surface. The filter keeps the list scannable.
-//  One tap → `OnboardingProgramPreviewView` (weights filled in inline there).
+//  renders) with the same Level / Goal / Days filters as the in-app library.
+//  Programs use the canonical selectable-card treatment so a returning step
+//  can show the saved choice and hand navigation to the sticky Continue CTA.
 //
 //  No manual-build escape hatch on this screen. If the user wants a program
 //  not on this list, they take the Paste path from `OnboardingImportMethodView`.
@@ -19,7 +17,9 @@ import SwiftUI
 struct OnboardingLibraryPickerView: View {
     var progressStep: Int
     var progressTotal: Int
+    var selectedProgramID: UUID?
     var onPick: (ProgramTemplate) -> Void
+    var onContinue: () -> Void
     var onBack: () -> Void
 
     @State private var selectedLevel: ProgramTemplate.Level? = nil
@@ -45,8 +45,10 @@ struct OnboardingLibraryPickerView: View {
         OnboardingShell(
             title: AppCopy.Onboarding.libraryTitle,
             subtitle: AppCopy.Onboarding.librarySubtitle,
+            ctaEnabled: selectedProgramID != nil,
             progressStep: progressStep,
             progressTotal: progressTotal,
+            onContinue: onContinue,
             onBack: onBack
         ) {
             VStack(alignment: .leading, spacing: AppSpacing.sm) {
@@ -55,14 +57,16 @@ struct OnboardingLibraryPickerView: View {
                 if filteredPrograms.isEmpty {
                     AppEmptyHint("No programs match these filters.")
                 } else {
-                    AppCardList(filteredPrograms) { program in
-                        Button {
-                            onPick(program)
-                        } label: {
-                            programRow(program)
+                    VStack(spacing: AppSpacing.sm) {
+                        ForEach(filteredPrograms) { program in
+                            AppOptionTileCard(
+                                title: program.name,
+                                subtitle: "\(program.level.displayName) · \(program.goal.displayName) · \(program.daysPerWeek) days/week",
+                                isSelected: selectedProgramID == program.id
+                            ) {
+                                onPick(program)
+                            }
                         }
-                        .buttonStyle(ScaleButtonStyle())
-                        .accessibilityHint("Opens the schedule and program review steps.")
                     }
                 }
             }
@@ -110,13 +114,6 @@ struct OnboardingLibraryPickerView: View {
             }
         }
     }
-
-    private func programRow(_ program: ProgramTemplate) -> some View {
-        PreviewListRow(
-            title: program.name,
-            subtitle: "\(program.level.displayName) · \(program.goal.displayName) · \(program.daysPerWeek) days/week"
-        )
-    }
 }
 
 #Preview {
@@ -124,7 +121,9 @@ struct OnboardingLibraryPickerView: View {
         OnboardingLibraryPickerView(
             progressStep: 3,
             progressTotal: 5,
+            selectedProgramID: ProgramCatalog.all.first?.id,
             onPick: { _ in },
+            onContinue: {},
             onBack: {}
         )
     }

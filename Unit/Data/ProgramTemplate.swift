@@ -57,6 +57,12 @@ struct ProgramItem: Identifiable, Hashable {
     let exerciseName: String
     let setCount: Int
     let repTarget: Int
+    /// Explicit source-backed rep range. A fixed prescription leaves this
+    /// nil and does not opt into automatic progression.
+    let repRange: ClosedRange<Int>?
+    /// Explicit smallest available increase in canonical kilograms. This is
+    /// never inferred from exercise equipment.
+    let weightIncrementKg: Double?
     let notes: String?
     /// Which compound 1RM the user-supplied starting weight is derived from.
     /// `nil` for accessories (lateral raise, curl) where no canonical 1RM
@@ -74,6 +80,8 @@ struct ProgramItem: Identifiable, Hashable {
         exerciseName: String,
         setCount: Int,
         repTarget: Int,
+        repRange: ClosedRange<Int>? = nil,
+        weightIncrementKg: Double? = nil,
         notes: String? = nil,
         oneRepMaxLift: OneRepMaxLift? = nil,
         startingWeightPct: Double? = nil
@@ -82,6 +90,8 @@ struct ProgramItem: Identifiable, Hashable {
         self.exerciseName = exerciseName
         self.setCount = setCount
         self.repTarget = repTarget
+        self.repRange = repRange
+        self.weightIncrementKg = weightIncrementKg
         self.notes = notes
         self.oneRepMaxLift = oneRepMaxLift
         self.startingWeightPct = startingWeightPct
