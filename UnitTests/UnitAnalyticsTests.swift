@@ -57,6 +57,17 @@ final class UnitAnalyticsTests: XCTestCase {
         ])
     }
 
+    func testOnboardingSlideAnalyticsFireOncePerGenuineView() {
+        var tracker = OnboardingSlideViewTracker()
+
+        XCTAssertTrue(tracker.shouldTrack(.nextTarget))
+        XCTAssertFalse(tracker.shouldTrack(.nextTarget))
+        XCTAssertTrue(tracker.shouldTrack(.doubleProgression))
+        XCTAssertFalse(tracker.shouldTrack(.doubleProgression))
+        XCTAssertTrue(tracker.shouldTrack(.oneTapLogging))
+        XCTAssertFalse(tracker.shouldTrack(.oneTapLogging))
+    }
+
     func testPayloadsContainOnlyControlledValuesAndNoWorkoutContent() {
         let events: [UnitAnalyticsEvent] = [
             .onboardingSlideViewed(id: .nextTarget),

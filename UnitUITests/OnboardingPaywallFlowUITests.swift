@@ -28,6 +28,7 @@ import StoreKitTest
 final class OnboardingPaywallFlowUITests: XCTestCase {
     private static let monthlyProductID = "com.unit.monthly"
     private static let lifetimeProductID = "com.unit.lifetime"
+    private static let paidAccessDisclosure = "Paid plan required after setup. Prices and any eligible trial are shown before purchase."
 
     override func setUpWithError() throws {
         continueAfterFailure = false
@@ -59,7 +60,7 @@ final class OnboardingPaywallFlowUITests: XCTestCase {
             app.staticTexts["Know what to do next"].waitForExistence(timeout: 8),
             "first progression value slide missing"
         )
-        XCTAssertTrue(app.buttons[AppCopy.Onboarding.splashCTA].exists)
+        assertCTAAndDisclosureAreReadable(in: app, requiresCompactWidth: true)
         attachScreenshot(named: "01-onboarding-next-target", app: app)
 
         app.swipeLeft()
@@ -74,10 +75,14 @@ final class OnboardingPaywallFlowUITests: XCTestCase {
             app.staticTexts["Log every set in one tap"].waitForExistence(timeout: 5),
             "one-tap logging slide missing"
         )
-        XCTAssertTrue(app.buttons[AppCopy.Onboarding.splashCTA].exists)
-        attachScreenshot(named: "03-onboarding-one-tap", app: app)
+        assertCTAAndDisclosureAreReadable(in: app, requiresCompactWidth: true)
+        attachScreenshot(named: "03-onboarding-paid-disclosure-smallest", app: app)
 
         tap(app.buttons[AppCopy.Onboarding.splashCTA], "onboarding CTA")
+        XCTAssertTrue(
+            app.staticTexts[AppCopy.Onboarding.unitTitle].waitForExistence(timeout: 5),
+            "onboarding CTA introduced an extra step before weight-unit selection"
+        )
         tap(button(in: app, containing: "Kilograms"), "weight unit")
         XCTAssertTrue(
             staticText(in: app, containing: AppCopy.Onboarding.methodPasteOption)
@@ -102,10 +107,12 @@ final class OnboardingPaywallFlowUITests: XCTestCase {
         XCTAssertTrue(
             app.staticTexts["Know what to do next"].waitForExistence(timeout: 8)
         )
-        let cta = app.buttons[AppCopy.Onboarding.splashCTA]
-        XCTAssertTrue(cta.exists)
-        XCTAssertGreaterThanOrEqual(cta.frame.height, 44)
-        attachScreenshot(named: "04-onboarding-accessibility-medium", app: app)
+        app.swipeLeft()
+        XCTAssertTrue(app.staticTexts["Build reps, then weight"].waitForExistence(timeout: 5))
+        app.swipeLeft()
+        XCTAssertTrue(app.staticTexts["Log every set in one tap"].waitForExistence(timeout: 5))
+        assertCTAAndDisclosureAreReadable(in: app)
+        attachScreenshot(named: "04-onboarding-paid-disclosure-accessibility-medium", app: app)
     }
 
     func testPasteEditorFocusIsStableOnCompactScreen() {
@@ -710,6 +717,44 @@ final class OnboardingPaywallFlowUITests: XCTestCase {
             // VoiceOver label's text bounds here while the visual row retains
             // its 48pt floor; require readable non-zero content on-screen.
             XCTAssertGreaterThan(row.frame.height, 0)
+        }
+    }
+
+    private func assertCTAAndDisclosureAreReadable(
+        in app: XCUIApplication,
+        requiresCompactWidth: Bool = false
+    ) {
+        let window = app.windows.firstMatch
+        let cta = app.buttons[AppCopy.Onboarding.splashCTA]
+        let disclosure = app.staticTexts[Self.paidAccessDisclosure]
+
+        XCTAssertTrue(window.waitForExistence(timeout: 5))
+        XCTAssertTrue(cta.exists, "onboarding CTA missing")
+        XCTAssertTrue(
+            disclosure.waitForExistence(timeout: 5),
+            "paid-access disclosure missing before program setup"
+        )
+        XCTAssertGreaterThanOrEqual(cta.frame.height, 44)
+        XCTAssertGreaterThan(disclosure.frame.height, 0)
+        XCTAssertTrue(disclosure.frame.intersects(window.frame), "paid-access disclosure is clipped")
+        XCTAssertLessThanOrEqual(disclosure.frame.maxY, window.frame.maxY)
+        XCTAssertLessThanOrEqual(cta.frame.maxY, disclosure.frame.minY)
+
+        let accessibilityElements = app.descendants(matching: .any).allElementsBoundByAccessibilityElement
+        let ctaIndex = accessibilityElements.firstIndex {
+            $0.elementType == .button && $0.label == AppCopy.Onboarding.splashCTA
+        }
+        let disclosureIndex = accessibilityElements.firstIndex {
+            $0.elementType == .staticText && $0.label == Self.paidAccessDisclosure
+        }
+        XCTAssertNotNil(ctaIndex, "CTA missing from accessibility order")
+        XCTAssertNotNil(disclosureIndex, "disclosure missing from accessibility order")
+        if let ctaIndex, let disclosureIndex {
+            XCTAssertLessThan(ctaIndex, disclosureIndex, "VoiceOver should read CTA before disclosure")
+        }
+
+        if requiresCompactWidth {
+            XCTAssertLessThanOrEqual(window.frame.width, 375, "run compact disclosure QA on the smallest iPhone")
         }
     }
 

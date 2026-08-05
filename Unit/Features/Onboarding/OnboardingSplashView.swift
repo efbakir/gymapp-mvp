@@ -49,7 +49,7 @@ struct OnboardingSplashView: View {
     /// Keeps the opener mounted through its exit animation, then unmounts it once
     /// the lift-away has played so it leaves the view hierarchy.
     @State private var openerVisible = true
-    @State private var viewedSlideIDs: Set<AnalyticsOnboardingSlide> = []
+    @State private var slideViewTracker = OnboardingSlideViewTracker()
 
     private let slides = MarketingSlide.all
 
@@ -114,10 +114,14 @@ struct OnboardingSplashView: View {
             }
 
             // Reduce Motion → no unprompted motion; a single slide → nothing to
-            // advance. The first beat is shorter (see `firstSlideInterval`) so
-            // the deck starts moving soon after the opener; every beat after
-            // settles into the steady `slideInterval`.
-            guard !reduceMotion, slides.count > 1 else { return }
+            // advance. UI tests paginate explicitly so their accessibility and
+            // screenshot assertions cannot race the timer. Production keeps the
+            // first shorter beat, then settles into the steady interval.
+            guard !reduceMotion,
+                  slides.count > 1,
+                  !CommandLine.arguments.contains("-ui-testing") else {
+                return
+            }
             var interval = Self.firstSlideInterval
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(interval))
@@ -136,7 +140,7 @@ struct OnboardingSplashView: View {
     private func recordVisibleSlide() {
         guard slides.indices.contains(selection) else { return }
         let analyticsID = slides[selection].analyticsID
-        guard viewedSlideIDs.insert(analyticsID).inserted else { return }
+        guard slideViewTracker.shouldTrack(analyticsID) else { return }
         onSlideViewed?(analyticsID)
     }
 
@@ -156,15 +160,23 @@ struct OnboardingSplashView: View {
             VStack(spacing: AppSpacing.lg) {
                 PageDots(count: slides.count, selection: selection)
 
-                AppPrimaryButton(AppCopy.Onboarding.splashCTA, action: onGetStarted)
-                    // Horizontal + bottom insets mirror `AppScreen`'s canonical
-                    // sticky-CTA chrome (md sides, xs above the home-indicator
-                    // safe area) so the button doesn't jump — inward OR downward —
-                    // when advancing Splash → UnitPicker. The splash can't route
-                    // through `AppScreen.primaryButton` (its body is a full-bleed
-                    // TabView), so it mirrors the inset by hand: keep these two in
-                    // lockstep with `AppScreen.bottomChrome`.
-                    .padding(.horizontal, AppSpacing.md)
+                VStack(spacing: AppSpacing.sm) {
+                    AppPrimaryButton(AppCopy.Onboarding.splashCTA, action: onGetStarted)
+
+                    Text(AppCopy.Onboarding.paidAccessDisclosure)
+                        .appFont(.caption)
+                        .foregroundStyle(AppColor.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                // Horizontal + bottom insets mirror `AppScreen`'s canonical
+                // sticky-CTA chrome (md sides, xs above the home-indicator
+                // safe area) so the button doesn't jump — inward OR downward —
+                // when advancing Splash → UnitPicker. The splash can't route
+                // through `AppScreen.primaryButton` (its body is a full-bleed
+                // TabView), so it mirrors the inset by hand: keep these two in
+                // lockstep with `AppScreen.bottomChrome`.
+                .padding(.horizontal, AppSpacing.md)
             }
             .padding(.bottom, AppSpacing.xs)
         }
@@ -172,6 +184,17 @@ struct OnboardingSplashView: View {
         // size; larger accessibility settings keep that legible size while the
         // slide remains vertically scrollable and VoiceOver-readable.
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+    }
+}
+
+/// Keeps carousel analytics idempotent while a slide remains mounted or is
+/// revisited. A new slide is a genuine view; repeated lifecycle callbacks are
+/// not.
+struct OnboardingSlideViewTracker {
+    private var viewedSlideIDs: Set<AnalyticsOnboardingSlide> = []
+
+    mutating func shouldTrack(_ slide: AnalyticsOnboardingSlide) -> Bool {
+        viewedSlideIDs.insert(slide).inserted
     }
 }
 

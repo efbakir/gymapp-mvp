@@ -291,6 +291,7 @@ enum AppCopy {
     enum Onboarding {
         static let splashTagline = "Progressive overload, made simple."
         static let splashCTA = "Set up your program"
+        static let paidAccessDisclosure = "Paid plan required after setup. Prices and any eligible trial are shown before purchase."
         static let unitTitle = "Choose weight unit"
         static let unitSubtitle = "You can change this later in Settings."
         static let methodTitle = "Add program"
