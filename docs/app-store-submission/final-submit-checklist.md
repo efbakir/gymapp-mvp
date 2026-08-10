@@ -3,6 +3,8 @@
 > The ASC handoff package. Copy fields are paste-exact; the introductory offers require the founder actions in §4 before submission.
 > Updated 2026-08-04 for the progression-guided v2.1 release. Companions: `docs/pricing.md` (pricing truth) and `docs/release-qa.md` (device gauntlet).
 
+**ASC status — 2026-08-10:** The iOS 2.1 draft exists in **Prepare for Submission**. The canonical English promotional text, description, What's New, keywords, and reviewer notes are saved. No build is attached. Build 66 must remain unattached. App name/subtitle, screenshots, privacy answers, age rating, introductory offers, and build 67 are still pending.
+
 ---
 
 ## 0. Warnings — read before touching ASC
