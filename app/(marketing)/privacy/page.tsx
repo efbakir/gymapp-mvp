@@ -82,6 +82,12 @@ export default function PrivacyPage() {
             used for advertising or tracking across apps or websites.
           </p>
           <p>
+            To count anonymous activity without an account, TelemetryDeck
+            processes a privacy-preserving app-scoped identifier derived from
+            the device&apos;s vendor identifier. It is not used to identify you,
+            link analytics to an account, or track you across apps or websites.
+          </p>
+          <p>
             Analytics never include exercise names, program text, weights,
             repetitions, notes, bodyweight, email addresses, exact workout
             timestamps, raw workout identifiers, calendar details, or StoreKit

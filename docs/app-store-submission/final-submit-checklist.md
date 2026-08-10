@@ -1,4 +1,4 @@
-# Final submit checklist — Unit v2.1 (build 66)
+# Final submit checklist — Unit v2.1 (build 67)
 
 > The ASC handoff package. Copy fields are paste-exact; the introductory offers require the founder actions in §4 before submission.
 > Updated 2026-08-04 for the progression-guided v2.1 release. Companions: `docs/pricing.md` (pricing truth) and `docs/release-qa.md` (device gauntlet).
@@ -11,6 +11,7 @@
 - **No permanent free tier.** Unit remains a hard paywall after onboarding. Weekly and Lifetime have no introductory offer.
 - **Paid access is disclosed before setup.** The onboarding carousel shows `Paid plan required after setup. Prices and any eligible trial are shown before purchase.` directly beneath `Set up your program`; the CTA still opens weight-unit selection with no added step.
 - **No fake prices.** Every visible in-app price is StoreKit-derived. ASC product config is the only place prices exist.
+- **Do not select build 66.** Its source/archive provenance cannot be established. Build 67 replaces it and must be archived from the clean tagged commit below.
 - **The app UI is English-only.** Do not claim or imply localization anywhere. Localized *metadata* is a separate, optional step (§8).
 - **Product IDs are immutable.** If any ASC screen asks you to create a product, you are on the wrong screen.
 
@@ -19,8 +20,8 @@
 | Field | Value | Verified |
 |---|---|---|
 | Marketing version | **2.1** | `MARKETING_VERSION = 2.1` in all 8 pbxproj configs |
-| Build | **66** | `CURRENT_PROJECT_VERSION = 66` in all 8 pbxproj configs |
-| Archive source | tagged `main` | clean tree, local `main` equals `origin/main`, tag `v2.1-build66` points at the archived commit |
+| Build | **67** | `CURRENT_PROJECT_VERSION = 67` in all 8 pbxproj configs |
+| Archive source | tagged `main` | clean tree, local `main` equals `origin/main`, tag `v2.1-build67` points at the archived commit |
 
 ## 2. App name
 
@@ -81,7 +82,7 @@ The description's paid-purchase paragraph and the two legal URLs are Guideline 3
 - [ ] Features → Subscriptions → `unit-pro` group exists with the 3 auto-renewables (§3 IDs and prices exact) and the §4 offers.
 - [ ] Each product has an English display name + description and a **review screenshot** (one capture of `PaywallView` covers all).
 - [ ] App Store tab → version 2.1 → In-App Purchases and Subscriptions → **attach Weekly, Monthly, Yearly** (+ Lifetime if configured).
-- [ ] Build 66 attached to the version.
+- [ ] Build 67 attached to the version. Build 66 remains unattached.
 
 ## 9. Localization
 
@@ -91,7 +92,7 @@ The description's paid-purchase paragraph and the two legal URLs are Guideline 3
 
 ## 10. Privacy / age rating / URLs
 
-- [ ] App Privacy: declare **Product Interaction** and **Purchase History** for analytics; both are not linked to identity and not used for tracking. Do not declare workout content.
+- [ ] App Privacy: declare **Device ID**, **Product Interaction**, and **Purchase History** for Analytics; all three are not linked to identity and not used for tracking. Do not declare workout content.
 - [ ] TelemetryDeck app identifier is supplied through the private `TELEMETRYDECK_APP_ID` build setting and verified in the archive; it is not committed to source.
 - [ ] Settings → Anonymous analytics disables future events immediately.
 - [ ] Age rating: **4+** (all questionnaire categories None/No).
@@ -107,9 +108,9 @@ The description's paid-purchase paragraph and the two legal URLs are Guideline 3
 - [ ] StoreKit sandbox QA — every step in `docs/pricing.md` §StoreKit sandbox verification checklist, on this exact build, with sandbox Apple IDs.
 - [ ] Apple's purchase sheet confirms the seven-day free period and correct renewal price for Monthly and Yearly; do not infer this from the in-app paywall alone.
 - [ ] `docs/release-qa.md` gauntlet run on device.
-- [ ] Xcode Settings shows **Version 2.1 (66)**.
+- [ ] Xcode Settings shows **Version 2.1 (67)**.
 - [ ] `git status --short` is empty and local `main` equals `origin/main`.
-- [ ] Tag `v2.1-build66` points at the exact commit being archived.
+- [ ] Tag `v2.1-build67` points at the exact commit being archived.
 - [ ] Archive from clean tagged `main` only.
 - [ ] Marketing-site pricing and privacy copy matches the hard paywall, conditional seven-day offer, and anonymous-analytics disclosure in this build.
 

@@ -1,3 +1,11 @@
+## 2026-08-10 — Build 67 replaces the untraceable build 66 candidate
+
+**Decision:** Version 2.1 advances to build **67**. Build 66 must not be attached to the App Store version because no retained archive, upload log, release tag, or commit can prove which source produced it. Build 67 also replaces the placeholder feature-request destination with the verified public Unit board at `https://unitlift.featurebase.app`.
+
+**Why:** A release binary must be reproducible from a clean, reviewed, tagged `main` commit. The only retained build-66 simulator artifact predates the final paid-access disclosure and still contains the placeholder Featurebase URL. Treating that artifact or the processed App Store Connect build as final would make the shipped behavior unknowable.
+
+**Implication:** Archive only after the TelemetryDeck identifier is supplied privately, the resulting archive plist is inspected, all automated checks pass, and the physical iPhone trial/purchase flow passes. Tag that exact commit `v2.1-build67`. App Store privacy answers declare Device ID, Product Interaction, and Purchase History for Analytics; none is linked to identity or used for tracking. Raw workout content remains on-device. Build 66 stays unattached.
+
 ## 2026-08-05 — Paid access is disclosed before setup; speed-first remains a post-launch screenshot test
 
 **Decision:** The shared onboarding-carousel CTA area now shows `Paid plan required after setup. Prices and any eligible trial are shown before purchase.` directly beneath `Set up your program`. It adds no screen, modal, confirmation, tap, analytics event, StoreKit behavior, or eligibility claim. The 2.1 App Store screenshot order remains progression-first: next target, 3-second log, reps-then-weight, program setup, progress history, and Lock Screen timer.

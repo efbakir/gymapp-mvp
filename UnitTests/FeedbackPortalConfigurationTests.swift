@@ -15,9 +15,8 @@ final class FeedbackPortalConfigurationTests: XCTestCase {
         )
 
         XCTAssertEqual(components.scheme, "https")
-        XCTAssertTrue(
-            components.host?.lowercased().hasSuffix(".featurebase.app") == true
-        )
+        XCTAssertEqual(components.host?.lowercased(), "unitlift.featurebase.app")
+        XCTAssertEqual(components.path, "")
         XCTAssertNil(components.user)
         XCTAssertNil(components.password)
         XCTAssertNil(components.query)

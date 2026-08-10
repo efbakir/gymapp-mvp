@@ -184,9 +184,9 @@ enum AppCopy {
         static let accessibilityHint = "Opens the Unit feature request board in your browser."
         static let openError = "Couldn’t open feature requests"
 
-        /// Replace this placeholder with the live public Featurebase portal URL
-        /// after the Unit workspace has been configured.
-        static let portalURLString = "https://YOUR-UNIT-SLUG.featurebase.app"
+        /// Public Unit feedback board. Keep this parameter-free so opening it
+        /// never sends workout or analytics data from the app.
+        static let portalURLString = "https://unitlift.featurebase.app"
         static let portalURL = URL(string: portalURLString)
     }
 
