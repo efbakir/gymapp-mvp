@@ -95,7 +95,8 @@ The description's paid-purchase paragraph and the two legal URLs are Guideline 3
 ## 10. Privacy / age rating / URLs
 
 - [ ] App Privacy: declare **Device ID**, **Product Interaction**, and **Purchase History** for Analytics; all three are not linked to identity and not used for tracking. Do not declare workout content.
-- [ ] TelemetryDeck app identifier is supplied through the private `TELEMETRYDECK_APP_ID` build setting and verified in the archive; it is not committed to source.
+- [x] TelemetryDeck app identifier is stored locally in the git-ignored `Config/TelemetryDeck.private.xcconfig`; it is not committed to source.
+- [ ] Archive with `-xcconfig Config/TelemetryDeck.private.xcconfig`, then confirm the archived app's `TelemetryDeckAppID` is a non-empty UUID before upload.
 - [ ] Settings → Anonymous analytics disables future events immediately.
 - [ ] Age rating: **4+** (all questionnaire categories None/No).
 - [ ] Encryption: **No** (`ITSAppUsesNonExemptEncryption = false` in Info.plist).

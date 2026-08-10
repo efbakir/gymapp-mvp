@@ -31,6 +31,7 @@ lerna-debug.log*
 .env
 .env.*
 !.env.example
+Config/*.private.xcconfig
 
 # Claude Code per-machine settings (not for shared repo)
 .claude/settings.local.json

@@ -1,0 +1,3 @@
+// Copy this file to TelemetryDeck.private.xcconfig and replace the value with
+// the Unit App ID from TelemetryDeck. The private file is ignored by Git.
+TELEMETRYDECK_APP_ID = 00000000-0000-0000-0000-000000000000
