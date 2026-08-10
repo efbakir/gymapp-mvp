@@ -3,7 +3,7 @@
 > The ASC handoff package. Copy fields are paste-exact; the introductory offers require the founder actions in §4 before submission.
 > Updated 2026-08-04 for the progression-guided v2.1 release. Companions: `docs/pricing.md` (pricing truth) and `docs/release-qa.md` (device gauntlet).
 
-**ASC status — 2026-08-10:** The iOS 2.1 draft exists in **Prepare for Submission**. The canonical English promotional text, description, What's New, keywords, and reviewer notes are saved. No build is attached. Build 66 must remain unattached. App name/subtitle, screenshots, privacy answers, age rating, introductory offers, and build 67 are still pending.
+**ASC status — 2026-08-10:** The iOS 2.1 draft exists in **Prepare for Submission**. The canonical English app name, subtitle, promotional text, description, What's New, keywords, and reviewer notes are saved. App Privacy and the 4+ age rating are published. Monthly and Yearly each have an ongoing one-week Free introductory offer across all 175 storefronts. No build is attached; build 66 must remain unattached. The new screenshots, build 67 upload/attachment, StoreKit sandbox checks, and physical-device gauntlet are still pending. The Media Manager requires a separate Apple sign-in before the screenshots can be replaced.
 
 ---
 
@@ -42,18 +42,18 @@ Group: reference name `unit-pro`, display name `Unit Pro`.
 
 - [ ] Confirm Weekly reads **$2.99** in ASC (the 2026-07-02 change). If it reads $4.99, fix before anything else.
 - [ ] All prices automatically generated from the USD base — no custom storefront prices.
-- [ ] Monthly and Yearly each have the one-week Free introductory offer described in §4.
-- [ ] Weekly and Lifetime have no introductory offer.
+- [x] Monthly and Yearly each have the one-week Free introductory offer described in §4.
+- [x] Weekly and Lifetime have no introductory offer.
 - [ ] Lifetime: only if the non-consumable is already configured. Do not create it for this submission.
 
 ## 4. Introductory-offer setup — founder action
 
-- [ ] Open Features → Subscriptions → the Unit subscription group in App Store Connect.
-- [ ] Open Monthly (`com.unit.monthly`) and add a **one-week Free** introductory offer.
-- [ ] Open Yearly (`com.unit.annual`) and add a **one-week Free** introductory offer.
-- [ ] Apply both offers to the intended storefronts and launch dates.
-- [ ] Confirm Weekly (`com.unit.weekly`) has no introductory offer.
-- [ ] Confirm Lifetime (`com.unit.lifetime`) has no introductory offer.
+- [x] Open Features → Subscriptions → the Unit subscription group in App Store Connect.
+- [x] Open Monthly (`com.unit.monthly`) and add a **one-week Free** introductory offer.
+- [x] Open Yearly (`com.unit.annual`) and add a **one-week Free** introductory offer.
+- [x] Apply both offers to all 175 storefronts, starting August 10, 2026 with no end date.
+- [x] Confirm Weekly (`com.unit.weekly`) has no introductory offer.
+- [x] Confirm Lifetime (`com.unit.lifetime`) has no introductory offer.
 - [ ] Wait for the StoreKit sandbox configuration to propagate.
 - [ ] Test with a fresh sandbox customer who has never redeemed an introductory offer in this subscription group.
 - [ ] Confirm Apple's purchase sheet itself displays the seven-day free period and correct post-trial price for Monthly, then repeat the sheet check for Yearly with another fresh eligible sandbox customer if needed.
@@ -94,11 +94,11 @@ The description's paid-purchase paragraph and the two legal URLs are Guideline 3
 
 ## 10. Privacy / age rating / URLs
 
-- [ ] App Privacy: declare **Device ID**, **Product Interaction**, and **Purchase History** for Analytics; all three are not linked to identity and not used for tracking. Do not declare workout content.
+- [x] App Privacy: declare **Device ID**, **Product Interaction**, and **Purchase History** for Analytics; all three are not linked to identity and not used for tracking. Do not declare workout content.
 - [x] TelemetryDeck app identifier is stored locally in the git-ignored `Config/TelemetryDeck.private.xcconfig`; it is not committed to source.
 - [ ] Archive with `-xcconfig Config/TelemetryDeck.private.xcconfig`, then confirm the archived app's `TelemetryDeckAppID` is a non-empty UUID before upload.
 - [ ] Settings → Anonymous analytics disables future events immediately.
-- [ ] Age rating: **4+** (all questionnaire categories None/No).
+- [x] Age rating: **4+** (all questionnaire categories None/No).
 - [ ] Encryption: **No** (`ITSAppUsesNonExemptEncryption = false` in Info.plist).
 - [ ] Privacy Policy URL: `https://unitlift.app/privacy` — returns 200.
 - [ ] Support URL: `https://unitlift.app/support` — returns 200.
