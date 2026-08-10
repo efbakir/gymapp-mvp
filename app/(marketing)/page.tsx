@@ -26,7 +26,7 @@ const faqs = [
   {
     question: "Is Unit free?",
     answer:
-      "Setup is free. A subscription unlocks logging. Weekly, monthly, and yearly prices appear before you pay. No trial, ads, or account.",
+      "Setup is free. A subscription unlocks logging. Eligible new customers may receive a 7-day free trial on Monthly or Yearly when Apple confirms the offer. Prices appear before you pay. No ads or account.",
   },
   {
     question: "How does Unit fill in my numbers?",
