@@ -25,7 +25,7 @@ struct UnitApp: App {
         ])
     private static let uiTestingArgument = "-ui-testing"
     private static let uiTestingResetArgument = "-ui-testing-reset"
-    private static let uiTestingSeedTwoCompletedWorkoutsArgument = "-ui-testing-seed-engagement-two"
+    private static let uiTestingSeedTwoCompletedWorkoutsArgument = "-ui-testing-seed-review-two"
     private static let progressionContractUITestArgument = "-ui-testing-progression-contract"
     private static let startingTargetUITestArgument = "-ui-testing-starting-target"
 #if DEBUG

@@ -25,7 +25,7 @@ Other source-of-truth docs:
 - **Gym Test**: one-handed, sweaty, ≤ 3 seconds to log a set.
 - **Last time** values (pre-fill from last session; formerly "ghost values", still `metricIsGhost` in code) are the primary logging mechanism.
 - **Templates** are the program unit — not cycles, not weeks, not engines.
-- **Local-first, light-first, quiet UI.** No social or feeds. Progression guidance is opt-in, transparent, post-workout, and never mutates a routine without acceptance.
+- **Local-first, light-only, quiet UI.** No social or feeds. Progression guidance is opt-in, transparent, post-workout, and never mutates a routine without acceptance.
 
 ---
 
@@ -70,7 +70,7 @@ Per compass decision 2026-03-26, these are **removed** or **deferred**. Claude k
 | Pricing component on landing | Removed. |
 | Conditioning days in imported programs | Filter on import. |
 | CloudKit sync | Post-v1. Local-first only. |
-| ~~Paywall on core logging~~ | ~~Core logging is free.~~ **Lifted 2026-06-16** — v2 ships hard paywall after onboarding. See `docs/pricing.md` and `docs/decision-log.md` 2026-06-16. |
+| Free-core or soft-gate access model | Superseded 2026-06-16. v2 uses the hard paywall after onboarding in `docs/pricing.md`; do not restore permanent free access. |
 
 Files deleted from repo (don't recreate): see [`docs/claude/scope.md`](docs/claude/scope.md).
 

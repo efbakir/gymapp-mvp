@@ -10,6 +10,33 @@ final class ProgressionPersistenceTests: XCTestCase {
         let plannedWeightKg: Double?
     }
 
+    func testCompletedStandardWorkoutFinishesWithoutConfirmation() {
+        let action = ActiveWorkoutViewModel().finishAction(
+            isWorkoutComplete: true,
+            isFreestyle: false
+        )
+
+        XCTAssertEqual(action, .finish)
+    }
+
+    func testCompletedFreestyleWorkoutPromptsForNameWithoutConfirmation() {
+        let action = ActiveWorkoutViewModel().finishAction(
+            isWorkoutComplete: true,
+            isFreestyle: true
+        )
+
+        XCTAssertEqual(action, .promptForName)
+    }
+
+    func testIncompleteWorkoutRequiresEarlyFinishConfirmation() {
+        let action = ActiveWorkoutViewModel().finishAction(
+            isWorkoutComplete: false,
+            isFreestyle: false
+        )
+
+        XCTAssertEqual(action, .confirmEarlyFinish)
+    }
+
     func testMissingAndCorruptProgressionDataDecodeAsEmpty() {
         let template = DayTemplate(name: "Push")
         XCTAssertTrue(template.progressionStateByExerciseId.isEmpty)

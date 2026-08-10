@@ -27,9 +27,10 @@ Swift 6 · SwiftUI · SwiftData · Local-first · Atomic design system
 
 | Document | Purpose |
 |----------|---------|
-| `product-compass.md` | Strategic decisions and direction — read first |
-| `AGENTS.md` | Rules for AI agents working on the codebase |
-| `DESIGN_SYSTEM.md` | Atomic design system — tokens, components, rules |
+| `docs/product-compass.md` | Strategic decisions and direction — read first |
+| `docs/AGENTS.md` | Rules for AI agents working on the codebase |
+| `DESIGN.md` | Visual system — palette, typography, components, rules |
 | `docs/app-positioning.md` | Positioning and messaging one-pager |
 | `docs/product-manifesto.md` | The longer "why" behind Unit |
 | `docs/goals.md` | Measurable targets and v2.1 scope |
+| `docs/pricing.md` | Current tiers and hard post-onboarding access gate |

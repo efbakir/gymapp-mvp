@@ -68,7 +68,8 @@
 | `docs/claude/design-system.md` | 5 UI principles, parallel-impl ban, gatekeeper checklist | Reviewing a UI change or creating a component |
 | `docs/claude/harness.md` | Hooks, skills, audit mode | Debugging a blocked Edit or understanding enforcement |
 | `docs/decision-log.md` | Append-only log of scope/design/direction changes (started 2026-05-01) | Asking "why did we…?" or avoiding redoing experiments |
-| `docs/custom-instructions.md` | Product execution context for any agent — role, source of truth | Syncing agent context across sessions |
+| `docs/custom-instructions.md` | Canonical custom instructions for the Efe > Unit ChatGPT Project | Reviewing or replacing the live Project instructions |
+| `docs/chatgpt-project-replacement.md` | Review-gated live Project deletion/upload manifest and source diff | Replacing the Efe > Unit Project after explicit approval |
 
 ## References (open the README, not the screenshots)
 

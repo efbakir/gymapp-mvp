@@ -44,7 +44,7 @@ The onboarding flow (splash → unit picker → import method → program build 
 **Paid post-paywall surfaces:**
 - Today tab (start workout, log sets, rest timer)
 - Programs tab (view / edit / reorder templates)
-- History (browse past sessions, PR chart, calendar)
+- History (browse the chronological session list and exercise progress)
 - Settings (manage subscription, export, theming, etc.)
 
 ## App Review metadata checklist

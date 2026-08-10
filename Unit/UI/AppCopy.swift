@@ -186,7 +186,7 @@ enum AppCopy {
 
         /// Replace this placeholder with the live public Featurebase portal URL
         /// after the Unit workspace has been configured.
-        static let portalURLString = "https://YOUR-UNIT-SLUG.featurebase.app"
+        static let portalURLString = "https://unitlift.featurebase.app"
         static let portalURL = URL(string: portalURLString)
     }
 
@@ -404,15 +404,6 @@ enum AppCopy {
         static let noProgramCTA = "Add program"
         static let restDayTitle = "Rest day"
         static let restDayCTA = "Choose routine"
-    }
-
-    enum Engagement {
-        static let feedbackTitle = "Help improve Unit"
-        static let feedbackBody = "Unit is built by one person. Have 15 minutes to tell me what worked or got in your way?"
-        static let bookCall = "Book a 15-minute call"
-        static let emailFeedback = "Email feedback"
-        static let noThanks = "No thanks"
-        static let linkError = "Couldn’t open that link"
     }
 
     /// Shared transient-toast copy. The pill is narrow and time-bound, so the

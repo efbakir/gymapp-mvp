@@ -152,7 +152,7 @@ struct ActiveWorkoutView: View {
     private var primaryButton: PrimaryButtonConfig? {
         guard isWorkoutComplete else { return nil }
         return PrimaryButtonConfig(label: AppCopy.Workout.finishWorkout) {
-            showsFinishConfirmation = true
+            requestWorkoutFinish()
         }
     }
 
@@ -413,7 +413,7 @@ struct ActiveWorkoutView: View {
                 }
                 if session.setEntries.contains(where: { $0.isCompleted }) && !isWorkoutComplete {
                     Button {
-                        showsFinishConfirmation = true
+                        requestWorkoutFinish()
                     } label: {
                         Label(AppCopy.Workout.finishWorkout, systemImage: AppIcon.checkmark.systemName)
                             .labelStyle(.iconOnly)
@@ -536,12 +536,7 @@ struct ActiveWorkoutView: View {
         }
         .alert(AppCopy.Workout.finishWorkoutTitle, isPresented: $showsFinishConfirmation) {
             Button(AppCopy.Workout.finishWorkout) {
-                if template?.name == FreestyleSessionSupport.templateName {
-                    renameDraft = ""
-                    showsRenamePrompt = true
-                } else {
-                    finishWorkout()
-                }
+                finishWorkoutAfterConfirmation()
             }
             Button(AppCopy.Nav.cancel, role: .cancel) {}
         } message: {
@@ -1061,6 +1056,33 @@ struct ActiveWorkoutView: View {
         workoutFinishedPhase &+= 1
     }
 
+    private func requestWorkoutFinish() {
+        switch viewModel.finishAction(
+            isWorkoutComplete: isWorkoutComplete,
+            isFreestyle: template?.name == FreestyleSessionSupport.templateName
+        ) {
+        case .finish:
+            finishWorkout()
+        case .promptForName:
+            promptForWorkoutName()
+        case .confirmEarlyFinish:
+            showsFinishConfirmation = true
+        }
+    }
+
+    private func finishWorkoutAfterConfirmation() {
+        if template?.name == FreestyleSessionSupport.templateName {
+            promptForWorkoutName()
+        } else {
+            finishWorkout()
+        }
+    }
+
+    private func promptForWorkoutName() {
+        renameDraft = ""
+        showsRenamePrompt = true
+    }
+
     private func addExerciseToWorkout(_ exercise: Exercise) {
         guard let template else { return }
         var ids = template.orderedExerciseIds
@@ -1509,12 +1531,26 @@ struct SetPrefill {
 @MainActor
 @Observable
 final class ActiveWorkoutViewModel {
+    enum FinishAction: Equatable {
+        case finish
+        case promptForName
+        case confirmEarlyFinish
+    }
+
     /// Nonisolated: under default-MainActor isolation the implicit deinit is
     /// isolated and routes through `swift_task_deinitOnExecutor`'s back-deploy
     /// shim, which SIGABRTs (malloc double-free in `TaskLocal::StopLookupScope`)
     /// on iOS 26 runtimes when the last release happens with a task context.
     /// Empty body — releasing stored refs needs no isolation.
     nonisolated deinit {}
+
+    func finishAction(
+        isWorkoutComplete: Bool,
+        isFreestyle: Bool
+    ) -> FinishAction {
+        guard isWorkoutComplete else { return .confirmEarlyFinish }
+        return isFreestyle ? .promptForName : .finish
+    }
 
     func prefillSet(
         for exerciseID: UUID,

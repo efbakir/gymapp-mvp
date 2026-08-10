@@ -260,8 +260,8 @@ final class OnboardingPaywallFlowUITests: XCTestCase {
         let complete = app.buttons[AppCopy.Workout.completeSet]
         XCTAssertTrue(complete.waitForExistence(timeout: 10), "Complete set CTA missing")
         XCTAssertFalse(
-            app.staticTexts[AppCopy.Engagement.feedbackTitle].exists,
-            "Feedback invitation must never interrupt active logging"
+            descendant(in: app, identifier: "feedback-invitation").exists,
+            "Proactive feedback invitation must never interrupt active logging"
         )
 
         // Two consecutive logs exercise the fast path without assuming the
@@ -282,15 +282,15 @@ final class OnboardingPaywallFlowUITests: XCTestCase {
         confirm.tap()
 
         // Finishing intentionally opens the completed-session summary first.
-        // Verify it, return to Today, then verify the same session in History.
+        // It must not show a proactive feedback invitation. Return to idle Today,
+        // then verify the third distinct workout arms the delayed review request.
         XCTAssertTrue(
-            app.staticTexts[AppCopy.Engagement.feedbackTitle].waitForExistence(timeout: 15),
-            "Completed-session summary or third-workout feedback invitation missing"
+            app.navigationBars.buttons.firstMatch.waitForExistence(timeout: 15),
+            "Completed-session summary missing"
         )
-        tap(app.buttons[AppCopy.Engagement.noThanks], "dismiss feedback invitation")
         XCTAssertFalse(
-            app.staticTexts[AppCopy.Engagement.feedbackTitle].exists,
-            "Feedback invitation did not dismiss"
+            descendant(in: app, identifier: "feedback-invitation").exists,
+            "Completed-session summary must not contain a proactive feedback invitation"
         )
         tap(app.navigationBars.buttons.firstMatch, "return from completed-session summary")
         XCTAssertTrue(
@@ -665,7 +665,7 @@ final class OnboardingPaywallFlowUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = [
             "-ui-testing",
-            "-ui-testing-seed-engagement-two",
+            "-ui-testing-seed-review-two",
             "-ui-testing-purchase-success",
             "-ui-testing-intro-eligible"
         ]

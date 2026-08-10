@@ -14,14 +14,12 @@ struct SessionDetailView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    @Environment(\.openURL) private var openURL
     @Query(sort: \Exercise.displayName) private var exercises: [Exercise]
     @Query(sort: \DayTemplate.name) private var templates: [DayTemplate]
     /// Full session history — the PR baseline must replay every completed
     /// session, not just the one on display.
     @Query(sort: \WorkoutSession.date, order: .reverse) private var allSessions: [WorkoutSession]
     @AppStorage("unitSystem") private var unitSystem = "kg"
-    @State private var showsFeedbackInvitation = false
     @State private var toastMessage: String?
     @State private var editingRecommendationID: UUID?
     @State private var editingWeightText = ""
@@ -144,10 +142,6 @@ struct SessionDetailView: View {
                 if !progressionRecommendations.isEmpty {
                     progressionCard
                 }
-
-                if showsFeedbackInvitation {
-                    feedbackInvitationCard
-                }
             }
             .appScreenEnter()
         }
@@ -166,7 +160,6 @@ struct SessionDetailView: View {
         }
         .onAppear {
             backfillAcceptedProgressionRecordsIfNeeded()
-            presentFeedbackInvitationIfNeeded()
             trackRecommendationsIfNeeded()
         }
     }
@@ -682,77 +675,6 @@ struct SessionDetailView: View {
     private func displayedWeight(_ weightKg: Double) -> String {
         let displayWeight = unitSystem == "lb" ? weightKg * 2.20462 : weightKg
         return displayWeight.weightString
-    }
-
-    private var feedbackInvitationCard: some View {
-        AppCard {
-            VStack(alignment: .leading, spacing: AppSpacing.md) {
-                VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                    Text(AppCopy.Engagement.feedbackTitle)
-                        .font(AppFont.title.font)
-                        .foregroundStyle(AppColor.textPrimary)
-
-                    Text(AppCopy.Engagement.feedbackBody)
-                        .font(AppFont.body.font)
-                        .foregroundStyle(AppColor.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                feedbackBookingButton
-
-                AppGhostButton(AppCopy.Engagement.emailFeedback) {
-                    guard let url = EngagementPromptTracker.feedbackEmailURL() else {
-                        toastMessage = AppCopy.Engagement.linkError
-                        return
-                    }
-                    UnitAnalytics.shared.track(.feedbackAction(action: .email))
-                    open(url)
-                }
-
-                Button(AppCopy.Engagement.noThanks) {
-                    UnitAnalytics.shared.track(.feedbackAction(action: .dismiss))
-                    withAnimation(.appState) {
-                        showsFeedbackInvitation = false
-                    }
-                }
-                .font(AppFont.caption.font)
-                .foregroundStyle(AppColor.textSecondary)
-                .frame(maxWidth: .infinity)
-                .frame(minHeight: 44)
-                .buttonStyle(ScaleButtonStyle())
-            }
-        }
-        .accessibilityIdentifier("feedback-invitation")
-    }
-
-    @ViewBuilder
-    private var feedbackBookingButton: some View {
-        if progressionRecommendations.isEmpty {
-            AppPrimaryButton(AppCopy.Engagement.bookCall) {
-                UnitAnalytics.shared.track(.feedbackAction(action: .book))
-                open(EngagementPromptTracker.bookingURL)
-            }
-        } else {
-            AppGhostButton(AppCopy.Engagement.bookCall) {
-                UnitAnalytics.shared.track(.feedbackAction(action: .book))
-                open(EngagementPromptTracker.bookingURL)
-            }
-        }
-    }
-
-    private func presentFeedbackInvitationIfNeeded() {
-        let tracker = EngagementPromptTracker()
-        guard tracker.shouldShowFeedback(for: session.id) else { return }
-        tracker.markFeedbackPromptShown()
-        showsFeedbackInvitation = true
-    }
-
-    private func open(_ url: URL) {
-        openURL(url) { accepted in
-            if !accepted {
-                toastMessage = AppCopy.Engagement.linkError
-            }
-        }
     }
 
     private func trackRecommendationsIfNeeded() {

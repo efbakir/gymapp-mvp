@@ -182,7 +182,7 @@ Allowed in `*View.swift`:
 
 ## Related docs
 
-- `visual-language.md` — tone, hierarchy, Gym Test, light-first surfaces
+- `visual-language.md` — tone, hierarchy, Gym Test, light-only surfaces
 - `design-principles.md` — product principles + token discipline
 - `apple-hig.md` — accessibility and platform rules
 

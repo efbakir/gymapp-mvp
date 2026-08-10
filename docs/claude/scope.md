@@ -17,7 +17,8 @@
 - Template-based logging with ghost values
 - Two first-run onboarding paths: text-paste and starter program library
 - Auto rest timer with Lock Screen / Dynamic Island
-- History view (list + calendar)
+- History view (chronological list + exercise progress)
+- Optional weekday schedule or flexible rotation that guides Today without changing the Template program model
 - Exercise library (search + custom exercise creation)
 - Haptic confirmation on set logged
 - PR detection + notification
@@ -52,7 +53,7 @@ If `git status` shows these as deleted — leave them deleted.
 
 - Anything on the "Does not ship" list above or `CLAUDE.md` §3 banned-list
 - Net-new components when an existing atom/molecule/organism would do (`CLAUDE.md` §4)
-- Dark-mode-first visual decisions
+- Dark-mode or adaptive-dark visual decisions; Unit is light-only for this release
 - Anything that adds taps, modals, or reading time to the Active Workout flow
 - Adding tokens/variants/radii/weights when simplification would do
 

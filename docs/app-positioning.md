@@ -31,7 +31,7 @@ People often default to the Notes app or a paper notebook because every tracker 
 ## Key messages (ranked)
 
 1. **Log a set in one tap.** Last time pre-fills your weight and reps from last session. Just tap Done.
-2. **Your program, your way.** Import from Notes/WhatsApp, convert a past workout, or build from scratch. No mandatory cycles or rigid scheduling.
+2. **Your program, your way.** Paste a routine from Notes/WhatsApp or choose a starter program, then edit it whenever needed. Use weekday scheduling or flexible rotation; never a mandatory cycle.
 3. **Know what changes next.** Configure a rep range once; after the workout Unit shows the exact next weight or rep target and why. Accept it, edit it, or ignore it.
 4. **Works offline, always.** Local-first. No account required. Your data stays on your device.
 5. **Invisible when you're lifting.** Auto rest timer on your Lock Screen. Haptic confirmation. The app does its job without demanding your attention.

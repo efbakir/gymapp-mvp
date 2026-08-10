@@ -92,9 +92,6 @@ enum AnalyticsProgressionDecision: String, CaseIterable, Hashable {
 }
 
 enum AnalyticsFeedbackAction: String, CaseIterable, Hashable {
-    case book
-    case email
-    case dismiss
     case portal
 }
 

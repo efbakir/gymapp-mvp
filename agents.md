@@ -25,7 +25,7 @@ The **Gym Test** applies: logging a set (weight, reps) in **under 3 seconds** un
 | Design system (palette, type, components, do/don't) | [`DESIGN.md`](DESIGN.md) + [`DESIGN.json`](DESIGN.json) |
 | UX rules + scope fences (full) | [`docs/AGENTS.md`](docs/AGENTS.md) |
 | Atomic layers + tokens + banned patterns | [`docs/atomic-design-system.md`](docs/atomic-design-system.md) |
-| Visual language (light-first, hierarchy, Gym Test) | [`docs/visual-language.md`](docs/visual-language.md) |
+| Visual language (light-only, hierarchy, Gym Test) | [`docs/visual-language.md`](docs/visual-language.md) |
 | Compass (decisions, positioning, decision log) | [`docs/product-compass.md`](docs/product-compass.md) |
 | v1 ships / does-not-ship + push-back phrasing | [`docs/claude/scope.md`](docs/claude/scope.md) |
 | Apple HIG reference | [`docs/apple-hig.md`](docs/apple-hig.md) |

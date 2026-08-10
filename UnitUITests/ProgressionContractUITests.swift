@@ -34,9 +34,6 @@ final class ProgressionContractUITests: XCTestCase {
         attachScreenshot(of: app, named: "01-progression-ready-to-finish")
         tap(finishWorkout, "ready-to-finish workout")
 
-        let finishConfirmation = app.alerts.firstMatch.buttons[AppCopy.Workout.finishWorkout]
-        tap(finishConfirmation, "finish confirmation")
-
         XCTAssertTrue(
             app.staticTexts[AppCopy.Workout.nextTimeTitle].waitForExistence(timeout: 15),
             "Post-workout progression section did not appear"

@@ -77,7 +77,7 @@ final class UnitAnalyticsTests: XCTestCase {
             .purchaseCompleted(tier: "annual"),
             .workoutCompleted(duration: .from30To60, setCount: .from11To20, noKeyboardRatio: .from90To99),
             .progressionDecision(action: .edit, outcome: .addWeight),
-            .feedbackAction(action: .book)
+            .feedbackAction(action: .portal)
         ]
         let forbiddenKeys = Set([
             "exercise", "program", "weight", "reps", "note", "bodyweight", "email",
