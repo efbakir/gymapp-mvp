@@ -75,7 +75,7 @@ export default async function ComparePage({ params }: { params: Params }) {
       {/* ── Hero ── */}
       <section className="pt-32 md:pt-40 pb-unit-xl">
         <div className="max-w-3xl mx-auto px-unit-md md:px-unit-lg">
-          <p className="eyebrow mb-unit-sm">
+          <p className="mb-unit-sm text-sm text-unit-text-secondary">
             <Link
               href="/"
               className="hover:text-unit-text-primary transition-colors"
@@ -99,7 +99,7 @@ export default async function ComparePage({ params }: { params: Params }) {
       {/* ── Comparison table ── */}
       <section className="py-unit-xl border-t border-unit-border">
         <div className="max-w-3xl mx-auto px-unit-md md:px-unit-lg">
-          <p className="eyebrow mb-unit-md">Side by side</p>
+          <h2 className="mb-unit-md text-xl font-bold tracking-tight">Side by side</h2>
           <div className="rounded-md bg-unit-card overflow-hidden">
             <div
               role="table"
@@ -111,19 +111,19 @@ export default async function ComparePage({ params }: { params: Params }) {
               >
                 <span
                   role="columnheader"
-                  className="text-[13px] font-mono font-medium uppercase tracking-[0.6px] text-unit-text-secondary"
+                  className="text-sm font-semibold text-unit-text-secondary"
                 >
                   Feature
                 </span>
                 <span
                   role="columnheader"
-                  className="text-[13px] font-mono font-medium uppercase tracking-[0.6px] text-unit-text-secondary"
+                  className="text-sm font-semibold text-unit-text-secondary"
                 >
                   Unit
                 </span>
                 <span
                   role="columnheader"
-                  className="text-[13px] font-mono font-medium uppercase tracking-[0.6px] text-unit-text-secondary"
+                  className="text-sm font-semibold text-unit-text-secondary"
                 >
                   {data.competitor}
                 </span>
@@ -138,7 +138,7 @@ export default async function ComparePage({ params }: { params: Params }) {
                   }`}
                 >
                   <div role="rowheader" className="md:hidden">
-                    <p className="eyebrow mb-unit-xs">{row.feature}</p>
+                    <p className="mb-unit-xs text-sm font-semibold text-unit-text-secondary">{row.feature}</p>
                   </div>
                   <div
                     role="rowheader"
@@ -146,11 +146,11 @@ export default async function ComparePage({ params }: { params: Params }) {
                   >
                     {row.feature}
                   </div>
-                  <div role="cell" className="text-[15px] leading-relaxed text-unit-text-primary">
+                  <div role="cell" className="text-base leading-relaxed text-unit-text-primary">
                     <span className="md:hidden eyebrow block mb-unit-xs">Unit</span>
                     {row.unit}
                   </div>
-                  <div role="cell" className="text-[15px] leading-relaxed text-unit-text-secondary">
+                  <div role="cell" className="text-base leading-relaxed text-unit-text-secondary">
                     <span className="md:hidden eyebrow block mb-unit-xs">
                       {data.competitor}
                     </span>
@@ -191,13 +191,13 @@ export default async function ComparePage({ params }: { params: Params }) {
       <section className="py-unit-xxl md:py-unit-xxxl border-t border-unit-border">
         <div className="max-w-3xl mx-auto px-unit-md md:px-unit-lg text-center">
           <h2 className="h-section mb-unit-md">
-            Faster than paper.
+            Know what to lift next.
           </h2>
           <p className="text-xl leading-snug mb-unit-xl text-unit-text-secondary max-w-xl mx-auto">
             {data.closing}
           </p>
           <div className="flex justify-center">{CTA}</div>
-          <p className="mt-unit-md text-[13px] text-unit-text-secondary">
+          <p className="mt-unit-md text-sm text-unit-text-secondary">
             <Link href="/" className="hover:text-unit-text-primary transition-colors">
               Back to home
             </Link>

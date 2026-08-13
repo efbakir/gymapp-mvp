@@ -58,10 +58,10 @@ Short on purpose: iOS descriptions are conversion-only (not search-indexed) and 
 ## Keywords (100, comma-separated, no spaces)
 
 ```
-reps,barbell,sets,strength,lifting,weights,routine,history,rest,timer,beginner,program,notebook
+reps,barbell,sets,strength,lifting,weights,routine,history,rest,timer,personal,record,pr,load,1rm
 ```
 
-95 bytes. Behavior and category terms are deduplicated against `Progressive Overload`, `Gym`, `Workout`, `Log`, and `Tracker` in the name and subtitle. The field supports combinations including reps tracker, barbell tracker, set tracker, rest timer, and gym notebook.
+97 bytes. Behavior and category terms are deduplicated against `Progressive Overload`, `Gym`, `Workout`, `Log`, and `Tracker` in the name and subtitle. The field supports combinations including reps tracker, barbell tracker, set tracker, rest timer, personal record, PR tracker, load tracker, and 1RM tracker.
 
 ## What's New — v2.1
 
@@ -78,11 +78,11 @@ Unit 2.1 adds transparent progressive overload without slowing down your workout
 
 The old screenshot set does not support the new App Store name. Capture and upload a new English set before submission, in this order:
 
-1. `One clear target for next time` — post-workout progression recommendation.
+1. `Know what to lift next` — real post-workout recommendation with previous target, next target, reason, and action.
 2. `Log a set in 3 seconds` — active workout with accepted target and Last time.
-3. `Increase reps, then weight` — transparent rep range and smallest available increase.
-4. `Choose a program or paste yours` — beginner-inclusive setup paths.
-5. `See every step forward` — exercise progress and history.
+3. `Hit 10 reps. Add 5 lb.` — real accepted double-progression result with previous and next targets.
+4. `Paste your plan or choose one` — beginner-inclusive setup paths.
+5. `See your strength go up` — exercise progress and history.
 6. `Rest timer on your Lock Screen` — verified Live Activity.
 
 Screenshots must use production data and names, not the Progression QA harness.

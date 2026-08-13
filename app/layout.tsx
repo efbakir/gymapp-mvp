@@ -31,7 +31,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: { default: "Unit: Progressive Overload for iPhone", template: "%s | Unit" },
   description:
-    "Unit is the simple progressive overload tracker for iPhone. Log in one tap, then get one clear target for next time. No AI, no social, no account.",
+    "Know what to lift next. Unit logs each set in one tap, then prepares one clear progressive overload target for your next workout.",
   metadataBase: new URL(SITE_URL),
   alternates: { canonical: "/" },
   openGraph: {
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
     url: `${SITE_URL}/`,
     title: "Unit: Progressive Overload for iPhone",
     description:
-      "Simple progressive overload tracker for iPhone. Log in one tap, then get one clear target for next time.",
+      "Know what to lift next. Log each set in one tap, then get one clear target for your next workout.",
     images: [
       { url: "/opengraph-image", width: 1200, height: 630, alt: "Unit: Progressive Overload" },
     ],
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Unit: Progressive Overload for iPhone",
-    description: "Simple progressive overload tracker. Log in one tap, then get one clear target for next time.",
+    description: "Know what to lift next. Log in one tap, then get one clear target for your next workout.",
     images: ["/opengraph-image"],
   },
   robots: { index: true, follow: true },

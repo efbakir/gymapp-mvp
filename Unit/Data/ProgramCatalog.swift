@@ -11,11 +11,13 @@ import Foundation
 
 enum ProgramCatalog {
     static let all: [ProgramTemplate] = [
+        fullBody2Day,
         startingStrength,
         gzclp,
         strongCurves,
         upperLower4Day,
         fiveThreeOneBBB,
+        strengthSize5Day,
         metallicadpaPPL,
         dumbbellPPL,
         arnoldSplit,
@@ -23,6 +25,54 @@ enum ProgramCatalog {
         phul,
         combatPower
     ]
+
+    static var supportedDays: [Int] {
+        Array(Set(all.map(\.daysPerWeek))).sorted()
+    }
+
+    /// Ranks ready-made programs against the three answers Unit can honor
+    /// today. Training days are a hard constraint; goal and experience rank
+    /// the remaining choices. Stable catalog order breaks ties so the same
+    /// answers always produce the same recommendations.
+    static func recommendations(
+        for profile: ProgramMatchProfile,
+        limit: Int = 3
+    ) -> [ProgramTemplate] {
+        all.enumerated()
+            .filter { $0.element.daysPerWeek == profile.daysPerWeek }
+            .sorted { lhs, rhs in
+                let lhsScore = recommendationScore(lhs.element, for: profile)
+                let rhsScore = recommendationScore(rhs.element, for: profile)
+                return lhsScore == rhsScore ? lhs.offset < rhs.offset : lhsScore > rhsScore
+            }
+            .prefix(max(1, limit))
+            .map(\.element)
+    }
+
+    private static func recommendationScore(
+        _ program: ProgramTemplate,
+        for profile: ProgramMatchProfile
+    ) -> Int {
+        let goalScore: Int
+        if program.goal == profile.goal {
+            goalScore = 6
+        } else if program.goal == .mixed || profile.goal == .mixed {
+            goalScore = 3
+        } else {
+            goalScore = 0
+        }
+
+        let levelOrder: [ProgramTemplate.Level: Int] = [
+            .beginner: 0,
+            .intermediate: 1,
+            .advanced: 2
+        ]
+        let distance = abs(
+            (levelOrder[program.level] ?? 0) - (levelOrder[profile.level] ?? 0)
+        )
+        let levelScore = distance == 0 ? 4 : (distance == 1 ? 2 : 0)
+        return goalScore + levelScore
+    }
 
     /// Recognizes an imported catalog program from its ordered day and exercise
     /// structure. Used only to repair the legacy onboarding bug that saved a
@@ -62,6 +112,33 @@ enum ProgramCatalog {
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
     }
+
+    // MARK: - 0. Full Body 2-Day (Beginner, Mixed, 2 days)
+    private static let fullBody2Day = ProgramTemplate(
+        id: UUID(uuidString: "00000000-0000-0000-0000-000000000012")!,
+        name: "Full Body 2-Day",
+        level: .beginner,
+        goal: .mixed,
+        daysPerWeek: 2,
+        summary: "Two full-body sessions for building strength and muscle with a manageable schedule.",
+        description: "A simple two-day plan for lifters who need more recovery or have limited training days. Each session covers a squat or hinge, a press, a pull and focused accessory work.",
+        days: [
+            ProgramDay(id: UUID(), name: "Full Body A", weekday: 3, items: [
+                ProgramItem(exerciseName: "Back Squat (BB)", setCount: 3, repTarget: 5, oneRepMaxLift: .squat, startingWeightPct: 0.70),
+                ProgramItem(exerciseName: "Bench Press", setCount: 3, repTarget: 6, oneRepMaxLift: .bench, startingWeightPct: 0.70),
+                ProgramItem(exerciseName: "Seated Cable Row", setCount: 3, repTarget: 10),
+                ProgramItem(exerciseName: "Romanian DL", setCount: 3, repTarget: 8, oneRepMaxLift: .deadlift, startingWeightPct: 0.65),
+                ProgramItem(exerciseName: "Plank", setCount: 3, repTarget: 45)
+            ]),
+            ProgramDay(id: UUID(), name: "Full Body B", weekday: 6, items: [
+                ProgramItem(exerciseName: "Deadlift (Conv)", setCount: 3, repTarget: 5, oneRepMaxLift: .deadlift, startingWeightPct: 0.70),
+                ProgramItem(exerciseName: "OHP (BB)", setCount: 3, repTarget: 6, oneRepMaxLift: .ohp, startingWeightPct: 0.70),
+                ProgramItem(exerciseName: "Lat Pulldown", setCount: 3, repTarget: 10),
+                ProgramItem(exerciseName: "Bulgarian Split Squat", setCount: 3, repTarget: 8),
+                ProgramItem(exerciseName: "DB Curl", setCount: 2, repTarget: 12)
+            ])
+        ]
+    )
 
     // MARK: - 1. Full Body (Beginner, Strength, 3 days) — SURFACED
     // Starting % from 1RM: main work sets (3×5) at 70%; the single heavy
@@ -231,6 +308,50 @@ enum ProgramCatalog {
                 ProgramItem(exerciseName: "Back Squat (BB)", setCount: 3, repTarget: 5, notes: "5/3/1 sets", oneRepMaxLift: .squat, startingWeightPct: 0.585),
                 ProgramItem(exerciseName: "Back Squat (BB)", setCount: 5, repTarget: 10, notes: "BBB @ 50%", oneRepMaxLift: .squat, startingWeightPct: 0.45),
                 ProgramItem(exerciseName: "Plank", setCount: 3, repTarget: 45)
+            ])
+        ]
+    )
+
+    // MARK: - 5b. Strength + Size 5-Day (Intermediate, Mixed, 5 days)
+    private static let strengthSize5Day = ProgramTemplate(
+        id: UUID(uuidString: "00000000-0000-0000-0000-000000000013")!,
+        name: "Strength + Size 5-Day",
+        level: .intermediate,
+        goal: .mixed,
+        daysPerWeek: 5,
+        summary: "Five focused sessions combining heavy compounds with practical hypertrophy work.",
+        description: "A weekday strength-and-size split for consistent lifters. The first two sessions prioritize the main lifts, followed by focused pull, push and leg sessions with moderate volume.",
+        days: [
+            ProgramDay(id: UUID(), name: "Upper Strength", weekday: 2, items: [
+                ProgramItem(exerciseName: "Bench Press", setCount: 4, repTarget: 5, oneRepMaxLift: .bench, startingWeightPct: 0.75),
+                ProgramItem(exerciseName: "Bent Over Row (BB)", setCount: 4, repTarget: 5),
+                ProgramItem(exerciseName: "OHP (BB)", setCount: 3, repTarget: 6, oneRepMaxLift: .ohp, startingWeightPct: 0.70),
+                ProgramItem(exerciseName: "Pull-Up", setCount: 3, repTarget: 8)
+            ]),
+            ProgramDay(id: UUID(), name: "Lower Strength", weekday: 3, items: [
+                ProgramItem(exerciseName: "Back Squat (BB)", setCount: 4, repTarget: 5, oneRepMaxLift: .squat, startingWeightPct: 0.75),
+                ProgramItem(exerciseName: "Deadlift (Conv)", setCount: 3, repTarget: 5, oneRepMaxLift: .deadlift, startingWeightPct: 0.75),
+                ProgramItem(exerciseName: "Romanian DL", setCount: 3, repTarget: 8),
+                ProgramItem(exerciseName: "Standing Calf Raise", setCount: 3, repTarget: 12)
+            ]),
+            ProgramDay(id: UUID(), name: "Pull Size", weekday: 4, items: [
+                ProgramItem(exerciseName: "Lat Pulldown", setCount: 4, repTarget: 10),
+                ProgramItem(exerciseName: "Seated Cable Row", setCount: 4, repTarget: 10),
+                ProgramItem(exerciseName: "Face Pull", setCount: 3, repTarget: 15),
+                ProgramItem(exerciseName: "DB Curl", setCount: 3, repTarget: 12)
+            ]),
+            ProgramDay(id: UUID(), name: "Push Size", weekday: 5, items: [
+                ProgramItem(exerciseName: "Incline DB Press", setCount: 4, repTarget: 10),
+                ProgramItem(exerciseName: "DB Shoulder Press", setCount: 3, repTarget: 10),
+                ProgramItem(exerciseName: "Lateral Raise (DB)", setCount: 3, repTarget: 15),
+                ProgramItem(exerciseName: "Triceps Pushdown", setCount: 3, repTarget: 12)
+            ]),
+            ProgramDay(id: UUID(), name: "Legs Size", weekday: 6, items: [
+                ProgramItem(exerciseName: "Front Squat", setCount: 4, repTarget: 8, oneRepMaxLift: .squat, startingWeightPct: 0.65),
+                ProgramItem(exerciseName: "Leg Press", setCount: 3, repTarget: 12),
+                ProgramItem(exerciseName: "Hamstring Curl", setCount: 3, repTarget: 12),
+                ProgramItem(exerciseName: "Walking Lunge", setCount: 3, repTarget: 10),
+                ProgramItem(exerciseName: "Seated Calf Raise", setCount: 4, repTarget: 15)
             ])
         ]
     )

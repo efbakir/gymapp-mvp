@@ -289,17 +289,37 @@ enum AppCopy {
     /// the controls don't already show. The first-person rule bans corporate
     /// "we" — it does not require "my"/"I'll" in UI labels.
     enum Onboarding {
-        static let splashTagline = "Progressive overload, made simple."
+        static let splashTagline = "Progressive overload made simple."
         static let splashCTA = "Set up your program"
-        static let paidAccessDisclosure = "Paid plan required after setup. Prices and any eligible trial are shown before purchase."
         static let unitTitle = "Choose weight unit"
         static let unitSubtitle = "You can change this later in Settings."
-        static let methodTitle = "Add program"
-        static let methodSubtitle = "Paste your routine or choose a ready-made program."
-        static let methodPasteOption = "Paste routine"
-        static let methodLibraryOption = "Choose program"
-        static let libraryTitle = "Choose program"
-        static let librarySubtitle = "Filter by experience, goal, or training days."
+        static let methodTitle = "Choose your path"
+        static let methodSubtitle = "Use your routine or find a ready-made match."
+        static let methodPasteOption = "I have a program"
+        static let methodPasteSubtitle = "Paste it from Notes, WhatsApp or anywhere else."
+        static let methodLibraryOption = "I need a program"
+        static let methodLibrarySubtitle = "Answer three questions to match ready-made programs."
+        static let libraryGoalTitle = "What is your goal?"
+        static let libraryGoalSubtitle = "Choose the result you want most."
+        static let libraryLevelTitle = "How experienced are you?"
+        static let libraryLevelSubtitle = "Pick the option closest to your current training."
+        static let libraryDaysTitle = "How many training days?"
+        static let libraryDaysSubtitle = "Only schedules supported by the ready-made catalog are shown."
+        static let libraryResultsTitle = "Programs for you"
+        static let libraryResultsSubtitle = "Ready-made programs matched to your answers."
+        static let libraryCTA = "Review program"
+        static let libraryBestMatch = "Best match"
+        static let libraryNoResults = "No ready-made program matches these answers yet."
+        static let libraryGoalChip = "Goal"
+        static let libraryLevelChip = "Experience"
+        static let libraryDaysChip = "Days/week"
+        static let libraryExactMatchReason = "Matches your goal, experience, and schedule."
+        static let libraryGoalMatchReason = "Matches your goal and schedule."
+        static let libraryExperienceMatchReason = "Matches your experience and schedule."
+        static let libraryScheduleMatchReason = "Closest ready-made fit for your schedule."
+        static func trainingDays(_ count: Int) -> String {
+            count == 1 ? "1 day/week" : "\(count) days/week"
+        }
         static let pasteTitle = "Paste program"
         static let pasteSubtitle = "Paste or type your workouts, exercises, sets, reps, and weights."
         static let splitTitle = "Set training split"
@@ -325,11 +345,13 @@ enum AppCopy {
         static let standardHeadline = "Unlock Unit"
         static let standardSupportingCopy = "Fast workout logging with one clear target for next time."
         static let programReady = "Program ready"
+        static let programMatched = "Matched to your answers"
         static let programFallbackTitle = "Your program"
         static func programDayCount(_ count: Int) -> String {
             count == 1 ? "1-day program" : "\(count)-day program"
         }
         static let choosePlan = "Choose a plan"
+        static let yourPlan = "Your plan"
         static let subscribeWeekly = "Subscribe weekly"
         static let subscribeMonthly = "Subscribe monthly"
         static let subscribeYearly = "Subscribe yearly"
@@ -341,7 +363,7 @@ enum AppCopy {
             duration: String,
             billedPrice: String
         ) -> String {
-            "\(duration) free, then \(billedPrice). Auto-renews unless cancelled."
+            "No charge today. Then \(billedPrice) after \(duration). Auto-renews unless cancelled."
         }
         static func subscriptionPurchaseContext(_ price: String) -> String {
             "\(price). Auto-renews unless cancelled."
@@ -360,33 +382,39 @@ enum AppCopy {
             "Lock Screen rest timer"
         ]
 
-        // Renewal-transparency sheet ("what happens next" timeline). One
-        // quiet trigger line on the paywall; the sheet answers the
-        // will-I-forget-and-get-charged anxiety honestly. No reminder is
-        // promised — Apple only mails receipts, and Unit sends nothing.
-        static let timelineTrigger = "What happens next?"
-        static let timelineTitle = "After you subscribe"
-        static let timelineSavedTitle = "Program saved"
-        static let timelineSavedFallback = "Your program is ready."
+        // On-page renewal transparency. The timeline explains the cancellation
+        // window directly without adding a notification decision to purchase.
+        static let timelineTitle = "What happens next"
         static let timelineTodayTitle = "Today"
-        static let timelineTodayMessage = "Everything unlocks. Log your first workout."
-        static let timelineCancelTitle = "Cancel anytime"
-        static let timelineCancelMessage = "Cancel in App Store settings. Access lasts through the paid period."
-        static let timelineRenewalTitle = "Renewal"
-        static let timelineRenewalMessage = "Auto-renews at the price shown until you cancel."
-
-        static let trialTimelineTitle = "Your free trial"
-        static let trialTimelineTodayTitle = "Today"
-        static let trialTimelineTodayMessage = "Everything unlocks immediately."
-        static func trialTimelineDurationTitle(_ duration: String) -> String {
-            "For \(duration)"
+        static let timelineTodayMessage = "Full Unit access starts immediately."
+        static let timelineBeforeRenewalTitle = "Before renewal"
+        static let timelineBeforeRenewalMessage = "Cancel anytime in App Store settings."
+        static func timelineRenewalTitle(_ period: String?) -> String {
+            period.map { "Every \($0)" } ?? "Renewal"
         }
-        static let trialTimelineDurationMessage = "Use every Unit feature for free."
-        static let trialTimelineBeforeRenewalTitle = "Before renewal"
-        static let trialTimelineBeforeRenewalMessage = "Cancel anytime in App Store settings."
-        static let trialTimelineAfterTitle = "After the trial"
-        static let trialTimelineAfterMessage = "Renews at the displayed price unless cancelled."
+        static func timelineRenewalMessage(_ billedPrice: String) -> String {
+            "Renews at \(billedPrice) unless cancelled."
+        }
+        static let lifetimeTimelineTitle = "Lifetime access"
+        static let lifetimeTodayMessage = "Full Unit access starts immediately."
+        static let lifetimePaymentTitle = "One payment"
+        static func lifetimePaymentMessage(_ price: String) -> String {
+            "\(price) once. No subscription renewal."
+        }
 
+        static let trialTimelineTitle = "How your free trial works"
+        static let trialTimelineDayZeroTitle = "Day 0"
+        static let trialTimelineDayZeroMessage = "Full Unit access starts immediately."
+        static func trialTimelineBeforeRenewalTitle(dayCount: Int?) -> String {
+            guard let dayCount else { return "Before the trial ends" }
+            return "Before Day \(dayCount)"
+        }
+        static func trialTimelineEndTitle(dayCount: Int?) -> String {
+            dayCount.map { "Day \($0)" } ?? "After the trial"
+        }
+        static func trialTimelineEndMessage(_ billedPrice: String) -> String {
+            "Renews at \(billedPrice) unless cancelled."
+        }
         // Social proof — a real, published five-star App Store review
         // (Türkiye storefront, v1.0, 2026-06-09: "Yıllardır aradığım gym
         // tracker app"). The user-facing quote is its English translation.

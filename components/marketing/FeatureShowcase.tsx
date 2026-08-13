@@ -19,12 +19,10 @@ type FeatureShowcaseItem = {
 }
 
 export default function FeatureShowcase({
-  eyebrow,
   title,
   body,
   items,
 }: {
-  eyebrow?: string
   title: string
   body?: string
   items: FeatureShowcaseItem[]
@@ -32,7 +30,6 @@ export default function FeatureShowcase({
   return (
     <div>
       <div className="mx-auto mb-unit-xxl max-w-3xl text-center">
-        {eyebrow && <p className="eyebrow mb-unit-sm">{eyebrow}</p>}
         <h2 className="h-section text-balance">{title}</h2>
         {body && (
           <p className="mx-auto mt-unit-md max-w-2xl text-base leading-snug text-unit-text-secondary">
@@ -41,31 +38,35 @@ export default function FeatureShowcase({
         )}
       </div>
 
-      <div className="grid grid-cols-1 gap-unit-md md:grid-cols-2">
-        {items.map((item) => (
+      <div className="divide-y divide-unit-border border-y border-unit-border">
+        {items.map((item, index) => (
           <article
             key={item.title}
-            className="lift-hover flex min-h-[280px] flex-col overflow-visible rounded-[32px] bg-unit-card"
+            className="grid items-center gap-unit-xl py-unit-xl md:grid-cols-2 md:gap-unit-xxl md:py-unit-xxl"
           >
-            <div className="flex flex-col px-unit-lg pt-unit-lg md:min-h-[152px] md:px-unit-xl md:pt-unit-xl">
-              {item.eyebrow && <p className="eyebrow mb-unit-sm">{item.eyebrow}</p>}
+            <div className={index % 2 === 1 ? "md:order-2" : undefined}>
+              {item.eyebrow && (
+                <p className="mb-unit-sm text-sm font-semibold text-unit-text-secondary">
+                  {item.eyebrow}
+                </p>
+              )}
               <h3 className="text-[22px] font-bold leading-[1.12] tracking-tight text-unit-text-primary">
                 {item.title}
               </h3>
-              <p className="mt-unit-sm max-w-xl text-[15px] leading-relaxed text-unit-text-secondary">
+              <p className="mt-unit-sm max-w-xl text-base leading-relaxed text-unit-text-secondary">
                 {item.body}
               </p>
               {item.microStat && (
-                <p className="eyebrow mt-unit-md">{item.microStat}</p>
+                <p className="mt-unit-md text-sm font-semibold">{item.microStat}</p>
               )}
               {item.children}
             </div>
 
             {item.mockup && (
               <div
-                className={`mt-unit-lg px-unit-lg pb-unit-lg md:px-unit-xl md:pb-unit-xl ${
+                className={`rounded-2xl bg-unit-card px-unit-lg py-unit-lg ${
                   item.mockup.clipOverflow ? "overflow-hidden" : ""
-                }`}
+                } ${index % 2 === 1 ? "md:order-1" : ""}`}
               >
                 <div className="mx-auto max-w-[var(--marketing-feature-device-width)]">
                   <DeviceFrame

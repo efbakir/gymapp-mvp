@@ -1,541 +1,432 @@
-## 2026-08-10 — Build 67 replaces the untraceable build 66 candidate
+# Unit — Decision Log
 
-**Decision:** Version 2.1 advances to build **67**. Build 66 must not be attached to the App Store version because no retained archive, upload log, release tag, or commit can prove which source produced it. Build 67 also replaces the placeholder feature-request destination with the verified public Unit board at `https://unitlift.featurebase.app`.
+- Newest decisions come first.
+- Each entry answers three questions: What changed? Why? What follows?
+- **Superseded** means the entry is history, not current direction.
+- Current product rules also live in `docs/product-compass.md` and `docs/pricing.md`.
 
-**Why:** A release binary must be reproducible from a clean, reviewed, tagged `main` commit. The only retained build-66 simulator artifact predates the final paid-access disclosure and still contains the placeholder Featurebase URL. Treating that artifact or the processed App Store Connect build as final would make the shipped behavior unknowable.
+<!-- Add new entries below this line. -->
 
-**Implication:** Archive only after the TelemetryDeck identifier is supplied privately, the resulting archive plist is inspected, all automated checks pass, and the physical iPhone trial/purchase flow passes. Tag that exact commit `v2.1-build67`. App Store privacy answers declare Device ID, Product Interaction, and Purchase History for Analytics; none is linked to identity or used for tracking. Raw workout content remains on-device. Build 66 stays unattached.
+## 2026-08-12 — Use an editorial marketing rhythm and preserve the native core
 
-## 2026-08-05 — Paid access is disclosed before setup; speed-first remains a post-launch screenshot test
+- **Marketing:** Replace repeated equal-weight feature cards with divided editorial rows, reserve uppercase mono labels for real metadata, and use 16px as the narrative-text floor.
+- **Reliability:** Render available local marketing photos immediately and show a fallback only after a real image error; cached images must not remain hidden behind placeholders.
+- **Responsive proof:** Stack trust statements cleanly on phones, remove forced-height review cards, and use a consistent audience grid.
+- **iOS:** Keep the current active screen architecture. It already follows the shared tokens and reusable components, and a cosmetic rewrite would risk the three-second logging path without a verified usability gain.
+- **Documentation:** The responsive website type ramp now lives in `DESIGN.md`; the complete audit and verification record lives in `docs/qa/design-evaluation/system-wide-impeccable-pass-2026-08-12.md`.
 
-**Decision:** The shared onboarding-carousel CTA area now shows `Paid plan required after setup. Prices and any eligible trial are shown before purchase.` directly beneath `Set up your program`. It adds no screen, modal, confirmation, tap, analytics event, StoreKit behavior, or eligibility claim. The 2.1 App Store screenshot order remains progression-first: next target, 3-second log, reps-then-weight, program setup, progress history, and Lock Screen timer.
+## 2026-08-12 — Show subscription timing on the paywall
 
-**Why:** A prospective customer should understand that setup ends at a paid-access boundary before investing time in a program. Inline secondary copy makes that requirement visible without reviving the removed price-disclosure screen or weakening the primary setup action. The first acquisition test should still measure the new progression promise; speed can be tested later without changing product behavior.
+- **Decision:** Replace the hidden `What happens next?` sheet with an on-page connected timeline that updates with the selected StoreKit tier.
+- **Trial sequence:** Show `Day 0`, the cancel-before-renewal window, and the StoreKit-derived renewal day and price. Do not claim Unit sends a reminder until that feature exists.
+- **Reminder:** Do not place a reminder toggle on the purchase screen. The visible cancellation window provides the necessary clarity without adding a notification decision before checkout.
+- **Tier placement:** Keep plan selection on the same page. A separate pricing step would add friction and separate the selected amount from its renewal explanation.
+- **Why:** Every local benchmark with a timeline makes the trial sequence visible before purchase. Unit adopts that clarity while keeping its flat, light, monochrome system and honest copy.
+- **Supersedes:** The 2026-07-13 decision to keep `What happens next?` only in a small sheet; the rule to keep price details near the purchase action remains active.
 
-**Implication:** After 2.1 is live and Apple reports enough traffic and confidence, Product Page Optimization may test a speed-first treatment by swapping screenshots 1 and 2 only. The existing verified binaries are reused; screenshots 3–6, name, subtitle, keywords, descriptions, pricing, and product behavior stay fixed. Record the result before adopting the treatment. Turkish UI localization, additional ASO keywords, social features, coaching, Apple Watch expansion, and broader discovery remain outside 2.1.
+## 2026-08-12 — Align the website and opener with progression
 
-## 2026-08-05 — Version 2.1 completes the progression pivot with anonymous funnel analytics
+- **Marketing:** Lead with `Know what to lift next`. Explain the product in one sequence: log the work, see the reason, review one next target, then accept or edit it.
+- **Control:** Keep one-tap logging and athlete control in the story. Never imply automatic program changes, generated programs, or a black-box coach.
+- **Onboarding:** Use a black surface only for the two-second logo opener with `Progressive overload made simple.` The carousel and product remain light.
+- **Why:** The verified 2.1 feature, onboarding, App Store listing, and website should make the same promise.
 
-**Decision:** Version 2.1 advances to build **66**, replaces the three logger-led marketing slides with progression-led onboarding, and uses TelemetryDeck for a strict allowlist of anonymous product-usage events. Analytics are enabled by default with an immediate Settings opt-out. Supabase and CloudKit are not part of this release.
+## 2026-08-12 — Match ready-made programs from three honest answers
 
-**Why:** Unit needs to measure the complete onboarding → paywall → verified trial/purchase → workout → recommendation funnel without building accounts or transmitting workout content. CloudKit is user-private sync rather than founder analytics; Supabase would add identity, database, policy, and deletion scope that the 2.1 hypothesis does not need.
+- **Decision:** Keep two onboarding paths: `I have a program` opens paste import; `I need a program` asks goal, experience, and supported training days, then ranks up to three existing catalog programs.
+- **Catalog:** Add one complete 2-day program and one complete 5-day program so the schedule question can offer 2–6 days without a dead answer. Training days are a hard match; goal and experience determine rank.
+- **Trust:** Say `Matched to your answers`, never imply Unit generated a new plan. Do not ask about workout duration or equipment until those fields exist across the catalog.
+- **Paywall and measurement:** Carry the three controlled answer buckets into the paywall and attach source, goal, experience, and days to trial/purchase events. Never send program names, exercises, weights, reps, or pasted text.
+- **Infrastructure:** Keep matching local and deterministic. Supabase remains deferred until the catalog needs remote management or a cross-device user profile.
 
-**Implication:** Raw workout details remain on-device and Unit remains fully functional offline or without analytics configuration. Analytics may contain only controlled enums and broad duration/set/no-keyboard buckets; never exercise names, program text, weights, reps, notes, bodyweight, email, timestamps, raw identifiers, or receipts. App Store privacy answers declare anonymous Product Interaction and Purchase History data as not linked and not used for tracking. The active English screenshot order is progression target, 3-second log, reps-then-weight, program setup, progress history, and Lock Screen timer. All non-English metadata remains stale.
+## 2026-08-12 — Tighten onboarding, screenshot, and ASO copy for 2.1
 
-## 2026-08-04 — First-session program values are targets, not history
+- **Decision:** Use a concrete progression story across onboarding and the App Store without duplicating the same screen. Onboarding says `Know what to lift next`, explains that Unit prepares the next target after the workout, uses the concrete `10 reps` / `5 lb` example, and keeps one-tap logging as the third value. The six App Store headlines are `Know what to lift next`, `Log a set in 3 seconds`, `Hit 10 reps. Add 5 lb.`, `Paste your plan or choose one`, `See your strength go up`, and `Rest timer on your Lock Screen`.
+- **ASO:** Use the 97-byte keyword field `reps,barbell,sets,strength,lifting,weights,routine,history,rest,timer,personal,record,pr,load,1rm`. Keep name/subtitle terms out of the field so Apple can combine the remaining words into searches such as `rest timer`, `personal record`, `PR tracker`, and `1RM tracker`.
+- **Why:** The copy is more concrete, scannable, and aligned with Unit's real double-progression behavior. RespectASO scores are directional evidence, not ground truth; keywords support discovery while screenshots explain benefits and conversion value.
+- **Next:** Replace the editable 2.1 listing metadata and six screenshots with these canonical assets. This is listing-only work and does not require a new app binary or build number.
 
-**Decision:** Sets, reps, and weights explicitly saved from a pasted, ready-made, or edited program persist into the first matching workout as a **Starting target**. Prefill precedence is: accepted progression target for the matching routine and exercise, latest valid completed session under the global fallback rules, explicit starting values for the current template/program, then the truly empty state. Planned values are never labelled **Last time** until the user has completed a real set.
+## 2026-08-10 — Build 67 replaces build 66
 
-**Why:** Unit already persisted the planned value and resolved a `.planned` source, but the active-workout UI intentionally ignored that source and showed `Log first set`. Calling planned data “Last time” would repair the visibility bug by inventing history; distinguishing target from evidence keeps the one-tap Gym Test honest.
+- **Decision:** Version 2.1 moves to build **67**. Build 66 will not be attached in App Store Connect.
+- **Why:** No retained archive, upload log, tag, or commit proves what source produced build 66.
+- **Next:** Add the private TelemetryDeck ID, inspect the archive, pass automated checks and the physical-device purchase test, then tag the exact commit `v2.1-build67`.
+- **Also:** Use the verified Featurebase board at `https://unitlift.featurebase.app`. Workout content stays on-device.
 
-**Implication:** `Bench Press 3x8-10 60` reviews as `3 × 8–10 at 60 kg`, opens the first workout at `60 kg × 8`, completes in one tap, and prefills subsequent sets through the existing within-session policy. This supersedes the presentation language in the 2026-06-09 planned-weight entry while preserving its persistence mechanism. `No history yet` appears only when all four prefill sources are unavailable.
+## 2026-08-05 — Disclose paid access before setup
 
-## 2026-08-04 — Seven-day introductory trial supersedes no-trial and eligible-user Weekly-default decisions
+- **Decision:** Show `Paid plan required after setup. Prices and any eligible trial are shown before purchase.` below `Set up your program`.
+- **Why:** People should know setup ends at a paywall before spending time building a program.
+- **Limits:** This adds no screen, tap, analytics event, StoreKit behavior, or trial promise.
+- **Test later:** After launch, test speed-first acquisition by swapping screenshots 1 and 2 only. Keep screenshots 3–6 and all other listing details fixed.
 
-**Decision:** Version 2.1 supports a seven-day Free introductory offer on Monthly (`com.unit.monthly`) and Yearly (`com.unit.annual`). Weekly and Lifetime have no trial. A new eligible customer defaults to Monthly; an ineligible customer retains the existing Weekly default. Unit remains a non-dismissible hard paywall after onboarding with no permanent free tier.
+## 2026-08-05 — Add anonymous funnel analytics
 
-**Why:** The trial lets a new customer test the complete progression-guided product without weakening the single paid-access boundary. Conditional StoreKit presentation prevents a marketing promise from appearing when Apple has not actually supplied the offer or the customer cannot redeem it.
+- **Decision:** Version 2.1 uses TelemetryDeck for a strict allowlist of anonymous usage events. Analytics are on by default with a Settings opt-out.
+- **Why:** Measure onboarding → paywall → purchase → workout → recommendation without adding accounts.
+- **Privacy:** Never send exercise names, program text, weights, reps, notes, bodyweight, email, timestamps, raw IDs, or receipts.
+- **Limits:** Supabase and CloudKit stay out. Unit still works offline and without analytics.
+- **Release note:** This entry advanced the candidate to build 66; the 2026-08-10 entry later replaced it with build 67.
 
-**Implication:** This entry explicitly supersedes the active “no free trial” decision and the earlier rule that Weekly is the default for every customer. Trial language appears only when the selected product is auto-renewable, has a valid StoreKit introductory offer in Free mode, and Apple reports the customer eligible; eligibility alone is insufficient. The local StoreKit file contains the Monthly and Yearly offers for deterministic QA. The founder must still configure equivalent App Store Connect offers and confirm Apple’s sandbox purchase sheet displays the seven-day free period before calling the trial release-ready.
+## 2026-08-04 — First-session values are Starting targets
 
-## 2026-08-04 — Progressive-overload positioning ships in version 2.1
+- **Decision:** Saved sets, reps, and weights appear in the first matching workout as a **Starting target**.
+- **Prefill order:** Accepted target → latest completed session → saved starting values → empty fields.
+- **Why:** Planned data is useful, but it is not workout history.
+- **Rule:** Use **Last time** only after a real set was completed. Show `No history yet` only when every prefill source is missing.
 
-**Decision:** Version 2.1, not a separate 2.2 release, contains the verified transparent double-progression feature and changes the App Store identity to `Unit: Progressive Overload` with subtitle `Gym Workout Log & Tracker`. The Home Screen name remains `Unit`. The canonical English metadata and screenshot plan now lead with the next-target promise while remaining beginner-inclusive through ready-made programs and pasted routines.
+## 2026-08-04 — Add a seven-day trial
 
-**Why:** Version 2.0 is the live release. The progression feature now has unit, UI, small-screen, and accessibility verification, so delaying the feature and its honest positioning to an artificial 2.2 release no longer serves the experiment. Shipping the name before the feature would overpromise; shipping the feature under the old listing would fail to test the acquisition hypothesis.
+- **Decision:** Eligible customers get a seven-day free trial on Monthly and Yearly. Weekly and Lifetime have no trial.
+- **Default:** Eligible new customers start on Monthly. Ineligible customers start on Weekly.
+- **Why:** Let new customers test the full product without adding a permanent free tier.
+- **Rule:** Show trial copy only when StoreKit returns a valid free offer and Apple confirms eligibility.
+- **Next:** Configure the same offers in App Store Connect and verify them in Apple’s sandbox purchase sheet.
+- **Supersedes:** The no-trial rule and the rule that Weekly is always selected by default.
 
-**Implication:** All active product and release documents use 2.1. The 2026-08-05 decision advances the candidate from 2.1 (65) to **2.1 (66)**. The old App Store screenshots must be replaced with a progression-led English set. All five localized metadata files are stale again and must not be published. The one-week trial is implemented in the paywall and local StoreKit QA configuration, but the actual App Store Connect offer and Apple sandbox purchase sheet remain release gates under the superseding trial decision above.
+## 2026-08-04 — Progression positioning ships in 2.1
 
-## 2026-08-03 — Transparent progression-guided logger supersedes pure logging
+- **Decision:** Ship transparent double progression in version 2.1, not 2.2.
+- **App Store:** Name `Unit: Progressive Overload`; subtitle `Gym Workout Log & Tracker`. Home Screen name stays `Unit`.
+- **Why:** The feature is verified, so the listing and the product can test the same promise together.
+- **Next:** Replace the old screenshots with the progression-led English set. Do not publish stale localized metadata.
 
-**Decision:** Pure-logger positioning is superseded by a transparent progression-guided logger. Unit may recommend the smallest next-session change while preserving the user’s program and final control. The active workout must still pass the three-second Gym Test.
+## 2026-08-03 — Unit becomes progression-guided
 
-**Why:** The first v2.2 progression MVP tests whether removing the recurring “What should I do differently from last time?” decision creates paid value without slowing set logging.
+- **Decision:** Unit is a transparent progression-guided logger, not only a passive log.
+- **Feature:** One opt-in double-progression rule suggests the smallest next-session change after the workout.
+- **Control:** The user edits or accepts the suggestion. Nothing changes automatically.
+- **Limits:** Keep the three-second Gym Test. Do not restore cycles, failure counters, deloads, recovery logic, or automatic program rewrites.
 
-**Implication:** Ship one opt-in double-progression rule with post-workout suggestions, explicit edit/acceptance, and accepted-target prefill. Do not restore cycles, failure counters, deload logic, recovery adaptation, or automatic program rewriting. The future App Store name and subtitle change only when the working feature ships.
+## 2026-07-27 — Build 59 replaces build 58
 
-#### 2026-08-03
-- pivoting oluyor biraz
-- isim değişikliği olucak - progressive overload geliyor isme
-- workout log gym bunlar ikinci kısma gelicek
-- biraz feature eklemek gerekebilir
-	- bir tane gelicek simple af
-- progressive overload strip down etmem lazım en simple haline açıkçası ona göre simple featurelar ile başlamak buradan
-	- isim: unit: progressive overload
-	- subtitle: gym workout log & tracker
-	- keywords: rest timer - reps tracker - gym notebook - set tracker - barbell tracker
+- **Status:** Superseded by later release builds.
+- **Decision:** Use version 2.1 build 59 from tag `v2.1-build59`; do not submit build 58.
+- **Why:** Build 58 could restore the paywall after a successful purchase because of a stale entitlement refresh.
+- **Next:** Repeat the physical-device purchase test and archive only a clean, tagged `main` commit.
 
-**v2.1**
-- pivoting: new name etc & feature for progressive overload
-- feature request + patchnotes
-- 1 week free
+## 2026-07-23 — Add review and feedback prompts
 
-**todo**
-- update screenshots
-- first promise değişecek mi?
-	- simplest progressive overload tracker?
+- **Decision:** Ask for an App Store review after workout 1 and show one feedback card after workout 3.
+- **Rule:** Count only new workout session IDs for this version. Never interrupt active logging.
+- **Feedback:** Open the Unit feedback calendar or a prefilled email to `support@unitlift.app`.
+- **Release note:** This entry set 2.1 build 58; later build decisions supersede that number.
 
+## 2026-07-22 — Bind releases to clean main
 
-## 2026-07-27 — Version 2.1 release candidate advances to build 59
+- **Decision:** Recover the July 13–17 work, remove Debug-only forced onboarding, and make Debug and Release use the same saved state.
+- **Why:** Version 2.0 build 35 was uploaded from older committed source while Xcode showed newer uncommitted work.
+- **Rule:** Archive only from clean, tagged `main`. Record the tag and build number before upload.
+- **Release note:** This entry set 2.1 build 36; later build decisions supersede that number.
 
-**Decision:** Version 2.1 ships as **2.1 (59)** from tag `v2.1-build59`. This supersedes only the build-58 release identity recorded on 2026-07-23; the engagement-prompt and App Store positioning decisions remain unchanged.
+## 2026-07-17 — Remove the simulated onboarding set
 
-**Why:** Physical-device StoreKit testing exposed an entitlement race in build 58: a successful purchase could be followed by a stale empty entitlement refresh that restored the hard paywall. Build 59 makes the verified purchase authoritative while preserving refund and expiration revocation.
+- **Decision:** Remove the `Try a set` card from program review. Do not move it elsewhere.
+- **Why:** Review should confirm exercises, sets, reps, and weights. A fake set added confusion and looked like history.
+- **Effect:** Program review now leads with the workout cards and one completion action.
 
-**Implication:** Do not submit or archive build 58. Repeat the physical-device purchase/unlock smoke test on build 59, then archive only the clean tagged `main` commit.
+## 2026-07-13 — Zero weight means bodyweight
 
-## 2026-07-23 — Version 2.1 engagement prompts and inclusive App Store positioning
+- **Decision:** Entering `0` completes the set and classifies the exercise as bodyweight.
+- **Display:** Show `BW`, never `0 kg`, across active workout, Today, History, and progress chips.
+- **Rule:** Empty weight is still invalid for an unclassified weighted exercise.
 
-**Decision:** Version 2.1 counts only newly completed workout session IDs in a version-scoped UserDefaults tracker. It makes one StoreKit review-request attempt after workout one’s summary closes, and shows one non-blocking feedback card on workout three’s summary. The card opens `https://calendar.notion.so/meet/efbakir/unit-feedback` or a prefilled email to `support@unitlift.app`. Neither prompt can interrupt active logging. App Store English copy now welcomes beginner-to-experienced users through ready-made programs or pasted routines; the five existing metadata translations are stale and must not ship in 2.1. Release identity is **2.1 (58)**.
+## 2026-07-13 — Use the compact yearly savings badge
 
-## 2026-07-22 — Recover the agreed v2.1 working state and bind releases to clean main
+- **Decision:** The yearly badge says `Save N%`, not `Save N% vs weekly`.
+- **Why:** The longer badge overpowered the plan card. The supporting price line already explains the comparison.
+- **Effect:** Pricing math and purchase behavior do not change.
 
-**Decision:** Preserve the complete July 13–17 working tree, remove the Debug-only forced-onboarding path, and ship the recovered product work as **2.1 (36)**. Xcode Run and Release now derive onboarding, paywall, and app entry from the same persisted program and entitlement state. Every App Store archive must come from a clean, tagged `main`; the tag and build number are recorded together before upload.
+## 2026-07-13 — Keep price details near the purchase action
 
-**Why:** Version 2.0 (35) was submitted before the final onboarding, paywall, logging, and design-system work was committed. Xcode showed the uncommitted working tree while App Store Connect received the older committed source. Debug also forced onboarding on every launch, creating another visible difference from Release.
+- **Decision:** Repeat the selected StoreKit price and renewal type in the sticky purchase area.
+- **Why:** The amount must stay visible when the selected plan card scrolls away.
+- **Also:** Keep `What happens next?` as a small sheet, not another page.
+- **Source:** Uses RevenueCat’s repeatable clarity ideas, not its unproven success-story patterns.
 
-**Implication:** The recovered branch is the sole source for 2.1. Do not archive from a feature branch or dirty tree. Before upload, verify Xcode Settings reports 2.1 (36), local `main` equals `origin/main`, tests pass, and the archive commit is tagged `v2.1-build36`.
+## 2026-07-13 — Simplify the paywall hierarchy
 
-## 2026-07-17 — Remove the simulated set from program review
+- **Decision:** Use one flow: Unit proof → saved program → plan choice → sticky purchase button.
+- **Removed:** Next-exercise teaser and repeated feature claims.
+- **Why:** The old page mixed too many messages and made the plan cards feel disconnected.
+- **Keep:** StoreKit pricing, savings math, Restore, Terms, Privacy, and purchase behavior.
 
-**Decision:** Remove the interactive “Try a set” card from the final onboarding review screen without relocating it elsewhere.
+## 2026-07-13 — Finalize four localized app names
 
-**Why:** The screen’s job is to verify exercises, sets, reps, and weights. A simulated log that writes no workout history makes that task less clear and falsely labels planned values as “Last time.”
+- **Decision:** Use de `Unit: Trainingstagebuch`, es-MX `Unit: Registro de gym`, fr `Unit: Carnet de Muscu`, and tr `Unit: Antrenman Günlüğü`.
+- **Open:** pt-BR `Unit: Diário de Treino` still needs a native review.
+- **Rule:** Nothing goes to App Store Connect without the locale-specific founder approval.
 
-**Implication:** Program review now leads directly with the user’s workout cards and keeps “Save program” as its only completion action. This resolves the demo-card question left open on 2026-07-11.
+## 2026-07-13 — Tighten in-app copy
 
-## 2026-07-13 — Explicit zero weight means bodyweight in the logging flow
+- **Decision:** Remove warm-up coaching, shorten onboarding labels, simplify Today states, and centralize stable copy in `AppCopy`.
+- **Why:** The app was explaining too much. Unit records training; it does not teach exercises.
+- **Voice rule:** First-person singular prevents fake corporate `we`; it does not require `I` or `my` in every label.
+- **Effect:** This supersedes the 2026-07-11 `Summary` / `Save my program` wording.
 
-**Decision:** Entering `0` in the weight field is a valid completed set and promotes the exercise to bodyweight. Logged zero values render as `BW` across the active set metric, progress chips, Today, and History; an empty weight remains invalid for an unclassified weighted exercise.
+## 2026-07-13 — Allow honest conversion tactics on the paywall
 
-**Why:** Zero is an intentional input, not missing data. Treating it as bodyweight keeps the one-tap logging path available without ever displaying `0 kg`.
+- **Decision:** Use live savings, per-week equivalents, and the user’s program name to clarify the choice.
+- **Rule:** Every number comes from StoreKit. No fake comparison price, countdown, scarcity, or unsupported trial claim.
+- **Placement:** Badge the upsell tier, not the default tier.
+- **Why:** Make the value ladder clear without breaking trust.
 
-**Implication:** PR-completed set chips use the accessible Verde soft-success treatment, distinct from the Ink current-set chip. Positive loads remain supported for weighted bodyweight variants.
+## 2026-07-11 — Replace style keywords with behavior keywords
 
-## 2026-07-13 — Yearly savings badge returns to the compact percentage
+- **Decision:** Target behaviors such as rest timer, set/reps counter, weights history, progressive overload, and training notes.
+- **Removed:** Narrow style terms such as powerlifting, barbell, 5x5, hypertrophy, and squat.
+- **Why:** Unit sells simple tracking behavior, not one training style.
 
-**Decision:** The yearly plan badge reads `Save N%` instead of `Save N% vs weekly`. The percentage remains calculated from the live weekly and yearly StoreKit prices.
+## 2026-07-11 — Renumber release build 16 to 35
 
-**Why:** The comparison suffix makes the chip dominate the selected plan card. The yearly card already communicates the weekly comparison through its `$0.58/week` supporting line.
+- **Status:** Historical release decision.
+- **Decision:** Use version 2.0 build 35 because App Store Connect already had builds 24–34.
+- **Why:** Those builds predated the launch-hang fix. Build 35 was the first clear post-fix candidate.
 
-**Implication:** Supersedes only the badge wording in the earlier RevenueCat paywall pass. Pricing, savings math, per-week anchoring, and purchase behavior are unchanged.
+## 2026-07-11 — Add `simple` to keywords
 
-## 2026-07-13 — RevenueCat paywall pass: anchor savings and price at the decision point
+- **Decision:** Remove redundant `rep` and generic `notes`; add `simple`.
+- **Why:** `Simple workout tracker` matches Unit’s strongest user feedback and positioning.
+- **Supersedes:** The same-day `planner` → `simple` edit against the older keyword list.
 
-**Decision:** Apply the repeatable levers from RevenueCat's [five paywall conversion boosters](https://www.revenuecat.com/blog/growth/paywall-conversion-boosters), not the article's explicitly cautioned success-story patterns. The yearly badge now says `Save N% vs weekly`; the sticky purchase area repeats the live StoreKit price plus `Auto-renews` or `One-time purchase`; the optional "What happens next?" timeline remains a compact sheet instead of becoming another page.
+## 2026-07-11 — Freeze English App Store copy
 
-**Why:** Unit already has purposeful entrance motion, direct copy, and per-week price anchoring. It has no free trial, so trial presentation does not apply. The remaining gaps were explaining what the savings compare against and keeping the selected billed amount visible when its card scrolls behind the sticky CTA. RevenueCat explicitly names timelines among tactics prone to survivorship bias, so the reference is not copied into the core funnel.
+- **Status:** Later progression-led listing decisions supersede parts of this freeze.
+- **Decision:** Freeze `docs/app-store-copy.md` after changing `Paste any program` to `Paste your program` and removing an overclaim from What’s New.
+- **Why:** App Store Connect still had stale v1 text and the localization work needed one stable source.
+- **Release note:** The build-16 plan was later changed to build 35.
 
-**Implication:** Supersedes the earlier 2026-07-13 removal of the selected-price summary and the in-session proposal to promote the timeline to a large page. Weekly remains the default; products, prices, purchase behavior, disclosures, and StoreKit-derived math are unchanged.
+## 2026-07-11 — Use a colon in the App Store name
 
-## 2026-07-13 — Paywall distilled around Unit, the saved program, and plan choice
+- **Decision:** Use `Unit: Gym Workout Log`, not the em-dash version.
+- **Why:** The colon scans better and matches the App Store category pattern.
+- **Status:** The words were later replaced by the progression-led name; the separator rule still applies.
 
-**Decision:** The hard paywall now follows one hierarchy: compact Unit logo and App Store proof → one card for the saved program → plan selector → sticky purchase action. Removed the next-exercise/weight teaser and the repeated "3-second logging / last session / Lock Screen timer" claims. The real review moves above pricing with larger stars; its attribution reads "App Store review" without the translation qualifier. The in-app brand remains `Unit`; `Unit: Gym Workout Log` remains the App Store listing name.
+## 2026-07-11 — Consolidate App Store copy
 
-**Why:** The old top block mixed onboarding payoff, a next-exercise preview, and three generic feature claims with no containing surface. It created a large gap and made the page read as loose text above four unrelated price cards. The paywall's single job is to confirm the user's program and make the purchase choice clear.
+- **Decision:** `docs/app-store-copy.md` is the only source for App Store Connect text.
+- **Why:** Three files had conflicting subtitles, promos, descriptions, and What’s New copy.
+- **Rule:** Other docs point to the canonical file instead of copying its strings.
 
-**Implication:** Supersedes the first-lift hero and compressed benefit line from the earlier 2026-07-13 conversion/minimal-language passes. StoreKit pricing, yearly savings math, weekly default, disclosure, renewal timeline, Restore, Terms, and Privacy remain unchanged.
+## 2026-07-11 — Launch metadata in five languages
 
-## 2026-07-13 — Localized app names finalized: de/es-MX/fr join tr; pt-BR still open
+- **Decision:** Localize metadata in German, Spanish (Mexico), Portuguese (Brazil), French, and Turkish.
+- **Keep English:** Screenshots and in-app UI.
+- **Pricing:** Let Apple convert the USD price ladder. Do not add custom storefront prices.
+- **Deferred:** Japanese and Korean need paid native translation. Simplified Chinese waits for an ICP decision.
 
-**Decision:** Founder-final localized App Store names: de `Unit: Trainingstagebuch` (unchanged from the audit candidate), es-MX `Unit: Registro de gym` (supersedes the `Diario de Gym` candidate), fr `Unit: Carnet de Muscu` (resolves the journal-vs-carnet fork toward the conventional category term, superseding the re-derivation's `Journal de Muscu`), tr `Unit: Antrenman Günlüğü` (already final 2026-07-11). pt-BR `Unit: Diário de Treino` remains the one candidate name, pending its native read. Cascades applied: the es-MX subtitle led with *registro*, which the final name now owns, so it becomes `Diario de fuerza y series`; fr keywords gain `journal` (displaced from the retired name), landing the field at exactly 100 chars.
+## 2026-07-11 — Rename the App Store listing
 
-**Why:** Founder call after the 2026-07-11 naming audit, applying the stated rule: natural local wording, log-vs-plan accuracy, and native comprehension decide; competitor differentiation is not a criterion, and a conventional category term is often desirable (fr *carnet* and de *Trainingstagebuch* are both attested in the market leader's own localized titles).
+- **Status:** Superseded by `Unit: Progressive Overload` on 2026-08-04.
+- **Decision:** Change the listing from `Unit — Gym Notebook` to `Unit — Gym Workout Log`; keep the Home Screen name `Unit`.
+- **Why:** `Workout` and `log` had stronger search value.
 
-**Implication:** Names are closed for tr/de/es-MX/fr — the pending native reads for de/es-MX/fr now cover register and copy only. pt-BR's read also rules on its name. All fields re-checked within ASC limits; keyword fields re-deduped against the final names/subtitles. Nothing pastes to ASC without the per-locale founder go-ahead (`docs/app-store-localization/asc-execution-status.md`).
+## 2026-07-11 — Revise program preview
 
-## 2026-07-11 — Post-freeze keyword correction: style terms out, behavior terms in
+- **Status:** Superseded by the minimal-language pass on 2026-07-13.
+- **Decision:** Use `Summary`, `Save my program`, and row-tap editing. Remove the separate pencil button.
+- **Also:** Track defaulted sets/reps directly so an explicit `3×8` does not trigger a false warning.
 
-**Decision:** The en-US keyword field is replaced with `lifting,rest,timer,set,rep,counter,weights,reps,training,routine,progressive,overload,history,notes` (99 chars). Founder-approved post-freeze correction; supersedes the 97-char list in the copy-freeze entry below.
+## 2026-07-02 — Lower Weekly to $2.99
 
-**Why:** The frozen list carried founder-rejected narrow style terms (*powerlifting, barbell, 5x5, hypertrophy, squat*) that target a program style, not the behavior Unit sells. The replacement indexes what users search for: rest timer, set/rep counter, weights history, progressive overload, training notes.
+- **Decision:** Price Weekly at **$2.99**. Keep Monthly $4.99, Yearly $29.99, and optional Lifetime $44.99.
+- **Why:** Weekly and Monthly at the same $4.99 price made the default look broken or manipulative.
+- **Rule:** Every tier must have a clear role; no visible tier may strictly dominate another.
+- **Next:** Change App Store Connect before submission. App prices remain StoreKit-derived.
 
-**Implication:** `docs/app-store-copy.md` §Keywords updated; ASC en-US field updated the same day. Localized keyword fields are untouched — the change re-stales them and rides the next locale regeneration pass per the freeze protocol.
+## 2026-06-29 — Set the v2 price structure
 
-## 2026-07-11 — Release build renumbered 16 → 35 (ASC already holds pre-fix builds 24–34)
+- **Status:** Weekly price was changed to $2.99 on 2026-07-02. The other rules remain.
+- **Decision:** Show Weekly, Monthly, and Yearly; show Lifetime only when StoreKit returns it. Select Weekly by default for customers without a trial.
+- **Rule:** Never show fake fallback prices. Update `docs/pricing.md`, App Store Connect, then code.
 
-**Decision:** `CURRENT_PROJECT_VERSION` bumped 16 → 35 across all 6 pbxproj configs. The v2.0 release candidate is **2.0 (35)**, superseding the "2.0 (16)" plan in the copy-freeze entry below.
+## 2026-06-29 — Keep widget typography separate for v1
 
-**Why:** ASC reconnaissance (2026-07-11) found TestFlight already holds builds 24–34 for version 2.0 — Xcode Cloud numbers independently of the pbxproj value, so "16" was already stale, and every one of those builds was uploaded before the launch-hang fix (`4fe1edd`, the UserDefaults-write-during-body loop that froze launch on iOS 27). Reusing a number ≤34 would make it ambiguous whether the submitted binary contains the fix; 35 is the first unambiguous post-fix candidate.
+- **Decision:** Do not move widget typography into app `AppFont` tokens yet.
+- **Why:** The widget target needs a proper shared token package, not a temporary bridge.
+- **Next:** Revisit only when the app and widget share a real design-system package.
 
-**Implication:** Archive ships as **2.0 (35)** from a `main` that includes `4fe1edd`. Never select builds 24–34 on the 2.0 version record. `final-submit-checklist.md`, `INDEX.md`, and `asc-execution-status.md` updated; historical docs left as-is.
+## 2026-06-18 — Simplify starter-program onboarding
 
-## 2026-07-11 — Freeze amendment #2: `simple` added to the corrected keyword field
+- **Decision:** Show five clear programs: Full Body, Upper / Lower, 5/3/1, Power + Size, and Push Pull Legs.
+- **Reuse:** Make onboarding use the same Level / Goal / Days filters and list components as the in-app library.
+- **Remove:** Delete the 1RM input screen. Library users enter weights in program preview.
+- **Why:** Insider program names and a true-1RM question were hard for most people to understand.
+- **Effect:** Library onboarding drops from five steps to four. The unused 1RM calculation code stays available for later.
 
-**Decision:** The post-freeze keyword correction (behavior-terms field, `ca52807`) now carries `simple`: dropped `rep` (redundant under Apple's singular/plural stemming — `reps` covers it) and `notes` (generic, polluted by Apple Notes searches); added `simple`. 96/100 chars. All behavior combinations preserved (rest+timer, set/reps+counter, weights+history, progressive+overload).
+## 2026-06-18 — Remove the pre-onboarding price screen
 
-**Why:** Executes amendment #1's intent against the field that actually shipped — #1 was written in parallel with the keyword correction and described the retired 97-char list, so its exact swap (`planner`→`simple`) no longer applied. The user-feedback rationale stands: "simple workout tracker" is the highest-intent query for Unit's actual differentiator.
+- **Status:** The 2026-08-05 inline paid-access disclosure is the current solution.
+- **Decision:** Delete the separate price-disclosure splash and return to one hard paywall after onboarding.
+- **Why:** A price screen before setup hurt the first-run experience.
+- **Accepted risk:** The App Store purchase label alone may not make a fully gated app obvious.
 
-**Implication:** Locale keyword fields consider local *simple* equivalents at review (already recorded in `asc-execution-status.md`). Amendment #1 below is superseded by this entry.
+## 2026-06-17 — Lock onboarding, pricing tests, and paid-growth rules
 
-## 2026-07-11 — Freeze amendment #1: keyword `planner` → `simple` (user feedback)
+- **Onboarding:** Use paste-first entry plus five starter programs. Remove the manual builder from first run.
+- **Pricing test:** Measure conversion before raising Yearly. Use a clear rollback threshold.
+- **Paid growth:** Do not scale ads until measured CAC is below LTV with payback under six months. A test up to $100 is allowed.
+- **Target:** $11k MRR / $132k ARR is the practical milestone; the earlier $1M ARR framing is long-term.
+- **Note:** The D0 price splash from this entry was removed the next day.
 
-**SUPERSEDED by Freeze amendment #2 (same day):** the parallel post-freeze keyword correction retired the field this entry's swap targeted. The intent (index `simple`) carried forward; the mechanics changed.
+## 2026-06-16 — Move to a hard paywall
 
-**Decision:** One keyword swap in the frozen canonical: `planner` out, `simple` in (96/100 chars). Name, subtitle, description, promo unchanged — "simple" earns keyword indexing, not a field of its own.
+- **Decision:** Gate the full app after free onboarding. The paywall cannot be dismissed.
+- **Users:** Existing v1 users are not grandfathered; the old `InstallProvenance` promise was removed.
+- **Why:** The founder chose immediate revenue over the untested soft-paywall plan and accepted review and retention risk.
+- **Supersedes:** The 2026-05-14 hybrid model and 2026-05-31 free-core model.
+- **Note:** Later entries restored optional Lifetime, lowered prices, and added eligible trials.
 
-**Why:** First organic user feedback (native es reviewer, WhatsApp): "your strength is that it is minimalistic — put that in the title, subtitle, and/or keywords." The Reddit research agrees ("simple", "no bloat" is the language of lifters leaving Strong/Hevy). Keywords-only because cross-field combination already matches "simple workout tracker" once `simple` is indexed anywhere; the subtitle keeps the *lifters* persona filter, and the name stays stable (frozen twice today). Bonus honesty: `planner` was off-model — Unit doesn't plan.
+## 2026-06-11 — Refine the Reddit plan
 
-**Implication:** Locale keyword fields consider local equivalents (sencillo / einfach / simples / simple / basit) at their per-locale review — recorded in `asc-execution-status.md`. Same reviewer proposed es-MX name `Unit: Registro de gym`; routed to the es-MX locale gate (conflicts with the es subtitle's *registro* — one field must yield).
+- **Decision:** Post feedback requests now in link-friendly communities while building karma for gated communities.
+- **r/iosapps gate:** 25 community karma, verified email, ABC format, correct flair, and one promo per 30 days.
+- **Rule:** Manual posting only. No comment automation.
+- **Why:** Live rules showed the old blanket `link only in first comment` guidance was too broad.
 
-## 2026-07-11 — English App Store copy FROZEN; build bumped to 16
+## 2026-06-11 — Use identity-led training content
 
-**Decision:** `docs/app-store-copy.md` is frozen, founder-approved, with two final honesty fixes: "Paste **your** program" (was "any" — the parser caps at 6 days and drops cardio, so "any" over-promised) and What's New bullet 3 now ends at "your program built in under a minute" (the old "first logged set" claim crossed the paywall). Subtitle challenge resolved: `Strength tracker for lifters` stands (the name owns *workout*; the subtitle must add new indexed terms). `CURRENT_PROJECT_VERSION` bumped 15 → 16 — ASC verification showed the live 1.0 already consumed build 15 via Xcode Cloud's independent numbering.
+- **Decision:** Lead reels with training identity footage and one strong on-screen claim. Mention Unit in the caption and comment funnel.
+- **Do not lead with:** Full app demos. A short app glimpse is optional.
+- **Why:** The reference creator’s best posts showed no app and were easier to produce.
+- **Risk:** Generic gym motivation may get views but few installs. Claims must point to tracking and simplicity.
 
-**Why:** Copy-freeze goal (2026-07-11): live ASC 1.0 metadata was compared field-by-field against canonical; every field changes for 2.0, and the stale v1 reviewer notes (no-IAP era) actively contradict v2. Freezing unblocks the localization chat's regeneration protocol.
+## 2026-06-11 — Reduce marketing to one routine
 
-**Implication:** Archive ships as **2.0 (16)**. Locale regeneration list: `docs/app-store-localization/asc-execution-status.md` §Second regeneration (separator + two What's New bullets ×5; descriptions untouched). Post-freeze copy changes require a new decision-log entry.
+- **Decision:** Cut active marketing docs from 56 files to 6 and archive the rest.
+- **Daily:** One TikTok/Instagram reel, reply to comments, and write 1–3 Reddit karma comments.
+- **Weekly:** Film a small clip library on Sunday.
+- **Why:** One fixed routine is easier to execute than many channel plans.
 
-## 2026-07-11 — App name separator resolved: `Unit: Gym Workout Log` (colon)
+## 2026-06-11 — Separate durable and tactical anti-patterns
 
-**Decision:** The ASC App Name field uses the colon form `Unit: Gym Workout Log` (21 chars). Supersedes the em-dash rendering in the earlier 2026-07-11 name entry — the words and the ASO rationale stand; only the separator is resolved. Locale names take the same separator at their next regeneration pass.
+- **Decision:** Mark legal, brand, and budget rules as durable. Treat algorithm and reach claims as testable.
+- **Change:** Allow plain keyword-to-DM funnels; keep hollow engagement bait banned.
+- **Why:** Live account data contradicted the compressed rule that banned both.
 
-**Why:** Founder pick ("preferred") during the English-copy freeze. Zero keyword-indexing difference; the colon is the category norm, scans better at App Store list sizes, and matches how the live 1.0 listing already renders (verified in ASC 2026-07-11: the Apps menu shows `Unit: Gym Notebook`).
+## 2026-06-11 — Increase posting volume
 
-**Implication:** `docs/app-store-copy.md` §App name updated. ASC paste uses the colon. The five locale files still carry `Unit — …` names — separator swap rides the next locale regeneration (do not edit them piecemeal).
+- **Status:** Later simplified to the one-daily-post routine.
+- **Decision:** Target 1–4 posts per day across accounts with different identities. Never clone the same content across accounts.
+- **Why:** The app was live, so more time could move from building to marketing.
 
-## 2026-07-11 — App Store copy consolidated to one canonical file
+## 2026-06-11 — Study proven Instagram accounts
 
-**Decision:** `docs/app-store-copy.md` is the single source of truth for every App Store Connect text field (name, subtitle, promo, description, keywords, What's New, screenshot captions, reviewer notes, subscription display fields, URLs). Deleted `docs/marketing/app-store-copy.md`; `source-en.md` and `final-submit-checklist.md` and the archive `asc-submission.md` now point instead of duplicating. Resolved forks: subtitle → `Strength tracker for lifters` (name owns gym/workout/log, so the subtitle adds strength/tracker/lifters); promo → the evergreen paper-comparison line; description → the short hook-first version; What's New → benefit bullets + an honest paid-purchase paragraph for updating v1 users; keywords deduped against name+subtitle (97 chars).
+- **Decision:** Create account studies that copy hooks, cadence, and formats, never a creator’s content, face, or captions.
+- **Why:** Current winning accounts are more useful than invented content theory.
+- **Open at the time:** Carousels, trial reels, editing workflow, posting volume, and account identity.
 
-**Why:** Two sessions produced three diverging copy docs plus a localization source that mirrored one of them — subtitle, promo, description, and What's New all disagreed, which risks pasting inconsistent metadata during the ASC session. Founder: "I want only one source of truth."
+## 2026-06-11 — Add PR badges to History
 
-**Implication:** Copy edits happen in `docs/app-store-copy.md` only; the checklist embeds no strings by design. Also fixed the last free-forever remnants on the marketing site (`compare/data.ts` pricing rows ×3, download-section eyebrow) and added site/dev-config price locations to `docs/pricing.md` §Changing prices so the next price change can't strand them.
+- **Decision:** Show PR tags in session rows, the session summary, and set details.
+- **Logic:** Calculate PRs from completed non-warm-up sets in completed sessions. Weight ranks first; reps break ties. The first log is not a PR.
+- **Why:** This makes the `Every PR` screenshot claim true.
+- **Rule:** Keep History and active-workout PR calculations aligned.
 
-## 2026-07-11 — App Store international rollout: 5-language metadata tier, English screenshots, auto-converted pricing
+## 2026-06-11 — Switch the marketing site to launched state
 
-**Decision:** Localize App Store **metadata only** in five languages riding the v2 submission — German, Spanish (Mexico), Portuguese (Brazil), French, Turkish — with paste-ready copy in `docs/app-store-localization/`. Screenshots stay English (ASC inherits them per locale). All four products keep Apple's automatic price conversion from the USD base ladder (Weekly $2.99 / Monthly $4.99 / Yearly $29.99 / optional Lifetime $44.99, per the 2026-07-02 entry on the `release/onboarding-paywall-qa` branch); no custom storefront prices. The in-app UI stays English, and every localized description says so in one honest line. Japanese/Korean deferred behind a paid-native-translation gate; Simplified Chinese rejected pending an ICP-filing decision (China mainland listing requires one since 2024). Supersedes the "defer localization until $5k MRR" line in `docs/archive/marketing/asc-submission.md` §Localization.
+- **Decision:** Make the live App Store URL the default and use git as the launch-state source.
+- **Added:** Official App Store badge, approved screenshot crops, desktop QR code, Smart App Banner, `Download` CTA, and launch date.
+- **Why:** Production should not depend on an unset Vercel environment variable.
 
-**Why:** Founder-directed international-launch prep (goal, 2026-07-11). Metadata localization is the low-risk, high-reach slice: per-locale fields go through the same v2 review with no binary change, and Apple's monotonic price grid preserves the "no dominated tier" rule in every storefront by construction. The five languages were picked on Health & Fitness market size, willingness to pay, native search behavior, translation risk, and founder review ability (Turkish is native-reviewable; the app's parser already reads Turkish programs).
+## 2026-06-09 — Rename Ghost values to Last time
 
-**Implication:** Founder ASC actions listed in `docs/app-store-localization/README.md` §App Store Connect actions (~45 min manual paste; no API key exists in the repo). Non-Turkish copy needs one native-speaker read each before paste. UI localization has hard prerequisites (String Catalog migration, parser exercise-name audit, per-language layout QA) recorded as Tier 3 — do not machine-translate `AppCopy.swift`. Product IDs, prices, and paywall StoreKit-derivation untouched.
+- **Decision:** Use **Last time** in the app and plain descriptions in marketing. Do not invent another feature name.
+- **Why:** Users say `last time` or `previous`; nobody naturally says `ghost values`.
+- **Keep internal:** `metricIsGhost` and the unrelated `AppGhostButton` names.
+- **Marketing angle:** The user’s own history, not an AI recommendation.
 
----
+## 2026-06-09 — Keep pasted weights for the first workout
 
-## 2026-07-11 — App Store listing name: `Unit — Gym Workout Log` (supersedes 2026-05-31 `Unit — Gym Notebook`)
+- **Status:** Refined by the 2026-08-04 **Starting target** decision.
+- **Decision:** Carry weights from a pasted program into the first workout instead of discarding them.
+- **Why:** Losing data the user already entered broke trust.
+- **Rule:** Percentages such as `@80%` stay blank until Unit can resolve them.
 
-**Decision:** App Store Connect App Name field is `Unit — Gym Workout Log`. Home-screen display name is unchanged (`Unit` via `INFOPLIST_KEY_CFBundleDisplayName`).
+## 2026-06-03 — Remove Pro signals from v1.0
 
-**Why:** Founder call, ASO over brand — "workout" and "log" are high-traffic search terms the previous name didn't carry. Raised as an open decision blocking the v2 App Information panel in `docs/marketing/app-store-copy.md`.
+- **Decision:** Hide subscription controls and Export Pro UI; replace the Pro chip in screenshot 5.
+- **Why:** Apple rejected build 12 because the app showed paid-feature signals but had no IAPs configured.
+- **Next:** Upload build 13 or later with no purchase surface. Update screenshot 5 before resubmission.
+- **Later:** The v2 hard-paywall decision superseded this free-launch setup.
 
-**Implication:** Update the App Name field in App Store Connect before submitting v2 (founder action). `docs/app-store-copy.md` and `docs/marketing/app-store-copy.md` updated to reflect the new name. `docs/archive/marketing/asc-submission.md` keeps the old name — it's a superseded historical record, not touched.
+## 2026-05-31 — Choose free core plus soft Pro
 
----
+- **Status:** Superseded by the hard paywall on 2026-06-16.
+- **Decision:** Keep core logging free and gate only export, Health, cloud, and Watch features. No weekly tier or onboarding paywall.
+- **Also:** Grandfather pre-paywall installs through `InstallProvenance`.
+- **Why:** The plan aimed to protect trust while monetizing off-path features.
 
-## 2026-07-02 — Weekly drops to $2.99: kill the dominated-default optics before v2 submits
+## 2026-05-31 — Defer Pro to v1.1
 
-**Decision:** Supersedes the 2026-06-29 prices (only the prices — weekly-default, all-tiers-visible, StoreKit-derivation, and optional-Lifetime rules all stand). v2 ships Weekly **$2.99/week**, Monthly $4.99/month, Yearly $29.99/year, optional Lifetime $44.99. Weekly stays the default selected plan.
+- **Status:** Superseded by later monetization decisions.
+- **Decision:** Ship v1.0 with no IAPs and hide every paywall entry point.
+- **Why:** No real Pro feature was ready, so taking money risked App Review rejection.
+- **Next at the time:** Re-enable Pro only after at least one paid feature existed.
 
-**Why:** Founder manual QA + external review flagged the $4.99-weekly / $4.99-monthly tie as trust-damaging: Monthly strictly dominated Weekly at the same sticker, and the dominated option was pre-selected — reads as broken or manipulative on the first paid screen of a hard-paywall app whose brand is "fast, clear, no bullshit." At $2.99 the default becomes the smallest number on screen ("lowest commitment first"), preserving the weekly-default call with honest optics. Timing: before the wall meets real traffic and before baseline-conversion data collection starts, so the first 100–500 paywall views baseline the ladder we believe in. The "don't change prices without data" rule targets post-launch reactive changes, not pre-launch menu coherence; change routed per `docs/pricing.md` §Changing prices.
+## 2026-05-30 — Configure Pro for v1.0 review
 
-**Implication:** ASC price change on `com.unit.weekly` ($4.99 → $2.99) is required **before v2 submits** — founder action, ASC first, nothing else moves. No app-code change: all visible prices are StoreKit-derived; Weekly default already in `StoreManager`. Updated: `docs/pricing.md` (tiers + math), `Unit/Unit.storekit` dev config (QA runs show the new ladder). Weekly math: $2.99 × 52 ≈ $155/yr — still a premium vs Monthly's $59.88/yr, which is the normal weekly-tier tradeoff (commitment, not trickery).
+- **Status:** Superseded the next day by the v1.1 deferral.
+- **Decision:** Submit three IAPs with v1.0 instead of stripping Pro copy.
+- **Risk:** The advertised Pro features were not built, so App Review could reject the purchase as incomplete.
 
-## 2026-06-29 — Founder pricing override: weekly default, $4.99 monthly, $29.99 yearly, optional lifetime
+## 2026-05-14 — Add a hybrid Pro upsell
 
-**Prices SUPERSEDED by 2026-07-02 (Weekly → $2.99). Weekly-default, all-tiers-visible, StoreKit-derivation, and optional-Lifetime rules still stand.**
+- **Status:** Superseded by the hard paywall on 2026-06-16.
+- **Decision:** Keep logging free and add quiet Pro entry points in Settings and History.
+- **Planned Pro:** Export, Health, themes, analytics, Watch, and later cloud sync.
+- **Why:** Test real conversion before gating core logging.
 
-**Decision:** Supersedes the 2026-06-17 annual-default experiment and the 2026-06-16 "drop Lifetime" line for v2 pricing. v2 now ships Weekly $4.99/week, Monthly $4.99/month, Yearly $29.99/year (`com.unit.annual`), and optional Lifetime $44.99 one-time (`com.unit.lifetime`) only if the non-consumable is already configured in App Store Connect and returned by StoreKit. Weekly is the default selected plan. The paywall must keep Weekly / Monthly / Yearly visible, derive every visible price from StoreKit, and never show fake fallback prices.
+## 2026-05-12 — Change the bundle ID
 
-**Why:** Founder override during the pricing-page review work: reduce App Review risk by making the purchase surface explicit, StoreKit-derived, and non-dismissible after onboarding, while preserving the opener + three-slide onboarding carousel before the setup flow.
+- **Decision:** Use `app.unitlift` and `app.unitlift.UnitWidgetExtension`.
+- **Why:** `com.unitlift.app` was unavailable and `app.unitlift` matches the owned `unitlift.app` domain.
+- **Effect:** App Store Connect and provisioning must use the new IDs.
 
-**Implication:** `docs/pricing.md`, `PaywallView`, `StoreManager`, and the ASC reviewer paste sheet are the current source of truth. Older text saying Annual is default, Monthly is $9.99, Yearly is $59.99, or Lifetime is withdrawn is historical only. Future pricing changes require this log plus App Store Connect changes first, then code.
+## 2026-05-10 — Redesign screenshot 5
 
-## 2026-06-18 — Onboarding library refinements: clear program names, reuse the program-library filter, remove the 1RM screen
+- **Decision:** Replace the Settings screenshot with a simple three-row trust graphic: Storage, Account, and Export.
+- **Why:** A literal Settings screen looked like settings, not a clear privacy message.
+- **Later:** The 2026-06-03 App Review fix replaced the Export Pro row.
 
-**Decision:** Three founder-driven changes to the library-pick onboarding path, all reversing or refining the 2026-06-17 grill:
-1. **Clear program names (reverses Q1's data-picked jargon set).** The surfaced set is re-curated to the five clearest universal structures, ordered by days: Full Body, Upper / Lower, 5/3/1, Power + Size, Push Pull Legs. The founder rejected the insider codenames (Metallicadpa / GZCLP / nSuns / PHUL / Boring But Big) as unreadable. Catalog titles renamed; any insider name now lives only in a program's description. Non-surfaced jargon also cleaned (GZCLP → Beginner Linear, nSuns 5/3/1 → High-Volume 5/3/1).
-2. **Picker reuses the existing filter.** `OnboardingLibraryPickerView` was rewritten to mirror the in-app `ProgramLibraryView` exactly: an `AppFilterChipBar` of Level / Goal / Days `AppDropdownChip`s over the surfaced set, then `AppCardList` + `PreviewListRow`. Replaces a bespoke `AppCard` + `AppTag` layout, so onboarding and the post-paywall program library read as one surface.
-3. **Removed the 1RM screen (reverses Q2 + Q4).** `Onboarding1RMInputView` is deleted. Rationale: almost nobody knows their true 1RM, so the screen was an unanswerable wall whose only job was to pre-fill library weights. Library picks now go straight to the program preview with blank weights; the user types their own weight inline next to each lift (the preview already supports inline editing, now with a filled-background affordance so the field reads as editable). The strong "we know your numbers" wow stays on the paste path, where weights come from the user's actual pasted routine. The founder weighed the rep-max-input alternative (enter a 5RM, derive the max via Epley) and chose to drop the step entirely rather than keep any weight-entry screen.
+## 2026-05-10 — Add a Data section to Settings
 
-**Why:** Founder feedback over three messages on 2026-06-18: the jargon names read as "I don't know what the fuck that is"; the picker should reuse the filter the app already has; and "why do we really need the one rep max" when most people can't answer it. All three accepted as product calls.
+- **Decision:** Add Storage, Account, and Export rows above Preferences.
+- **Why:** Give data ownership a real product surface and a source for screenshot 5.
+- **Later:** The 2026-06-03 decision hid Export Pro for the free v1.0 build.
 
-**Implication:** Library path is now 4 onboarding steps (was 5); paste path stays 5. The 1RM-derivation substrate is left DORMANT but intact: `ProgramItem.oneRepMaxLift` / `startingWeightPct`, the per-program percentages in `ProgramCatalog`, `ProgramImporter.startingWeight(for:oneRMs:)`, and `ProgramImporterTests` all remain (tested, unused by the running app) so the rep-max idea can be added later with no re-derivation. The `OnboardingViewModel.oneRMs` property + `applyOneRMs()` were removed as dead flow code. `AppInlineWeightField` is now single-caller (the preview) but kept as the canonical weight input. Updated `ProgramImporterTests` to assert the five clear names and guard against the jargon codenames returning.
+## 2026-05-10 — Remove the History calendar
 
----
+- **Decision:** History becomes one chronological list grouped by month.
+- **Why:** Most days have one workout, so the calendar added taps and a large parallel UI implementation.
+- **Future:** If date navigation becomes useful, add a filter instead of restoring the calendar.
 
-## 2026-06-18 — D0 pre-onboarding price-disclosure splash REMOVED (reverses the 2026-06-17 D0 decision)
+## 2026-05-10 — Set iOS 18 as the deployment target
 
-**Decision:** Deleted `OnboardingPriceDisclosureView` (the "Before you start — I built Unit as a paid app…" splash) and reverted `ContentView` to a single paywall-only `fullScreenCover` gate. Removed the `hasSeenPriceDisclosure` `@AppStorage` flag, the `OnboardingGate` enum, and the stacked-cover logic; the gate is back to the simple `paywallGate` binding (`!needsOnboarding && store.hasCheckedEntitlement && !store.isPurchased`). The "D1" half of the 2026-06-17 decision (paste-first + 5-program library, manual builder deleted, 1RM-derived weights, program-preview wow surface) **stands unchanged** — only the D0 splash is removed. Onboarding now opens directly into the existing splash → unit picker → import method, and the only paywall touch is the hard wall after the program preview.
+- **Decision:** Lower the app and widget deployment target from iOS 26 to iOS 18 and add availability fallbacks.
+- **Why:** iOS 26 excluded too many devices for launch.
+- **Bundle note:** This entry’s `com.unitlift.app` ID was replaced by `app.unitlift` on 2026-05-12.
 
-**Why:** Founder pushback (2026-06-18): an in-app "this app is paid" screen at the very start is redundant because the App Store product page already surfaces the subscription / in-app purchases before download, and front-loading the price reads as worse UX than letting the user build their program first and meet the wall at the natural commitment point. Accepted as the founder's product call. Noted residual risk (the same one D0 was meant to mitigate): the App Store "In-App Purchases" label does not communicate that the app is *fully* gated, so a sliver of the Fitbod-review "wait, I can't use anything?" pattern remains at the paywall — traded for a cleaner first run. The 2026-06-17 §2 user-voice research (Fitbod 3★ "Paywall after onboarding") is the cited risk; the founder is accepting it.
+## 2026-05-01 — Use continuous iOS corners everywhere
 
-**Implication:** `Q3` and `Q8` of the 2026-06-17 grill (D0 copy + D0-wraps-paywall-for-v1-users) are void. v1 users upgrading to v2 now go straight to the paywall on first cold launch with no disclosure splash — same as the pre-D0 Phase A behavior. No onboarding step renumbering needed: D0 was a `ContentView` cover, never an `OnboardingShell` progress step, so `progressStep`/`progressTotal` on the library/1RM/preview screens are unchanged. The Phase B plan file (`~/.claude/plans/v2-phase-b-onboarding-redesign.md`) D0/B-2 section is now historical. ASC reviewer notes in `docs/archive/marketing/asc-submission.md` still accurately describe the after-onboarding paywall (they never depended on D0).
+- **Decision:** Use iOS continuous corners for every rounded container. Use the web squircle equivalent where supported.
+- **Why:** The app already mostly followed this shape; enforcement closed the remaining drift.
+- **Rule:** Do not add a custom Squircle component.
 
----
+## 2026-05-01 — Use first-person singular voice
 
-## 2026-06-17 — v2 onboarding direction D0 + D1 locked; pricing experiment plan; paid-ads gating discipline; $11k MRR milestone anchored
+- **Decision:** User-facing copy uses `I / me / my` or names Unit as the actor. Never use corporate `we / us / our`.
+- **Why:** Unit is built by one person, Efe Bakir.
+- **Rule:** Check this across app copy, App Store text, marketing, legal, support, and social posts.
 
-**Decision:** Three linked decisions, all driven by Phase B research (`docs/onboarding-redesign-research.md`):
+## 2026-05-01 — Add the docs index
 
-1. **Onboarding direction**: D0 (pre-paywall price-disclosure splash, ships regardless) + D1 (paste-first program entry with 5 starter programs, manual builder deleted). Rejected: D2 (sample-and-edit; loses agency framing for the self-coached intermediate) and D3 (library-only; excludes custom-program lifters, directly violates the 2016 r/Fitness "I just want an excel sheet" persona quote). Sourced reasoning: §2 of the research doc (Fitbod 3★ "Paywall after onboarding" review names Unit's exact strategy under complaint; mitigated by D0 disclosure splash + 5★ Liftosaur reviews validate paste-first as the indie wedge).
-2. **Pricing experiment plan**: v2 ships at currently-committed Weekly $4.99 / Monthly $9.99 / Annual $59.99. Week 3-4 of v2: if Annual conversion ≥ 8% of paywall views (fitness category benchmark), bump Annual to $74.99 via ASC for new subscribers (existing subs grandfather). Week 5-6 measurement: revert if conversion down ≥ 30%, hold if down ≤ 20%. Captured in `docs/pricing.md` §Distribution. Rejected: bumping to $74.99 now without baseline data, and bumping monthly/weekly tiers.
-3. **Paid acquisition discipline**: Apple Search Ads / paid channels gated on measured CAC < LTV with payback < 6 months. A small ≤$100 burn test is allowed early to validate ad creative + keyword targeting; scaling is not. Required inputs before scaling: cohort retention data from 100+ paywall views, computed LTV from observed tier mix, CAC at the candidate channel comfortably below that LTV. Until then, organic channels only (`docs/marketing/README.md` daily routine). Codified in `docs/pricing.md` §Distribution AND `docs/marketing/anti-patterns.md` §Distribution anti-patterns (which now supersedes the earlier "no ads this year" blanket — gating, not banning).
-4. **$11k MRR milestone anchored**: $132k ARR. At $59.99 Annual = ~2,200 subs; at $74.99 = ~1,760. Both achievable indie numbers in 2 years if marketing executes. This **down-corrects** the "top 0.1% in 2 years ≈ $1M ARR" framing earlier in the research doc, which implied ~$83k MRR / 17k annual subs — that goal is the long-arc ambition, not the year-1 milestone. Persona pick (self-coached intermediate, see research doc §1) is unchanged because it requires the lowest conversion % of TAM at any milestone — the smaller goal makes it easier, not different.
+- **Decision:** Use `docs/INDEX.md` as the on-demand catalog and archive four stale docs.
+- **Why:** Many useful docs were invisible to fresh sessions, while adding all of them to `CLAUDE.md` would add noise.
+- **Rule:** Add new docs to the index, not the session-level guide.
 
-**Why:** Sharp pricing-and-CAC critique surfaced ("Soru 8") arguing that $6/mo anchor is wrong, annual-push is the right SaaS shape, paid ads payback requires measured LTV. Most of the critique was structurally correct and aligned with what shipped on 2026-06-16 (`selectedTier: .annual` default, "Save 50%" badge, annual on the right of the tier row). The $59.99 → $74.99 lever is real but the empirical question is "does conversion hold at the higher price?" — and without baseline data, the only honest answer is "measure first." Pricing experiment plan captures both the bet and the abort lever.
+## 2026-05-01 — Start the decision log
 
-**Implication:** Phase B implementation work (D0 + D1) becomes the gate on v2 submission. New implementation plan to be written next turn at `~/.claude/plans/v2-phase-b-onboarding-redesign.md` covering: `OnboardingPriceDisclosureView` (new), `OnboardingImportMethodView` rewrite (3-choice → 2-choice), `OnboardingStarterProgram` catalog (5 hardcoded programs), `OnboardingProgramPreviewView` (new — replaces 548-line `OnboardingExercisesView` with editable parsed/picked program + pre-filled last-time weights), `ProgramImportParser` hardening for low-confidence section detection. Estimated 3-5 days. Pricing.md and asc-submission.md numbers do not change for the ship of v2 — the price-bump experiment runs post-launch via ASC, not via code change. Paid-ads burn test allowed pre-MRR only as creative validation, not scaling fuel.
-
----
-
-## 2026-06-16 — v2 hard paywall — supersedes 2026-05-14 hybrid, deletes InstallProvenance grandfather, drops Lifetime tier
-
-**Decision:** Reversed the 2026-05-14 "Hybrid upsell" decision (which itself supersedes). v2 ships a hard paywall presented after onboarding (before first workout log), no dismissal, no free trial. Tier structure changes to Weekly / Monthly / Annual ($4.99 / $9.99 / $59.99); Lifetime tier dropped. The 2026-05-31 `InstallProvenance` grandfather mechanic in `UnitApp.swift` is deleted entirely — v1 users hit the same paywall as new installers on v2 launch (clean break, no honoring of the recorded promise). `docs/pricing.md` §Free forever is removed; `CLAUDE.md` §3 row "Paywall on core logging" struck through and footnoted as overridden. Onboarding completes free so the user sees the program built — that surface is being redesigned in Phase B of the v2 plan (research + competitor captures + cognitive-principles application; multi-day separate work) before v2 submits. ASC products: drop `com.unit.lifetime`, add `com.unit.weekly`, update `com.unit.monthly` and `com.unit.annual` prices to $9.99 / $59.99.
-
-Code surfaces shipped today: `Unit/UnitApp.swift` (InstallProvenance + Security import + Keychain plumbing deleted), `Unit/Features/Subscription/StoreManager.swift` (Tier enum rewrite: weekly/monthly/annual, drop lifetime; added `hasCheckedEntitlement` to avoid cold-launch paywall flash), `Unit/Features/Subscription/PaywallView.swift` (drop "Not now" secondary button, drop trial copy on every tier, rewrite benefits list from 2 thin "Pro extras" to 6 product capabilities, new tier copy + disclosure for weekly), `Unit/ContentView.swift` (`.fullScreenCover(isPresented:)` gate driven by computed `paywallGate` binding — present once onboarding complete and entitlement check has returned without finding a Pro entitlement; setter is a no-op so user cannot dismiss).
-
-**Why:** Frustration with revenue: "I need fucking money." Soft-paywall conversion is untested but you're not willing to wait for the data. Hard paywall is the highest-day-1-conversion model in the lifter-utility category. Acknowledged risks (called out before the override): 1-star reviews (Hevy precedent in `docs/launch-plan.md` §2), App Store reviewer scrutiny (Guideline 3.1.2(b) disclosure requirements + the "no preview of value" risk for paywall-first apps — placement after onboarding mitigates), v1 user backlash from broken grandfather promise. Override accepted in plan `~/.claude/plans/i-am-still-unsure-quiet-flame.md` (v2 — Hard paywall, bug commits, onboarding redesign).
-
-**Implication:** v2 cannot submit until Phase B (onboarding redesign) lands — user-facing copy is "subscribe to use the app" so the onboarding has to teach value before the wall, and the current 548-line `OnboardingExercisesView` is the highest friction surface (~127 taps for a 4-day program per the audit). Existing v1.0 users who installed prior to v2 are NOT honored as grandfathered, which means their next App Store update collapses their access to the paywall. Marketing wedge "Unit knows your numbers on day one" (2026-06-09 decision) still works as a paste-import value prop, but it's a pre-paywall demonstration, not a free perk. The $9.99/$49.99 "Phase-3" pricing parked in `docs/launch-plan.md` §2 is now superseded by the new $9.99/$59.99 here. The 2026-05-30 ASC submission plan with `com.unit.lifetime` configured is also superseded; ASC needs the lifetime product withdrawn + the weekly product added before v2 submits.
-
----
-
-## 2026-06-11 — Reddit plan refined from the "Subreddits" session: post-now subs + r/iosapps gate change + RSS-assisted comments
-
-**Decision:** Folded the parallel "Subreddits" Claude Code session (`53d502cf`) into `README.md`'s Reddit section. Three changes: (1) reframed from "farm karma for weeks, then post" to **two games in parallel** — post the screenshot-feedback post *now* in link-friendly subs (**r/appledevelopers** — link-in-body survives — plus r/SideProject, r/alphaandbetausers, r/TestMyApp, r/betatesting) while farming karma for the gated ones; (2) captured r/iosapps's tightened **Phase-1 gate** (25 *community* karma, ABC format, Freemium flair never "Free", verify email, 1 promo/30 days); (3) noted Claude can pull live threads + draft comments via Reddit's **public RSS feed** (the connector + JSON API are 403 auth-walled). Added the proven self-deprecating post hook ("I can deadlift Xkg but can't tell if my screenshots are any good").
-
-**Why:** Founder asked to mine that session and reconcile it with the plan. It contained live-verified tactics the README lacked — most importantly that the app is already live so open subs are postable today, and that r/iosapps changed its rules (old karma plan assumed a floor of 15; it's 25 community karma now).
-
-**Implication:** The blanket "link in first comment, never in body" don't is now nuanced — body links are fine in r/appledevelopers + the dedicated feedback subs. r/iosapps stays gated until 25 community karma + email verify. Reddit comment automation stays banned (ToS + shadowban risk — confirmed in that session). The RSS route and r/iosapps rules are already in memory (`reference_reddit_research_via_rss`, `reference_reddit_iosapps_rules`). Full title variants + ~150-word body template live in the `53d502cf` session if needed.
-
----
-
-## 2026-06-11 — Content model switched: aspirational-identity content + app-in-caption (NOT app demos)
-
-**Decision:** The primary reel format is now **journal.bingen's model** — aspirational *identity* footage (you training, cinematic, locked-in) with one bold on-screen text claim, app named **only in the caption** + comment funnel. Demoting the inherited "screen-record the app logging a set" demo format (from the archived `tiktok-ig.md` tradesman playbook) — app footage is now optional (a ≤1s glance shot), not the subject. Verified by pulling the cover frames of his top 6 reels (11.3M→176k views): zero show the app; all are monk-mode/lock-in/reverse-brainrot aesthetic. `README.md` "The format" section rewritten; study updated with the visual finding.
-
-**Why:** Founder looked at his actual page and pushed back that he behaves like an influencer and only names the app in the caption — far easier than choreographing app demos. The frames confirmed it. Easier production directly serves the anti-overwhelm goal, and identity/aesthetic content out-reaches product demos.
-
-**Implication / open risk:** Eclipta (meditation) has a tight content→product link; a gym *logger* is looser — lifting footage sells *training*, not *logging*. Mitigation locked into the plan: the on-screen claim must point at the **tracking/simplicity identity**, not generic gym motivation, or reach won't convert to installs. This is the one thing to get right; watch install-per-view, not just views. His video frames were viewed for analysis but **not committed** (his content, public repo, `anti-patterns.md` reuse rule).
-
----
-
-## 2026-06-11 — Marketing radically simplified to one daily routine; folder cut 56→6 files; Reddit karma habit added
-
-**Decision:** Collapsed `docs/marketing/` from 56 files to an active core of 6 — a single one-page plan (`README.md`), `anti-patterns.md`, `account-studies/`, and the `ig_account_fetch.py` tool. The other ~48 files (`12-week-calendar.md`, launch-day/ASO/App-Review docs, the ElevenLabs + Python automation pipeline, X and Reddit deep docs, UGC brief, all `research/`) moved to `docs/archive/marketing/` via `git mv` — parked, not deleted, with an archive README. The live plan is a **daily routine**: ~25 min/day (1 reel to TikTok+IG from a Sunday-filmed library · reply to comments · 1–3 Reddit karma comments) + a ~60 min Sunday session. **Reddit is back in** as a daily comment-only karma habit with a 3-phase ladder (bank karma → mention-when-asked at >100 r/SideProject / ≥25 r/iosapps → BIP post at a real milestone), distilled from the archived `reddit-karma-plan.md`.
-
-**Why:** Founder was overwhelmed — "too many options, no plan" — and explicitly asked to delete what isn't used and be given one direction to execute without getting sidetracked. Drift-prevention here means *removing* options, not adding a plan on top (CLAUDE.md §1/§7 simplification bias). This **overrides** the same-day README line "don't add Reddit back for 90 days": karma farming is a slow background habit that must *start* early (the months-long runway is the point); only the promo post stays gated, so a daily comment habit is compatible with simplicity — it's a fixed checklist item, not a new open-ended choice.
-
-**Implication:** One entry point for all marketing now: `docs/marketing/README.md`, checklist-first. `INDEX.md` marketing row updated; `anti-patterns.md` research-citation paths repointed into `../archive/`. Append-only links from this log to `research/monetization-strategy-2026-05-31.md` and `research/pre-fill-naming-2026-06-09.md` now resolve under `docs/archive/marketing/research/` (noted in the archive README; not chased). To revive any channel: `git mv docs/archive/marketing/<file> docs/marketing/`. Reddit anti-pattern rules (link in first comment, 1 BIP/sub/month, manual posting, 6h reply window) remain binding and are restated in the plan.
-
----
-
-## 2026-06-11 — anti-patterns.md trust-calibrated (durable vs tactical rows); engagement-bait row split — first live-data correction
-
-**Decision:** Added a "How to trust this file" header to `anti-patterns.md` splitting rows into **durable** (legal / brand / budget — obey) and **tactical** (algorithm reach/shadowban/timing claims — test, don't obey; sourced from 2026-04-29 secondary research, never tested on Unit's accounts; live `account-studies/` data overrides). Split the "engagement bait" row: hollow bait ("like for part 2", "comment YES") stays banned; the **keyword auto-DM funnel** ("comment X → auto-DM the link") is removed from the ban — Meta-native conversion mechanic, not bait.
-
-**Why:** Founder challenged the doc's authority after I cited it 3× to reject the comment-to-DM funnel that drove journal.bingen's 11.3M-view reel. Tracing provenance showed the underlying research (`viral-patterns-2026-04-29.md`) actually kept the two cases separate — it documents Tony Dinh's Xnapper using the funnel (line 110) *and* bans hollow bait (line 130). The contradiction was introduced when the table compressed both into one row, then propagated through repeated citation. First time a tactical anti-pattern was checked against live data; it failed.
-
-**Implication:** `anti-patterns.md` is a tiered checklist now, not gospel — tactical rows are hypotheses pending live-data confirmation. The auto-DM funnel is cleared to **test** on Unit reels (plain wording, link not in first DM); the only open question is brand-voice fit for Unit's calm niche, not reach-safety. Other untested tactical rows (hashtag counts, cross-post timing windows, AI-tool shadowban claims, Reddit caps) stay as hypotheses — confirm or kill each against `account-studies/` data before treating as a rule.
-
----
-
-## 2026-06-11 — Posting volume decided: 1-4/day across differentiated accounts; free-first marketing push
-
-**Decision:** Resolves the volume question left open in the entry below, same day. Target 1-4 posts/day (up from 3 reels/week), across multiple Instagram accounts, marketing Unit on the free angle while post-launch bugs get fixed. Multi-account means **differentiated identities** (own angle per account, the noah.rolette structure) — clone accounts reposting identical clips are banned; Instagram dedupes cross-account duplicates and that is the detectable-automation pattern `anti-patterns.md` blocks.
-
-**Why:** Founder call: the 3-hrs/month production budget in `cadence.md` was a build-mode assumption; the app is built and live, so the time budget moves to content. Volume is the proven growth mechanic (noah.rolette study, tip 5). "Free" is a safe permanent claim because monetization is already locked (2026-05-31: free-forever core, soft off-path paywall v1.1+, pre-paywall installs grandfathered into Pro).
-
-**Implication:** `cadence.md` and `content-engine.md` (3 hrs → ~20 clips/month) no longer match the target; they cascade after the founder locks a daily mix (reels + carousels + raw journey clips + Edits templates — reels alone cannot fill 30-120 slots/month). Account identity split (founder-personal vs Unit-brand vs both) still open. Buffer cross-post stagger rules stay binding. The grandfather mechanic is usable as honest urgency in content ("install while it's free-everything; early installs keep Pro free").
-
----
-
-## 2026-06-11 — Marketing: account-study workflow added; direction shift to "copy proven IG accounts"
-
-**Decision:** New folder `docs/marketing/account-studies/` — a swipe file of dissected Instagram accounts, one folder per handle, with a fetch protocol (Claude-in-Chrome logged-in session → screenshot drop → web metadata, in that order of depth). Operating rule: copy **mechanics** (hooks, format mix, cadence, journey structure), never **content** (clips, faces, captions) — the existing `anti-patterns.md` copyright/likeness rows stay binding. First two studies: noah.rolette (634K; his own 7-tip playbook, transcribed from the founder's screenshots) and journal.bingen (~26K, founder's friend; stub pending data).
-
-**Why:** Founder call 2026-06-11: stop inventing content theory, study accounts that are winning now and copy what works. The April-research playbooks (`tiktok-ig.md`, `content-engine.md`) had no creator-study workflow at all — confirmed gap from a full marketing-folder review this session.
-
-**Implication:** Three format changes enter evaluation against current docs: (1) carousels as a second, cheap format alongside reels (today the strategy is reels-only cross-posting); (2) trial reels on by default; (3) Instagram's Edits app tested as a template-based edit step. Open founder decisions, not yet made: posting volume (current 3/week vs the playbook's 1-4/day — gap closable with carousels, not more filming) and Unit-brand account vs founder-personal account with Unit inside the journey. `tiktok-ig.md`/`cadence.md` stay authoritative until those calls land here.
-
----
-
-## 2026-06-09 — Renamed "Ghost values" → "Last time" (in-app label + positioning); killed the coined term
-
-**Decision:** Drop "Ghost values" as the name for the pre-fill-from-last-session feature, in-app and in marketing. The in-app label is **Last time** (the inline metric already renders "Last 60kg" / "Last BW", so this is consistent, not new); the one-tap confirm reads **Same as last time**. No replacement proper noun — the feature is described in plain first-person sentences everywhere. Internal `metricIsGhost` and the unrelated `AppGhostButton` component keep their names (behaviour-identical; renaming `AppGhostButton` is pure churn — it's a button *style*, not this feature). Cascaded into `PRODUCT.md`, `app-store-copy.md`, `CLAUDE.md` North Star, and the strategy/reference docs; historical/append-only entries (this log, compass decision-log rows, dated plans) left intact.
-
-**Why:** Two independent research scans (competitor App Store/landing copy + how lifters speak in reviews/forums) converged: lifters say "previous" (~9) and "last time" (~7); "pre-fill / auto-fill" is developer vocabulary; **zero** lifters say "ghost" or "carries over". "Ghost values" is invented vocabulary nobody reaches for — the founder's own complaint that it was unclear. A scored, adversarial naming workflow ranked "Last time" first (39/50) — the only candidate that beat the proven category baseline "Previous" — because it reads as personal memory, not an algorithm's recommendation (the exact wedge vs Fitbod, which hides the same data behind "AI recommended"). Research saved at `docs/marketing/research/pre-fill-naming-2026-06-09.md`.
-
-**Implication:** Marketing leads with two gaps no competitor can claim: (1) the **day-one** angle — "On day one I already know your numbers" — enabled by the seed-from-paste fix (entry below); (2) the **anti-AI** angle — "my own history, not a recommendation." Strong (market leader) has this feature and never markets it; that's the third angle. Do NOT coin a new metaphor to replace "ghost," do NOT ship "Previous" (cedes the term to Hevy/Strong/Boostcamp), do NOT use "pre-fill / auto-fill" in headlines, never market it as "smart / AI / recommended." Live App Store Connect listing must be updated separately by the founder — editing `app-store-copy.md` does not change what's submitted.
-
----
-
-## 2026-06-09 — First-session ghost seeded from pasted-program weights (cold-start refinement)
-
-**Decision:** When a lifter pastes a program that includes weights, those weights now seed the first-session "Last time" ghost instead of being discarded. Threaded the parser's already-extracted `weightKg` through the import→model chain that previously dropped it: `OnboardingExercise.plannedWeightKg`, `DayTemplate.plannedWeightByExerciseId` (a `[UUID: Double]` sibling of the existing `plannedSets` / `plannedReps` maps — the same "first-session ghost before history exists" mechanism), and the `.planned` branch of `ActiveWorkoutViewModel.prefillSet`. The seed renders as a normal ghost (soft, tap-to-confirm), never as a logged value. Refines — does not overturn — the 2026-03-26 "Ghost value cold start: empty + No history yet" decision: empty stays the default; a paste with weights is now a valid history source.
-
-**Why:** A user pasted a program *with weights* and was shocked the weights vanished. The parser already extracted them correctly (tested); the importer had nowhere to put them (`DayTemplate` stored planned sets + reps but not weight), so they were silently dropped — a data-loss / trust bug, not a feature request. Honoring data the lifter already gave is the same ghost-value mechanism with a better cold-start source; it is not target-vs-actual (no second number, no comparison, no engine), so it stays inside the scope fence.
-
-**Implication:** Day-one sets are pre-filled for pasted programs (the marketing wedge above). The parser's weight extraction now runs end-to-end for the first time — earlier validation rounds checked names / sets / reps, not weight (it was discarded), so a weight-specific paste corpus is the remaining test surface. Policy defaults locked: per-set weights / ranges seed the top/first number; percentages (`@80%`) stay unresolved / blank. Seed-path tests added in `UnitTests/ProgramImportParserTests.swift`. Edits applied, not yet verified — build + visual pass is the founder's.
-
----
-
-## 2026-06-03 — Pro UI stripped from v1.0.0 binary + Screenshot 5 PRO chip replaced (App Review rejection fix)
-
-**Decision:** App Store Build 12 was rejected under Guideline 2.1(b) — Information Needed, dated 2026-06-03 (Submission ID `2b8f50d7-84fe-48fe-b4f2-b641a9bfd807`, reviewed on iPad Air 11" M3). Reviewer found a Pro/subscription pattern (Settings → Subscription section with "Restore purchases" + "Manage subscription"; Settings → Data → "Export data" with PRO chip; Screenshot 5 row 3 with PRO chip) but no IAPs configured in App Store Connect (Decouple decision 2026-05-31). Two surgical fixes: **(a)** `Unit/Features/Settings/SettingsView.swift` — `subscriptionSection` call removed from `settingsContent` layout (ViewBuilder + `SubscriptionRow` enum retained as dead code for v1.1+ re-enable); `.export` filtered out of `dataSection`'s `AppDividedList` (case kept in switch for v1.1+); **(b)** `docs/marketing/research/screenshot-strategy-final.md` Screenshot 5 Row 3 spec changed from "Export data" + PRO chip to "Tracking" + "None" (glyph: `hand.raised.slash`). Supersedes the 2026-05-10 entries below ("Screenshot #5 pivots…" PRO-chip framing AND "Settings gets a 'Data' section…" Export PRO row), and supersedes the `subscriptionSection` "safe to show always" framing in `SettingsView.swift` (HEAD comment at the `.manage` case).
-**Why:** Per the Decouple decision 2026-05-31 (`asc-submission.md` §SUPERSEDED Pricing note), v1.0.0 ships zero IAPs in ASC. Build 12 carried two Pro-implying surfaces in the binary (Subscription section + Export PRO row) and one in the listing (Screenshot 5 PRO chip). App Review reads any of these as "the app accesses paid digital content" under 3.1.1 / 2.1(b) and asks the developer to either (i) deliver the IAPs through ASC or (ii) remove the Pro signals. Option (ii) is correct for v1.0.0 because shipping IAPs now would require attaching them to v1.0.0 with no Pro feature behind them (the 3.1.1 "purchase doesn't deliver advertised features" risk previously documented in `asc-submission.md` §Review risk). The Subscription section's "safe to show always — Apple presents an empty state if the user has no subscriptions" comment proved incorrect in practice: an empty Manage Subscriptions sheet plus a Restore button against a zero-product StoreKit catalog reads as broken to a reviewer, not as a forward-compatible affordance. "Tracking: None" as the new Row 3 is verifiable against `Unit/PrivacyInfo.xcprivacy` (only `UserDefaults` declared, reason `CA92.1`) and reinforces the calm-honest brand voice better than a Pro upsell chip ever did.
-**Implication:** New Xcode Cloud archive (Build 13+) ships with no Subscription section, no Export PRO row, and a clean Settings → Data section (Storage + Account only). Screenshot 5 needs Figma re-export with the new Row 3 spec before re-uploading to ASC. App Review reply drafted at `docs/marketing/app-review-reply-2026-06-03.md` answers the four reviewer questions truthfully (no paid subs in this build; future Pro tier deferred until features ship). The parallel-agent uncommitted work in `Unit/Features/Settings/SettingsView.swift`, `Unit/Features/Subscription/PaywallView.swift`, and `Unit/Features/History/HistoryView.swift` (which adds the `LaunchConfig.proAvailable` gate pattern + `proSection` + `proGatedDataRow` + History PRO toolbar button) is stashed (`stash@{0}: parallel-agent-WIP-pause`) and remains the correct end-state for the v1.1 Pro launch — pop and resolve when Pro is ready to flip on. This surgical fix lets v1.0.0 ship today without depending on that larger refactor compiling against the also-uncommitted `DesignSystem.swift` batch (130 lines, 19 hunks).
-
----
-
-## 2026-05-12 — Bundle ID switched to `app.unitlift`
-
-**Decision:** Renamed `PRODUCT_BUNDLE_IDENTIFIER` from `com.unitlift.app` to `app.unitlift` (and widget `com.unitlift.app.UnitWidgetExtension` to `app.unitlift.UnitWidgetExtension`) across all four pbxproj configs (main + widget × Debug + Release). Also aligned the three `Logger(subsystem:)` fallback strings in `UnitApp.swift`, `MarketingSeed.swift`, and `StoreManager.swift` to `app.unitlift`. The `StoreManager.swift` Logger was upgraded to the `Bundle.main.bundleIdentifier ?? "app.unitlift"` pattern used by the other two (previously it was a bare literal). Supersedes the bundle-ID portion of the 2026-05-10 entry.
-**Why:** Xcode automatic signing reported `com.unitlift.app` "cannot be registered to your development team because it is not available" against team `R2BR5SX98Y` — bundle IDs are first-come-first-served globally on Apple Developer, and the ID was held by someone else (or a different Apple ID). `app.unitlift` is the canonical reverse-DNS of the owned domain `unitlift.app` (the `.app` is the TLD, not a suffix), more Apple-conventional than `com.unitlift.app`, and almost certainly free since `.app` reverse-DNS is uncommon.
-**Implication:** App Store Connect record must be created under `app.unitlift` (not the old ID — ASC bundle IDs are immutable once created, but no record existed yet so no migration needed). Provisioning profiles regenerate under the new ID. `Unit.entitlements` is currently empty (no App Groups, no associated domains, no iCloud), so nothing further changes. If/when an `apple-app-site-association` file is added to `unitlift.app` for universal links, the appID prefix must use the new bundle ID. Launch paste sheets at `docs/launch-week-may-11.md` and `docs/marketing/asc-submission.md` updated to match.
-
----
-
-## 2026-05-10 — Screenshot #5 pivots from Settings capture to iconographic three-fact composition
-
-**Decision:** App Store screenshot slot #5 (`docs/marketing/research/screenshot-strategy-final.md` §Screenshot 5) no longer uses a real `SettingsView` capture inside an iPhone device frame. New composition: flat `#F5F5F5` canvas, no device frame, three vertically stacked icon+label rows mirroring the in-app Data section — `iphone → Storage → "On this iPhone"`, `person.crop.circle.badge.xmark → Account → "None"`, `square.and.arrow.up → Export data → [PRO]` chip. Headline ("No account. / Works offline.") and subhead ("Your training data lives on your iPhone. Always.") unchanged. The 2026-05-10 Data-section decision below stands at the code level — the section remains in `SettingsView` as a real product surface, independent of this marketing pivot.
-**Why:** User pushback: the literal Settings capture still reads as "screenshot of a settings list" first, "trust mechanic" second. Research catalog across Bear, Standard Notes, Obsidian, Signal, 1Password, Bitwarden, Drafts, iA Writer, Liftosaur, FitNotes identified seven visual treatments for trust claims in this category; the dominant pattern for "three independent facts" (1Password / Bitwarden / Proton) is a stacked icon+label row composition with no device chrome. Unit's existing Data section enumerates exactly three facts in exactly this order — promoting them from settings-row chrome to first-class glyphs preserves the TypingMind-style "show, don't claim" intent while letting each fact scan at App Store thumbnail size. Treatment #3 picked over alternatives (device-frame + corner glyph; pure typographic; horizontal three-column trio) for fidelity to the Data section's vertical rhythm and thumbnail readability.
-**Implication:** The Settings → Data section code in `Unit/Features/Settings/SettingsView.swift` (lines 170–193) is unchanged. The Figma marketing file is the only artifact that changes — slot #5 becomes a composition build (~45 min) instead of a device-frame copy of slots 2/3/4. Carousel visual structure becomes composition → frame → frame → frame → composition, bracketed cleanly by slots 1 and 5. SF Symbols used (`iphone`, `person.crop.circle.badge.xmark`, `square.and.arrow.up`) live only in the Figma file; `AppIcon` enum in `DesignSystem.swift` is not modified. Anti-paywall logic still holds: PRO chip is a hint, not an active paywall sheet — same rule as the in-app Settings row. Plan: `~/.claude/plans/for-that-instead-of-zazzy-beaver.md`.
-
----
-
-## 2026-05-10 — Settings gets a "Data" section to carry App Store screenshot #5
-
-**Decision:** Added a `Data` section as the first card in `Unit/Features/Settings/SettingsView.swift`, above Preferences. Three rows: `Storage → "On this iPhone"`, `Account → "None"`, `Export data → [PRO]` (accent-fill `AppTag(.compactCapsule)`). Reuses existing primitives only — no `DesignSystem.swift` edits. Export tap is intentionally a no-op stub at W3; a `// TODO at W5+` marks where the paywall + CSV export wire in once Pro flips on.
-**Why:** App Store screenshot strategy slot #5 needs a "No account. Works offline." trust shot following the TypingMind pattern — *show* the trust mechanic, don't *claim* it. Exploration confirmed no existing onboarding screen carries the mechanic explicitly (every step is implicit-only — proof by absence of a sign-in field), and Settings had zero data-ownership language. Original brief preferred option (a) onboarding, but chose option (b) Settings because it's the most authentic mechanic *and* fixes a real product gap (today no in-app surface tells the user where their data lives or hints at export).
-**Implication:** Slot #5 source asset is now Settings (Data section visible at the top), not an onboarding screen — `docs/marketing/research/screenshot-strategy-final.md` slot #5 updated accordingly. The PRO chip is the gentle upgrade hint; brief is explicit that no active paywall should appear in the screenshot, so the row is visually present but inert until W5+. When Pro flips on, replace the empty `Button { }` action with `if !store.isPurchased { /* present PaywallView */ } else { /* present CSV export sheet */ }`.
-
----
-
-## 2026-05-10 — History is list-only; killed the Calendar tab
-
-**Decision:** Removed the `Calendar` tab from `Unit/Features/History/HistoryView.swift`. History is now a single chronological list, grouped under quiet `Month YYYY` eyebrows above each `AppCardList` block. Dropped `SessionHistoryMode`, `CalendarDayStatus`, `CalendarDayCellModel`, `CalendarMonthHeader`, `CalendarGrid`, `CalendarDayCell`, plus the now-orphaned `MissedDay*` and `EmptyDay*` payload + sheet types and their helpers (`makeMissedDayPayload`, `isMissedDay`, `assignedWorkoutName`, `syncCalendarSelectionIfNeeded`). File shrank from 1,263 → 543 lines. Single external touchpoint updated: `TodayView.swift` no longer passes `initialMode:` to `RecentSessionsView`.
-**Why:** Schema technically allows N workouts/day but in practice 95%+ of days have ≤1 — so the calendar was operating as a glorified date-picker over a one-event-per-day surface. Browsing N sessions cost N cell taps vs. one scroll on the list. Pattern audit: Apple Health Workouts, Streaks, Done all use list-only when the canonical event is "1 per day" without scheduled-vs-actual reconciliation. Heatmap/streak header alternative ruled out by `PRODUCT.md` line 54 ("no streaks, no engagement gamification"). The calendar code was also a 270-line parallel-implementation foothold outside `DesignSystem.swift` — direct CLAUDE.md §4 violation. The author's own header comment ("list-first … quiet calendar browser") already telegraphed the calendar was secondary.
-**Implication:** No model changes — `WorkoutSession.date` still allows multiple sessions per day, the surface just doesn't call attention to that edge case. If date-jump becomes a real workflow later, add a search/date-range filter above the existing list rather than reviving a calendar tab. Month-section eyebrows reuse `AppFont.smallLabel` via `.appCapsLabel(.smallLabel)` — no new DS primitives.
-
----
-
-## 2026-05-10 — Bundle ID `com.unitlift.app`, iOS 18 deployment target
-
-> **SUPERSEDED in part by 2026-05-12** — the bundle-ID portion of this decision is superseded; `com.unitlift.app` was unavailable to team `R2BR5SX98Y` and was replaced with `app.unitlift`. The iOS 18 deployment-target portion still stands.
-
-**Decision:** App Store readiness audit before first submission. Renamed `PRODUCT_BUNDLE_IDENTIFIER` from `com.atlaslog.app` (and widget `com.atlaslog.app.UnitWidgetExtension`) to `com.unitlift.app` (and `com.unitlift.app.UnitWidgetExtension`) across all four pbxproj configs. Dropped `IPHONEOS_DEPLOYMENT_TARGET` from `26.0` to `18.0` across all four configs (main + widget × Debug + Release). Added iOS 26 availability gates inside `appScrollEdgeSoft(top:bottom:)` and `appExerciseSearchable(text:)` in `Unit/UI/DesignSystem.swift` so iOS 18 callers degrade gracefully (no soft scroll-edge fade; toolbar search field still visible but does not minimize on scroll). Cosmetic: aligned three `Logger(subsystem:)` fallback strings (`StoreManager.swift`, `UnitApp.swift`, `MarketingSeed.swift`) from `com.atlaslog.app` to `com.unitlift.app`.
-**Why:** Bundle ID is locked to the App Store Connect listing at first submission — `com.atlaslog.app` was a leftover from an earlier name and would have permanently mismatched the marketing domain `unitlift.app`. iOS 26 deployment target excluded every device on iOS 25 and below, shrinking TAM unnecessarily for a launch indie app. Audit triggered by the question "is the build good to submit?" — see plan at `~/.claude/plans/whats-the-final-decision-immutable-willow.md`.
-**Implication:** App Store Connect record must be created under `com.unitlift.app` (not `com.atlaslog.app`). Provisioning profiles need regeneration under the new ID. Phase 0 paywall hygiene confirmed clean (PaywallView is dead code, no Pro gates enforced). Remaining pre-submission gating items are operational, not code: support email MX live + tested, App Store screenshots captured, archive uploaded.
-
----
-
-## 2026-05-01 — iOS-native squircle smoothing is the only corner shape
-
-**Decision:** Every radius container — iOS app and marketing site — renders with iOS's native squircle corner smoothing (≈60% Figma corner smoothing). On iOS this is `RoundedRectangle(style: .continuous)` / `Capsule(style: .continuous)`, now hook-enforced via `.claude/hooks/ui-banned-list.sh` (bare `RoundedRectangle(cornerRadius:)` and `.cornerRadius(...)` modifier are blocked in feature code). On the web this is a global `corner-shape: squircle` (with a `superellipse(2.5)` fallback) under `@supports`, applied in `app/globals.css` `@layer base`. All 14 `Capsule()` instances in `Unit/UI/DesignSystem.swift` plus one stray in `TrainingWeekProgress.swift` migrated to `Capsule(style: .continuous)`.
-**Why:** Efe asked for "60% smooth radius because iOS does that" and emphasized system-level + consistent + reuse-existing. Audit revealed iOS already used `.continuous` on all 23 `RoundedRectangle` callsites — so the gap was enforcement (no hook rule existed) and Capsule consistency (most omitted `style:`), not migration. The web side had no squircle implementation at all; the CSS Round Display Module's `corner-shape: squircle` is iOS-native equivalent and shipping into Chromium/Electron, so a single global @supports rule lights up squircles where supported and cleanly falls back to circular elsewhere. No per-component migration, no JS dependency, no bespoke `Squircle` shape (would conflict with CLAUDE.md §4 "iOS-native over custom").
-**Implication:** Hook now enforces `style: .continuous` on every `RoundedRectangle` in feature code — regression closes silently. `AppRadius` docstring upgraded from recommendation to enforced contract. Marketing site verified live in preview (Electron 41 / Chromium): all 18 rounded elements compute `corner-shape: squircle`, border-radius values unchanged. For non-supporting browsers (older Safari / Firefox) the @supports block is a no-op — they get today's circular corners, no breakage.
-
----
-
-## 2026-05-01 — First-person singular is the only voice
-
-**Decision:** Every user-facing surface uses `I / me / my` (or **Unit** as the actor) — never `we / us / our / our team`. Applies to marketing site, legal pages (privacy/terms entity defined as `{DEVELOPER_NAME} ("I," "me," or "my")`), in-app copy, App Store description, support/contact, social posts.
-**Why:** Unit is solo (Efe Bakir, `DEVELOPER_NAME` in `lib/contact.ts`). Corporate "we" is dishonest for a one-person product and conflicts with the calm-expert-honest brand voice. Caught on the changelog page on 2026-05-01 — Efe: *"I just realized here you use we language. Do not forget that I am the only one here working it Efe."* Solo-founder identity is a positioning asset, not something to hide.
-**Implication:** Pre-ship grep on any user-facing surface: `\bwe\b|\bwe'|\bour\b|\b us \b`. Rule lives in `PRODUCT.md` §Brand Personality. Implemented across compare/programs/support/legal pages in commits `b6c1e8d` and `96e341f`.
-
----
-
-## 2026-05-01 — Added `docs/INDEX.md` and archived 4 stale docs
-
-**Decision:** Built `docs/INDEX.md` as on-demand catalog of all docs (loaded from CLAUDE.md §1 only when the agent doesn't know which doc applies). Moved `geminiresearch-1/2/mvp-pivot.md` and `cleanup-spec.md` to `docs/archive/`.
-**Why:** ~15 of ~30 docs in `docs/` were invisible to fresh sessions because CLAUDE.md only routed to ~10 of them. Karpathy LLM-wiki pattern: thin always-loaded router → fuller on-demand index. Adds 1 line to CLAUDE.md, surfaces 30 docs, no per-session token cost for the catalog itself.
-**Implication:** When extending the docs set, add a row to `INDEX.md`. Don't grow CLAUDE.md. Archived files stay readable for history but are deprioritized.
-
----
-
-## 2026-05-01 — Started this decision log
-
-**Decision:** Add `docs/decision-log.md` as the append-only record for cross-session decisions.
-**Why:** Existing memory + `CLAUDE.md` capture *current state*; they don't capture *what changed and why*. Karpathy's LLM-wiki pattern points at the gap — decisions evaporate at session end unless they make it into a memory file. A flat log is cheaper than a full wiki overhaul.
-**Implication:** Future sessions read this on any "why did we…" question. Pair with monthly `consolidate-memory` runs to keep `~/.claude/.../memory/` honest.
-
----
-
-## 2026-05-14 — Pricing: Hybrid upsell + thicken Pro with Analytics / Watch / Cloud sync
-
-**SUPERSEDED by 2026-06-16 (v2 hard paywall — reversed direction; rolled back the three Pro surfaces, deleted InstallProvenance, dropped Lifetime tier).**
-
-**Decision:** Reaffirmed the "free forever" promise (`docs/pricing.md` §Free forever) against renewed pressure to gate free logs. Wired the previously-dead `PaywallView` into three new surfaces, none of which gate the Gym Test: (a) Settings → new "Unit Pro" section at top of the screen with state-aware row (Subscribe / Active), (b) Settings → Data section → Export Data row (PRO chip → paywall; "Coming soon" once subscribed until CSV/Markdown export ships), (c) Settings → Data section → new Apple Health row (same pattern), (d) History → new "See your trends" `AppSessionHighlightCard` teaser above the segmented control (hidden once subscribed). Expanded `PaywallView` benefits list from 2 items to all 5 committed Pro features per `pricing.md` (exports, Health sync, custom icons, accent colors, founding badge) and added a dated founding-rate footer driven by a new `LaunchConfig` constant (pinned to 2026-06-30; one-line update if launch slips). Approved three new Pro features in order: Analytics (Phase C1, ~1wk), Apple Watch companion (Phase C2, ~2-3wk), Cloud backup + multi-device sync (Phase C3, ~3-4wk) — separate plans required for C2 and C3 before they start. Cloud sync requires lifting the v1 CloudKit ban in CLAUDE.md §3 — green-lit for Pro tier only, with `pricing.md` line 40 already telegraphing this as a future Pro feature ("no second paywall ever"). Pricing tiers ($4.99/$29.99/$44.99) unchanged; the $9.99/$49.99 Phase-3 target remains parked pending conversion data from the now-wired paywall.
-
-**Why:** Frustration about thin Pro feature mix surfaced a gate-logs idea (limit free workouts → paywall). Three blockers: (a) violates `pricing.md` sacred promise + CLAUDE.md §3 (`Paywall on core logging` is banned), (b) inverts the "premium-quiet" positioning (`pricing.md` §Rationale) into "free-trial trap," replicating the documented 1-star pattern attributed to Hevy in `docs/launch-plan.md` §2, (c) the existing `PaywallView` has never been tested because it isn't wired anywhere — "thin Pro won't make money" was an untested intuition with no conversion data behind it. Hybrid path keeps the promise, ships the wiring (highest immediate leverage), and thickens Pro with three category-standard power features that all sit off the Gym Test path.
-
-**Implication:** Settings + History gain quiet Pro surfaces; Today / Active Workout / Onboarding stay clean (those are Gym Test paths). Three follow-ups: (1) Founding-deadline date is currently 2026-06-30 in `Unit/Features/Subscription/PaywallView.swift` `LaunchConfig` — re-pick if launch slips. (2) `AppListRow` "Member since {date}" upgrade on the proSection requires plumbing `Transaction.originalPurchaseDate` through `StoreManager`; tracked as a follow-up, Phase A2 ships without the date. (3) When C3 lands, CLAUDE.md §3 row "CloudKit sync: Post-v1. Local-first only." needs a footnote: "Lifted 2026-05-14 for Pro tier (cloud sync) and Pro tier only. Free tier remains local-first by default." Plan file: `~/.claude/plans/i-am-still-unsure-quiet-flame.md`.
-
----
-
-## 2026-05-30 — ASC submission: Option B (Pro configured + inert) over Option A (strip Pro)
-
-**SUPERSEDED by 2026-05-31 (decouple — Pro deferred to v1.1).**
-
-**Decision:** Submit v1.0.0 with all 3 Pro IAP records configured in App Store Connect and attached to the build for review (Option B), rather than stripping the Pro paragraph and leaving IAPs in draft (Option A). Product IDs `com.unit.monthly` / `com.unit.annual` / `com.unit.lifetime` and prices $4.99 / $29.99 / $44.99 verified to match across `StoreManager.swift:19-21`, `docs/pricing.md`, and `docs/marketing/asc-submission.md` — no `Product.products(for:)` drift. `docs/marketing/asc-submission.md` updated with a paste-ready ASC configuration sequence, a verified-clean ID/price table, and a "Review risk" callout. No fastlane/ASC API key exists in the repo, so the record creation itself is a manual web task.
-**Why:** User chose Option B to keep the Pro paragraph live and get the IAPs approved alongside the binary (avoids a second IAP-only review round post-launch). Accepted tradeoff: more review surface.
-**Implication / open risk:** All four advertised Pro features (CSV/Markdown export, Apple Health sync, custom app icons, custom template accent colors) are **unbuilt** as of today — a live purchase delivers only founding-supporter status. Guideline 2.1 ("can't locate IAP") risk is low (paywall reachable from Settings ×2 + History; `purchase()` wired), but Guideline 3.1.1 / 2.3.1 ("purchase doesn't deliver advertised features") risk is medium-high. Sub-decision resolved same day: **timing-honest reframe** applied across all three surfaces — the description paragraph in `asc-submission.md`, the `PaywallView` subhead + benefit rows (forthcoming features tagged "coming soon" to match Settings, founding-supporter status led first), and the 3 IAP localized descriptions (reframed to "Support Unit + lock your founding rate"). Reviewer notes retained as backup. Residual 3.1.1 risk is lower but non-zero; if review bounces, next lever is shipping one cosmetic feature (custom app icons / accent colors) before re-submit.
-
----
-
-## 2026-05-31 — ASC submission: decouple — Pro deferred to v1.1 (reverses 2026-05-30 Option B)
-
-**Decision:** Ship v1.0.0 as a 100%-free app with **no in-app purchases submitted**. Reverses the 2026-05-30 Option B plan at submission time. Two parts: (1) **Listing** (`asc-submission.md`, edited by founder) — Pro paragraph stripped from the description, "WHAT UNIT IS NOT" bullet softened to "Not a subscription," reviewer notes rewritten to "no in-app purchases in this build," IAP section marked DEFERRED, App Name changed to `Unit — Gym Notebook` (collision on `Unit`; home-screen name stays `Unit` via `INFOPLIST_KEY_CFBundleDisplayName`). (2) **Code** — added `LaunchConfig.proAvailable = false` (`PaywallView.swift`, made `LaunchConfig` non-private) and gated every paywall entry point on it: `proSection` + `subscriptionSection` in `SettingsView` (hidden), Export/Apple Health rows filtered out of `dataSection`, and the History toolbar PRO chip. Result: the build has no purchase surface at all, so the hidden paywall can't render as a dead screen (empty `Product.products` → disabled buy button + load-failure banner). The 3 product IDs stay reserved in `StoreManager.swift`; no ASC IAP records created.
-**Why:** Submission day, zero Pro features built → a live IAP delivers only founding-supporter status → Guideline 3.1.1 ("purchase doesn't deliver advertised features") risk too high to absorb in the launch review, where a first-time IAP rejection bounces the whole version. Decoupling gets the real product (free core logging) approved fast; the Option B prep (configured copy, IAP config sequence) carries forward to v1.1 unchanged.
-**Implication:** Pro returns by flipping `LaunchConfig.proAvailable` to `true` **and** submitting the IAPs for review in v1.1 — gate that on at least one real Pro feature existing (custom app icons scoped at `.claude/plans/custom-app-icons-scope-2026-05-31.md`). **Build dependency:** the gated build must be the one archived/uploaded — an earlier archive still has the live (now-dead) paywall. **Open conflict with the 2026-04-28 compass paywall plan:** that plan called for a quiet in-app "Unit Pro is coming" founding-member intent card during Phase 1 (Weeks 1-4); that card is hidden too under this flag. Decide separately whether to keep a non-purchasing "Pro coming / founding-rate" teaser (landing page, not in-app) or go silent on Pro until v1.1 — marketing question, open as of this entry.
-
----
-
-## 2026-05-31 — Monetization model locked: free-forever core + soft off-path paywall (no weekly, no price cut, no hard paywall)
-
-**Decision:** When Pro ships (v1.1+), monetize with free-forever core + a **soft, off-path paywall** on genuine premium features (export, Health, cloud, Watch) — keep the locked `pricing.md` tiers ($4.99/mo · $29.99/yr · $44.99 lifetime, 7-day trial on monthly+annual). **No weekly tier. No price cut. No hard/onboarding paywall.** Grandfather every pre-paywall install forever: shipped `InstallProvenance` in `UnitApp.swift` (v1.0) — records first-launch version + date in the Keychain (survives reinstall); v1.1 grants full Pro free to anyone whose first-launch version predates the paywall release. Pro stays silent in-app at launch (no teaser). Reconciles two external research summaries + Unit's own decisions; full memo at `docs/marketing/research/monetization-strategy-2026-05-31.md`. The parallel `deep-research` workflow was stopped once the decision locked.
-**Why:** Founder needs revenue but feared a hard paywall would be "super annoying." Research verdict: half right — a hard paywall on the *core* is the brand-killing move to avoid, but a soft paywall on off-path extras with grandfathering is not (hard vs soft Y1 retention ~27% vs ~28% — you only lose people who'd never pay). Weekly converts better generally but Health & Fitness is the documented exception (annual 51%→61% of category revenue 2023→2025; weekly ~65% churn in 30 days), and weekly fitness pricing is the dark-pattern Unit's trust moat is defined against. Pushed back (§2) on the external research's price cut ($3.99/$24.99/$59.99) and hard-onboarding-paywall pick — both contradict `pricing.md`, the free-forever sacred promise, and CLAUDE.md §3.
-**Implication:** No pricing changes needed (matches `pricing.md`). Grandfather marker must be in the v1.0 build that gets archived — it's net-new Keychain code, not yet compile-verified (build before archiving). Monetization is gated on building one real premium feature first (custom app icons scoped at `.claude/plans/custom-app-icons-scope-2026-05-31.md`). Conversion figures in the memo are from the pasted research, not independently verified — re-run `deep-research` before betting real money on any single number. Resolves the founding-member-teaser question left open by the 2026-05-31 decouple entry: go silent in-app at launch.
-
----
-
-## 2026-06-11 — PR badging ships in History (v1.1) — Screenshot 4 "Every PR." headline compliant again
-
-**Decision:** History now renders at-log-time PR indicators on three surfaces: session list rows and the session-summary header (ink "PR" `AppTag` next to the state chip), and per-set rows in the detail breakdown (tag sits left of the metric so the mono number column stays flush right). Derivation is `PRHistory.prSetEntryIDs(in:)` (HistoryView.swift) — a chronological replay that mirrors `ActiveWorkoutView.priorBest` exactly: completed non-warmup sets, completed sessions only, weight ranks first with reps as tiebreak, first-ever log never fires. Nothing is persisted: badges appear retroactively for sessions logged before this feature and recompute through edits/deletes. Zero new design-system primitives (`AppTag(style: .accent)` reused per /component-reuse-check); 8 unit tests in `PRHistoryTests`. Screenshot-strategy §Screenshot 4 updated: the 2026-06-03 "no PR wording" rule is lifted and the founder's new headline — "Every set. Every PR. Full history. Local." — is the spec.
-**Why:** Founder wants "Every PR." back on Screenshot 4 (the strongest progression hook). The 2026-06-03 audit banned it only because no History surface rendered PRs a reviewer could find (Guideline 2.3.3). Building the surface makes the claim true instead of weakening the claim.
-**Implication:** **Build dependency:** the v1.1 archive must include this commit, or Screenshot 4 re-trips 2.3.3 — the same mistake-class as the Build 12 rejection. The live-workout PR rule and `PRHistory` must stay in lockstep (cross-referenced in both doc comments). Calendar day cells deliberately carry no PR marks (too dense, quiet-UI); ExerciseProgressView's all-time-best card is unchanged.
-
----
-
-## 2026-06-11 — Marketing site flips to launched state; App Store URL hardcoded as the default
-
-**Decision:** unitlift.app renders the launched state everywhere. The flip no longer depends on the Vercel env var: `lib/launchState.ts` hardcodes the live listing URL (`https://apps.apple.com/us/app/unit-gym-notebook/id6775008893`) as the default — `NEXT_PUBLIC_APP_STORE_URL` still overrides, and an empty-string override previews the pre-launch waitlist state. Shipped with the flip: Apple's official badge artwork replaces the inline stub (brand-guideline requirement noted in the old component), crops of the five approved App Store screenshots (pulled from Apple's CDN, headline band removed) fill the hero stack and feature cards, an App Store QR sits in the `#download` section for desktop visitors, the iOS Smart App Banner is on via `itunes` metadata, the header CTA reads "Download", TrustBand says "Now on the App Store", and the changelog v1.0 entry is dated June 11, 2026.
-**Why:** Launch is one-way. An env-var-driven flip left production dependent on Vercel dashboard state that couldn't be set from this machine (no Vercel CLI, no token, browser extension disconnected). Hardcoding makes git the single source of truth: push → deploy → launched.
-**Implication:** Setting `NEXT_PUBLIC_APP_STORE_URL` in the Vercel dashboard is optional belt-and-braces now; if set, keep it equal to the listing URL. The waitlist machinery (WaitlistForm, Resend counter, `getWaitlistCount`) is dead code post-launch — removal candidate for a later cleanup, kept for now as the pre-launch preview path. The FounderStory maker-photo slot is the page's last placeholder; it needs a real photo of the founder, not a stock substitute.
-
----
-
-## 2026-06-29 - Widget typography stays widget-native for v1
-
-**Decision:** Do not refactor `UnitWidget` typography into app `AppFont` tokens for v1. The widget target can continue using widget-native SwiftUI typography until a shared token package exists.
-**Why:** The app design-system cleanup should not force widget code to import app UI primitives or create a parallel token bridge during the monetization/onboarding pass.
-**Implication:** Treat widget typography drift as explicitly out of scope for v1 consistency cleanup. Revisit only when the app and widget share a proper token package.
-
----
-
-## 2026-07-11 - Program preview revised: "Summary" title, "Save my program" CTA, row-tap edit
-
-**Decision:** Founder revision to the paste-preview screen (screenshot-capture pass surfaced them): title "Here's what I read" → **"Summary"**; subtitle drops "A subscription is required before logging."; CTA "Choose a plan" → **"Save my program"** (label "Saving…" while committing); the standalone pencil button is gone — the name + sets×reps block is the tap target for the edit sheet. Also fixed: the "Check sets and reps" hint now reads a `usedDefaultSetsReps` flag recorded at parse-mapping time instead of value-equality against 3×8, so an explicitly written 3x8 line no longer false-positives (unit tests added).
-**Why:** "Here's what I read" was a sentence where a label belongs; "Choose a plan" read as a pricing action on a program-confirmation screen (the actual plan choice happens on the paywall it opens); the pencil sat between the text and the weight field looking like a control for neither. This supersedes the 2026-06-17 Q5 lock on the "Choose a plan" CTA wording — the hand-off behavior (commit → hard paywall) is unchanged.
-**Implication:** ASC screenshot #2 must be recaptured from the revised screen. `docs/release-qa.md` §paywall walk and the submit-checklist capture runbook now name the new CTA. The "Ready to log set #1?" demo card is under review separately — founder flagged it as confusing without step-4 context; not yet removed.
-
----
-
-## 2026-07-13 - Minimal-language copy pass; first-person rule clarified; warm-up coaching removed (Not v1)
-
-**Decision:** In-app copy tightened app-wide on `copy/minimal-language-pass` per founder direction. (1) The warm-up reminder, "Tap to learn how.", and the guidance sheet are **removed from the active workout** — Unit is history, not instructions; a warm-up education surface is a different product ("Not v1"). (2) Onboarding titles become neutral labels ≤ 4 words ("Weight unit", "Add program", "Training days", "Review program"); subtitles exist only when they add information the controls don't show. (3) Paywall: subtitle "Choose a plan to start.", benefits "3-second set logging / Last session prefilled / Lock Screen rest timer", CTA "Subscribe weekly/monthly/yearly", the "Selected: …" summary line removed (the selected card already says it). Legal disclosure, renewal labels, Restore/Terms/Privacy untouched. (4) Today: "No program" and "Rest day" are single-status cards — no eyebrow+title+message stacking. (5) Stable screen copy centralized in `AppCopy` (Onboarding/Paywall/Today groups). This supersedes the 2026-07-11 "Summary"/"Save my program" wording.
-**Why:** The copy had drifted conversational — screens explaining themselves conflicts with the compass (fewest words under fatigue). The first-person rule was being over-applied: its point is **never fake a corporate "we"**, not "put 'my/I'll' on every label" — PRODUCT.md §Brand Personality now says so explicitly.
-**Implication:** ASC screenshot #2 (and any shot showing onboarding/paywall/Today) must be captured only after this branch merges — pre-pass captures are stale. The frozen EN reviewer notes claim "the selected billed amount remains visible directly above the CTA"; with the summary line removed that sentence must be revised (or re-verified against the tier cards) before pasting into ASC.
-
----
-
-## 2026-07-13 - Paywall conversion pass: founder green-lights growth tactics within an honest-math floor
-
-**Decision:** Founder explicitly accepted "sliding toward" conversion-optimized paywall patterns (chips, savings framing, personalization) after reviewing high-revenue paywall examples (LADDER, YAZIO, per-week ladders). Shipped: (1) yearly card badge computes **"Save N%"** live from StoreKit (yearly vs 52× the weekly price, rounds down, falls back to "Best value", hides if the saving isn't real); (2) monthly and yearly sublabels show **per-week equivalents** derived from live prices, so all recurring tiers are priced in the unit the pre-selected Weekly anchors on; (3) the header subtitle **names the user's own program** ("Push · Pull · Legs is loaded.") — the paywall reads as the payoff of onboarding effort. Badge placement rule: chip the upsell tier only, never the pre-selected default.
-**Why:** The decision screen converts better when the moment feels like a reveal of the user's own work and the value ladder is legible in one unit. Founder judged the earlier quiet-paywall posture too conservative for v2's hard paywall.
-**Implication:** The honest-optics floor from docs/pricing.md §default still holds: Weekly stays the default AND the smallest visible price; every number on the screen is StoreKit-derived division, no fabricated compare-at prices, no countdowns, no fake scarcity, no trial language (there is no trial). Personalization uses only on-device program data. If tiers or prices change, the badge and equivalents recompute — nothing is hardcoded.
-
----
-
-<!-- new entries above this line -->
+- **Decision:** Keep cross-session product, scope, design, and release decisions in this file.
+- **Why:** Current-state docs explain what is true now; this log explains what changed and why.
+- **Rule:** Keep entries short, dated, and newest-first. Mark replaced decisions as **Superseded**.

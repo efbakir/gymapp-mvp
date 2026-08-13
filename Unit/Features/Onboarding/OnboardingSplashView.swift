@@ -80,7 +80,11 @@ struct OnboardingSplashView: View {
                     onDismiss?()
                 } label: {
                     AppIcon.close.image(size: 16, weight: .semibold)
-                        .foregroundStyle(AppColor.textSecondary)
+                        .foregroundStyle(
+                            openerVisible
+                                ? AppColor.accentForeground
+                                : AppColor.textSecondary
+                        )
                         .frame(width: 44, height: 44)
                         .contentShape(Rectangle())
                 }
@@ -93,6 +97,10 @@ struct OnboardingSplashView: View {
         // bar by default for every step; splash has its own dismiss affordance
         // and no back action, so hide the bar at this level only.
         .toolbar(.hidden, for: .navigationBar)
+        // Explicit brand-opener exception: keep status-bar chrome legible on
+        // the black two-second opener, then return to Unit's light appearance
+        // as soon as the opener unmounts.
+        .preferredColorScheme(openerVisible ? .dark : .light)
         .task {
             // The opener is mounted on first render, with the carousel kept as
             // a separate surface underneath after hand-off. If this task is
@@ -156,19 +164,16 @@ struct OnboardingSplashView: View {
             // pinned CTA, so hide them and draw a tokenized `PageDots` row above
             // the button instead.
             .tabViewStyle(.page(indexDisplayMode: .never))
+            // A taller artwork must scroll inside its page instead of growing
+            // the TabView and pushing the shared conversion controls below the
+            // viewport. The bottom chrome wins vertical compression on every
+            // slide, including the smallest supported iPhone.
+            .layoutPriority(0)
 
             VStack(spacing: AppSpacing.lg) {
                 PageDots(count: slides.count, selection: selection)
 
-                VStack(spacing: AppSpacing.sm) {
-                    AppPrimaryButton(AppCopy.Onboarding.splashCTA, action: onGetStarted)
-
-                    Text(AppCopy.Onboarding.paidAccessDisclosure)
-                        .appFont(.caption)
-                        .foregroundStyle(AppColor.textSecondary)
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+                AppPrimaryButton(AppCopy.Onboarding.splashCTA, action: onGetStarted)
                 // Horizontal + bottom insets mirror `AppScreen`'s canonical
                 // sticky-CTA chrome (md sides, xs above the home-indicator
                 // safe area) so the button doesn't jump — inward OR downward —
@@ -179,6 +184,8 @@ struct OnboardingSplashView: View {
                 .padding(.horizontal, AppSpacing.md)
             }
             .padding(.bottom, AppSpacing.xs)
+            .fixedSize(horizontal: false, vertical: true)
+            .layoutPriority(1)
         }
         // This fixed hero composition scales through the largest standard text
         // size; larger accessibility settings keep that legible size while the
@@ -202,7 +209,9 @@ struct OnboardingSlideViewTracker {
 
 /// The brand opener: logo + "Welcome to Unit" + tagline, vertically centered.
 /// No CTA, no dots — it's the app's opening beat, shown once before the carousel
-/// reveals. File-private, splash-only.
+/// reveals. The black surface belongs only to this two-second brand beat; the
+/// value carousel and every product screen remain in Unit's light appearance.
+/// File-private, splash-only.
 private struct SplashOpener: View {
     let logoSide: CGFloat
     /// When true, the opener plays its staggered parallax *exit* — each layer
@@ -233,19 +242,19 @@ private struct SplashOpener: View {
                 VStack(spacing: AppSpacing.xxs) {
                     Text("Welcome to")
                         .font(AppFont.splashWelcome.font)
-                        .foregroundStyle(AppColor.textSecondary)
+                        .foregroundStyle(AppColor.textDisabled)
 
                     Text("Unit")
                         .font(AppFont.splashTitle.font)
                         .tracking(AppFont.splashTitle.tracking)
-                        .foregroundStyle(AppColor.textPrimary)
+                        .foregroundStyle(AppColor.accentForeground)
                 }
                 .padding(.top, AppSpacing.xl)
                 .modifier(ParallaxEntry(index: 1, appeared: appeared, leaving: leaving, reduceMotion: reduceMotion))
 
                 Text(AppCopy.Onboarding.splashTagline)
                     .font(AppFont.splashWelcome.font)
-                    .foregroundStyle(AppColor.textSecondary)
+                    .foregroundStyle(AppColor.textDisabled)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity)
@@ -257,6 +266,7 @@ private struct SplashOpener: View {
             Spacer(minLength: AppSpacing.lg)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(AppColor.textPrimary.ignoresSafeArea())
     }
 }
 
@@ -311,26 +321,54 @@ private struct MarketingSlide: Identifiable {
     var headline: String
     var subline: String
 
-    static let all: [MarketingSlide] = [
+    static var all: [MarketingSlide] {
+        let metrics = MarketingPreviewMetrics.current
+        return [
         MarketingSlide(
             analyticsID: .nextTarget,
             visual: .nextTarget,
-            headline: "Know what to do next",
-            subline: "After every workout, Unit suggests one clear target for next time."
+            headline: "Know what to lift next",
+            subline: "Finish your workout. Unit prepares one clear target for next time."
         ),
         MarketingSlide(
             analyticsID: .doubleProgression,
             visual: .doubleProgression,
             headline: "Build reps, then weight",
-            subline: "Reach the top of your range, then move up by the smallest increase."
+            subline: "Reach 10 reps on every set. Then add \(metrics.increment)."
         ),
         MarketingSlide(
             analyticsID: .oneTapLogging,
             visual: .oneTapLogging,
             headline: "Log every set in one tap",
-            subline: "Your target and last session are ready before each set."
+            subline: "Your target and last workout are ready before every set."
         ),
-    ]
+        ]
+    }
+}
+
+/// The value carousel appears before Unit asks for a weight unit. Match the
+/// device's measurement convention until the user makes that explicit choice.
+/// This keeps US acquisition examples in pounds without forcing pounds on
+/// metric storefronts.
+private struct MarketingPreviewMetrics {
+    let previousWeight: String
+    let nextWeight: String
+    let increment: String
+
+    static var current: MarketingPreviewMetrics {
+        if Locale.current.measurementSystem == .us {
+            return MarketingPreviewMetrics(
+                previousWeight: "135 lb",
+                nextWeight: "140 lb",
+                increment: "5 lb"
+            )
+        }
+        return MarketingPreviewMetrics(
+            previousWeight: "60 kg",
+            nextWeight: "62.5 kg",
+            increment: "2.5 kg"
+        )
+    }
 }
 
 private enum MarketingSlideVisual {
@@ -401,28 +439,54 @@ private struct MarketingSlideArtwork: View {
     let visual: MarketingSlideVisual
     let maxHeight: CGFloat
 
+    private let metrics = MarketingPreviewMetrics.current
+
     var body: some View {
         AppCard {
             switch visual {
             case .nextTarget:
-                VStack(alignment: .leading, spacing: AppSpacing.md) {
-                    previewEvidence(label: "LAST TIME", value: "60 kg · 10, 10, 10")
-                    AppDivider()
-                    previewEvidence(label: "NEXT TARGET", value: "62.5 kg · 8", primary: true)
-                    Text("All sets reached the top of your range.")
+                VStack(alignment: .leading, spacing: AppSpacing.smd) {
+                    Text("SUGGESTED FOR NEXT TIME")
+                        .appCapsLabel(.overline)
+                        .foregroundStyle(AppColor.textSecondary)
+
+                    Text("Bench Press")
+                        .font(AppFont.body.font)
+                        .foregroundStyle(AppColor.textPrimary)
+
+                    Text("3 × 8 at \(metrics.nextWeight)")
+                        .font(AppFont.title.font)
+                        .foregroundStyle(AppColor.textPrimary)
+                        .monospacedDigit()
+
+                    Text("Last time · 3 × 10 at \(metrics.previousWeight)")
                         .font(AppFont.caption.font)
                         .foregroundStyle(AppColor.textSecondary)
-                }
-            case .doubleProgression:
-                VStack(alignment: .leading, spacing: AppSpacing.md) {
-                    previewStep(label: "BUILD REPS", value: "60 kg · 8 → 9 → 10")
-                    HStack(spacing: AppSpacing.sm) {
-                        AppIcon.forward.image(size: 18, weight: .semibold)
-                        Text("Every set reached 10")
+
+                    AppDivider()
+
+                    HStack(alignment: .firstTextBaseline, spacing: AppSpacing.sm) {
+                        AppIcon.forward.image(size: 16, weight: .semibold)
+                        Text("All sets reached the top of your range.")
                             .font(AppFont.caption.font)
                     }
                     .foregroundStyle(AppColor.textSecondary)
-                    previewStep(label: "ADD WEIGHT", value: "62.5 kg · 8")
+
+                    AppPrimaryButton("Use this target") { }
+                }
+            case .doubleProgression:
+                VStack(alignment: .leading, spacing: AppSpacing.smd) {
+                    previewEvidence(label: "YOUR RANGE", value: "3 × 8–10")
+                    AppDivider()
+                    previewStep(label: "LAST", value: "\(metrics.previousWeight) · 10, 10, 10")
+                    previewStep(label: "NEXT", value: "\(metrics.nextWeight) · 8, 8, 8", primary: true)
+
+                    HStack(alignment: .firstTextBaseline, spacing: AppSpacing.sm) {
+                        AppIcon.forward.image(size: 16, weight: .semibold)
+                        Text("Top of the range on every set · +\(metrics.increment)")
+                            .font(AppFont.caption.font)
+                    }
+                    .foregroundStyle(AppColor.textSecondary)
                 }
             case .oneTapLogging:
                 VStack(alignment: .leading, spacing: AppSpacing.md) {
@@ -434,11 +498,11 @@ private struct MarketingSlideArtwork: View {
                     Text("Bench Press")
                         .font(AppFont.title.font)
                         .foregroundStyle(AppColor.textPrimary)
-                    Text("60 kg × 8")
+                    Text("\(metrics.previousWeight) × 8")
                         .appFont(.numericDisplay)
                         .foregroundStyle(AppColor.textPrimary)
                         .monospacedDigit()
-                    Text("Last time · 60 kg × 7")
+                    Text("Last time · \(metrics.previousWeight) × 7")
                         .font(AppFont.caption.font)
                         .foregroundStyle(AppColor.textSecondary)
                     AppPrimaryButton("Complete set") { }
@@ -463,14 +527,14 @@ private struct MarketingSlideArtwork: View {
         }
     }
 
-    private func previewStep(label: String, value: String) -> some View {
+    private func previewStep(label: String, value: String, primary: Bool = false) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: AppSpacing.md) {
             Text(label)
                 .appCapsLabel(.overline)
                 .foregroundStyle(AppColor.textSecondary)
                 .frame(width: 92, alignment: .leading)
             Text(value)
-                .font(AppFont.body.font)
+                .font(primary ? AppFont.sectionHeader.font : AppFont.body.font)
                 .foregroundStyle(AppColor.textPrimary)
                 .monospacedDigit()
         }

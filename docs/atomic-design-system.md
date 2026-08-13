@@ -121,6 +121,7 @@ Toolbar and nav-bar chrome defers to iOS-native — there is no `AppNavBar` mole
 | `appCardStyle()` | Modifier matching `AppCard` when a wrapper type is awkward |
 | `AppDividedList` | Bare divided list of rows separated by `AppDivider`. Use directly only when you already own the surrounding card chrome. |
 | `AppCardList(data) { row }` | **Canonical** list-in-card primitive — bakes the 8/24 inset recipe, divider, and full padded rectangular hit shape for interactive rows. Hand-composing `AppCard { AppDividedList(...) }` outside `DesignSystem.swift` is banned (hook-enforced). |
+| `AppTimeline` | Read-only connected milestone rail for short time-based sequences. Uses `AppTimelineItem` data and canonical card/icon atoms; not a replacement for divided lists or onboarding step progress. |
 | `AppCardListAddRow` | Trailing "+ Add X" affordance designed to live in `AppCardList(_:row:trailing:)`. |
 | `SettingsSection` | Titled group inside an `AppCard` |
 | `ProductTopBar` | Shared root/product-screen top bar replacing ad-hoc large title headers |

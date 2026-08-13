@@ -27,6 +27,7 @@ struct UnitApp: App {
     private static let uiTestingResetArgument = "-ui-testing-reset"
     private static let uiTestingSeedTwoCompletedWorkoutsArgument = "-ui-testing-seed-engagement-two"
     private static let progressionContractUITestArgument = "-ui-testing-progression-contract"
+    private static let appStoreScreenshotUITestArgument = "-ui-testing-app-store-screenshot"
     private static let startingTargetUITestArgument = "-ui-testing-starting-target"
 #if DEBUG
     private static let combatPowerSmokeTestArgument = "-smoke-test-combat-power"
@@ -39,10 +40,14 @@ struct UnitApp: App {
         self.sharedModelContainer = Self.makeSharedModelContainer()
         UnitAnalytics.shared.configure()
 #if DEBUG
-        if CommandLine.arguments.contains(Self.progressionContractUITestArgument) {
+        if CommandLine.arguments.contains(Self.progressionContractUITestArgument)
+            || CommandLine.arguments.contains(Self.appStoreScreenshotUITestArgument) {
             do {
                 try ProgressionContractUITestSeeder.seed(
-                    in: sharedModelContainer.mainContext
+                    in: sharedModelContainer.mainContext,
+                    usesUSStorefrontPresentation: CommandLine.arguments.contains(
+                        Self.appStoreScreenshotUITestArgument
+                    )
                 )
                 Self.logger.info("Progression contract UI-test seed ready")
             } catch {
@@ -233,8 +238,12 @@ enum ProgressionContractUITestSeeder {
     ]
 
     @MainActor
-    static func seed(in modelContext: ModelContext) throws {
-        UserDefaults.standard.set("kg", forKey: "unitSystem")
+    static func seed(
+        in modelContext: ModelContext,
+        usesUSStorefrontPresentation: Bool = false
+    ) throws {
+        let unitSystem = usesUSStorefrontPresentation ? "lb" : "kg"
+        UserDefaults.standard.set(unitSystem, forKey: "unitSystem")
         // Open the launch gate immediately while StoreKitTest restores the
         // matching transaction owned by the UI test process.
         UserDefaults.standard.set(
@@ -249,15 +258,59 @@ enum ProgressionContractUITestSeeder {
             return
         }
 
-        let exerciseIDs = exerciseSeeds.map(\.id)
+        let seeds: [ExerciseSeed]
+        let progressionIncrementKg: Double
+        if usesUSStorefrontPresentation {
+            let poundsToKilograms = 1 / 2.20462
+            seeds = [
+                ExerciseSeed(
+                    id: exerciseSeeds[0].id,
+                    name: "Bench Press",
+                    currentWeightKg: 135 * poundsToKilograms,
+                    currentTargetReps: 10,
+                    completedWeightsKg: Array(repeating: 135 * poundsToKilograms, count: 3),
+                    completedReps: [10, 10, 10]
+                ),
+                ExerciseSeed(
+                    id: exerciseSeeds[1].id,
+                    name: "Barbell Row",
+                    currentWeightKg: 95 * poundsToKilograms,
+                    currentTargetReps: 8,
+                    completedWeightsKg: Array(repeating: 95 * poundsToKilograms, count: 3),
+                    completedReps: [8, 8, 8]
+                ),
+                ExerciseSeed(
+                    id: exerciseSeeds[2].id,
+                    name: "Back Squat",
+                    currentWeightKg: 115 * poundsToKilograms,
+                    currentTargetReps: 9,
+                    completedWeightsKg: Array(repeating: 115 * poundsToKilograms, count: 3),
+                    completedReps: [9, 8, 9]
+                ),
+                ExerciseSeed(
+                    id: exerciseSeeds[3].id,
+                    name: "Deadlift",
+                    currentWeightKg: 135 * poundsToKilograms,
+                    currentTargetReps: 8,
+                    completedWeightsKg: [135, 140, 135].map { $0 * poundsToKilograms },
+                    completedReps: [8, 8, 8]
+                )
+            ]
+            progressionIncrementKg = 5 * poundsToKilograms
+        } else {
+            seeds = exerciseSeeds
+            progressionIncrementKg = 2.5
+        }
+
+        let exerciseIDs = seeds.map(\.id)
         let progressionStates = Dictionary(
-            uniqueKeysWithValues: exerciseSeeds.map { seed in
+            uniqueKeysWithValues: seeds.map { seed in
                 (
                     seed.id,
                     ExerciseProgressionState(
                         lowerRepBound: 8,
                         upperRepBound: 10,
-                        weightIncrementKg: 2.5,
+                        weightIncrementKg: progressionIncrementKg,
                         currentAcceptedTargetWeightKg: seed.currentWeightKg,
                         currentAcceptedTargetReps: seed.currentTargetReps,
                         sourceWorkoutSessionID: nil,
@@ -267,15 +320,15 @@ enum ProgressionContractUITestSeeder {
             }
         )
         let plannedSets = Dictionary(
-            uniqueKeysWithValues: exerciseSeeds.map { ($0.id, 3) }
+            uniqueKeysWithValues: seeds.map { ($0.id, 3) }
         )
         let plannedReps = Dictionary(
-            uniqueKeysWithValues: exerciseSeeds.map {
+            uniqueKeysWithValues: seeds.map {
                 ($0.id, $0.currentTargetReps)
             }
         )
         let plannedWeights = Dictionary(
-            uniqueKeysWithValues: exerciseSeeds.map {
+            uniqueKeysWithValues: seeds.map {
                 ($0.id, $0.currentWeightKg)
             }
         )
@@ -301,7 +354,7 @@ enum ProgressionContractUITestSeeder {
         modelContext.insert(split)
         modelContext.insert(template)
 
-        let exercises = exerciseSeeds.map { seed in
+        let exercises = seeds.map { seed in
             Exercise(
                 id: seed.id,
                 displayName: seed.name,
@@ -314,6 +367,52 @@ enum ProgressionContractUITestSeeder {
             modelContext.insert(exercise)
         }
 
+        // Give the production History chart enough real progression evidence
+        // to communicate a trend in App Store and release-gate screenshots.
+        // These completed sessions stay deterministic, isolated to the UI-test
+        // store, and intentionally include only Bench Press so the contract's
+        // other recommendation branches remain unchanged.
+        let benchPressID = seeds[0].id
+        let historyWeights: [Double]
+        if usesUSStorefrontPresentation {
+            historyWeights = [120, 125, 130].map { $0 / 2.20462 }
+        } else {
+            historyWeights = [55.0, 57.5, 60.0]
+        }
+        let historyReps = [8, 9, 9]
+        for historyIndex in historyWeights.indices {
+            let historySession = WorkoutSession(
+                id: UUID(
+                    uuidString: String(
+                        format: "31000000-0000-0000-0000-%012d",
+                        101 + historyIndex
+                    )
+                )!,
+                date: Calendar.current.date(
+                    byAdding: .day,
+                    value: -21 + (historyIndex * 7),
+                    to: Date()
+                ) ?? Date(),
+                templateId: template.id,
+                isCompleted: true
+            )
+            modelContext.insert(historySession)
+
+            for setIndex in 0..<3 {
+                let entry = SetEntry(
+                    sessionId: historySession.id,
+                    exerciseId: benchPressID,
+                    weight: historyWeights[historyIndex],
+                    reps: historyReps[historyIndex],
+                    isWarmup: false,
+                    isCompleted: true,
+                    setIndex: setIndex
+                )
+                entry.session = historySession
+                modelContext.insert(entry)
+            }
+        }
+
         let session = WorkoutSession(
             id: sessionID,
             date: Date(),
@@ -322,7 +421,7 @@ enum ProgressionContractUITestSeeder {
         )
         modelContext.insert(session)
 
-        for seed in exerciseSeeds {
+        for seed in seeds {
             for setIndex in seed.completedReps.indices {
                 let entry = SetEntry(
                     sessionId: session.id,

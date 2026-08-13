@@ -557,6 +557,7 @@ enum AppIcon: String {
     case play = "play.fill"
     case pause = "pause.fill"
     case list = "list.bullet"
+    case bell = "bell.fill"
     case calendarClock = "calendar.badge.clock"
     case bolt = "bolt.fill"
     case chart = "chart.line.uptrend.xyaxis"
@@ -2468,7 +2469,8 @@ struct AppCard<Content: View>: View {
 ///
 /// Pass either `icon` (SF Symbol via `AppIcon`) or `iconText` (a short
 /// glyph like `kg` / `lb`) — exactly one. `badge` is the optional accent
-/// chip trailing the title (e.g. "New", "Recommended").
+/// chip above the title (e.g. "New", "Recommended") so supporting copy
+/// always keeps the card's full content width.
 struct AppOptionTileCard: View {
     var icon: AppIcon? = nil
     var iconText: String? = nil
@@ -2494,24 +2496,27 @@ struct AppOptionTileCard: View {
                     iconBubble
                 }
 
-                VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                    Text(title)
-                        .font(AppFont.sectionHeader.font)
-                        .foregroundStyle(AppColor.textPrimary)
+                VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                    if let badge {
+                        AppTag(text: badge, style: .accent, layout: .compactCapsule)
+                            .fixedSize(horizontal: true, vertical: false)
+                    }
 
-                    if let subtitle {
-                        Text(subtitle)
-                            .font(AppFont.muted.font)
-                            .foregroundStyle(AppColor.textSecondary)
-                            .fixedSize(horizontal: false, vertical: true)
+                    VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                        Text(title)
+                            .font(AppFont.sectionHeader.font)
+                            .foregroundStyle(AppColor.textPrimary)
+
+                        if let subtitle {
+                            Text(subtitle)
+                                .font(AppFont.muted.font)
+                                .foregroundStyle(AppColor.textSecondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
                     }
                 }
 
                 Spacer(minLength: 0)
-
-                if let badge {
-                    AppTag(text: badge, style: .accent, layout: .compactCapsule)
-                }
             }
             .appCardStyle(isSelected: isSelected)
         }
@@ -2569,17 +2574,87 @@ struct AppOptionTileCard: View {
     }
 }
 
+/// One read-only milestone in `AppTimeline`. Titles carry the time marker
+/// (for example, `Day 0` or `Day 7`) while subtitles explain the outcome.
+/// `isCurrent` is reinforced by both the filled icon well and VoiceOver's
+/// current-value announcement, so the state never depends on colour alone.
+struct AppTimelineItem: Identifiable, Equatable {
+    let id: String
+    let title: String
+    let subtitle: String
+    let icon: AppIcon
+    var isCurrent: Bool = false
+}
+
+/// Canonical connected milestone rail for short, read-only sequences such as
+/// subscription timing. `AppCardList` remains the default for divided rows;
+/// this separate organism exists because a timeline needs one continuous
+/// vertical connector that survives multiline text and Dynamic Type.
+struct AppTimeline: View {
+    let items: [AppTimelineItem]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
+                HStack(alignment: .top, spacing: AppSpacing.smd) {
+                    AppIconCircle(
+                        diameter: AppSpacing.xl,
+                        surface: item.isCurrent
+                            ? .tinted(AppColor.accent, opacity: 1)
+                            : .control
+                    ) {
+                        item.icon
+                            .image(size: 14, weight: .semibold)
+                            .foregroundStyle(
+                                item.isCurrent
+                                    ? AppColor.accentForeground
+                                    : AppColor.textSecondary
+                            )
+                    }
+                    .accessibilityHidden(true)
+
+                    VStack(alignment: .leading, spacing: AppSpacing.xxs) {
+                        Text(item.title)
+                            .font(AppFont.sectionHeader.font)
+                            .foregroundStyle(AppColor.textPrimary)
+
+                        Text(item.subtitle)
+                            .font(AppFont.muted.font)
+                            .foregroundStyle(AppColor.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .padding(.bottom, index < items.count - 1 ? AppSpacing.md : 0)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("\(item.title). \(item.subtitle)")
+                .accessibilityValue(item.isCurrent ? "Current" : "")
+            }
+        }
+        .background(alignment: .leading) {
+            if items.count > 1 {
+                Rectangle()
+                    .fill(AppColor.controlBackground)
+                    .frame(width: AppSpacing.xxs)
+                    .padding(.vertical, AppSpacing.md)
+                    .offset(x: (AppSpacing.xl - AppSpacing.xxs) / 2)
+                    .accessibilityHidden(true)
+            }
+        }
+    }
+}
+
 /// Canonical tier-selection card for the paywall (and any future "pick one of
-/// N priced tiers" surface). Replaces the 50-line inline `tierCard` in
-/// `PaywallView` that hand-rolled its own `.background`/`.clipShape` chrome
-/// outside the design system — CLAUDE.md §4 parallel-implementation ban.
+/// N priced tiers" surface). Its regular-width layout is a compact comparison
+/// row: plan identity and renewal detail stay together on the leading edge,
+/// while the StoreKit price forms one stable trailing column. This preserves
+/// the fast scan of a grouped pricing table without introducing a second page
+/// or a separate pricing component. At large Dynamic Type sizes the row falls
+/// back to a vertical layout instead of compressing or clipping price copy.
 ///
-/// Layout: optional accent badge top, eyebrow row (small-caps label +
-/// trailing checkmark when selected), price (`productHeading` tracking),
-/// muted sublabel. Selected state shifts the background to `accentSoft`
-/// AND lays down a 1.5pt accent border so the affordance reads correctly
-/// for reduced-color-discrimination users (WCAG AA), not just for the
-/// 14pt checkmark glyph alone.
+/// The selected state uses the shared `appCardStyle` fill, border, checkmark,
+/// and accessibility trait, so selection never depends on colour alone.
 ///
 /// Accessibility: the `.isSelected` trait fires on the underlying button so
 /// VoiceOver announces the selected tier without an extra label hack.
@@ -2590,47 +2665,37 @@ struct AppSelectableTierCard: View {
     var badge: String? = nil
     let isSelected: Bool
     var isEnabled: Bool = true
+    var accessibilityHint: String = "Select this plan"
     let action: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         Button(action: handleTap) {
-            VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                // No reserved empty badge slot. Paywall tiers are stacked
-                // vertically, so unbadged cards should keep their natural
-                // compact height and leave room for legal copy + CTA.
-                if let badge {
-                    AppTag(text: badge, style: .accent, layout: .compactCapsule)
-                        .fixedSize(horizontal: true, vertical: true)
+            Group {
+                if dynamicTypeSize.isAccessibilitySize {
+                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                        planIdentity
+                        priceLabel
+                    }
+                } else {
+                HStack(alignment: .center, spacing: AppSpacing.md) {
+                    planIdentity
+
+                    Spacer(minLength: AppSpacing.sm)
+
+                    priceLabel
                 }
-
-                // Eyebrow + price + sublabel grouped so the outer VStack's
-                // `sm` gap separates the badge from this block, while
-                // the block itself stays tight at `xs` (4). Mirrors the
-                // Figma AppSelectableTierCard structure (node 341-18).
-                VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                    Text(label)
-                        .appCapsLabel(.smallLabel)
-                        .foregroundStyle(isEnabled ? AppColor.textSecondary : AppColor.textDisabled)
-
-                    Text(price)
-                        .font(AppFont.productHeading.font)
-                        .tracking(AppFont.productHeading.tracking)
-                        .foregroundStyle(isEnabled ? AppColor.textPrimary : AppColor.textDisabled)
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    Text(sublabel)
-                        .font(AppFont.muted.font)
-                        .foregroundStyle(isEnabled ? AppColor.textSecondary : AppColor.textDisabled)
-                        .multilineTextAlignment(.leading)
-                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.vertical, AppSpacing.smd)
+            .frame(minHeight: AppSpacing.xxl)
+            .padding(.vertical, AppSpacing.sm)
             .padding(.horizontal, AppSpacing.smd)
+            // Reserve the checkmark column for every state so selection never
+            // changes text width or forces the price below the plan name.
+            .padding(.trailing, AppSpacing.lg)
             .appCardStyle(
                 contentInset: 0,
                 cornerRadius: AppRadius.md,
@@ -2641,7 +2706,7 @@ struct AppSelectableTierCard: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilitySummary)
         .accessibilityValue(isSelected ? "Selected" : "Not selected")
-        .accessibilityHint(isEnabled ? "Select this plan" : "This plan is unavailable")
+        .accessibilityHint(isEnabled ? accessibilityHint : "This plan is unavailable")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
         // Apply disabled state to the final combined accessibility element,
         // not only the button's child tree. VoiceOver and XCTest must both
@@ -2656,6 +2721,40 @@ struct AppSelectableTierCard: View {
 
     private func handleTap() {
         action()
+    }
+
+    private var planIdentity: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.xs) {
+            HStack(alignment: .center, spacing: AppSpacing.sm) {
+                Text(label)
+                    .font(AppFont.sectionHeader.font)
+                    .foregroundStyle(isEnabled ? AppColor.textPrimary : AppColor.textDisabled)
+                    .fixedSize(horizontal: true, vertical: true)
+
+                if let badge {
+                    AppTag(text: badge, style: .accent, layout: .compactCapsule)
+                        .fixedSize(horizontal: true, vertical: true)
+                }
+            }
+
+            Text(sublabel)
+                .font(AppFont.muted.font)
+                .foregroundStyle(isEnabled ? AppColor.textSecondary : AppColor.textDisabled)
+                .multilineTextAlignment(.leading)
+                .lineLimit(dynamicTypeSize.isAccessibilitySize ? 2 : 1)
+                .minimumScaleFactor(0.8)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var priceLabel: some View {
+        Text(price)
+            .font(AppFont.sectionHeader.font)
+            .foregroundStyle(isEnabled ? AppColor.textPrimary : AppColor.textDisabled)
+            .multilineTextAlignment(.trailing)
+            .lineLimit(1)
+            .minimumScaleFactor(0.85)
+            .fixedSize(horizontal: true, vertical: true)
     }
 
     private var accessibilitySummary: String {
@@ -2777,27 +2876,12 @@ struct AppSessionHighlightCard<Trailing: View, BelowContent: View>: View {
 /// scan alignment without shrinking feature identity.
 struct AppFeatureAccessTable: View {
     let rows: [String]
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
-        AppCard(contentInset: 0, verticalInset: 0) {
-            VStack(alignment: .leading, spacing: 0) {
-                HStack(alignment: .firstTextBaseline, spacing: AppSpacing.md) {
-                    Text("Included")
-                        .appCapsLabel(.smallLabel)
-                        .foregroundStyle(AppColor.textSecondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-
-                    Text("Unit")
-                        .appCapsLabel(.smallLabel)
-                        .foregroundStyle(AppColor.textSecondary)
-                        .frame(width: statusColumnWidth, alignment: .center)
-                }
-                .padding(.horizontal, AppSpacing.lg)
-                .padding(.vertical, AppSpacing.smd)
-                .accessibilityHidden(true)
-
+        AppCard(contentInset: AppSpacing.smd, verticalInset: AppSpacing.smd) {
+            LazyVGrid(columns: columns, alignment: .leading, spacing: AppSpacing.sm) {
                 ForEach(Array(rows.enumerated()), id: \.offset) { index, label in
-                    AppDivider()
                     featureRow(label)
                         .accessibilityIdentifier("paywall-feature-row-\(index)")
                 }
@@ -2807,28 +2891,28 @@ struct AppFeatureAccessTable: View {
         .accessibilityIdentifier("paywall-feature-table")
     }
 
-    private var statusColumnWidth: CGFloat {
-        AppSpacing.xxl + AppSpacing.md
+    private var columns: [GridItem] {
+        let count = dynamicTypeSize.isAccessibilitySize ? 1 : 2
+        return Array(
+            repeating: GridItem(.flexible(), spacing: AppSpacing.sm, alignment: .topLeading),
+            count: count
+        )
     }
 
     private func featureRow(_ label: String) -> some View {
-        HStack(alignment: .center, spacing: AppSpacing.md) {
+        HStack(alignment: .top, spacing: AppSpacing.xs) {
+            AppIcon.checkmarkFilled.image(size: 13, weight: .semibold)
+                .foregroundStyle(AppColor.accent)
+                .accessibilityHidden(true)
+
             Text(label)
-                .font(AppFont.body.font)
-                .foregroundStyle(AppColor.textPrimary)
+                .font(AppFont.metadata.font)
+                .foregroundStyle(AppColor.textSecondary)
                 .multilineTextAlignment(.leading)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .layoutPriority(1)
-
-            AppIcon.checkmarkFilled.image(size: 18, weight: .semibold)
-                .foregroundStyle(AppColor.accent)
-                .frame(width: statusColumnWidth, alignment: .center)
-                .accessibilityHidden(true)
         }
-        .padding(.horizontal, AppSpacing.lg)
-        .padding(.vertical, AppSpacing.smd)
-        .frame(minHeight: 48)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(label), included in Unit")
     }
@@ -3756,10 +3840,14 @@ struct WorkoutCommandCard: View {
     @ViewBuilder
     private var metricValueText: some View {
         Text(metricValue)
-            .font(AppFont.numericDisplay.font)
-            .tracking(AppFont.numericDisplay.tracking)
+            // Targets mix numbers with language (`3 × 8 at 140 lb`). A fully
+            // monospaced face gives spaces and short words the same wide cell
+            // as digits, visually splitting one target into several columns.
+            // `numericInput` keeps the digits tabular while the surrounding
+            // words and punctuation remain proportionally spaced.
+            .font(AppFont.numericInput.font)
+            .tracking(AppFont.numericInput.tracking)
             .foregroundStyle(metricIsGhost ? AppColor.textDisabled : AppColor.textPrimary)
-            .monospacedDigit()
             .multilineTextAlignment(.center)
             .minimumScaleFactor(0.55)
             .lineLimit(3)
@@ -4550,6 +4638,10 @@ struct AppScreen<Content: View>: View {
     let floatingAccessory: AnyView?
     var hidesNavigationBar: Bool = false
     var showsNativeNavigationBar: Bool = false
+    /// Set false for a chrome-free purchase surface whose first content row
+    /// must stay crisp at the top edge. The ScrollView still clips to its safe
+    /// area; this only removes AppScreen's decorative fade overlays.
+    var showsTopScrollFade: Bool = true
     /// When `false`, the screen does not wrap content in `ScrollView` — use for fixed dashboards where an inner control (e.g. `PreviewListContainer`) owns vertical scrolling.
     var usesOuterScroll: Bool = true
     /// When `true`, adds a trailing **Done** to the keyboard accessory bar
@@ -4589,6 +4681,7 @@ struct AppScreen<Content: View>: View {
         floatingAccessory: AnyView? = nil,
         hidesNavigationBar: Bool = false,
         showsNativeNavigationBar: Bool = false,
+        showsTopScrollFade: Bool = true,
         usesOuterScroll: Bool = true,
         showsKeyboardDismissToolbar: Bool = false,
         surface: Color? = AppColor.background,
@@ -4600,6 +4693,7 @@ struct AppScreen<Content: View>: View {
         self.floatingAccessory = floatingAccessory
         self.hidesNavigationBar = hidesNavigationBar
         self.showsNativeNavigationBar = showsNativeNavigationBar
+        self.showsTopScrollFade = showsTopScrollFade
         self.usesOuterScroll = usesOuterScroll
         self.showsKeyboardDismissToolbar = showsKeyboardDismissToolbar
         self.surface = surface
@@ -4636,7 +4730,7 @@ struct AppScreen<Content: View>: View {
                 // and without the fade it collides with the clock / Dynamic
                 // Island. Every nav-bar-showing caller had this true already.
                 .appScrollEdgeSoft(
-                    top: true,
+                    top: showsTopScrollFade,
                     bottom: hasBottomChrome
                 )
                 .onScrollGeometryChange(for: CGFloat.self) { geometry in
@@ -4844,7 +4938,7 @@ struct AppScreen<Content: View>: View {
         // content. Apply the same canonical fade there so layout changes (for
         // example a shorter selected paywall card) cannot leave text colliding
         // with the clock or carrier label.
-        if usesOuterScroll {
+        if usesOuterScroll, showsTopScrollFade {
             LinearGradient(
                 colors: hidesNavigationBar && customHeader == nil
                     ? [chromeSurface, chromeSurface, chromeSurface.opacity(0)]
@@ -5232,6 +5326,75 @@ enum AppIconCircleSize {
     static let weight: Font.Weight = .semibold
 }
 
+// MARK: - Onboarding progress
+
+/// Numeric onboarding counter with an optional nested progress track for a
+/// short question sequence contained inside one outer step.
+struct OnboardingProgressBar: View {
+    struct Detail: Equatable {
+        let label: String
+        let accessibilityLabel: String
+        let value: Int
+        let total: Int
+    }
+
+    let step: Int
+    let total: Int
+    var detail: Detail? = nil
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var clampedStep: Int { max(1, min(step, max(total, 1))) }
+    private var stepText: String { String(format: "%02d", clampedStep) }
+    private var totalText: String { String(format: "%02d", max(total, 1)) }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.sm) {
+            HStack(spacing: AppSpacing.sm) {
+                HStack(spacing: 0) {
+                    Text("STEP ")
+                        .foregroundStyle(AppColor.textSecondary)
+                    Text(stepText)
+                        .foregroundStyle(AppColor.textPrimary)
+                        .contentTransition(.numericText())
+                        .appAnimation(.appReveal, value: clampedStep, reduceMotion: reduceMotion)
+                    Text(" / \(totalText)")
+                        .foregroundStyle(AppColor.textDisabled)
+                }
+
+                Spacer(minLength: AppSpacing.sm)
+
+                if let detail {
+                    Text(detail.label)
+                        .foregroundStyle(AppColor.textSecondary)
+                        .contentTransition(.numericText())
+                        .appAnimation(.appReveal, value: detail.label, reduceMotion: reduceMotion)
+                }
+            }
+            .font(AppFont.stepIndicator.font)
+
+            if let detail {
+                ProgressView(
+                    value: Double(max(0, min(detail.value, max(detail.total, 1)))),
+                    total: Double(max(detail.total, 1))
+                )
+                .progressViewStyle(.linear)
+                .tint(AppColor.progressSegmentFill)
+                .appAnimation(.appState, value: detail.value, reduceMotion: reduceMotion)
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityIdentifier("onboarding-progress")
+        .accessibilityLabel(accessibilityLabel)
+    }
+
+    private var accessibilityLabel: String {
+        let stepLabel = "Step \(clampedStep) of \(max(total, 1))"
+        guard let detail else { return stepLabel }
+        return "\(stepLabel), \(detail.accessibilityLabel)"
+    }
+}
+
 // MARK: - Custom segmented control
 
 /// SwiftUI segmented control with a soft (non-pill) radius, larger label text,
@@ -5274,7 +5437,7 @@ struct AppSegmentedControl<Item: Hashable & Identifiable>: View {
         case dark
     }
 
-    @Binding var selection: Item
+    private let selection: Binding<Item?>
     let items: [Item]
     var size: Size = .compact
     var selectionStyle: SelectionStyle = .light
@@ -5297,7 +5460,34 @@ struct AppSegmentedControl<Item: Hashable & Identifiable>: View {
         accessibilityLabel: ((Item) -> String)? = nil,
         isDisabled: ((Item) -> Bool)? = nil
     ) {
-        self._selection = selection
+        self.selection = Binding(
+            get: { selection.wrappedValue },
+            set: { newValue in
+                if let newValue {
+                    selection.wrappedValue = newValue
+                }
+            }
+        )
+        self.items = items
+        self.size = size
+        self.selectionStyle = selectionStyle
+        self.title = title
+        self.accessibilityLabel = accessibilityLabel
+        self.isDisabled = isDisabled
+    }
+
+    /// Optional-selection overload for controls whose initial state is
+    /// intentionally unanswered. No segment is highlighted until selection.
+    init(
+        selection: Binding<Item?>,
+        items: [Item],
+        size: Size = .compact,
+        selectionStyle: SelectionStyle = .light,
+        title: @escaping (Item) -> String,
+        accessibilityLabel: ((Item) -> String)? = nil,
+        isDisabled: ((Item) -> Bool)? = nil
+    ) {
+        self.selection = selection
         self.items = items
         self.size = size
         self.selectionStyle = selectionStyle
@@ -5339,6 +5529,7 @@ struct AppSegmentedControl<Item: Hashable & Identifiable>: View {
 
     var body: some View {
         let trackShape = RoundedRectangle(cornerRadius: trackRadius, style: .continuous)
+        let selectedItem = selection.wrappedValue
 
         ZStack(alignment: .leading) {
             // 1. Track background.
@@ -5351,14 +5542,16 @@ struct AppSegmentedControl<Item: Hashable & Identifiable>: View {
                 let count = max(items.count, 1)
                 let segmentWidth = geo.size.width / CGFloat(count)
                 let pillHeight = geo.size.height
-                let index = items.firstIndex(where: { $0.id == selection.id }) ?? 0
-                let pillX = CGFloat(index) * segmentWidth
+                if let selectedItem,
+                   let index = items.firstIndex(where: { $0.id == selectedItem.id }) {
+                    let pillX = CGFloat(index) * segmentWidth
 
-                RoundedRectangle(cornerRadius: pillRadius, style: .continuous)
-                    .fill(pillFill)
-                    .frame(width: segmentWidth, height: pillHeight)
-                    .offset(x: pillX)
-                    .animation(.appConfirm, value: selection.id)
+                    RoundedRectangle(cornerRadius: pillRadius, style: .continuous)
+                        .fill(pillFill)
+                        .frame(width: segmentWidth, height: pillHeight)
+                        .offset(x: pillX)
+                        .animation(.appConfirm, value: selectedItem.id)
+                }
             }
             .padding(trackPadding)
             .frame(height: size.trackHeight)
@@ -5370,11 +5563,11 @@ struct AppSegmentedControl<Item: Hashable & Identifiable>: View {
             //    applies so first/last labels don't kiss the track edge.
             HStack(spacing: 0) {
                 ForEach(items) { item in
-                    let isSelected = item == selection
+                    let isSelected = item == selectedItem
                     let disabled = isDisabled?(item) ?? false
                     Button {
                         if !isSelected && !disabled {
-                            selection = item
+                            selection.wrappedValue = item
                         }
                     } label: {
                         Text(title(item))
@@ -5388,6 +5581,7 @@ struct AppSegmentedControl<Item: Hashable & Identifiable>: View {
                     .buttonStyle(.plain)
                     .disabled(disabled)
                     .accessibilityLabel(accessibilityLabel?(item) ?? title(item))
+                    .accessibilityAddTraits(isSelected ? .isSelected : [])
                 }
             }
             .padding(.horizontal, trackPadding)

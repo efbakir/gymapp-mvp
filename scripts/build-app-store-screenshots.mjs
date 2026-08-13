@@ -10,11 +10,11 @@ const width = 1290
 const height = 2796
 
 const screens = [
-  ["01-next-target.png", "01-one-clear-target.png", "One clear target\nfor next time"],
+  ["01-next-target.png", "01-one-clear-target.png", "Know what to\nlift next"],
   ["02-one-tap.png", "02-log-in-3-seconds.png", "Log a set\nin 3 seconds"],
-  ["03-double-progression.png", "03-reps-then-weight.png", "Increase reps,\nthen weight"],
-  ["04-program-setup.png", "04-program-setup.png", "Choose a program\nor paste yours"],
-  ["05-progress-history.png", "05-see-progress.png", "See every\nstep forward"],
+  ["03-double-progression.png", "03-reps-then-weight.png", "Hit 10 reps.\nAdd 5 lb."],
+  ["04-program-setup.png", "04-program-setup.png", "Paste your plan\nor choose one"],
+  ["05-progress-history.png", "05-see-progress.png", "See your strength\ngo up"],
   ["06-lock-screen-timer.png", "06-lock-screen-timer.png", "Rest timer on your\nLock Screen"],
 ]
 
@@ -73,6 +73,7 @@ async function render([sourceName, outputName, title]) {
       { input: shadow, left: 70, top: top - 30 },
       { input: phone, left: 130, top },
     ])
+    .removeAlpha()
     .png({ compressionLevel: 9 })
     .toFile(path.join(outputDir, outputName))
 }

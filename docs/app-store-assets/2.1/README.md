@@ -2,18 +2,21 @@
 
 Canonical English order:
 
-1. `One clear target for next time`
+1. `Know what to lift next`
 2. `Log a set in 3 seconds`
-3. `Increase reps, then weight`
-4. `Choose a program or paste yours`
-5. `See every step forward`
+3. `Hit 10 reps. Add 5 lb.`
+4. `Paste your plan or choose one`
+5. `See your strength go up`
 6. `Rest timer on your Lock Screen`
 
 `source/` contains clean production-screen captures. `exports/6.9-inch/` contains the final flattened PNGs with no alpha channel.
 
 Regenerate the upload set with `npm run build:app-store-screenshots`. The six
-exports were visually verified on 2026-08-05; the Lock Screen source is a real
-ActivityKit surface captured while its timer was counting down, not a mock.
+exports were visually verified on 2026-08-12. Screens 1 and 3 use real
+post-workout progression states, screen 2 uses the accepted next-workout target,
+screen 4 uses the production program-source flow, screen 5 uses four completed
+Bench Press sessions, and the Lock Screen source is a real ActivityKit surface
+captured while its timer was counting down, not a mock. The US set uses pounds.
 
 Export contract:
 

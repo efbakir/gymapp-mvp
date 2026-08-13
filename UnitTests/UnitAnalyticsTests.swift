@@ -51,7 +51,7 @@ final class UnitAnalyticsTests: XCTestCase {
     func testCustomEventAllowlistIsExact() {
         XCTAssertEqual(UnitAnalyticsEvent.allowedNames, [
             "onboarding_started", "onboarding_slide_viewed", "weight_unit_selected",
-            "program_source_selected", "program_setup_completed", "paywall_viewed",
+            "program_source_selected", "program_match_selected", "program_setup_completed", "paywall_viewed",
             "trial_started", "purchase_completed", "workout_started", "workout_completed",
             "progression_recommendation_shown", "progression_decision", "feedback_action"
         ])
@@ -73,8 +73,22 @@ final class UnitAnalyticsTests: XCTestCase {
             .onboardingSlideViewed(id: .nextTarget),
             .weightUnitSelected(unit: "kg"),
             .programSourceSelected(source: "paste"),
+            .programMatchSelected(
+                profile: ProgramMatchProfile(goal: .strength, level: .intermediate, daysPerWeek: 4),
+                rank: 1
+            ),
             .paywallViewed(trialEligibility: "eligible"),
-            .purchaseCompleted(tier: "annual"),
+            .purchaseCompleted(
+                tier: "annual",
+                context: ProgramSetupContext(
+                    source: .matchedLibrary,
+                    matchProfile: ProgramMatchProfile(
+                        goal: .strength,
+                        level: .intermediate,
+                        daysPerWeek: 4
+                    )
+                )
+            ),
             .workoutCompleted(duration: .from30To60, setCount: .from11To20, noKeyboardRatio: .from90To99),
             .progressionDecision(action: .edit, outcome: .addWeight),
             .feedbackAction(action: .book)
@@ -100,6 +114,29 @@ final class UnitAnalyticsTests: XCTestCase {
             AnalyticsNoKeyboardRatioBucket.value(prefilledSets: 9, completedSets: 10),
             .from90To99
         )
+    }
+
+    func testPurchasePayloadIncludesOnlyControlledProgramSegment() {
+        let payload = UnitAnalyticsEvent.purchaseCompleted(
+            tier: "annual",
+            context: ProgramSetupContext(
+                source: .matchedLibrary,
+                matchProfile: ProgramMatchProfile(
+                    goal: .strength,
+                    level: .intermediate,
+                    daysPerWeek: 4
+                )
+            )
+        ).payload
+
+        XCTAssertEqual(payload.name, "purchase_completed")
+        XCTAssertEqual(payload.parameters, [
+            "tier": "annual",
+            "program_source": "matched_library",
+            "goal": "strength",
+            "experience": "intermediate",
+            "days": "4"
+        ])
     }
 
     private func makeFixture(

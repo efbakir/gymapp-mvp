@@ -13,32 +13,32 @@ const features: {
 }[] = [
   {
     title: "Stored on your iPhone",
-    body: "No account, sync, or internet required.",
+    body: "Raw workout details never leave your iPhone.",
     visual: "local",
   },
   {
     title: "Lock Screen timer",
-    body: "Your rest time stays visible between sets.",
+    body: "Your rest time stays visible while you prepare for the next set.",
     visual: "timer",
   },
   {
     title: "Automatic PRs",
-    body: "See new weight, rep, and volume records.",
+    body: "See when more weight, reps, or volume moved the line.",
     visual: "pr",
   },
   {
     title: "Training calendar",
-    body: "Find every completed session at a glance.",
+    body: "Follow the completed work behind each next target.",
     visual: "calendar",
   },
   {
     title: "Quick Start",
-    body: "Start lifting without choosing a template.",
+    body: "Log an unplanned workout without changing your program.",
     visual: "quick",
   },
   {
     title: "Starter programs",
-    body: "Choose a proven split or paste your own.",
+    body: "Get matched by goal, experience, and training days.",
     visual: "programs",
   },
 ]
@@ -46,7 +46,7 @@ const features: {
 function LocalVisual() {
   return (
     <div className="flex justify-center">
-      <div className="w-full max-w-[240px] rounded-[22px] bg-unit-background p-unit-md">
+      <div className="w-full max-w-[240px] rounded-2xl bg-unit-background p-unit-md">
         <div className="mb-unit-md flex items-center gap-unit-sm">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-unit-accent text-unit-accent-foreground">
             <svg
@@ -70,7 +70,7 @@ function LocalVisual() {
           {["Account", "Sync", "Tracking"].map((item) => (
             <div key={item} className="rounded-xl bg-unit-card px-unit-xs py-unit-sm">
               <p className="text-sm font-bold">No</p>
-              <p className="mt-1 text-[10px] text-unit-text-secondary">{item}</p>
+              <p className="mt-1 text-xs text-unit-text-secondary">{item}</p>
             </div>
           ))}
         </div>
@@ -82,13 +82,13 @@ function LocalVisual() {
 function TimerVisual() {
   return (
     <div className="flex justify-center">
-      <div className="w-full max-w-[260px] rounded-[28px] bg-unit-accent p-unit-lg text-unit-accent-foreground shadow-[0_20px_50px_rgba(10,10,10,0.14)]">
+      <div className="w-full max-w-[260px] rounded-2xl bg-unit-accent p-unit-lg text-unit-accent-foreground shadow-[0_20px_50px_rgba(10,10,10,0.14)]">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] opacity-60">
+            <p className="text-xs font-semibold opacity-60">
               Rest timer
             </p>
-            <p className="mt-unit-xs text-[30px] font-bold tabular-nums tracking-tight">
+            <p className="mt-unit-xs text-3xl font-bold tabular-nums tracking-tight">
               01:57
             </p>
           </div>
@@ -112,14 +112,14 @@ function PRVisual() {
       <div className="mb-unit-md">
         <div className="flex items-end justify-between">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-unit-text-secondary">
+            <p className="text-xs font-semibold text-unit-text-secondary">
               Back squat
             </p>
-            <p className="mt-unit-xs text-[32px] font-bold tabular-nums tracking-tight">
+            <p className="mt-unit-xs text-3xl font-bold tabular-nums tracking-tight">
               140 kg
             </p>
           </div>
-          <span className="rounded-full bg-unit-accent px-unit-sm py-unit-xs text-[10px] font-bold uppercase tracking-[0.12em] text-unit-accent-foreground">
+          <span className="rounded-full bg-unit-accent px-unit-sm py-unit-xs text-xs font-bold text-unit-accent-foreground">
             New PR
           </span>
         </div>
@@ -132,7 +132,7 @@ function PRVisual() {
         ].map(([label, value]) => (
           <div key={label} className="rounded-xl bg-unit-background p-unit-sm">
             <p className="text-sm font-bold tabular-nums">{value}</p>
-            <p className="mt-1 text-[10px] text-unit-text-secondary">{label}</p>
+            <p className="mt-1 text-xs text-unit-text-secondary">{label}</p>
           </div>
         ))}
       </div>
@@ -153,7 +153,7 @@ function CalendarVisual() {
 
   return (
     <div className="flex justify-center">
-      <div className="w-full max-w-[270px] rounded-[22px] bg-unit-background p-unit-md">
+      <div className="w-full max-w-[270px] rounded-2xl bg-unit-background p-unit-md">
         <div className="mb-unit-md flex items-center justify-between">
           <p className="text-sm font-bold tracking-tight">This week</p>
           <p className="text-xs text-unit-text-secondary">4 sessions</p>
@@ -161,7 +161,7 @@ function CalendarVisual() {
         <div className="grid grid-cols-7 gap-unit-xs">
           {days.map(([day, active], index) => (
             <div key={`${day}-${index}`} className="text-center">
-              <p className="mb-unit-xs text-[10px] text-unit-text-secondary">{day}</p>
+              <p className="mb-unit-xs text-xs text-unit-text-secondary">{day}</p>
               <span
                 className={`mx-auto block aspect-square w-full max-w-7 rounded-lg ${
                   active ? "bg-unit-accent" : "bg-unit-card"
@@ -243,31 +243,28 @@ export default function SecondaryFeatures() {
   return (
     <div>
       <div className="mx-auto mb-unit-xxl max-w-3xl text-center">
-        <p className="eyebrow mb-unit-sm">Built in</p>
-        <h2 className="h-section text-balance">Everything your log needs.</h2>
+        <h2 className="h-section text-balance">The rest stays out of the way.</h2>
         <p className="mx-auto mt-unit-md max-w-xl text-base leading-snug text-unit-text-secondary">
-          Useful between sets. Quiet everywhere else.
+          Useful tools for following progress without giving up control of your program.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-unit-md sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 border-b border-unit-border md:grid-cols-2 md:gap-x-unit-xxl">
         {features.map((feature) => (
           <article
             key={feature.title}
-            className="lift-hover flex h-full min-h-[320px] flex-col rounded-[32px] bg-unit-card p-unit-lg"
+            className="grid items-center gap-unit-lg border-t border-unit-border py-unit-lg sm:grid-cols-[minmax(0,1fr)_minmax(180px,0.8fr)] md:grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(180px,0.8fr)]"
           >
-            <div className="shrink-0">
+            <div>
               <h3 className="text-lg font-bold leading-tight tracking-tight">
                 {feature.title}
               </h3>
-              <p className="mt-unit-xs max-w-[30ch] text-sm leading-relaxed text-unit-text-secondary">
+              <p className="mt-unit-xs max-w-[34ch] text-base leading-relaxed text-unit-text-secondary">
                 {feature.body}
               </p>
             </div>
-            <div className="flex min-h-[176px] flex-1 items-center justify-center">
-              <div className="w-full">
-                <FeatureVisual visual={feature.visual} />
-              </div>
+            <div className="w-full rounded-2xl bg-unit-card p-unit-md">
+              <FeatureVisual visual={feature.visual} />
             </div>
           </article>
         ))}

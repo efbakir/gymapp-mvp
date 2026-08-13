@@ -13,7 +13,7 @@ import { SITE_URL } from "@/lib/site"
 
 export const metadata: Metadata = {
   description:
-    "Unit is the simple progressive overload tracker for iPhone. Log in one tap, then get one clear target for next time. No AI, no social, no account.",
+    "Know what to lift next. Unit logs each set in one tap, then prepares one clear progressive overload target for your next workout.",
   alternates: { canonical: "/" },
 }
 
@@ -21,7 +21,7 @@ const faqs = [
   {
     question: "What kind of workout log app is Unit?",
     answer:
-      "Unit is a simple, private workout log for iPhone. Paste a program or build one from scratch, then log each set in under 3 seconds with last time's weight and reps already filled in.",
+      "Unit is a progression-guided workout log for iPhone. Paste your program or choose a ready-made match, log each set in one tap, then get one clear target for next time.",
   },
   {
     question: "Is Unit free?",
@@ -29,9 +29,14 @@ const faqs = [
       "Setup is free. A subscription unlocks logging. Eligible new customers may receive a 7-day free trial on Monthly or Yearly when Apple confirms the offer. Prices appear before you pay. No ads or account.",
   },
   {
+    question: "How does progressive overload work in Unit?",
+    answer:
+      "Choose a rep range and your smallest available weight increase for an exercise. If every working set reaches the top of the range, Unit suggests adding weight. Otherwise, it suggests building reps or repeating the target. Nothing changes until you accept it.",
+  },
+  {
     question: "How does Unit fill in my numbers?",
     answer:
-      "When you start an exercise, Unit shows what you logged last time: same weight, same reps. Tap Done to log it again, or adjust before you tap.",
+      "Unit first uses an accepted target for that routine and exercise. If there is no target, it shows the latest completed set or your saved starting values. Tap Done to log it, or adjust before you tap.",
   },
   {
     question: "Does Unit work offline?",
@@ -67,7 +72,7 @@ const softwareLd = {
   applicationCategory: "HealthApplication",
   operatingSystem: "iOS",
   description:
-    "Simple progressive overload tracker for iPhone. Log in one tap, then get one clear target for next time.",
+    "Know what to lift next. Log each set in one tap, then get one clear progressive overload target for your next workout.",
   url: `${SITE_URL}/`,
   keywords:
     "gym tracker, workout log, lifting log, strength log, last session values, rest timer, local-first, no account",
@@ -121,10 +126,9 @@ export default function LandingPage() {
       <section className="py-unit-xxl md:py-unit-xxxl border-t border-unit-border">
         <div className="max-w-5xl mx-auto px-unit-md md:px-unit-lg">
           <div className="mb-unit-xl text-center">
-            <p className="eyebrow mb-unit-sm">From the App Store</p>
             <h2 className="h-section">What lifters say.</h2>
           </div>
-          <div className="grid grid-cols-1 gap-unit-md md:grid-cols-2">
+          <div className="grid grid-cols-1 divide-y divide-unit-border border-y border-unit-border md:grid-cols-2 md:divide-x md:divide-y-0">
             {[
               {
                 quote: "\u201CThe gym tracker app I\u2019ve been looking for for years.\u201D",
@@ -137,18 +141,18 @@ export default function LandingPage() {
             ].map((review) => (
               <figure
                 key={review.original}
-                className="flex min-h-[240px] w-full flex-col items-center justify-between rounded-2xl bg-unit-card p-unit-lg text-center md:min-h-[280px] md:p-unit-xl"
+                className="w-full py-unit-xl text-center md:px-unit-xl md:py-unit-xxl"
               >
-                <p className="text-sm tracking-[0.2em]" aria-label="5 out of 5 stars">
+                <p className="text-sm tracking-[0.14em]" aria-label="5 out of 5 stars">
                   ★★★★★
                 </p>
                 <blockquote
-                  className="my-unit-lg max-w-[28ch] text-lg font-bold tracking-tight leading-snug"
+                  className="mx-auto my-unit-md max-w-[28ch] text-xl font-bold tracking-tight leading-snug"
                   title={review.original}
                 >
                   {review.quote}
                 </blockquote>
-                <figcaption className="eyebrow">
+                <figcaption className="text-sm text-unit-text-secondary">
                   App Store review
                 </figcaption>
               </figure>
@@ -166,15 +170,14 @@ export default function LandingPage() {
       >
         <div className="max-w-6xl mx-auto px-unit-md md:px-unit-lg">
           <FeatureShowcase
-            eyebrow="How it works"
-            title="Designed for the bench, not your desk."
-            body="Bring your program. Log each set. Review your progress."
+            title="From last time to next time."
+            body="Log what you did. See why the target changed. Accept it only when it makes sense."
             items={[
               {
-                eyebrow: "One tap per set",
-                title: "Last time does the typing.",
-                body: "Your last weight and reps are ready. Tap Done. Keep lifting.",
-                microStat: "Average log: 2.4s",
+                eyebrow: "Last time",
+                title: "Start with your last workout.",
+                body: "Your previous weight and reps are already there. Tap Done or make a quick edit.",
+                microStat: "One tap per set",
                 mockup: {
                   src: "/screenshots/hero-ghost-values.png",
                   alt: "Unit active set showing last time: 3×5×140 kg, ready to confirm",
@@ -184,9 +187,9 @@ export default function LandingPage() {
                 },
               },
               {
-                eyebrow: "Bring your program",
-                title: "Paste from Notes. Done.",
-                body: "Paste a routine or build one. Unit reads the exercises, sets, reps, and weights.",
+                eyebrow: "Your program",
+                title: "Bring the routine you trust.",
+                body: "Paste from Notes or choose a ready-made match. Unit keeps the exercises, sets, and reps clear.",
                 mockup: {
                   src: "/screenshots/onboarding-2.png",
                   alt: "Unit turning a pasted Upper A workout into five exercises",
@@ -198,9 +201,9 @@ export default function LandingPage() {
                 },
               },
               {
-                eyebrow: "History · PRs",
-                title: "Every set. Every PR.",
-                body: "See every session and PR. You decide when to add weight.",
+                eyebrow: "Next target",
+                title: "See progress you can trace.",
+                body: "Review completed sessions and PRs, then see how today's work led to the next target.",
                 mockup: {
                   src: "/screenshots/hero-history-calendar.png",
                   alt: "Unit history calendar, April 2026, logged days highlighted",
@@ -210,9 +213,9 @@ export default function LandingPage() {
                 },
               },
               {
-                eyebrow: "Rest timer",
-                title: "Follows you to the Lock Screen.",
-                body: "Starts when you tap Done. Check it on the Dynamic Island or Lock Screen.",
+                eyebrow: "Between sets",
+                title: "Keep the next set in focus.",
+                body: "The timer starts when you tap Done and stays visible on the Dynamic Island or Lock Screen.",
                 mockup: {
                   src: "/screenshots/rest-timer-figma.png",
                   alt: "Unit rest timer running at 1:57 with the set editor below",
@@ -239,9 +242,8 @@ export default function LandingPage() {
       {/* ── 5. Privacy slab ── */}
       <section className="py-unit-xxxl md:py-unit-xxxxl border-t border-unit-border">
         <div className="max-w-3xl mx-auto px-unit-md md:px-unit-lg text-center">
-          <p className="eyebrow mb-unit-md">Built for privacy</p>
           <h2 className="h-section mb-unit-md">
-            Local-first. Stays on your phone.
+            Your training stays on your iPhone.
           </h2>
           <p className="text-lg leading-snug text-unit-text-secondary max-w-xl mx-auto">
             No account or server sync. Your history stays on your iPhone and
@@ -253,25 +255,25 @@ export default function LandingPage() {
       {/* ── 6. What Unit is not ── */}
       <section className="py-unit-xxl md:py-unit-xxxl border-t border-unit-border">
         <div className="max-w-3xl mx-auto px-unit-md md:px-unit-lg">
-          <p className="eyebrow mb-unit-md">What Unit is not</p>
+          <h2 className="h-section mb-unit-md">Progress without the black box.</h2>
 
           <div className="divide-y divide-unit-border">
             {[
               {
-                title: "No coaching.",
-                body: "You choose the program. Unit logs it.",
+                title: "No hidden decisions.",
+                body: "Every suggestion shows the last result, next target, and reason.",
+              },
+              {
+                title: "No automatic changes.",
+                body: "Accept, edit, or ignore each target. Your program stays yours.",
               },
               {
                 title: "No social feed.",
                 body: "No followers or likes. Training stays personal.",
               },
               {
-                title: "No clutter.",
-                body: "Only what you need to log and review.",
-              },
-              {
-                title: "No ads.",
-                body: "Setup is free. A subscription unlocks logging.",
+                title: "No cloud dependency.",
+                body: "Logging works offline and raw workout details stay on your iPhone.",
               },
             ].map((item) => (
               <div
@@ -281,7 +283,7 @@ export default function LandingPage() {
                 <h3 className="text-lg font-bold tracking-tight leading-snug md:flex-1">
                   {item.title}
                 </h3>
-                <p className="mt-unit-xs md:mt-0 text-[15px] leading-relaxed text-unit-text-secondary md:flex-1 md:max-w-md">
+                <p className="mt-unit-xs text-base leading-relaxed text-unit-text-secondary md:mt-0 md:max-w-md md:flex-1">
                   {item.body}
                 </p>
               </div>
@@ -325,13 +327,11 @@ export default function LandingPage() {
         className="py-unit-xxxl md:py-unit-xxxxl border-t border-unit-border"
       >
         <div className="max-w-3xl mx-auto px-unit-md md:px-unit-lg text-center">
-          <p className="eyebrow mb-unit-md">Ready when you are</p>
           <h2 className="h-display mb-unit-md">
-            Log a set in 3 seconds.
+            Know what to lift next.
           </h2>
           <p className="text-lg leading-snug mb-unit-xl text-unit-text-secondary max-w-xl mx-auto">
-            One tap per set. Raw workout details stay on your phone. The
-            notebook, upgraded.
+            Log every set in one tap. Finish with one clear target for next time.
           </p>
           <div className="flex flex-col items-center gap-unit-lg">
             <AppStoreBadge href={APP_STORE_URL} />
@@ -351,7 +351,9 @@ export default function LandingPage() {
               </p>
             </div>
           </div>
-          <p className="eyebrow mt-unit-md">No account. No ads. No social feed.</p>
+          <p className="mt-unit-md text-sm font-semibold text-unit-text-secondary">
+            No account. No automatic changes. No social feed.
+          </p>
         </div>
       </section>
     </>

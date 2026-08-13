@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Unit: Gym Logger & Workout Tracker",
     short_name: "Unit",
     description:
-      "Simple progressive overload tracker. Log in one tap and know what to do next.",
+      "Progressive overload made simple. Log in one tap and know what to lift next.",
     start_url: "/",
     display: "standalone",
     background_color: "#F5F5F5",

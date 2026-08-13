@@ -142,10 +142,24 @@ final class OnboardingViewModel {
 
     // MARK: Library path (Phase B-3)
 
-    /// Program template picked from the onboarding library (the surfaced set:
-    /// Full Body / Upper / Lower / 5/3/1 / Power + Size / Push Pull Legs). nil
-    /// until the user taps a card on `OnboardingLibraryPickerView`. Drives the
-    /// program preview, where the user fills in their own weights inline.
+    var preferredGoal: ProgramTemplate.Goal? = nil
+    var preferredLevel: ProgramTemplate.Level? = nil
+    var preferredDaysPerWeek: Int? = nil
+
+    var programMatchProfile: ProgramMatchProfile? {
+        guard let preferredGoal,
+              let preferredLevel,
+              let preferredDaysPerWeek else { return nil }
+        return ProgramMatchProfile(
+            goal: preferredGoal,
+            level: preferredLevel,
+            daysPerWeek: preferredDaysPerWeek
+        )
+    }
+
+    /// Program template picked from the 1–3 catalog matches. Nil until the
+    /// user taps a result on `OnboardingLibraryPickerView`. Drives the program
+    /// preview, where the user fills in their own weights inline.
     var pickedProgram: ProgramTemplate? = nil
 
     // MARK: Units
@@ -527,8 +541,8 @@ extension OnboardingViewModel {
 
         dayCount = min(max(templateDays.count, Self.dayCountRange.lowerBound), Self.dayCountRange.upperBound)
         dayNames = Array(templateDays.prefix(dayCount).map(\.name))
-        // Library programs always declare weekdays — write through; the
-        // schedule step is bypassed for the library path.
+        // Library programs declare canonical weekdays. Keep them as defaults
+        // that the schedule review can confirm or edit before commit.
         dayWeekdays = Array(templateDays.prefix(dayCount).map { $0.weekday ?? 0 })
         useFlexibleSchedule = false
 

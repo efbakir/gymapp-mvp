@@ -10,7 +10,7 @@
 import Foundation
 
 struct ProgramTemplate: Identifiable, Hashable {
-    enum Level: String, CaseIterable, Identifiable {
+    enum Level: String, CaseIterable, Identifiable, Codable {
         case beginner, intermediate, advanced
         var id: String { rawValue }
         var displayName: String {
@@ -20,9 +20,17 @@ struct ProgramTemplate: Identifiable, Hashable {
             case .advanced: return "Advanced"
             }
         }
+
+        var matcherDisplayName: String {
+            switch self {
+            case .beginner: return "New"
+            case .intermediate: return "Consistent"
+            case .advanced: return "Experienced"
+            }
+        }
     }
 
-    enum Goal: String, CaseIterable, Identifiable {
+    enum Goal: String, CaseIterable, Identifiable, Codable {
         case strength, hypertrophy, mixed
         var id: String { rawValue }
         var displayName: String {
@@ -30,6 +38,14 @@ struct ProgramTemplate: Identifiable, Hashable {
             case .strength: return "Strength"
             case .hypertrophy: return "Hypertrophy"
             case .mixed: return "Mixed"
+            }
+        }
+
+        var matcherDisplayName: String {
+            switch self {
+            case .strength: return "Strength"
+            case .hypertrophy: return "Muscle"
+            case .mixed: return "Both"
             }
         }
     }
@@ -42,6 +58,50 @@ struct ProgramTemplate: Identifiable, Hashable {
     let summary: String
     let description: String
     let days: [ProgramDay]
+}
+
+struct ProgramMatchProfile: Codable, Equatable {
+    let goal: ProgramTemplate.Goal
+    let level: ProgramTemplate.Level
+    let daysPerWeek: Int
+
+    var summary: String {
+        "\(goal.matcherDisplayName) · \(level.matcherDisplayName) · \(daysPerWeek) days/week"
+    }
+}
+
+/// Small local context carried from onboarding into the hard paywall and
+/// purchase analytics. It contains controlled answer buckets only—never an
+/// exercise, weight, note, or program name.
+struct ProgramSetupContext: Codable, Equatable {
+    enum Source: String, Codable {
+        case paste
+        case matchedLibrary = "matched_library"
+    }
+
+    let source: Source
+    let matchProfile: ProgramMatchProfile?
+}
+
+enum ProgramSetupContextStore {
+    private static let key = "programSetup.context"
+
+    static func save(
+        _ context: ProgramSetupContext,
+        defaults: UserDefaults = .standard
+    ) {
+        guard let data = try? JSONEncoder().encode(context) else { return }
+        defaults.set(data, forKey: key)
+    }
+
+    static func load(defaults: UserDefaults = .standard) -> ProgramSetupContext? {
+        guard let data = defaults.data(forKey: key) else { return nil }
+        return try? JSONDecoder().decode(ProgramSetupContext.self, from: data)
+    }
+
+    static func clear(defaults: UserDefaults = .standard) {
+        defaults.removeObject(forKey: key)
+    }
 }
 
 struct ProgramDay: Identifiable, Hashable {

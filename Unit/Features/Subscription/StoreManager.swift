@@ -137,6 +137,10 @@ struct StorePlanPresentation: Equatable, Sendable {
     struct Trial: Equatable, Sendable {
         let durationText: String
         let adjectiveText: String
+        /// Exact day boundary for day- and week-based offers. Month/year
+        /// offers stay nil because their calendar boundary is not a fixed
+        /// number of days.
+        let dayCount: Int?
     }
 
     let displayPrice: String
@@ -181,25 +185,30 @@ struct StorePlanPresentation: Equatable, Sendable {
         guard !overflow, periods > 0 else { return nil }
 
         let value: Int
+        let dayCount: Int?
         let singular: String
         let plural: String
         switch offer.period.unit {
         case .day:
             value = periods
+            dayCount = value
             singular = "day"
             plural = "days"
         case .week:
             let result = periods.multipliedReportingOverflow(by: 7)
             guard !result.overflow, result.partialValue > 0 else { return nil }
             value = result.partialValue
+            dayCount = value
             singular = "day"
             plural = "days"
         case .month:
             value = periods
+            dayCount = nil
             singular = "month"
             plural = "months"
         case .year:
             value = periods
+            dayCount = nil
             singular = "year"
             plural = "years"
         case .other:
@@ -209,7 +218,8 @@ struct StorePlanPresentation: Equatable, Sendable {
         let unit = value == 1 ? singular : plural
         return Trial(
             durationText: "\(value) \(unit)",
-            adjectiveText: "\(value)-\(singular)"
+            adjectiveText: "\(value)-\(singular)",
+            dayCount: dayCount
         )
     }
 }
@@ -358,7 +368,6 @@ final class StoreManager {
     /// Non-error notice shown via the same `.alert` channel — e.g.
     /// "No purchases to restore." after a benign restore call.
     var infoMessage: String?
-
     /// Introductory-offer eligibility is a subscription-group property. Keep
     /// the answer separate from offer metadata so eligibility alone can never
     /// create trial copy.
@@ -571,9 +580,19 @@ final class StoreManager {
                 if let tier = Tier(rawValue: transaction.productID) {
                     confirmEntitlement(tier)
                     if presentation(for: tier)?.trial != nil {
-                        UnitAnalytics.shared.track(.trialStarted(tier: tier.analyticsValue))
+                        UnitAnalytics.shared.track(
+                            .trialStarted(
+                                tier: tier.analyticsValue,
+                                context: ProgramSetupContextStore.load()
+                            )
+                        )
                     }
-                    UnitAnalytics.shared.track(.purchaseCompleted(tier: tier.analyticsValue))
+                    UnitAnalytics.shared.track(
+                        .purchaseCompleted(
+                            tier: tier.analyticsValue,
+                            context: ProgramSetupContextStore.load()
+                        )
+                    )
                 }
                 await transaction.finish()
             case .userCancelled:

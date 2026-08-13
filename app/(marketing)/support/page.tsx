@@ -25,7 +25,7 @@ export default function SupportPage() {
         {/* Contact */}
         <address className="not-italic block rounded-xl p-unit-lg bg-unit-card mb-unit-xxl">
           <h2 className="text-lg font-semibold mb-unit-xs">Contact me</h2>
-          <p className="text-[15px] mb-unit-md text-unit-text-secondary">
+          <p className="mb-unit-md text-base text-unit-text-secondary">
             I typically respond within 24 hours.
           </p>
           <a
@@ -49,7 +49,11 @@ export default function SupportPage() {
           />
           <FAQItem
             question="How do I see what I logged last time?"
-            answer="When you start an exercise, Unit shows what you logged last time: same weight, same reps. Tap Done to log it again, or adjust before you tap."
+            answer="When you start an exercise, Unit first shows any target you accepted for that routine and exercise. Otherwise, it uses your latest completed set or saved starting values. Tap Done to log it, or adjust before you tap."
+          />
+          <FAQItem
+            question="How does Unit choose my next target?"
+            answer="For an exercise with progressive overload enabled, Unit checks the completed working sets after your workout. Reaching the top of the rep range on every set suggests your chosen weight increase. Otherwise, Unit suggests building reps or repeating. Nothing changes until you accept it."
           />
           <FAQItem
             question="Can I change my program after setup?"
@@ -154,7 +158,7 @@ function TroubleshootItem({
   return (
     <div>
       <h3 className="text-base font-semibold mb-unit-xs">{title}</h3>
-      <ol className="list-decimal pl-5 space-y-1 text-[15px] leading-relaxed text-unit-text-secondary">
+      <ol className="list-decimal space-y-1 pl-5 text-base leading-relaxed text-unit-text-secondary">
         {steps.map((step, i) => (
           <li key={i}>{step}</li>
         ))}

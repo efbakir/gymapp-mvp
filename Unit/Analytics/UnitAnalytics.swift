@@ -109,10 +109,11 @@ enum UnitAnalyticsEvent {
     case onboardingSlideViewed(id: AnalyticsOnboardingSlide)
     case weightUnitSelected(unit: String)
     case programSourceSelected(source: String)
+    case programMatchSelected(profile: ProgramMatchProfile, rank: Int)
     case programSetupCompleted(source: String)
     case paywallViewed(trialEligibility: String)
-    case trialStarted(tier: String)
-    case purchaseCompleted(tier: String)
+    case trialStarted(tier: String, context: ProgramSetupContext?)
+    case purchaseCompleted(tier: String, context: ProgramSetupContext?)
     case workoutStarted
     case workoutCompleted(duration: AnalyticsDurationBucket, setCount: AnalyticsSetCountBucket, noKeyboardRatio: AnalyticsNoKeyboardRatioBucket)
     case progressionRecommendationShown(outcome: AnalyticsProgressionOutcome)
@@ -124,6 +125,7 @@ enum UnitAnalyticsEvent {
         "onboarding_slide_viewed",
         "weight_unit_selected",
         "program_source_selected",
+        "program_match_selected",
         "program_setup_completed",
         "paywall_viewed",
         "trial_started",
@@ -145,14 +147,24 @@ enum UnitAnalyticsEvent {
             ("weight_unit_selected", ["unit": unit == "lb" ? "lb" : "kg"])
         case .programSourceSelected(let source):
             ("program_source_selected", ["source": source == "paste" ? "paste" : "library"])
+        case .programMatchSelected(let profile, let rank):
+            (
+                "program_match_selected",
+                [
+                    "goal": profile.goal.rawValue,
+                    "experience": profile.level.rawValue,
+                    "days": Self.validDays(profile.daysPerWeek),
+                    "rank": Self.validRank(rank)
+                ]
+            )
         case .programSetupCompleted(let source):
             ("program_setup_completed", ["source": source == "paste" ? "paste" : "library"])
         case .paywallViewed(let trialEligibility):
             ("paywall_viewed", ["trial_eligibility": Self.validTrialEligibility(trialEligibility)])
-        case .trialStarted(let tier):
-            ("trial_started", ["tier": Self.validTier(tier)])
-        case .purchaseCompleted(let tier):
-            ("purchase_completed", ["tier": Self.validTier(tier)])
+        case .trialStarted(let tier, let context):
+            ("trial_started", Self.purchaseParameters(tier: tier, context: context))
+        case .purchaseCompleted(let tier, let context):
+            ("purchase_completed", Self.purchaseParameters(tier: tier, context: context))
         case .workoutStarted:
             ("workout_started", [:])
         case .workoutCompleted(let duration, let setCount, let noKeyboardRatio):
@@ -175,6 +187,33 @@ enum UnitAnalyticsEvent {
 
     private static func validTier(_ tier: String) -> String {
         ["weekly", "monthly", "annual", "lifetime"].contains(tier) ? tier : "unknown"
+    }
+
+    private static func purchaseParameters(
+        tier: String,
+        context: ProgramSetupContext?
+    ) -> [String: String] {
+        var parameters = ["tier": validTier(tier)]
+        guard let context else {
+            parameters["program_source"] = "unknown"
+            return parameters
+        }
+
+        parameters["program_source"] = context.source.rawValue
+        if let profile = context.matchProfile {
+            parameters["goal"] = profile.goal.rawValue
+            parameters["experience"] = profile.level.rawValue
+            parameters["days"] = validDays(profile.daysPerWeek)
+        }
+        return parameters
+    }
+
+    private static func validDays(_ days: Int) -> String {
+        (1...7).contains(days) ? String(days) : "unknown"
+    }
+
+    private static func validRank(_ rank: Int) -> String {
+        (1...3).contains(rank) ? String(rank) : "unknown"
     }
 
     private static func validTrialEligibility(_ value: String) -> String {

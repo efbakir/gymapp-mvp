@@ -109,7 +109,7 @@ body {
     color: var(--unit-text-primary);
   }
   .prose-page p {
-    @apply text-[15px] leading-relaxed mb-4;
+    @apply text-base leading-relaxed mb-4;
     color: var(--unit-text-secondary);
   }
   .prose-page ul {
@@ -117,7 +117,7 @@ body {
     color: var(--unit-text-secondary);
   }
   .prose-page li {
-    @apply text-[15px] leading-relaxed;
+    @apply text-base leading-relaxed;
   }
   .prose-page a {
     @apply underline underline-offset-2;
@@ -147,17 +147,15 @@ body {
 
   /* ── Marketing-site shared utilities ─────────────────────────────── */
 
-  /* The 13px Geist Mono uppercase eyebrow used in hero label, bento
-     eyebrows, founder section header, trust band, "What Unit is not"
-     header. Single canonical recipe, never inline-duplicate. */
+  /* Compact mono labels are reserved for true metadata and state. They are
+     not the default way to introduce a marketing section. */
   .eyebrow {
     @apply text-[13px] font-medium font-mono uppercase tracking-[0.6px] text-unit-text-secondary;
   }
 
-  /* Interactive variant of .eyebrow used for marketing-header nav items.
-     Same caps + mono recipe, with primary-text hover. */
+  /* Navigation is sentence case for faster scanning. */
   .eyebrow-link {
-    @apply eyebrow transition-colors hover:text-unit-text-primary;
+    @apply text-sm font-semibold tracking-tight text-unit-text-secondary transition-colors hover:text-unit-text-primary;
   }
 
   /* Marketing type scale: compact labels stay at 13 and 14px. Larger text
@@ -172,7 +170,7 @@ body {
     @apply text-[34px] md:text-[44px] font-bold tracking-[-0.04em] leading-[1.02] text-unit-text-primary;
   }
   .h-hero {
-    @apply text-[40px] sm:text-[52px] lg:text-[60px] font-bold tracking-[-0.045em] leading-[0.96] text-unit-text-primary;
+    @apply text-[40px] sm:text-[52px] lg:text-[60px] font-bold tracking-[-0.035em] leading-[1] text-unit-text-primary;
   }
 
   /* The Ink radial-gradient ambient blur used behind hero mockup and

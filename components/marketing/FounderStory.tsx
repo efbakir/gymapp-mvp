@@ -21,16 +21,16 @@ export default function FounderStory() {
       </div>
 
       <div className="order-2 max-w-[600px] space-y-unit-md">
-        <p className="eyebrow">From the maker</p>
+        <p className="text-sm font-semibold text-unit-text-secondary">From the maker</p>
         <p className="text-base leading-relaxed">
-          I trained with a paper notebook for years. Gym apps added too many
-          menus and too much typing.
+          I trained with a paper notebook for years. It showed what I did last
+          time, but it still left me deciding what to do next.
         </p>
         <p className="text-base leading-relaxed text-unit-text-secondary">
-          I built Unit to do one job: log each set fast. Your last numbers are
-          ready, the timer follows you, and your data stays on your phone.
+          I built Unit to keep notebook speed and add one thing paper cannot: a
+          clear next target. Unit shows the reason and waits for you to accept it.
         </p>
-        <p className="pt-unit-xs text-[15px] font-semibold tracking-tight">
+        <p className="pt-unit-xs text-base font-semibold tracking-tight">
           {DEVELOPER_NAME.split(" ")[0]}
         </p>
       </div>

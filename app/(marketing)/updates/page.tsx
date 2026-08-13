@@ -94,7 +94,7 @@ function ReleaseHeading({
     <header className="mb-unit-md">
       <div className="mb-unit-xs flex flex-wrap items-center gap-unit-sm">
         {latest && (
-          <span className="rounded-md bg-unit-accent px-unit-sm py-unit-xs font-mono text-[11px] font-bold uppercase tracking-[0.6px] text-unit-accent-foreground">
+          <span className="rounded-md bg-unit-accent px-unit-sm py-unit-xs text-xs font-bold text-unit-accent-foreground">
             Latest
           </span>
         )}
@@ -105,7 +105,7 @@ function ReleaseHeading({
       <h2
         className={
           latest
-            ? "text-[26px] font-bold leading-tight tracking-tight text-unit-text-primary"
+            ? "text-2xl font-bold leading-tight tracking-tight text-unit-text-primary"
             : "text-xl font-bold leading-tight tracking-tight text-unit-text-primary"
         }
       >
@@ -123,7 +123,6 @@ export default async function UpdatesPage() {
     <>
       <section className="pb-unit-xl pt-32 md:pb-unit-xxl md:pt-40">
         <div className="mx-auto max-w-3xl px-unit-md md:px-unit-lg">
-          <p className="eyebrow mb-unit-sm">What&rsquo;s New</p>
           <h1 className="h-section mb-unit-md">What&rsquo;s New</h1>
           <p className="max-w-2xl text-lg leading-relaxed text-unit-text-secondary">
             Every public Unit update, exactly as it appears on the App Store.
@@ -146,7 +145,7 @@ export default async function UpdatesPage() {
                     href={APP_STORE_URL}
                     target="_blank"
                     rel="noreferrer"
-                    className="btn-primary min-h-[52px] px-unit-lg text-[13px] sm:text-[14px]"
+                    className="btn-primary min-h-[52px] px-unit-lg text-sm"
                   >
                     Download or update on the App Store
                   </a>

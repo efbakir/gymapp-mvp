@@ -34,6 +34,9 @@ enum OnboardingPreferencesKeys {
     static let hasSelectedUnit = "onboarding.hasSelectedUnit"
     static let unitSystem = "onboarding.unitSystem"
     static let pickedProgramID = "onboarding.pickedProgramID"
+    static let preferredGoal = "onboarding.preferredGoal"
+    static let preferredLevel = "onboarding.preferredLevel"
+    static let preferredDaysPerWeek = "onboarding.preferredDaysPerWeek"
     static let dayExercises = "onboarding.dayExercises"
     static let pastedProgramText = "onboarding.pastedProgramText"
     static let currentStep = "onboarding.currentStep"
@@ -69,6 +72,21 @@ enum OnboardingPreferences {
         } else {
             defaults.removeObject(forKey: OnboardingPreferencesKeys.pickedProgramID)
         }
+        if let preferredGoal = viewModel.preferredGoal?.rawValue {
+            defaults.set(preferredGoal, forKey: OnboardingPreferencesKeys.preferredGoal)
+        } else {
+            defaults.removeObject(forKey: OnboardingPreferencesKeys.preferredGoal)
+        }
+        if let preferredLevel = viewModel.preferredLevel?.rawValue {
+            defaults.set(preferredLevel, forKey: OnboardingPreferencesKeys.preferredLevel)
+        } else {
+            defaults.removeObject(forKey: OnboardingPreferencesKeys.preferredLevel)
+        }
+        if let preferredDaysPerWeek = viewModel.preferredDaysPerWeek {
+            defaults.set(preferredDaysPerWeek, forKey: OnboardingPreferencesKeys.preferredDaysPerWeek)
+        } else {
+            defaults.removeObject(forKey: OnboardingPreferencesKeys.preferredDaysPerWeek)
+        }
         defaults.set(viewModel.pastedProgramText, forKey: OnboardingPreferencesKeys.pastedProgramText)
         defaults.set(currentStep.rawValue, forKey: OnboardingPreferencesKeys.currentStep)
         defaults.set(history.map(\.rawValue), forKey: OnboardingPreferencesKeys.stepHistory)
@@ -99,6 +117,9 @@ enum OnboardingPreferences {
             OnboardingPreferencesKeys.hasSelectedUnit,
             OnboardingPreferencesKeys.unitSystem,
             OnboardingPreferencesKeys.pickedProgramID,
+            OnboardingPreferencesKeys.preferredGoal,
+            OnboardingPreferencesKeys.preferredLevel,
+            OnboardingPreferencesKeys.preferredDaysPerWeek,
             OnboardingPreferencesKeys.dayExercises,
             OnboardingPreferencesKeys.pastedProgramText,
             OnboardingPreferencesKeys.currentStep,
@@ -157,6 +178,19 @@ enum OnboardingPreferences {
            let rawProgramID = defaults.string(forKey: OnboardingPreferencesKeys.pickedProgramID),
            let programID = UUID(uuidString: rawProgramID) {
             viewModel.pickedProgram = ProgramCatalog.all.first { $0.id == programID }
+        }
+
+        if let rawGoal = defaults.string(forKey: OnboardingPreferencesKeys.preferredGoal) {
+            viewModel.preferredGoal = ProgramTemplate.Goal(rawValue: rawGoal)
+        }
+        if let rawLevel = defaults.string(forKey: OnboardingPreferencesKeys.preferredLevel) {
+            viewModel.preferredLevel = ProgramTemplate.Level(rawValue: rawLevel)
+        }
+        if defaults.object(forKey: OnboardingPreferencesKeys.preferredDaysPerWeek) != nil {
+            let days = defaults.integer(forKey: OnboardingPreferencesKeys.preferredDaysPerWeek)
+            if ProgramCatalog.supportedDays.contains(days) {
+                viewModel.preferredDaysPerWeek = days
+            }
         }
 
         if let pastedText = defaults.string(forKey: OnboardingPreferencesKeys.pastedProgramText) {
@@ -359,17 +393,7 @@ struct OnboardingView: View {
             OnboardingLibraryPickerView(
                 progressStep: 3,
                 progressTotal: totalRequiredSteps,
-                selectedProgramID: vm.pickedProgram?.id,
-                onPick: { template in
-                    let shouldAutoAdvance = vm.pickedProgram == nil
-                    if vm.pickedProgram?.id != template.id {
-                        vm.applyPickedProgram(template)
-                    }
-                    persistProgress()
-                    if shouldAutoAdvance {
-                        push(.schedule)
-                    }
-                },
+                onUpdate: persistProgress,
                 onContinue: { push(.schedule) },
                 onBack: pop
             )
@@ -453,6 +477,12 @@ struct OnboardingView: View {
         isCommitting = true
         do {
             try vm.commit(modelContext: modelContext)
+            ProgramSetupContextStore.save(
+                ProgramSetupContext(
+                    source: vm.importMethod == .paste ? .paste : .matchedLibrary,
+                    matchProfile: vm.importMethod == .library ? vm.programMatchProfile : nil
+                )
+            )
             UnitAnalytics.shared.track(
                 .programSetupCompleted(source: vm.importMethod == .paste ? "paste" : "library")
             )

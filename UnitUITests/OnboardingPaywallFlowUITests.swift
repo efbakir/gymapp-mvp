@@ -28,7 +28,6 @@ import StoreKitTest
 final class OnboardingPaywallFlowUITests: XCTestCase {
     private static let monthlyProductID = "com.unit.monthly"
     private static let lifetimeProductID = "com.unit.lifetime"
-    private static let paidAccessDisclosure = "Paid plan required after setup. Prices and any eligible trial are shown before purchase."
 
     override func setUpWithError() throws {
         continueAfterFailure = false
@@ -57,10 +56,14 @@ final class OnboardingPaywallFlowUITests: XCTestCase {
             "progression-led opener tagline missing"
         )
         XCTAssertTrue(
-            app.staticTexts["Know what to do next"].waitForExistence(timeout: 8),
+            app.staticTexts["Know what to lift next"].waitForExistence(timeout: 8),
             "first progression value slide missing"
         )
-        assertCTAAndDisclosureAreReadable(in: app, requiresCompactWidth: true)
+        XCTAssertTrue(
+            app.staticTexts["Finish your workout. Unit prepares one clear target for next time."].exists,
+            "first progression value body copy missing"
+        )
+        assertCTAIsReadable(in: app, requiresCompactWidth: true)
         attachScreenshot(named: "01-onboarding-next-target", app: app)
 
         app.swipeLeft()
@@ -68,6 +71,11 @@ final class OnboardingPaywallFlowUITests: XCTestCase {
             app.staticTexts["Build reps, then weight"].waitForExistence(timeout: 5),
             "double-progression slide missing"
         )
+        XCTAssertTrue(
+            app.staticTexts["Reach 10 reps on every set. Then add 5 lb."].exists,
+            "double-progression body copy missing"
+        )
+        assertCTAIsReadable(in: app, requiresCompactWidth: true)
         attachScreenshot(named: "02-onboarding-double-progression", app: app)
 
         app.swipeLeft()
@@ -75,8 +83,12 @@ final class OnboardingPaywallFlowUITests: XCTestCase {
             app.staticTexts["Log every set in one tap"].waitForExistence(timeout: 5),
             "one-tap logging slide missing"
         )
-        assertCTAAndDisclosureAreReadable(in: app, requiresCompactWidth: true)
-        attachScreenshot(named: "03-onboarding-paid-disclosure-smallest", app: app)
+        XCTAssertTrue(
+            app.staticTexts["Your target and last workout are ready before every set."].exists,
+            "one-tap logging body copy missing"
+        )
+        assertCTAIsReadable(in: app, requiresCompactWidth: true)
+        attachScreenshot(named: "03-onboarding-one-tap-smallest", app: app)
 
         tap(app.buttons[AppCopy.Onboarding.splashCTA], "onboarding CTA")
         XCTAssertTrue(
@@ -105,14 +117,150 @@ final class OnboardingPaywallFlowUITests: XCTestCase {
         app.launch()
 
         XCTAssertTrue(
-            app.staticTexts["Know what to do next"].waitForExistence(timeout: 8)
+            app.staticTexts["Know what to lift next"].waitForExistence(timeout: 8)
         )
         app.swipeLeft()
         XCTAssertTrue(app.staticTexts["Build reps, then weight"].waitForExistence(timeout: 5))
         app.swipeLeft()
         XCTAssertTrue(app.staticTexts["Log every set in one tap"].waitForExistence(timeout: 5))
-        assertCTAAndDisclosureAreReadable(in: app)
-        attachScreenshot(named: "04-onboarding-paid-disclosure-accessibility-medium", app: app)
+        assertCTAIsReadable(in: app)
+        attachScreenshot(named: "04-onboarding-accessibility-medium", app: app)
+    }
+
+    /// Production-size reference captures for the in-app onboarding carousel.
+    /// App Store screenshots 1 and 3 intentionally use real post-workout
+    /// progression surfaces instead of this marketing shell.
+    func testCaptureProgressionOnboardingReferenceSlides() {
+        let app = makeApp(reset: true)
+        app.launch()
+
+        XCTAssertTrue(
+            app.staticTexts["Know what to lift next"].waitForExistence(timeout: 8)
+        )
+        assertCTAIsReadable(in: app)
+        attachScreenshot(named: "onboarding-01-next-target", app: app)
+
+        app.swipeLeft()
+        XCTAssertTrue(
+            app.staticTexts["Build reps, then weight"].waitForExistence(timeout: 5)
+        )
+        assertCTAIsReadable(in: app)
+        attachScreenshot(named: "onboarding-02-double-progression", app: app)
+    }
+
+    /// Captures the real US setup choice used by screenshot four. The launch
+    /// still walks through production onboarding; only the UI-test store is
+    /// isolated from user data.
+    func testCaptureUSAppStoreProgramSetup() {
+        let app = makeApp(reset: true)
+        app.launch()
+
+        tap(app.buttons[AppCopy.Onboarding.splashCTA], "splash CTA", timeout: 20)
+        tap(button(in: app, containing: "Pounds"), "unit picker — Pounds")
+
+        XCTAssertTrue(
+            app.staticTexts[AppCopy.Onboarding.methodTitle].waitForExistence(timeout: 8),
+            "program-source screen did not open"
+        )
+        XCTAssertTrue(button(in: app, containing: AppCopy.Onboarding.methodPasteOption).exists)
+        XCTAssertTrue(button(in: app, containing: AppCopy.Onboarding.methodLibraryOption).exists)
+        attachScreenshot(named: "store-04-program-setup", app: app)
+    }
+
+    func testReadyMadeProgramPathMatchesCatalogFromThreeAnswers() {
+        let app = makeApp(reset: true)
+        app.launch()
+
+        tap(app.buttons[AppCopy.Onboarding.splashCTA], "splash CTA", timeout: 20)
+        tap(button(in: app, containing: "Kilograms"), "unit picker — Kilograms")
+        tap(
+            button(in: app, containing: AppCopy.Onboarding.methodLibraryOption),
+            "program source — ready-made"
+        )
+
+        XCTAssertTrue(
+            app.staticTexts[AppCopy.Onboarding.libraryGoalTitle].waitForExistence(timeout: 8)
+        )
+        XCTAssertEqual(
+            descendant(in: app, identifier: "onboarding-progress").label,
+            "Step 3 of 5, question 1 of 3"
+        )
+        tap(button(in: app, containing: "Strength"), "goal — Strength")
+        XCTAssertTrue(
+            app.staticTexts[AppCopy.Onboarding.libraryLevelTitle].waitForExistence(timeout: 5)
+        )
+        XCTAssertEqual(
+            descendant(in: app, identifier: "onboarding-progress").label,
+            "Step 3 of 5, question 2 of 3"
+        )
+        tap(button(in: app, containing: "New"), "experience — New")
+        XCTAssertTrue(
+            app.staticTexts[AppCopy.Onboarding.libraryDaysTitle].waitForExistence(timeout: 5)
+        )
+        XCTAssertEqual(
+            descendant(in: app, identifier: "onboarding-progress").label,
+            "Step 3 of 5, question 3 of 3"
+        )
+        tap(
+            button(in: app, containing: AppCopy.Onboarding.trainingDays(2)),
+            "schedule — 2 days/week"
+        )
+
+        XCTAssertTrue(
+            app.staticTexts[AppCopy.Onboarding.libraryResultsTitle].waitForExistence(timeout: 8)
+        )
+        XCTAssertTrue(
+            button(in: app, containing: "Full Body 2-Day").exists,
+            "the catalog-backed 2-day recommendation was not shown"
+        )
+        XCTAssertTrue(
+            app.staticTexts[AppCopy.Onboarding.libraryResultsSubtitle].exists,
+            "matching disclosure is missing"
+        )
+
+        tap(app.buttons["Back"], "return to schedule question")
+        XCTAssertTrue(
+            app.staticTexts[AppCopy.Onboarding.libraryDaysTitle].waitForExistence(timeout: 5)
+        )
+        XCTAssertTrue(
+            button(in: app, containing: AppCopy.Onboarding.trainingDays(2)).isSelected,
+            "schedule answer should remain selected after navigating back"
+        )
+        XCTAssertTrue(app.buttons["Continue"].isEnabled)
+
+        tap(app.buttons["Back"], "return to experience question")
+        XCTAssertTrue(
+            app.staticTexts[AppCopy.Onboarding.libraryLevelTitle].waitForExistence(timeout: 5)
+        )
+        XCTAssertTrue(
+            button(in: app, containing: "New").isSelected,
+            "experience answer should remain selected after navigating back"
+        )
+        XCTAssertTrue(app.buttons["Continue"].isEnabled)
+
+        tap(app.buttons["Back"], "return to goal question")
+        XCTAssertTrue(
+            app.staticTexts[AppCopy.Onboarding.libraryGoalTitle].waitForExistence(timeout: 5)
+        )
+        XCTAssertTrue(
+            button(in: app, containing: "Strength").isSelected,
+            "goal answer should remain selected after navigating back"
+        )
+        XCTAssertTrue(app.buttons["Continue"].isEnabled)
+
+        tap(app.buttons["Continue"], "continue with saved goal")
+        tap(app.buttons["Continue"], "continue with saved experience")
+        tap(app.buttons["Continue"], "continue with saved schedule")
+        XCTAssertTrue(
+            app.staticTexts[AppCopy.Onboarding.libraryResultsTitle].waitForExistence(timeout: 8)
+        )
+
+        tap(button(in: app, containing: "Full Body 2-Day"), "select best match")
+        tap(app.buttons[AppCopy.Onboarding.libraryCTA], "review matched program")
+        XCTAssertTrue(
+            app.staticTexts[AppCopy.Onboarding.scheduleTitle].waitForExistence(timeout: 8),
+            "matched program did not continue into its schedule review"
+        )
     }
 
     func testPasteEditorFocusIsStableOnCompactScreen() {
@@ -334,6 +482,14 @@ final class OnboardingPaywallFlowUITests: XCTestCase {
         )
         attachScreenshot(named: "01-eligible-monthly-trial-paywall", app: app)
 
+        let trialTimeline = descendant(in: app, identifier: "paywall-timeline")
+        scrollTo(trialTimeline, in: app)
+        XCTAssertTrue(trialTimeline.exists, "eligible trial timeline is missing")
+        XCTAssertTrue(staticText(in: app, containing: "Day 0").exists)
+        XCTAssertTrue(staticText(in: app, containing: "Before Day 7").exists)
+        XCTAssertTrue(staticText(in: app, containing: "Day 7").exists)
+
+        tap(app.buttons["paywall-plan-picker-toggle"], "Change plan")
         let yearly = descendant(in: app, identifier: "paywall-plan-com.unit.annual")
         scrollTo(yearly, in: app)
         tap(yearly, "Yearly plan")
@@ -348,8 +504,13 @@ final class OnboardingPaywallFlowUITests: XCTestCase {
         )
         attachScreenshot(named: "02-eligible-yearly-trial-paywall", app: app)
 
+        tap(app.buttons["paywall-plan-picker-toggle"], "Change plan")
+        XCTAssertTrue(
+            staticText(in: app, containing: "Save").exists,
+            "Yearly savings badge became unreadable in the plan picker"
+        )
         let weekly = descendant(in: app, identifier: "paywall-plan-com.unit.weekly")
-        scrollTo(weekly, in: app, direction: .down)
+        scrollTo(weekly, in: app)
         tap(weekly, "Weekly plan")
         XCTAssertTrue(
             app.staticTexts[AppCopy.Paywall.standardHeadline].waitForExistence(timeout: 5),
@@ -366,10 +527,6 @@ final class OnboardingPaywallFlowUITests: XCTestCase {
         XCTAssertFalse(
             staticText(in: app, containing: "free trial").exists,
             "Weekly selection must not show free-trial copy"
-        )
-        XCTAssertTrue(
-            yearly.label.localizedCaseInsensitiveContains("Save 72%"),
-            "Yearly savings badge became unreadable after selecting Weekly"
         )
         let weeklyCTA = button(in: app, containing: AppCopy.Paywall.subscribeWeekly)
         XCTAssertGreaterThanOrEqual(weeklyCTA.frame.height, 44)
@@ -578,6 +735,7 @@ final class OnboardingPaywallFlowUITests: XCTestCase {
         )
         app.launch()
         XCTAssertTrue(app.staticTexts["Some plans couldn't load."].waitForExistence(timeout: 20))
+        tap(app.buttons["paywall-plan-picker-toggle"], "Change plan")
         let monthly = descendant(in: app, identifier: "paywall-plan-com.unit.monthly")
         scrollTo(monthly, in: app)
         XCTAssertTrue(monthly.exists, "missing Monthly card was hidden instead of disabled")
@@ -720,41 +878,22 @@ final class OnboardingPaywallFlowUITests: XCTestCase {
         }
     }
 
-    private func assertCTAAndDisclosureAreReadable(
+    private func assertCTAIsReadable(
         in app: XCUIApplication,
         requiresCompactWidth: Bool = false
     ) {
         let window = app.windows.firstMatch
         let cta = app.buttons[AppCopy.Onboarding.splashCTA]
-        let disclosure = app.staticTexts[Self.paidAccessDisclosure]
 
         XCTAssertTrue(window.waitForExistence(timeout: 5))
         XCTAssertTrue(cta.exists, "onboarding CTA missing")
-        XCTAssertTrue(
-            disclosure.waitForExistence(timeout: 5),
-            "paid-access disclosure missing before program setup"
-        )
         XCTAssertGreaterThanOrEqual(cta.frame.height, 44)
-        XCTAssertGreaterThan(disclosure.frame.height, 0)
-        XCTAssertTrue(disclosure.frame.intersects(window.frame), "paid-access disclosure is clipped")
-        XCTAssertLessThanOrEqual(disclosure.frame.maxY, window.frame.maxY)
-        XCTAssertLessThanOrEqual(cta.frame.maxY, disclosure.frame.minY)
-
-        let accessibilityElements = app.descendants(matching: .any).allElementsBoundByAccessibilityElement
-        let ctaIndex = accessibilityElements.firstIndex {
-            $0.elementType == .button && $0.label == AppCopy.Onboarding.splashCTA
-        }
-        let disclosureIndex = accessibilityElements.firstIndex {
-            $0.elementType == .staticText && $0.label == Self.paidAccessDisclosure
-        }
-        XCTAssertNotNil(ctaIndex, "CTA missing from accessibility order")
-        XCTAssertNotNil(disclosureIndex, "disclosure missing from accessibility order")
-        if let ctaIndex, let disclosureIndex {
-            XCTAssertLessThan(ctaIndex, disclosureIndex, "VoiceOver should read CTA before disclosure")
-        }
+        XCTAssertTrue(cta.isHittable, "onboarding CTA is outside the visible viewport")
+        XCTAssertTrue(cta.frame.intersects(window.frame), "onboarding CTA is clipped")
+        XCTAssertLessThanOrEqual(cta.frame.maxY, window.frame.maxY)
 
         if requiresCompactWidth {
-            XCTAssertLessThanOrEqual(window.frame.width, 375, "run compact disclosure QA on the smallest iPhone")
+            XCTAssertLessThanOrEqual(window.frame.width, 375, "run compact CTA QA on the smallest iPhone")
         }
     }
 

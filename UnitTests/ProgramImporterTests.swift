@@ -317,6 +317,100 @@ final class ProgramImporterTests: XCTestCase {
         }
     }
 
+    func testProgramMatcherOffersEverySupportedScheduleFromTwoToSixDays() {
+        XCTAssertEqual(ProgramCatalog.supportedDays, [2, 3, 4, 5, 6])
+    }
+
+    func testProgramMatcherKeepsTrainingDaysAsAHardConstraint() {
+        for days in ProgramCatalog.supportedDays {
+            let profile = ProgramMatchProfile(
+                goal: .mixed,
+                level: .intermediate,
+                daysPerWeek: days
+            )
+            let recommendations = ProgramCatalog.recommendations(for: profile)
+
+            XCTAssertFalse(recommendations.isEmpty, "Expected at least one \(days)-day match")
+            XCTAssertLessThanOrEqual(recommendations.count, 3)
+            XCTAssertTrue(recommendations.allSatisfy { $0.daysPerWeek == days })
+        }
+    }
+
+    func testProgramMatcherRanksExactGoalAndExperienceFirst() throws {
+        let profile = ProgramMatchProfile(
+            goal: .mixed,
+            level: .intermediate,
+            daysPerWeek: 5
+        )
+        let first = try XCTUnwrap(ProgramCatalog.recommendations(for: profile).first)
+
+        XCTAssertEqual(first.name, "Strength + Size 5-Day")
+        XCTAssertEqual(first.goal, profile.goal)
+        XCTAssertEqual(first.level, profile.level)
+    }
+
+    func testTwoAndFiveDayProgramsResolveEveryExercise() throws {
+        for days in [2, 5] {
+            let program = try XCTUnwrap(
+                ProgramCatalog.all.first { $0.daysPerWeek == days }
+            )
+            XCTAssertEqual(program.days.count, days)
+            for item in program.days.flatMap(\.items) {
+                XCTAssertNotNil(
+                    ExerciseCatalog.lookup(item.exerciseName),
+                    "Missing catalog metadata for \(program.name) / \(item.exerciseName)"
+                )
+            }
+        }
+    }
+
+    func testProgramSetupContextRoundTripsWithoutWorkoutContent() throws {
+        let suiteName = "ProgramSetupContextStoreTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let context = ProgramSetupContext(
+            source: .matchedLibrary,
+            matchProfile: ProgramMatchProfile(
+                goal: .strength,
+                level: .advanced,
+                daysPerWeek: 3
+            )
+        )
+
+        ProgramSetupContextStore.save(context, defaults: defaults)
+
+        XCTAssertEqual(ProgramSetupContextStore.load(defaults: defaults), context)
+        ProgramSetupContextStore.clear(defaults: defaults)
+        XCTAssertNil(ProgramSetupContextStore.load(defaults: defaults))
+    }
+
+    func testProgramMatchAnswersSurviveColdRelaunch() throws {
+        let suiteName = "ProgramMatchDraftTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let original = OnboardingViewModel()
+        original.importMethod = .library
+        original.hasSelectedImportMethod = true
+        original.preferredGoal = .hypertrophy
+        original.preferredLevel = .beginner
+        original.preferredDaysPerWeek = 2
+
+        OnboardingPreferences.save(
+            from: original,
+            currentStep: .libraryPicker,
+            history: [.splash, .unitPicker, .importMethod],
+            defaults: defaults
+        )
+
+        let restored = OnboardingViewModel()
+        OnboardingPreferences.load(into: restored, defaults: defaults)
+        let navigation = OnboardingPreferences.loadNavigation(defaults: defaults)
+
+        XCTAssertEqual(restored.programMatchProfile, original.programMatchProfile)
+        XCTAssertEqual(navigation.step, .libraryPicker)
+        XCTAssertEqual(navigation.history, [.splash, .unitPicker, .importMethod])
+    }
+
     func testCombatPowerProgramPreservesScheduleAndContrastOrder() throws {
         let program = try XCTUnwrap(
             ProgramCatalog.all.first {

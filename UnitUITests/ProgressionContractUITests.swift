@@ -49,13 +49,12 @@ final class ProgressionContractUITests: XCTestCase {
             staticText(in: app, containing: "Every set reached the top of your 8–10 range").exists,
             "Increase-weight explanation is missing"
         )
-        attachScreenshot(of: app, named: "02-increase-weight")
-
         let useFirstSuggestion = button(
             in: app,
             containing: AppCopy.Workout.useThisTarget
         )
         scrollTo(useFirstSuggestion, in: app)
+        attachScreenshot(of: app, named: "02-increase-weight")
         tap(useFirstSuggestion, "Use this target — increase weight")
         XCTAssertTrue(
             staticText(in: app, containing: AppCopy.Workout.acceptedForNextTime)
@@ -246,6 +245,115 @@ final class ProgressionContractUITests: XCTestCase {
         attachScreenshot(of: app, named: "08-accepted-target-next-workout")
     }
 
+    /// Captures the real, production progression surfaces used by the US App
+    /// Store screenshot set. The dedicated seed uses pounds and ordinary
+    /// exercise/routine names; it never introduces screenshot-only views.
+    func testCaptureUSAppStoreProgressionScreens() throws {
+        var app = makeAppStoreScreenshotApp(reset: true)
+        app.launch()
+
+        XCTAssertTrue(
+            app.staticTexts["Upper A"].waitForExistence(timeout: 20),
+            "US App Store seed did not open the completed workout"
+        )
+        let finishWorkout = app.buttons[AppCopy.Workout.finishWorkout].firstMatch
+        tap(finishWorkout, "finish US screenshot workout", timeout: 12)
+        tap(
+            app.alerts.firstMatch.buttons[AppCopy.Workout.finishWorkout],
+            "finish US screenshot confirmation"
+        )
+
+        XCTAssertTrue(
+            staticText(in: app, containing: "3 × 8 at 140 lb")
+                .waitForExistence(timeout: 15),
+            "US screenshot recommendation did not show the complete 140 lb target"
+        )
+        XCTAssertTrue(
+            staticText(in: app, containing: "Previous target · 3 × 10 at 135 lb").exists,
+            "US screenshot recommendation lost the 135 lb evidence"
+        )
+        XCTAssertTrue(
+            staticText(in: app, containing: "Every set reached the top of your 8–10 range").exists,
+            "US screenshot recommendation lost its transparent reason"
+        )
+
+        let useSuggestion = button(in: app, containing: AppCopy.Workout.useThisTarget)
+        scrollTo(useSuggestion, in: app)
+        attachScreenshot(of: app, named: "store-01-real-next-target")
+
+        // Additional real recommendation variants for founder-composed App
+        // Store artwork. These stay outside the canonical six-image export so
+        // Figma can layer or crop them without changing the product UI.
+        let addRepSuggestion = app.buttons[
+            "\(AppCopy.Workout.useThisTarget) for Barbell Row"
+        ]
+        scrollTo(addRepSuggestion, in: app, maximumSwipes: 6)
+        XCTAssertTrue(
+            staticText(in: app, containing: "3 × 9 at 95 lb").exists,
+            "US add-rep recommendation was not visible"
+        )
+        attachScreenshot(of: app, named: "figma-card-add-one-rep")
+
+        let repeatSuggestion = app.buttons[
+            "\(AppCopy.Workout.useThisTarget) for Back Squat"
+        ]
+        scrollTo(repeatSuggestion, in: app, maximumSwipes: 6)
+        XCTAssertTrue(
+            staticText(in: app, containing: "3 × 9 at 115 lb").exists,
+            "US repeat-target recommendation was not visible"
+        )
+        attachScreenshot(of: app, named: "figma-card-repeat-target")
+
+        scrollTo(useSuggestion, in: app, maximumSwipes: 8)
+
+        tap(useSuggestion, "Use this target — US screenshot")
+        XCTAssertTrue(
+            staticText(in: app, containing: AppCopy.Workout.acceptedForNextTime)
+                .waitForExistence(timeout: 8),
+            "Accepted recommendation state was not visible"
+        )
+        attachScreenshot(of: app, named: "store-03-real-double-progression-result")
+
+        // Capture the real History surface before starting the next workout.
+        app.terminate()
+        app = makeAppStoreScreenshotApp()
+        app.launch()
+        XCTAssertTrue(app.staticTexts["Today"].waitForExistence(timeout: 20))
+        tap(app.buttons[AppCopy.Nav.history], "History — US screenshot")
+        tap(
+            app.buttons["history-session-row"].firstMatch,
+            "completed session — US screenshot",
+            timeout: 10
+        )
+        let exerciseProgress = button(in: app, containing: "Bench Press")
+        scrollTo(exerciseProgress, in: app, maximumSwipes: 4)
+        tap(exerciseProgress, "Bench Press progress — US screenshot")
+        XCTAssertTrue(
+            staticText(in: app, containing: "Best set · 135 lb × 10")
+                .waitForExistence(timeout: 10),
+            "US History evidence did not use pounds"
+        )
+        attachScreenshot(of: app, named: "store-05-strength-progress")
+
+        tap(app.navigationBars.buttons.firstMatch, "back to session details")
+        tap(app.navigationBars.buttons.firstMatch, "back to History")
+        tap(app.navigationBars.buttons.firstMatch, "back to Today")
+
+        let startWorkout = app.buttons[AppCopy.Workout.startWorkout]
+        scrollTo(startWorkout, in: app)
+        tap(startWorkout, "start accepted-target workout — US screenshot")
+        XCTAssertTrue(
+            staticText(in: app, containing: "3 × 8 at 140 lb")
+                .waitForExistence(timeout: 10),
+            "Accepted US target was not prefilled"
+        )
+        XCTAssertTrue(
+            staticText(in: app, containing: "Last time · 3 × 10 at 135 lb").exists,
+            "US active workout lost previous-session evidence"
+        )
+        attachScreenshot(of: app, named: "store-02-one-tap-workout")
+    }
+
     func testPastedStartingTargetSurvivesRelaunchAndLogsInOneTap() throws {
         var app = makeStartingTargetApp(reset: true)
         app.launch()
@@ -337,6 +445,19 @@ final class ProgressionContractUITests: XCTestCase {
         app.launchArguments = [
             "-ui-testing",
             "-ui-testing-starting-target"
+        ]
+        if reset {
+            app.launchArguments.append("-ui-testing-reset")
+        }
+        return app
+    }
+
+    private func makeAppStoreScreenshotApp(reset: Bool = false) -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "-ui-testing",
+            "-ui-testing-progression-contract",
+            "-ui-testing-app-store-screenshot"
         ]
         if reset {
             app.launchArguments.append("-ui-testing-reset")

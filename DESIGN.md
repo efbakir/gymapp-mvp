@@ -58,6 +58,65 @@ typography:
     lineHeight: 1
     letterSpacing: "-0.6px"
     fontFeature: "tnum"
+  marketingHeroMobile:
+    fontFamily: "Geist, -apple-system, system-ui, sans-serif"
+    fontSize: "40px"
+    fontWeight: 700
+    lineHeight: 1
+    letterSpacing: "-0.035em"
+  marketingHeroTablet:
+    fontFamily: "Geist, -apple-system, system-ui, sans-serif"
+    fontSize: "52px"
+    fontWeight: 700
+    lineHeight: 1
+    letterSpacing: "-0.035em"
+  marketingHeroDesktop:
+    fontFamily: "Geist, -apple-system, system-ui, sans-serif"
+    fontSize: "60px"
+    fontWeight: 700
+    lineHeight: 1
+    letterSpacing: "-0.035em"
+  marketingCampaignMobile:
+    fontFamily: "Geist, -apple-system, system-ui, sans-serif"
+    fontSize: "34px"
+    fontWeight: 700
+    lineHeight: 1.02
+    letterSpacing: "-0.04em"
+  marketingCampaignDesktop:
+    fontFamily: "Geist, -apple-system, system-ui, sans-serif"
+    fontSize: "44px"
+    fontWeight: 700
+    lineHeight: 1.02
+    letterSpacing: "-0.04em"
+  marketingDisplayMobile:
+    fontFamily: "Geist, -apple-system, system-ui, sans-serif"
+    fontSize: "40px"
+    fontWeight: 700
+    lineHeight: 1.04
+    letterSpacing: "-0.025em"
+  marketingDisplayDesktop:
+    fontFamily: "Geist, -apple-system, system-ui, sans-serif"
+    fontSize: "54px"
+    fontWeight: 700
+    lineHeight: 1.04
+    letterSpacing: "-0.025em"
+  marketingSectionMobile:
+    fontFamily: "Geist, -apple-system, system-ui, sans-serif"
+    fontSize: "26px"
+    fontWeight: 700
+    lineHeight: 1.1
+    letterSpacing: "-0.025em"
+  marketingSectionDesktop:
+    fontFamily: "Geist, -apple-system, system-ui, sans-serif"
+    fontSize: "32px"
+    fontWeight: 700
+    lineHeight: 1.1
+    letterSpacing: "-0.025em"
+  webMetadata:
+    fontFamily: "Geist, GeistMono, -apple-system, system-ui, sans-serif"
+    fontSize: "13px"
+    fontWeight: 500
+    lineHeight: 1.3
 rounded:
   sm: "10px"
   md: "14px"
@@ -204,6 +263,22 @@ Both ship as bundled `.ttf` and are registered via `UIAppFonts` in `Info.plist`.
 - **Product action** (Geist Mono Bold 17): Primary CTA labels and top-bar text actions.
 - **Performance** (Geist Mono SemiBold 15): Set-result / PR rows in History.
 - **Step indicator** (Geist Mono SemiBold 14): Set step counters in `SetProgressIndicator`.
+
+### Marketing type ramp
+
+The public website uses the same Geist families, medium-weight floor, and
+Ink/Ash hierarchy with a responsive editorial scale. These are named web
+tokens in `app/globals.css`, not feature-level one-offs:
+
+- **Hero** (`.h-hero`): 40 / 52 / 60px, line-height 1.0, tracking -0.035em.
+- **Campaign heading** (`.h-campaign`): 34 / 44px, line-height 1.02.
+- **Display CTA** (`.h-display`): 40 / 54px, line-height 1.04.
+- **Section heading** (`.h-section`): 26 / 32px, line-height 1.1.
+- **Narrative body:** 16px minimum; 18–20px is reserved for hero/supporting leads.
+- **Metadata:** 12–14px only for dates, status, compact data labels, and controls.
+
+Uppercase mono `.eyebrow` labels are metadata, not general section decoration.
+Navigation, footer headings, and section introductions use sentence-case Geist.
 
 ### Named Rules
 

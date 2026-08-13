@@ -34,6 +34,7 @@ struct OnboardingShell<Content: View, StickyAccessory: View, FloatingAccessory: 
     var ctaDisabledReason: String? = nil
     var progressStep: Int? = nil
     var progressTotal: Int? = nil
+    var progressDetail: OnboardingProgressBar.Detail? = nil
     var onContinue: (() -> Void)? = nil
     /// Back action is owned by `OnboardingFlow` (state-driven coordinator);
     /// every step gets one wired explicitly so there is no environment-dismiss
@@ -81,7 +82,8 @@ struct OnboardingShell<Content: View, StickyAccessory: View, FloatingAccessory: 
                 if hasProgressBar && !condensesHeader {
                     OnboardingProgressBar(
                         step: progressStep ?? 0,
-                        total: progressTotal ?? 0
+                        total: progressTotal ?? 0,
+                        detail: progressDetail
                     )
                 }
                 if !condensesHeader {
@@ -186,6 +188,7 @@ extension OnboardingShell where StickyAccessory == EmptyView, FloatingAccessory 
         ctaDisabledReason: String? = nil,
         progressStep: Int? = nil,
         progressTotal: Int? = nil,
+        progressDetail: OnboardingProgressBar.Detail? = nil,
         onContinue: (() -> Void)? = nil,
         onBack: @escaping () -> Void,
         usesOuterScroll: Bool = true,
@@ -200,6 +203,7 @@ extension OnboardingShell where StickyAccessory == EmptyView, FloatingAccessory 
         self.ctaDisabledReason = ctaDisabledReason
         self.progressStep = progressStep
         self.progressTotal = progressTotal
+        self.progressDetail = progressDetail
         self.onContinue = onContinue
         self.onBack = onBack
         self.usesOuterScroll = usesOuterScroll
@@ -220,6 +224,7 @@ extension OnboardingShell where FloatingAccessory == EmptyView {
         ctaDisabledReason: String? = nil,
         progressStep: Int? = nil,
         progressTotal: Int? = nil,
+        progressDetail: OnboardingProgressBar.Detail? = nil,
         onContinue: (() -> Void)? = nil,
         onBack: @escaping () -> Void,
         usesOuterScroll: Bool = true,
@@ -235,6 +240,7 @@ extension OnboardingShell where FloatingAccessory == EmptyView {
         self.ctaDisabledReason = ctaDisabledReason
         self.progressStep = progressStep
         self.progressTotal = progressTotal
+        self.progressDetail = progressDetail
         self.onContinue = onContinue
         self.onBack = onBack
         self.usesOuterScroll = usesOuterScroll
@@ -255,6 +261,7 @@ extension OnboardingShell where StickyAccessory == EmptyView {
         ctaDisabledReason: String? = nil,
         progressStep: Int? = nil,
         progressTotal: Int? = nil,
+        progressDetail: OnboardingProgressBar.Detail? = nil,
         onContinue: (() -> Void)? = nil,
         onBack: @escaping () -> Void,
         usesOuterScroll: Bool = true,
@@ -270,6 +277,7 @@ extension OnboardingShell where StickyAccessory == EmptyView {
         self.ctaDisabledReason = ctaDisabledReason
         self.progressStep = progressStep
         self.progressTotal = progressTotal
+        self.progressDetail = progressDetail
         self.onContinue = onContinue
         self.onBack = onBack
         self.usesOuterScroll = usesOuterScroll
@@ -278,37 +286,5 @@ extension OnboardingShell where StickyAccessory == EmptyView {
         self.content = content
         self.stickyAccessory = { EmptyView() }
         self.floatingAccessory = floatingAccessory
-    }
-}
-
-/// Page-corner numeric counter — `STEP 02 / 04`.
-/// Replaces the old segmented capsule bar. Mono digits (Geist Mono SemiBold 14
-/// via `AppFont.stepIndicator`) make the count the loudest element instead of
-/// chrome. Current digit reads in Ink, total in Mist, label in Ash — three
-/// weights of meaning on one line. Leading-aligned with the title underneath.
-struct OnboardingProgressBar: View {
-    let step: Int
-    let total: Int
-
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    private var clampedStep: Int { max(1, min(step, max(total, 1))) }
-    private var stepText: String { String(format: "%02d", clampedStep) }
-    private var totalText: String { String(format: "%02d", max(total, 1)) }
-
-    var body: some View {
-        HStack(spacing: 0) {
-            Text("STEP ")
-                .foregroundStyle(AppColor.textSecondary)
-            Text(stepText)
-                .foregroundStyle(AppColor.textPrimary)
-                .contentTransition(.numericText())
-                .appAnimation(.appReveal, value: clampedStep, reduceMotion: reduceMotion)
-            Text(" / \(totalText)")
-                .foregroundStyle(AppColor.textDisabled)
-        }
-        .font(AppFont.stepIndicator.font)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Step \(clampedStep) of \(max(total, 1))")
     }
 }

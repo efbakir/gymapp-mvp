@@ -39,7 +39,7 @@ export default function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-unit-xl md:gap-unit-lg">
           {columns.map((col) => (
             <div key={col.heading}>
-              <p className="eyebrow mb-unit-md">{col.heading}</p>
+              <p className="mb-unit-md text-sm font-semibold tracking-tight">{col.heading}</p>
               <ul className="flex flex-col gap-unit-sm">
                 {col.links.map((link) => (
                   <li key={link.href}>
@@ -69,7 +69,7 @@ export default function Footer() {
               className="h-8 w-8 rounded-md"
             />
           </Link>
-          <p className="font-mono text-[13px] tracking-[0.6px] text-unit-text-secondary">
+          <p className="text-sm text-unit-text-secondary">
             &copy; {new Date().getFullYear()} Unit
           </p>
         </div>

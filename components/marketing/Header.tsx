@@ -102,7 +102,7 @@ export default function Header() {
             href={APP_STORE_URL}
             target="_blank"
             rel="noreferrer"
-            className="btn-primary h-11 px-unit-md text-[13px]"
+            className="btn-primary h-11 px-unit-md text-sm"
           >
             {ctaLabel}
           </a>
@@ -165,7 +165,7 @@ export default function Header() {
               target="_blank"
               rel="noreferrer"
               onClick={() => setMenuOpen(false)}
-              className="btn-primary text-[15px] px-unit-lg mt-unit-xs"
+              className="btn-primary mt-unit-xs px-unit-lg text-base"
               style={{ height: "var(--button-height-lg)" }}
             >
               {ctaLabel}
@@ -272,13 +272,13 @@ function MobileSection({
 }) {
   return (
     <div className="flex flex-col gap-unit-sm">
-      <p className="eyebrow">{label}</p>
+      <p className="text-sm font-semibold">{label}</p>
       {items.map((item) => (
         <Link
           key={item.href}
           href={item.href}
           onClick={onItemClick}
-          className="text-[15px] text-unit-text-secondary py-1"
+          className="py-1 text-base text-unit-text-secondary"
         >
           {item.label}
         </Link>

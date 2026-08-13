@@ -67,17 +67,19 @@ export default function AudienceStrip() {
     >
       <div className="mx-auto max-w-6xl px-unit-md md:px-unit-lg">
         <div className="mx-auto mb-unit-xxl max-w-3xl text-center">
-          <p className="eyebrow mb-unit-sm">Your training. Your way.</p>
           <h2 className="h-campaign text-balance">
-            For everyone who lifts.
+            Progression for every kind of lifter.
           </h2>
+          <p className="mx-auto mt-unit-md max-w-xl text-base leading-snug text-unit-text-secondary">
+            Your program stays yours, whether you train for strength, muscle, or both.
+          </p>
         </div>
 
-        <div className="flex flex-wrap justify-center gap-x-unit-xl gap-y-unit-lg md:gap-x-unit-xxl">
+        <div className="grid grid-cols-1 gap-unit-lg sm:grid-cols-2 lg:grid-cols-4">
           {audiences.map((audience) => (
             <div
               key={audience.label}
-              className="flex min-w-[180px] items-center gap-unit-sm"
+              className="flex items-center gap-unit-sm"
             >
               <MarketingPhoto
                 src={audience.src}

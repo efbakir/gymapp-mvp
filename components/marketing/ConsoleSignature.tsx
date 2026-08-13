@@ -19,7 +19,7 @@ export default function ConsoleSignature() {
     /* eslint-disable no-console */
     console.log("%cUnit", styleHeading)
     console.log(
-      "%cBuilt by one lifter, for lifters. Notebook fast, on-device, no AI.\nQuestions, bugs, or just want to say hi: " +
+      "%cBuilt by one lifter, for lifters. One-tap logs, clear next targets, on-device.\nQuestions, bugs, or just want to say hi: " +
         SUPPORT_EMAIL,
       styleBody
     )

@@ -46,6 +46,7 @@ final class StorePlanPresentationTests: XCTestCase {
 
         XCTAssertEqual(presentation.trial?.durationText, "7 days")
         XCTAssertEqual(presentation.trial?.adjectiveText, "7-day")
+        XCTAssertEqual(presentation.trial?.dayCount, 7)
     }
 
     func testEligibleYearlyShowsConfiguredFreeTrial() {
@@ -58,6 +59,7 @@ final class StorePlanPresentationTests: XCTestCase {
         )
 
         XCTAssertEqual(presentation.trial?.durationText, "7 days")
+        XCTAssertEqual(presentation.trial?.dayCount, 7)
         XCTAssertEqual(presentation.billingPeriodText, "year")
     }
 

@@ -2,7 +2,7 @@
 //  OnboardingImportMethodView.swift
 //  Unit
 //
-//  Screen 3 — Choose how to bring an existing program into onboarding.
+//  Screen 3 — Choose between an existing program and a ready-made match.
 //
 
 import SwiftUI
@@ -26,15 +26,10 @@ struct OnboardingImportMethodView: View {
             onBack: onBack
         ) {
             VStack(spacing: AppSpacing.sm) {
-                // 2-choice rewrite (Phase B-3, Q1 + Q3 locked 2026-06-17).
-                // Manual builder DELETED — the self-coached intermediate
-                // persona pastes or picks. Hidden programs still live in
-                // ProgramCatalog.all for a future "browse all" surface.
-                // Use-past-workout (history) path also removed: it required
-                // existing sessions which a brand-new v2 install never has.
                 AppOptionTileCard(
                     icon: .clipboard,
                     title: AppCopy.Onboarding.methodPasteOption,
+                    subtitle: AppCopy.Onboarding.methodPasteSubtitle,
                     isSelected: selectedMethod == .paste
                 ) {
                     onSelect(.paste)
@@ -43,6 +38,7 @@ struct OnboardingImportMethodView: View {
                 AppOptionTileCard(
                     icon: .list,
                     title: AppCopy.Onboarding.methodLibraryOption,
+                    subtitle: AppCopy.Onboarding.methodLibrarySubtitle,
                     isSelected: selectedMethod == .library
                 ) {
                     onSelect(.library)
